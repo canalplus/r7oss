@@ -1,0 +1,72 @@
+#
+# this config file was automatically generated
+# using lirc-0.8.2(mplay) on Fri Dec  7 20:04:59 2007
+#
+# contributed by 
+#
+# brand:                       VLSystem
+# model no. of remote control: MPlay Blast
+# devices being controlled by this remote:
+#
+
+begin remote
+
+  name  VLSystem_MPlay_Blast
+  bits            8
+  eps            30
+  aeps          100
+
+  one             0     0
+  zero            0     0
+  gap          211938
+  toggle_bit_mask 0x0
+
+      begin codes
+          PwrOff                   0x41
+          PwrOn                    0x55
+          Movies                   0x40
+          Television               0x46
+          Photos                   0x45
+          Music                    0x56
+          1                        0x4d
+          2                        0x4e
+          3                        0x4f
+          4                        0x50
+          5                        0x51
+          6                        0x52
+          7                        0x53
+          8                        0x03
+          9                        0x07
+          0                        0x4c
+          Vol+                     0x0a
+          Vol-                     0x0e
+          Ch+_Lang                 0x12
+          Ch-_Page                 0x16
+          Guide                    0x0f
+          Back                     0x0b
+          Tv                       0x13
+          Ok                       0x42
+          Up                       0x19
+          Left                     0x54
+          Right                    0x43
+          Down                     0x1d
+          Exit_Click               0x1f
+          Task_Quick               0x17
+          Run_DClick               0x1b
+          Rew                      0x0d
+          Play                     0x09
+          Ffwd                     0x15
+          Prev                     0x1a
+          Stop                     0x01
+          Next                     0x1e
+          Pause                    0x05
+          Mute                     0x4a
+          Warp_Mouse               0x47
+          Rec                      0x11
+          DVD_Zoom                 0x14
+          Detail                   0x4b
+      end codes
+
+end remote
+
+

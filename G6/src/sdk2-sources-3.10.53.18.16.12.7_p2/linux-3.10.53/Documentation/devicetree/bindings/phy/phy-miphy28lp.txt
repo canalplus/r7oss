@@ -1,0 +1,71 @@
+STMicroelectronics STi MIPHY28LP PHY binding
+============================================
+
+This binding describes a miphy device that is used to control PHY hardware
+for SATA, PCIe or USB3.
+
+Required properties:
+- compatible: Should be "st,miphy28lp-phy"
+- #phy-cells: 1, see below
+- reg: Address and length of the register set for the device
+- reg-names: The names of the register addresses corresponding to the registers
+   filled in "reg". Is can also contain the offset of the system configuration
+   registers used as glue-logic to setup the device for SATA/PCIe or USB3
+   devices.
+- st,syscfg : should be a phandle of the syscfg node.
+- resets, reset-names: soft-reset lines of MIPHY IP.
+   Associated names must be "miphy-sw-rst".
+
+Optional properties:
+- st,osc-rdy: to check the MIPHY0_OSC_RDY status in the glue-logic. This
+  is not available in all the MiPHY. For example, for STiH407, only the MiPHY0
+  has this bit.
+- st,osc-force-ext: to select the external oscillator. This can change from
+  different MiPHY inside the same SoC.
+- st,sata_gen: to select which SATA_SPDMODE has to be set in the SATA system
+  config register.
+- st,px_rx_pol_inv: to invert polarity of RXn/RXp (respectively negative line and positive
+  line).
+- st,scc-on: enable ssc on sata/pcie to reduce effects of EMI.
+
+example:
+
+		miphy28lp_phy0: miphy28lp@0 {
+			compatible	= "st,miphy28lp-phy";
+			#phy-cells	= <1>;
+			reg		= <0x9b22000 0xff>,
+					  <0x9b09000 0xff>,
+					  <0x9b04000 0xff>,
+					  <0x114 0x4>,
+					  <0x818 0x4>,
+					  <0xe0  0x4>,
+					  <0xec  0x4>;
+			reg-names	= "sata-up", "pcie-up", "pipew",
+					  "miphy-ctrl-glue",
+					  "miphy-status-glue",
+					  "pcie-glue", "sata-glue";
+			st,syscfg	= <&syscfg_core>;
+
+			resets		= <&softreset STIH407_MIPHY0_SOFTRESET>;
+			reset-names	= "miphy-sw-rst";
+		};
+
+
+Specifying phy control of devices
+=================================
+
+Device nodes should specify the configuration required in their "phys"
+property, containing a phandle to the miphy device node and an index
+specifying which configuration to use, as described in phy-bindings.txt.
+
+example:
+		sata0: sata@9b20000  {
+			...
+			phys		= <&miphy28lp_phy0 MIPHY28LP_SATA>;
+			phy-names	= "ahci_phy";
+			...
+		};
+
+Macro definitions for the supported miphy configuration can be found in:
+
+include/dt-bindings/phy/phy-miphy28lp.h

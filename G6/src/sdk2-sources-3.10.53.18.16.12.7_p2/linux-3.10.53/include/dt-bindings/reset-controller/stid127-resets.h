@@ -1,0 +1,23 @@
+/*
+ * This header provides constants for the reset controller
+ * based peripheral powerdown requests on the STMicroelectronics
+ * STiD127 SoC.
+ */
+#ifndef _DT_BINDINGS_RESET_CONTROLLER_STID127
+#define _DT_BINDINGS_RESET_CONTROLLER_STID127
+
+#define STID127_USB0_POWERDOWN		0
+#define STID127_PCIE0_POWERDOWN		1
+#define STID127_PCIE1_POWERDOWN		2
+#define STID127_KEYSCAN_POWERDOWN	3
+#define STID127_ETH0_POWERDOWN		4
+
+#define STID127_ETH0_SOFTRESET		0
+#define STID127_USB0_SOFTRESET		1
+#define STID127_ST40_MANRESET		2
+#define STID127_ST40_PWRRESET		3
+#define STID127_PCIE0_SOFTRESET		4
+#define STID127_PCIE1_SOFTRESET		5
+#define STID127_FP_SOFTRESET		6
+
+#endif /* _DT_BINDINGS_RESET_CONTROLLER_STID127 */

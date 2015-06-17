@@ -1,0 +1,7 @@
+          name : bash_launcher
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : Daniel Malmgren
+      commands : 
+       options : script, script_opts, selinux_context
+   description : Allows starting or stopping a service using a shell script
+                 contained inside the .i file.

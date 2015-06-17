@@ -1,0 +1,367 @@
+<html><head>        
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+
+
+<meta name="description" content="This is a brief note on how to use Linux kernel's linked list in your own applications. Concepts behind the implementation of the list and some examples on how we can use it to create new data structures are also covered">         
+<meta name="keywords" content="circular link list, Linux kernel link list, simple link list in C, etc."><title>[Linux Kernel Linked List Explained]</title></head>
+<body bgcolor="#ffffff">         
+<br><br>        
+
+<div align="center">         
+  <center>         
+  <table border="0" cellpadding="0" cellspacing="1" width="50%">         
+    <tbody><tr>         
+      <td align="center" valign="top"></td>         
+      <td align="center" valign="top" width="0"><strong>/<a href="http://vip.poly.edu/kulesh/" title="/home/">home</a>/</strong></td>         
+      <td align="center" valign="top" width="0"><strong>/<a href="http://vip.poly.edu/kulesh/research/" title="/research/">research</a>/</strong></td>
+      <td align="center" valign="top" width="0"><strong>/<a href="http://vip.poly.edu/kulesh/stuff/" title="/stuff/">stuff</a>/</strong></td>         
+      <td align="center" valign="top"></td>         
+    </tr>         
+  </tbody></table>         
+  </center>         
+</div>         
+
+<hr color="#000000" noshade="noshade" size="1" width="80%">
+
+<div align="center">         
+  <center>         
+  <table cellpadding="0" cellspacing="1" width="75%">         
+    <tbody><tr>         
+      <td>         
+         
+<!--stuff that matters-->         
+
+
+
+
+<br>
+<h2 align="center"><u>Linux Kernel Linked List Explained</u></h2>
+<br>
+<center>(<em>Note: This is a working copy, last updated on April 5<sup>th</sup>, 2005. Feel free to email your comments.</em>)</center>
+<br><br>
+<h3><u>Introduction:</u></h3>
+Linux kernel is mostly written in the C language. Unlike many other languages C does not have
+a good collection of data structures built into it or supported by a collection of standard libraries.
+Therefore, you're probably excited to hear that you can borrow a good implementation of a 
+circularly-linked list in C from the Linux kernel source tree. 
+
+<br><br>
+The file <tt>include/linux/list.h</tt>
+in the source tree implements a type oblivious, easy-to-use, circularly-linked list in the C
+language. The implementation is efficient and portable-- otherwise it would not have made it
+into the kernel. Whenever someone needs a list in the Linux kernel they rely on this 
+implementation to strung up any data structure they have. With very little modifications 
+(removing hardware prefetching of list items) we can also use this list in our applications.
+A usable version of this file is available <a href="http://vip.poly.edu/kulesh/stuff/src/klist/list.h" title="Linux kernel linked list">
+here for download</a>. 
+<br><br>
+
+Some of the advantages of using this list are:
+<ol>
+<li><strong>Type Oblivious:</strong><br>
+This list can be used to strung up any data structure you have in mind.
+</li>
+
+<li><strong>Portable:</strong><br>
+Though I haven't tried in every platform it is safe to assume the list implementation
+is very portable. Otherwise it would not have made it into the kernel source tree.
+</li>
+
+<li><strong>Easy to Use:</strong><br>
+Since the list is type oblivious same functions are used to initialize, access, 
+and traverse any list of items strung together using this list implementation.
+</li>
+
+<li><strong>Readable:</strong><br>
+The macros and inlined functions of the list implementation makes the resulting 
+code very elegant and readable.
+</li>
+
+<li><strong>Saves Time:</strong><br>
+Stops you from reinventing the wheel. Using the list really saves a lot of 
+debugging time and repetitively creating lists for every data structure
+you need to link.
+</li>
+</ol>
+Linux implementation of the linked list is different from the many 
+<a href="http://en.wikipedia.org/wiki/Linked_list" title="Linked list: From Wikipedia, the free encyclopedia.">linked list</a> 
+implementations you might have seen. Usually a linked list <em>contains</em> the items that are to be linked. For example:
+<pre>struct my_list{
+	void *myitem;
+	struct my_list *next;
+	struct my_list *prev;
+	};
+</pre>
+The kernel's implementation of linked list gives the illusion that the
+list is contained in the items it links! For example, if you were to
+create a linked list of <tt>struct my_cool_list</tt> you would do the following:
+<pre>struct my_cool_list{
+	struct list_head list; /* kernel's list structure */
+	int my_cool_data;
+	void* my_cool_void;
+	};
+</pre>
+Couple of things to note here:
+<ol>
+<li><em>List is inside the data item you want to link together.</em></li>
+<li><em>You <b>can put</b></em> <tt><b>struct list_head</b></tt> <em><b>anywhere</b> in your structure.</em></li>
+<li><em>You <b>can name</b></em> <tt><b>struct list_head</b></tt> <em><b> variable anything</b> you wish.</em></li>
+<li><em>You <b>can have</b></em> multiple lists!</li>
+</ol>
+So for example, the declaration below is also a valid one:
+<pre>struct todo_tasks{
+	char *task_name;
+	unsigned int name_len;
+	short int status;
+
+	int sub_tasks;
+
+	int subtasks_completed;
+	struct list_head completed_subtasks;/* list structure */
+
+	int subtasks_waiting;
+	struct list_head waiting_subtasks; 	/* another list of same or different items! */
+
+	struct list_head todo_list;			/* list of todo_tasks */
+	};
+</pre>
+Here are some examples of such lists from the kernel:
+<ul>
+	<li><a href="http://lxr.linux.no/source/include/linux/fs.h?v=2.6.10#L362">include/linux/fs.h:362</a></li>
+	<li><a href="http://lxr.linux.no/source/include/linux/fs.h?v=2.6.10#L429">include/linux/fs.h:429</a></li>
+</ul>
+While we are at this, kernel's list structure is declared as follows in <tt>include/linux/list.h</tt>:
+<pre>struct list_head{
+	struct list_head *next;
+	struct list_head *prev;
+	}
+</pre>
+Having said that this is probably a good time to delve into the details. 
+First let us see how we can use this data structure in our programs. Then, 
+we will see how the data structure actually works.
+
+<br> <br>
+
+<h3><u>Using the List:</u></h3>
+I think the best way to get familiar with the list functions is to simply scan 
+<a href="http://vip.poly.edu/kulesh/stuff/src/klist/list.h">the file</a> for them.
+The file is well commented so there should not be any trouble understanding what is available to 
+a user.<br><br>
+
+Here is an example of creating, adding, deleting, and traversing the list. You can download the source
+code <a href="http://vip.poly.edu/kulesh/stuff/src/klist/test_list.c" title="Test code for list">here</a>.
+
+<pre>#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+#include "list.h"
+
+
+struct kool_list{
+	int to;
+	struct list_head list;
+	int from;
+	};
+
+int main(int argc, char **argv){
+
+	struct kool_list *tmp;
+	struct list_head *pos, *q;
+	unsigned int i;
+
+	struct kool_list mylist;
+	INIT_LIST_HEAD(&amp;mylist.list);
+	/* or you could have declared this with the following macro
+	 * LIST_HEAD(mylist); which declares and initializes the list
+	 */
+
+	/* adding elements to mylist */
+	for(i=5; i!=0; --i){
+		tmp= (struct kool_list *)malloc(sizeof(struct kool_list));
+		
+		/* INIT_LIST_HEAD(&amp;tmp-&gt;list); 
+		 *
+		 * this initializes a dynamically allocated list_head. we
+		 * you can omit this if subsequent call is add_list() or 
+		 * anything along that line because the next, prev
+		 * fields get initialized in those functions.
+		 */
+		printf("enter to and from:");
+		scanf("%d %d", &amp;tmp-&gt;to, &amp;tmp-&gt;from);
+
+		/* add the new item 'tmp' to the list of items in mylist */
+		list_add(&amp;(tmp-&gt;list), &amp;(mylist.list));
+		/* you can also use list_add_tail() which adds new items to
+		 * the tail end of the list
+		 */
+	}
+	printf("\n");
+
+
+	/* now you have a circularly linked list of items of type struct kool_list.
+	 * now let us go through the items and print them out
+	 */
+
+
+	/* list_for_each() is a macro for a for loop. 
+	 * first parameter is used as the counter in for loop. in other words, inside the
+	 * loop it points to the current item's list_head.
+	 * second parameter is the pointer to the list. it is not manipulated by the macro.
+	 */
+	printf("traversing the list using list_for_each()\n");
+	list_for_each(pos, &amp;mylist.list){
+
+		/* at this point: pos-&gt;next points to the next item's 'list' variable and 
+		 * pos-&gt;prev points to the previous item's 'list' variable. Here item is 
+		 * of type struct kool_list. But we need to access the item itself not the 
+		 * variable 'list' in the item! macro list_entry() does just that. See "How
+		 * does this work?" below for an explanation of how this is done.
+		 */
+		 tmp= list_entry(pos, struct kool_list, list);
+
+		 /* given a pointer to struct list_head, type of data structure it is part of,
+		  * and it's name (struct list_head's name in the data structure) it returns a
+		  * pointer to the data structure in which the pointer is part of.
+		  * For example, in the above line list_entry() will return a pointer to the
+		  * struct kool_list item it is embedded in!
+		  */
+
+		 printf("to= %d from= %d\n", tmp-&gt;to, tmp-&gt;from);
+
+	}
+	printf("\n");
+	/* since this is a circularly linked list. you can traverse the list in reverse order
+	 * as well. all you need to do is replace 'list_for_each' with 'list_for_each_prev'
+	 * everything else remain the same!
+	 *
+	 * Also you can traverse the list using list_for_each_entry() to iterate over a given
+	 * type of entries. For example:
+	 */
+	printf("traversing the list using list_for_each_entry()\n");
+	list_for_each_entry(tmp, &amp;mylist.list, list)
+		 printf("to= %d from= %d\n", tmp-&gt;to, tmp-&gt;from);
+	printf("\n");
+	
+
+	/* now let's be good and free the kool_list items. since we will be removing items
+	 * off the list using list_del() we need to use a safer version of the list_for_each() 
+	 * macro aptly named list_for_each_safe(). Note that you MUST use this macro if the loop 
+	 * involves deletions of items (or moving items from one list to another).
+	 */
+	printf("deleting the list using list_for_each_safe()\n");
+	list_for_each_safe(pos, q, &amp;mylist.list){
+		 tmp= list_entry(pos, struct kool_list, list);
+		 printf("freeing item to= %d from= %d\n", tmp-&gt;to, tmp-&gt;from);
+		 list_del(pos);
+		 free(tmp);
+	}
+
+	return 0;
+}
+</pre>
+
+
+
+<br> <br>
+
+<h3><u>How Does This Work?</u></h3>
+Well most of the implementation is quite trivial but finesse. The finesse relies on the fact that
+somehow we can obtain the address of an item that contains the list (struct list_head list) given
+the pointer to the list. This trick is done by the <tt>list_entry()</tt> macro as we saw above. Let
+us now understand what it does.
+<pre>#define list_entry(ptr, type, member) \
+	((type *)((char *)(ptr)-(unsigned long)(&amp;((type *)0)-&gt;member)))
+</pre>
+
+Macro expansion for the above example is as follows:
+<pre>	(<font color="#ff0000">(</font>struct kool_list *<font color="#ff0000">)</font><font color="#00ff00">(</font>(char *)(pos)<bb> - </bb>(unsigned long)<font color="#0000ff">(</font>&amp;<font color="#ca4400">(</font>(struct kool_list *)0<font color="#ca4400">)</font>-&gt;list<font color="#0000ff">)</font><font color="#00ff00">)</font>)
+</pre>
+This is what confuses most people but it is quite simple and a <a href="ftp://rtfm.mit.edu/pub/usenet-by-group/news.answers/C-faq/faq" title="C FAQ">well-known technique (See Question 2.14)</a>. Given a pointer to <tt>struct list_head</tt> <em>in</em> a data structure, macro <tt>list_entry()</tt> simply computes the pointer <em>of</em>
+the data structure. To achieve this we need to figure out where in the
+data structure the list_head is (offset of list_head). Then, simply
+deduct the list_head's offset from the actual pointer passed to the
+macro.
+<br><br>
+Now the question is how can we compute the offset of an element in a structure? Suppose you have a data structure <tt>struct foo_bar</tt> and you want to find the offset of element <tt>boo</tt> in it, this is how you do it: 
+<pre>(unsigned long)(&amp;((struct foo_bar *)0)-&gt;boo)
+</pre>
+
+Take memory address 0, and cast it to whatever the type of structure you have-- in this case <tt>struct foo_bar</tt>.
+Then, take the address of the member you're interested in. This gives
+the offset of the member within the structure. Since we already know
+the absolute memory address of this element for a particular instance
+of the structure (for example, by way of <tt>pos</tt>) deducting this
+offset points us to the address of the structure itself. That's all
+there is to it. To get a better handle on this I suggest you play
+around with this <a href="http://vip.poly.edu/kulesh/stuff/src/klist/compute_offset.c" title="compute offset">piece of code</a>.
+<pre>#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+struct foobar{
+	unsigned int foo;
+	char bar;
+	char boo;
+};
+
+int main(int argc, char** argv){
+
+	struct foobar tmp;
+
+	printf("address of &amp;tmp is= %p\n\n", &amp;tmp);
+	printf("address of tmp-&gt;foo= %p \t offset of tmp-&gt;foo= %lu\n", &amp;tmp.foo, (unsigned long) &amp;((struct foobar *)0)-&gt;foo);
+	printf("address of tmp-&gt;bar= %p \t offset of tmp-&gt;bar= %lu\n", &amp;tmp.bar, (unsigned long) &amp;((struct foobar *)0)-&gt;bar);
+	printf("address of tmp-&gt;boo= %p \t offset of tmp-&gt;boo= %lu\n\n", &amp;tmp.boo, (unsigned long) &amp;((struct foobar *)0)-&gt;boo);
+
+	printf("computed address of &amp;tmp using:\n");
+	printf("\taddress and offset of tmp-&gt;foo= %p\n",
+	      (struct foobar *) (((char *) &amp;tmp.foo) - ((unsigned long) &amp;((struct foobar *)0)-&gt;foo)));
+	printf("\taddress and offset of tmp-&gt;bar= %p\n",
+	      (struct foobar *) (((char *) &amp;tmp.bar) - ((unsigned long) &amp;((struct foobar *)0)-&gt;bar)));
+	printf("\taddress and offset of tmp-&gt;boo= %p\n",
+	      (struct foobar *) (((char *) &amp;tmp.boo) - ((unsigned long) &amp;((struct foobar *)0)-&gt;boo)));
+
+	return 0;
+}
+</pre>
+Output from this code is:
+<pre>address of &amp;tmp is= 0xbfffed00
+
+address of tmp-&gt;foo= 0xbfffed00   offset of tmp-&gt;foo= 0
+address of tmp-&gt;bar= 0xbfffed04   offset of tmp-&gt;bar= 4
+address of tmp-&gt;boo= 0xbfffed05   offset of tmp-&gt;boo= 5
+
+computed address of &amp;tmp using:
+address and offset of tmp-&gt;foo= 0xbfffed00
+address and offset of tmp-&gt;bar= 0xbfffed00
+address and offset of tmp-&gt;boo= 0xbfffed00
+</pre>
+
+<h3><u>See Also</u></h3>
+<ul>
+	<li>Please also have a look at the hash table that uses the linked list.</li>
+	<li><a href="http://vip.poly.edu/kulesh/stuff/src/" title="Source code">/sutff/src/</a> for more source code</li>
+</ul>
+<h3><u>TODO</u></h3>
+<ul>
+<li>Figure to explain list_entry() better</li>
+<li>Post the C Data Structures Library (CDSL) that contains hashtables, maps etc. for peer review. Think of it as the <a href="http://java.sun.com/j2se/1.4.2/docs/api/java/util/package-summary.html" title="Java.Util Documentation">Java.Util</a> for C. Clean syntax, prepackaged data structures to make your C life easy!</li>
+</ul>
+
+
+
+
+
+
+         
+<!--stuff ends here -->         
+         
+</td>         
+    </tr>         
+  </tbody></table>         
+  </center>         
+</div>         
+         
+
+<hr color="#000000" noshade="noshade" size="1" width="80%">
+
+</body></html>

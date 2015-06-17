@@ -1,0 +1,84 @@
+From 9c6165ea2fa66816095f0a167af1e0c7512c1e53 Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:19:59 +0100
+Subject: [PATCH 03/36] patches/player2_vc1_configurable_framerate
+
+---
+ player/frame_parser/frame_parser_video_vc1.cpp |   24 +++++++++++++++++++++---
+ player/frame_parser/frame_parser_video_vc1.h   |    2 ++
+ 2 files changed, 23 insertions(+), 3 deletions(-)
+
+diff --git a/player/frame_parser/frame_parser_video_vc1.cpp b/player/frame_parser/frame_parser_video_vc1.cpp
+index 070f884..6a6abd5 100644
+--- a/player/frame_parser/frame_parser_video_vc1.cpp
++++ b/player/frame_parser/frame_parser_video_vc1.cpp
+@@ -343,6 +343,9 @@ FrameParserStatus_t   FrameParser_VideoVc1_c::Reset (void)
+     RangeMapUVFlag                              = false;
+     RangeMapUV                                  = 0;
+ 
++    FrameRateDefaultDen                         = 1001;
++    FrameRateDefaultNum                         = 24000;
++
+     return FrameParser_Video_c::Reset();
+ }
+ //}}}
+@@ -666,6 +669,12 @@ FrameParserStatus_t   FrameParser_VideoVc1_c::ReadHeaders (void)
+                 //report (severity_info, "VC1_END_OF_SEQUENCE\n");
+                 break;
+ 
++	    case 8:
++	        FrameRateDefaultDen = Bits.Get(32);
++		FrameRateDefaultNum = Bits.Get(32);
++		report (severity_error, "Received framerate %d / %d\n", FrameRateDefaultDen, FrameRateDefaultNum);
++		break;
++
+             default:
+                 #if 0
+                 {
+@@ -1997,6 +2006,14 @@ FrameParserStatus_t   FrameParser_VideoVc1_c::CommitFrameForDecode (void)
+     //
+ 
+     ParsedFrameParameters->KeyFrame                             = SliceType == SliceTypeI;
++//     if (SliceType != SliceTypeI)
++//       CodedFramePlaybackTimeValid = false;
++    //report (severity_error, "Slite type %d.\n", PictureHeader->ptype);
++    if (PictureHeader->ptype != 1) { //SliceType == SliceTypeB || PictureHeader->ptype == VC1_PICTURE_CODING_TYPE_BI) {
++//       ParsedFrameParameters->NormalizedPlaybackTime = INVALID_TIME;
++//       CodedFramePlaybackTimeValid = false;
++      //report (severity_error, "FrameParser_VideoVc1_c::CommitFrameForDecode - B or BI frame, ignoring PTS.\n");
++    }
+     ParsedFrameParameters->ReferenceFrame                       = (SliceType != SliceTypeB) && (PictureHeader->ptype != VC1_PICTURE_CODING_TYPE_BI);
+     ParsedFrameParameters->IndependentFrame                     = ParsedFrameParameters->KeyFrame;
+ 
+@@ -2056,11 +2073,12 @@ FrameParserStatus_t   FrameParser_VideoVc1_c::CommitFrameForDecode (void)
+ 
+             FrameRate   = Rational_t (90000, Pts - LastPts);
+             report (severity_info, "FrameParser_VideoVc1_c::CommitFrameForDecode - No framerate, use PTS (Not Implemented).\n");
+-                    FrameRate.IntegerPart(), FrameRate.RemainderDecimal());
++	    FrameRate.IntegerPart(), FrameRate.RemainderDecimal());
+         }
+ #endif
+-        ParsedVideoParameters->Content.FrameRate                = Rational_t (24000, 1001);
+-        //report (severity_error, "FrameParser_VideoVc1_c::CommitFrameForDecode - No framerate, use PTS (Not Implemented).\n");
++        //report (severity_error, "FrameParser_VideoVc1_c::CommitFrameForDecode - No framerate in ES.\n");
++        //ParsedVideoParameters->Content.FrameRate                = Rational_t (24000, 1001);
++        ParsedVideoParameters->Content.FrameRate                = Rational_t (FrameRateDefaultNum, FrameRateDefaultDen);
+     }
+ 
+     ParsedVideoParameters->Content.Progressive                  = ProgressiveSequence;
+diff --git a/player/frame_parser/frame_parser_video_vc1.h b/player/frame_parser/frame_parser_video_vc1.h
+index 2141a87..b22c972 100644
+--- a/player/frame_parser/frame_parser_video_vc1.h
++++ b/player/frame_parser/frame_parser_video_vc1.h
+@@ -91,6 +91,8 @@ private:
+     //  Frame rate details
+     bool                        FrameRateValid;
+     Rational_t                  FrameRate;
++    int32_t                     FrameRateDefaultDen;
++    int32_t                     FrameRateDefaultNum;
+ 
+ 
+     // Functions
+-- 
+1.7.9.5
+

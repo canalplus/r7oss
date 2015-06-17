@@ -1,0 +1,24 @@
+--- ../../alsa-kernel/pci/echoaudio/echoaudio.c	2006-08-05 14:41:12.000000000 +0200
++++ echoaudio.c	2006-10-07 20:30:53.000000000 +0200
+@@ -1926,6 +1926,7 @@
+ 	struct echoaudio *chip;
+ 	int err;
+ 	size_t sz;
++	u16 subsystem_device;
+ 	static struct snd_device_ops ops = {
+ 		.dev_free = snd_echo_dev_free,
+ 	};
+@@ -1988,7 +1989,12 @@
+ 	chip->comm_page_phys = chip->commpage_dma_buf.addr;
+ 	chip->comm_page = (struct comm_page *)chip->commpage_dma_buf.area;
+ 
+-	err = init_hw(chip, chip->pci->device, chip->pci->subsystem_device);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 3, 0)
++	subsystem_device = pci->subsystem_device;
++#else
++	pci_read_config_word(pci, PCI_SUBSYSTEM_ID, &subsystem_device);
++#endif
++	err = init_hw(chip, chip->pci->device, subsystem_device);
+ 	if (err) {
+ 		DE_INIT(("init_hw err=%d\n", err));
+ 		snd_echo_free(chip);

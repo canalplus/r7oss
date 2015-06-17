@@ -1,0 +1,28 @@
+SPEC=SPECS/stm-host-stmfb.spec
+BUILDAREA?=$(PWD)/..
+
+include $(BUILDAREA)/Makefile.rpm
+
+rpmpackage:
+	mkdir -p SOURCES
+	cd SOURCES ; git format-patch $(BASE_TAG)..wyplay-release
+
+	#Generate include files
+	cd SOURCES ; ls *.patch | awk 'BEGIN{NR=0}{print "Patch"NR":",$$1}' > ../patches_include.files ; cd -
+	cd SOURCES ; ls *.patch | awk 'BEGIN{NR=0}{print "%patch"NR,"-p1"}' > ../patches_apply.files ; cd -
+
+	#Split SPEC file at PATCH_DEFINITIONS
+	version=`echo $(BASE_TAG) | sed "s/stmfb_//g"`
+	awk '{print $$0 ; if ($$0 == "#PATCH_DEFINITIONS") exit}' SPECS/stm-host-stmfb-source.spec | sed "s/#BASE_TAG/$$(VERSION)/g" > stm-host-stmfb-source1.spec
+	awk 'BEGIN{ start_flag=0; }; { if ($$0 == "#PATCH_DEFINITIONS") start_flag = 1; if ( start_flag == 1 ) print $$0; }' SPECS/stm-host-stmfb-source.spec > stm-host-stmfb-source_temp.spec
+	
+	#Split SPEC file at PATCH_IMPLEMENTATION
+	awk '{print $$0 ; if ($$0 == "#PATCH_IMPLEMENTATION") exit}' stm-host-stmfb-source_temp.spec > stm-host-stmfb-source2.spec
+	awk 'BEGIN{ start_flag=0; }; { if ($$0 == "#PATCH_IMPLEMENTATION") start_flag = 1; if ( start_flag == 1 ) print $$0; }' stm-host-stmfb-source_temp.spec > stm-host-stmfb-source3.spec
+	
+	#Generate SPEC file with patches included and applied
+	cat stm-host-stmfb-source1.spec patches_include.files stm-host-stmfb-source2.spec patches_apply.files stm-host-stmfb-source3.spec > SPECS/stm-host-stmfb.spec
+	rm -f stm-host-stmfb-source*.spec patches_apply.files patches_*.files
+
+	git archive $(BASE_TAG) linux Makefile COPYING Gamma Generic HDTVOutFormatter include os21 README* soc STMCommon | bzip2 > SOURCES/stmfb.tar.bz2
+

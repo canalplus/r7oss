@@ -1,0 +1,514 @@
+#!/bin/bash
+
+INSMOD="/sbin/insmod"
+INSMODM="/sbin/insmod -m"
+MODPROBE="/sbin/modprobe"
+MODDIR="../modules"
+SUFF=".o"
+MAP="../snd.map"
+OLDMAP="../snd.map.old"
+CARDS_LIMIT=2
+KERNEL26="false"
+
+# 2.6 check
+tmp=`insmod -V | cut -d ' ' -f 1`
+if [ "$tmp" = "module-init-tools" ]; then
+  INSMODM="$INSMOD"
+  SUFF=".ko"
+  KERNEL26="true"
+fi
+
+if grep -E "^alias snd-card" /etc/modprobe.d/sound > /dev/null 2> /dev/null ; then
+  echo "*********************************************"
+  echo "Warning: disabling system sound configuration"
+  echo "File /etc/modprobe.d/sound has been modified"
+  echo "Please, revert it manually"
+  echo "*********************************************"
+  sed -e 's/^alias snd-card/#alias snd-card/g' /etc/modprobe.d/sound > /dev/shm/alsa.sound.x1
+  cp /dev/shm/alsa.sound.x1 /etc/modprobe.d/sound
+fi
+
+function banner() {
+   echo > /dev/null
+#  echo "Inserting $1.."
+#  sleep 1
+}
+
+function isapnp() {
+  if [ -r $MODDIR/isapnp$SUFF ]; then
+    banner "isapnp"
+    if ! $INSMOD $MODDIR/isapnp$SUFF >> $MAP; then exit 1; fi
+  fi
+}
+
+function basic() {
+  $MODPROBE -q soundcore 2> /dev/null
+  banner "snd-page-alloc"
+  if ! $INSMOD $MODDIR/snd-page-alloc$SUFF >> $MAP; then exit 1; fi
+  banner "snd"
+  if ! $INSMOD $MODDIR/snd$SUFF cards_limit=$CARDS_LIMIT >> $MAP; then exit 1; fi
+  if [ -r $MODDIR/snd-mixer-oss$SUFF ]; then
+    banner "snd-mixer-oss"
+    if ! $INSMOD $MODDIR/snd-mixer-oss$SUFF >> $MAP; then exit 1; fi  
+  fi
+  banner "snd-timer"
+  if ! $INSMOD $MODDIR/snd-timer$SUFF >> $MAP; then exit 1; fi
+  banner "snd-pcm"
+  if ! $INSMOD $MODDIR/snd-pcm$SUFF preallocate_dma=1 >> $MAP; then exit 1; fi
+  if [ -r $MODDIR/snd-pcm-oss$SUFF ]; then
+    banner "snd-pcm-oss"
+    if ! $INSMOD $MODDIR/snd-pcm-oss$SUFF >> $MAP; then exit 1; fi  
+  fi
+  if [ -r $MODDIR/snd-seq-device$SUFF ]; then
+    banner "snd-seq-device"
+    if ! $INSMOD $MODDIR/snd-seq-device$SUFF >> $MAP; then exit 1; fi
+  fi
+  if [ -r $MODDIR/snd-rawmidi$SUFF ]; then
+    banner "snd-rawmidi"
+    if ! $INSMOD $MODDIR/snd-rawmidi$SUFF >> $MAP; then exit 1; fi
+  fi
+  if [ -r $MODDIR/snd-hwdep$SUFF ]; then
+    banner "snd-hwdep"
+    if ! $INSMOD $MODDIR/snd-hwdep$SUFF >> $MAP; then exit 1; fi
+  fi
+  if [ -r $MODDIR/snd-seq$SUFF ]; then
+    banner "snd-seq"
+    if ! $INSMOD $MODDIR/snd-seq$SUFF seq_default_timer_class=2 seq_default_timer_card=0 seq_default_timer_device=0 seq_default_timer_subdevice=0 >> $MAP; then exit 1; fi
+    if [ -r $MODDIR/snd-seq-midi-event$SUFF ]; then
+      banner "snd-seq-midi-event"
+      if ! $INSMOD $MODDIR/snd-seq-midi-event$SUFF >> $MAP; then exit 1; fi
+    fi
+    if [ -r $MODDIR/snd-seq-midi$SUFF ]; then
+      banner "snd-seq-midi"
+      if ! $INSMOD $MODDIR/snd-seq-midi$SUFF >> $MAP; then exit 1; fi
+    fi
+    if [ -r $MODDIR/snd-seq-midi-emul$SUFF ]; then
+      banner "snd-seq-midi-emul"
+      if ! $INSMOD $MODDIR/snd-seq-midi-emul$SUFF >> $MAP; then exit 1; fi
+    fi
+    if [ -r $MODDIR/snd-seq-instr$SUFF ]; then
+      banner "snd-seq-instr"
+      if ! $INSMOD $MODDIR/snd-seq-instr$SUFF >> $MAP; then exit 1; fi
+    fi
+    if [ -r $MODDIR/snd-ainstr-simple$SUFF ]; then
+      banner "snd-ainstr-simple"
+      if ! $INSMOD $MODDIR/snd-ainstr-simple$SUFF >> $MAP; then exit 1; fi
+    fi
+    if [ -r $MODDIR/snd-ainstr-gf1$SUFF ]; then
+      banner "snd-ainstr-gf1"
+      if ! $INSMOD $MODDIR/snd-ainstr-gf1$SUFF >> $MAP; then exit 1; fi
+    fi
+    if [ -r $MODDIR/snd-ainstr-iw$SUFF ]; then
+      banner "snd-ainstr-iw"
+      if ! $INSMOD $MODDIR/snd-ainstr-iw$SUFF >> $MAP; then exit 1; fi
+    fi
+    if [ -r $MODDIR/snd-ainstr-fm$SUFF ]; then
+      banner "snd-ainstr-fm"
+      if ! $INSMOD $MODDIR/snd-ainstr-fm$SUFF >> $MAP; then exit 1; fi
+    fi
+    if [ -r $MODDIR/snd-seq-oss$SUFF ]; then
+      banner "snd-seq-oss"
+      if ! $INSMOD $MODDIR/snd-seq-oss$SUFF >> $MAP; then exit 1; fi
+    fi
+  fi
+}
+
+function insert() {
+  if ! $INSMOD $MODDIR/$@ >> $MAP; then exit 1; fi
+}
+
+function restore() {
+  sleep 1
+  if [ -r /etc/asound/$1 ]; then
+    /usr/sbin/alsactl -f /etc/asound/$1 restore
+  fi
+}
+
+function ac97() {
+  if [ "$KERNEL26" = "yes" ]; then
+    insert snd-ac97-bus$SUFF
+  fi
+  insert snd-ac97-codec$SUFF
+}
+
+if [ -z "$1" ]; then
+  echo "Specify soundcard ID..."
+  exit
+fi
+
+if [ -w $MAP ]; then
+  mv -f $MAP $OLDMAP
+fi
+
+./remove
+
+case "$1" in
+  interwave-stb|stb)
+    basic; isapnp
+    insert snd-cs4231-lib$SUFF
+    insert snd-gus$SUFF
+    insert snd-gus-synth$SUFF
+    insert snd-i2c$SUFF
+    insert snd-tea6330t$SUFF
+    insert snd-interwave-stb$SUFF port=0x240 irq=7 dma1=5 dma2=6 midi=1 pcm_channels=8
+    restore interwave-stb.conf
+    ;;
+  interwave|iw)
+    basic; isapnp
+    insert snd-cs4231-lib$SUFF
+    insert snd-gus$SUFF
+    insert snd-gus-synth$SUFF
+    insert snd-interwave$SUFF irq=7 dma1=5 dma2=6 midi=1
+    restore interwave.conf
+    ;;
+  es1688)
+    basic
+    insert snd-es1688-lib$SUFF
+    insert snd-mpu401-uart$SUFF 
+    insert snd-opl3-lib$SUFF
+    insert snd-es1688$SUFF mpu_port=0x330
+    restore es1688.conf
+    ;;
+  es18xx)
+    basic; isapnp
+    insert snd-mpu401-uart$SUFF 
+    insert snd-opl3-lib$SUFF
+    insert snd-es18xx$SUFF irq=7 dma1=0 dma2=1
+    restore es18xx.conf
+    ;;
+  sb16)
+    basic; isapnp
+    insert snd-sb-common$SUFF
+    insert snd-mpu401-uart$SUFF 
+    insert snd-sb16-dsp$SUFF
+    insert snd-sb16-csp$SUFF
+    insert snd-opl3-lib$SUFF
+    insert snd-sb16$SUFF irq=7 dma8=1 dma16=5
+    restore sb16.conf
+    ;;
+  sb)
+    basic; isapnp
+    insert snd-sb-common$SUFF
+    insert snd-sb8-dsp$SUFF
+    insert snd-opl3-lib$SUFF
+    insert snd-sb8$SUFF port=0x220 irq=7 dma8=1
+    restore sb.conf
+    ;;
+  sbawe)
+    basic; isapnp
+    insert snd-sb-common$SUFF
+    insert snd-sb16-dsp$SUFF
+    insert snd-sb16-csp$SUFF
+    insert snd-mpu401-uart$SUFF 
+    insert snd-opl3-lib$SUFF
+    if [ -r $MODDIR/snd-emu8000$SUFF ]; then
+      insert snd-emu8000$SUFF
+    fi
+    insert snd-sbawe$SUFF irq=7 dma8=1 dma16=5
+    restore sbawe.conf
+    ;;
+  emu10k1|live)
+    basic
+    ac97
+    insert snd-util-mem$SUFF
+    insert snd-emu10k1$SUFF
+    insert snd-seq-virmidi$SUFF
+    insert snd-emux-synth$SUFF
+    insert snd-emu10k1-synth$SUFF
+    restore emu10k1.conf
+    ;;
+  sb8)
+    basic
+    insert snd-sb-common$SUFF
+    insert snd-sb8-dsp$SUFF
+    insert snd-opl3-lib$SUFF
+    insert snd-sb8$SUFF irq=5 dma8=1
+    restore sb8.conf
+    ;;
+  gusm*|max)
+    basic
+    insert snd-cs4231-lib$SUFF
+    insert snd-gus$SUFF
+    insert snd-gus-synth$SUFF
+    insert snd-gusmax$SUFF irq=7 pcm_channels=8 dma1=6 dma2=7
+    restore gusmax.conf
+    ;;
+  gusc*|clas*)
+    basic
+    insert snd-gus$SUFF
+    insert snd-gus-synth$SUFF
+    insert snd-gusclassic$SUFF irq=7 dma1=6 dma2=7
+    restore gusclassic.conf
+    ;;
+  guse*|ext*)
+    basic
+    insert snd-es1688$SUFF
+    insert snd-mpu401-uart$SUFF 
+    insert snd-opl3-lib$SUFF
+    insert snd-gus$SUFF
+    insert snd-gus-synth$SUFF
+    insert snd-opl3-synth$SUFF
+    insert snd-gusextreme$SUFF irq=5 gf1_irq=11 mpu_port=0x300
+    restore gusextreme.conf
+    ;;
+  opl3sa2)
+    basic; isapnp
+    insert snd-cs4231$SUFF
+    insert snd-mpu401-uart$SUFF
+    insert snd-opl3-lib$SUFF
+    insert snd-opl3sa2$SUFF port=0x100 wss_port=0xe80 \
+                        fm_port=0x388 midi_port=0x300 \
+                        irq=5 dma1=0 dma2=1
+    restore opl3sa2.conf
+    ;;
+  mozart)
+    basic
+    insert snd-ad1848$SUFF
+    insert snd-mozart$SUFF
+    restore mozart.conf
+    ;;
+  p1)
+    basic; isapnp
+    insert snd-sb16-dsp$SUFF
+    insert snd-mpu401-uart$SUFF 
+    insert snd-sb16$SUFF irq=5 dma8=1 dma16=5 mpu_port=0x330
+    insert snd-gus$SUFF
+    insert snd-gusclassic$SUFF dma2=-1
+    restore p1.conf
+    ;;
+  p2)
+    basic
+    insert snd-cs4231$SUFF
+    insert snd-es1688$SUFF
+    insert snd-mpu401-uart$SUFF 
+    insert snd-gus$SUFF
+    insert snd-gusmax$SUFF
+    insert snd-gusextreme$SUFF irq1=11 mpu_port=0x300
+    restore p2.conf
+    ;;
+  s3)
+    basic
+    insert snd-mpu401-uart$SUFF 
+    insert snd-opl3-lib$SUFF
+    insert snd-sonicvibes$SUFF reverb=1
+    restore sonicvibes.conf
+    ;;
+  ens1370)
+    basic
+    insert snd-ak4531-codec$SUFF
+    insert snd-ens1370$SUFF
+    restore ens1370.conf
+    ;;
+  ens1371)
+    basic
+    ac97
+    insert snd-ens1371$SUFF
+#    insert snd-share$SUFF
+    restore ens1371.conf
+    ;;
+  trident)
+    basic
+    insert snd-mpu401-uart$SUFF 
+    ac97
+    insert snd-util-mem$SUFF
+    insert snd-trident$SUFF
+    insert snd-trident-synth$SUFF
+    restore trident.conf
+    ;;
+  cs46xx)
+    basic
+    ac97
+    insert snd-cs46xx$SUFF
+    restore cs46xx.conf
+    ;;
+  cs4281)
+    basic
+    ac97
+    insert snd-opl3-lib$SUFF
+    insert snd-cs4281$SUFF
+    restore cs4281.conf
+    ;;
+  fm801)
+    basic
+    ac97
+    insert snd-mpu401-uart$SUFF 
+    insert snd-opl3-lib$SUFF
+    insert snd-tea575x-tuner$SUFF
+    insert snd-fm801$SUFF
+    restore fm801.conf
+    ;;
+  fm801-radio)
+    basic
+    ac97
+    insert snd-mpu401-uart$SUFF 
+    insert snd-opl3-lib$SUFF
+    insert snd-tea575x-tuner$SUFF
+    insert snd-fm801$SUFF tea575x_tuner=1
+    restore fm801.conf
+    ;;
+  es1938|solo1)
+    basic
+    insert snd-mpu401-uart$SUFF
+    insert snd-opl3-lib$SUFF
+    insert snd-es1938$SUFF    
+    restore solo1.conf
+    ;;
+  cs4232)
+    basic; isapnp
+    insert snd-mpu401-uart$SUFF 
+    insert snd-cs4231-lib$SUFF
+    insert snd-opl3-lib$SUFF
+    insert snd-cs4232$SUFF port=0x534 \
+		fm_port=0x388 mpu_port=0x330 jport=0x208 \
+		dma1=1 dma2=0 \
+		irq=5 mpu_irq=7
+    restore cs4232.conf
+    ;;
+  cs4236)
+    basic; isapnp
+    insert snd-mpu401-uart$SUFF 
+    insert snd-cs4231$SUFF
+    insert snd-cs4236$SUFF
+    insert snd-opl3-lib$SUFF
+#    insert snd-cs4236$SUFF port=0x534 cport=0x120 \
+#		fm_port=0x388 mpu_port=0x330 jport=0x208 \
+#		dma1=1 dma2=0 \
+#		irq=5 mpu_irq=7
+    insert snd-cs4236$SUFF irq=7
+    restore cs4236.conf
+    ;;
+  ice1712|envy24)
+    basic
+    ac97
+    insert snd-mpu401-uart$SUFF 
+    insert snd-i2c$SUFF
+    insert snd-cs8427$SUFF
+    insert snd-ak4xxx-adda$SUFF
+    insert snd-ice17xx-ak4xxx$SUFF
+    insert snd-ice1712$SUFF enable=1,1 cs8427_timeout=5
+    restore ice1712.conf
+    ;;
+  ice1724|envy24ht)
+    basic
+    ac97
+    insert snd-mpu401-uart$SUFF 
+    #insert snd-i2c$SUFF
+    #insert snd-cs8427$SUFF
+    insert snd-ak4114$SUFF
+    insert snd-ak4xxx-adda$SUFF
+    insert snd-ice17xx-ak4xxx$SUFF
+    insert snd-ice1724$SUFF enable=1,1
+    restore ice1724.conf
+    ;;
+  i8x0|ich)
+    basic
+    ac97
+    insert snd-mpu401-uart$SUFF 
+    insert snd-intel8x0$SUFF ac97_clock=48000
+    restore intel8x0.conf
+    ;;
+  hda)
+    basic
+    insert snd-hda-codec$SUFF
+    insert snd-hda-intel$SUFF 
+    restore hda.conf
+    ;;
+  pdplus|prodif-plus)
+    basic
+    insert snd-pdplus$SUFF
+    restore prodif-plus.conf
+    ;;
+  via686*|via8233*|via)
+    basic
+    ac97
+    insert snd-mpu401-uart$SUFF
+    insert snd-via82xx$SUFF mpu_port=0x330
+    restore via82xx.conf
+    ;;
+  ymfpci|yamaha)
+    basic
+    ac97
+    insert snd-mpu401-uart$SUFF
+    insert snd-opl3-lib$SUFF
+    insert snd-ymfpci$SUFF
+    restore ymfpci.conf
+    ;;
+  dummy)
+    basic
+    insert snd-dummy$SUFF enable=1,1 pcm_devs=4,4
+    #restore dummy.conf
+    ;;
+  virmidi)
+    basic
+    insert snd-seq-virmidi$SUFF
+    insert snd-virmidi$SUFF enable=1,1 midi_devs=8,8
+    ;;
+  serialmidi)
+    basic
+    insert snd-serialmidi$SUFF
+    ;;
+  usb)
+    basic
+    insert snd-usb-audio$SUFF
+    ;;
+  vxpocket2)
+    basic
+    insert snd-vx-lib$SUFF
+    insert snd-vx-cs$SUFF
+    insert snd-vxpocket$SUFF
+    ;;
+  pdaudiocf)
+    basic
+    insert snd-ak4117$SUFF
+    insert snd-pdaudiocf$SUFF
+    ;;
+  t1)
+    basic; isapnp
+    insert snd-mpu401-uart$SUFF 
+    insert snd-cs4231-lib$SUFF
+    insert snd-cs4236-lib$SUFF
+    insert snd-opl3-lib$SUFF
+    insert snd-sb16-dsp$SUFF
+    insert snd-sb16-csp$SUFF
+    insert snd-sb16$SUFF irq=10 dma8=1 dma16=5
+    insert snd-cs4236$SUFF
+    ;;
+  t2)
+    basic
+    ac97
+    insert snd-util-mem$SUFF
+    insert snd-emu10k1$SUFF
+    insert snd-seq-virmidi$SUFF
+    insert snd-emux-synth$SUFF
+    insert snd-emu10k1-synth$SUFF
+    insert snd-mpu401-uart$SUFF 
+    insert snd-ice1712$SUFF
+    restore t2.conf
+    ;;
+  t3)
+    basic
+    ac97
+    insert snd-mpu401-uart$SUFF
+    insert snd-opl3-lib$SUFF
+    insert snd-ymfpci$SUFF
+    insert snd-i2c$SUFF
+    insert snd-cs8427$SUFF
+    insert snd-ice1712$SUFF
+    restore t3.conf
+    ;;
+  t4)
+    basic
+    insert snd-ak4117$SUFF
+    insert snd-pdaudiocf$SUFF
+    insert snd-mpu401-uart$SUFF 
+    ac97
+    insert snd-util-mem$SUFF
+    insert snd-trident$SUFF
+    #insert snd-trident-synth$SUFF
+    restore trident.conf
+    ;;
+  *)
+    echo "Unknown soundcard $1..."
+    ;;
+esac
+echo "Insert done..."

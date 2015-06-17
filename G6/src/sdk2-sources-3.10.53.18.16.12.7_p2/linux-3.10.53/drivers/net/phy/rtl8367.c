@@ -1,0 +1,2354 @@
+/*
+ * Platform driver for the Realtek RTL8367R/M ethernet switches
+ *
+ * Copyright (C) 2011 Gabor Juhos <juhosg@openwrt.org>
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as published
+ * by the Free Software Foundation.
+ */
+
+#include <linux/kernel.h>
+#include <linux/module.h>
+#include <linux/init.h>
+#include <linux/device.h>
+#include <linux/of.h>
+#include <linux/of_platform.h>
+#include <linux/delay.h>
+#include <linux/skbuff.h>
+#include <linux/rtl8367.h>
+#ifdef CONFIG_RTL8366_SMI_DEBUG_FS
+#include <linux/debugfs.h>
+#endif
+#ifdef CONFIG_PM
+#include <linux/gpio.h>
+#endif
+
+#include "rtl8366_smi.h"
+
+#define RTL8367_RESET_DELAY	1000	/* msecs*/
+
+#define RTL8367_PHY_ADDR_MAX	8
+#define RTL8367_PHY_REG_MAX	31
+
+#define RTL8367_VID_MASK	0xffff
+#define RTL8367_FID_MASK	0xfff
+#define RTL8367_UNTAG_MASK	0xffff
+#define RTL8367_MEMBER_MASK	0xffff
+
+#define RTL8367_PORT_CFG_REG(_p)		(0x000e + 0x20 * (_p))
+#define   RTL8367_PORT_CFG_EGRESS_MODE_SHIFT	4
+#define   RTL8367_PORT_CFG_EGRESS_MODE_MASK	0x3
+#define   RTL8367_PORT_CFG_EGRESS_MODE_ORIGINAL	0
+#define   RTL8367_PORT_CFG_EGRESS_MODE_KEEP	1
+#define   RTL8367_PORT_CFG_EGRESS_MODE_PRI	2
+#define   RTL8367_PORT_CFG_EGRESS_MODE_REAL	3
+
+#define RTL8367_BYPASS_LINE_RATE_REG		0x03f7
+
+#define RTL8367_TA_CTRL_REG			0x0500
+#define   RTL8367_TA_CTRL_STATUS		BIT(12)
+#define   RTL8367_TA_CTRL_METHOD		BIT(5)
+#define   RTL8367_TA_CTRL_CMD_SHIFT		4
+#define   RTL8367_TA_CTRL_CMD_READ		0
+#define   RTL8367_TA_CTRL_CMD_WRITE		1
+#define   RTL8367_TA_CTRL_TABLE_SHIFT		0
+#define   RTL8367_TA_CTRL_TABLE_ACLRULE		1
+#define   RTL8367_TA_CTRL_TABLE_ACLACT		2
+#define   RTL8367_TA_CTRL_TABLE_CVLAN		3
+#define   RTL8367_TA_CTRL_TABLE_L2		4
+#define   RTL8367_TA_CTRL_CVLAN_READ \
+		((RTL8367_TA_CTRL_CMD_READ << RTL8367_TA_CTRL_CMD_SHIFT) | \
+		 RTL8367_TA_CTRL_TABLE_CVLAN)
+#define   RTL8367_TA_CTRL_CVLAN_WRITE \
+		((RTL8367_TA_CTRL_CMD_WRITE << RTL8367_TA_CTRL_CMD_SHIFT) | \
+		 RTL8367_TA_CTRL_TABLE_CVLAN)
+
+#define RTL8367_TA_ADDR_REG			0x0501
+#define   RTL8367_TA_ADDR_MASK			0x3fff
+
+#define RTL8367_TA_DATA_REG(_x)			(0x0503 + (_x))
+#define   RTL8367_TA_VLAN_DATA_SIZE		4
+#define   RTL8367_TA_VLAN_VID_MASK		RTL8367_VID_MASK
+#define   RTL8367_TA_VLAN_MEMBER_SHIFT		0
+#define   RTL8367_TA_VLAN_MEMBER_MASK		RTL8367_MEMBER_MASK
+#define   RTL8367_TA_VLAN_FID_SHIFT		0
+#define   RTL8367_TA_VLAN_FID_MASK		RTL8367_FID_MASK
+#define   RTL8367_TA_VLAN_UNTAG1_SHIFT		14
+#define   RTL8367_TA_VLAN_UNTAG1_MASK		0x3
+#define   RTL8367_TA_VLAN_UNTAG2_SHIFT		0
+#define   RTL8367_TA_VLAN_UNTAG2_MASK		0x3fff
+
+#define RTL8367_VLAN_PVID_CTRL_REG(_p)		(0x0700 + (_p) / 2)
+#define RTL8367_VLAN_PVID_CTRL_MASK		0x1f
+#define RTL8367_VLAN_PVID_CTRL_SHIFT(_p)	(8 * ((_p) % 2))
+
+#define RTL8367_VLAN_MC_BASE(_x)		(0x0728 + (_x) * 4)
+#define   RTL8367_VLAN_MC_DATA_SIZE		4
+#define   RTL8367_VLAN_MC_MEMBER_SHIFT		0
+#define   RTL8367_VLAN_MC_MEMBER_MASK		RTL8367_MEMBER_MASK
+#define   RTL8367_VLAN_MC_FID_SHIFT		0
+#define   RTL8367_VLAN_MC_FID_MASK		RTL8367_FID_MASK
+#define   RTL8367_VLAN_MC_EVID_SHIFT		0
+#define   RTL8367_VLAN_MC_EVID_MASK		RTL8367_VID_MASK
+
+#define RTL8367_VLAN_CTRL_REG			0x07a8
+#define   RTL8367_VLAN_CTRL_ENABLE		BIT(0)
+
+#define RTL8367_VLAN_INGRESS_REG		0x07a9
+
+#define RTL8367_PORT_ISOLATION_REG(_p)		(0x08a2 + (_p))
+
+#define RTL8367_MIB_COUNTER_REG(_x)		(0x1000 + (_x))
+
+#define RTL8367_MIB_ADDRESS_REG			0x1004
+
+#define RTL8367_MIB_CTRL_REG(_x)		(0x1005 + (_x))
+#define   RTL8367_MIB_CTRL_GLOBAL_RESET_MASK	BIT(11)
+#define   RTL8367_MIB_CTRL_QM_RESET_MASK	BIT(10)
+#define   RTL8367_MIB_CTRL_PORT_RESET_MASK(_p)	BIT(2 + (_p))
+#define   RTL8367_MIB_CTRL_RESET_MASK		BIT(1)
+#define   RTL8367_MIB_CTRL_BUSY_MASK		BIT(0)
+
+#define RTL8367_MIB_COUNT			36
+#define RTL8367_MIB_COUNTER_PORT_OFFSET		0x0050
+
+#define RTL8367_SWC0_REG			0x1200
+#define   RTL8367_SWC0_MAX_LENGTH_SHIFT		13
+#define   RTL8367_SWC0_MAX_LENGTH(_x)		((_x) << 13)
+#define   RTL8367_SWC0_MAX_LENGTH_MASK		RTL8367_SWC0_MAX_LENGTH(0x3)
+#define   RTL8367_SWC0_MAX_LENGTH_1522		RTL8367_SWC0_MAX_LENGTH(0)
+#define   RTL8367_SWC0_MAX_LENGTH_1536		RTL8367_SWC0_MAX_LENGTH(1)
+#define   RTL8367_SWC0_MAX_LENGTH_1552		RTL8367_SWC0_MAX_LENGTH(2)
+#define   RTL8367_SWC0_MAX_LENGTH_16000		RTL8367_SWC0_MAX_LENGTH(3)
+
+#define RTL8367_CHIP_NUMBER_REG			0x1300
+
+#define RTL8367_CHIP_VER_REG			0x1301
+#define   RTL8367_CHIP_VER_RLVID_SHIFT		12
+#define   RTL8367_CHIP_VER_RLVID_MASK		0xf
+#define   RTL8367_CHIP_VER_MCID_SHIFT		8
+#define   RTL8367_CHIP_VER_MCID_MASK		0xf
+#define   RTL8367_CHIP_VER_BOID_SHIFT		4
+#define   RTL8367_CHIP_VER_BOID_MASK		0xf
+
+#define RTL8367_CHIP_MODE_REG			0x1302
+#define   RTL8367_CHIP_MODE_MASK		0x7
+
+#define RTL8367_CHIP_DEBUG0_REG			0x1303
+#define   RTL8367_CHIP_DEBUG0_DUMMY0(_x)	BIT(8 + (_x))
+
+#define RTL8367_CHIP_DEBUG1_REG			0x1304
+
+#define RTL8367_DIS_REG				0x1305
+#define   RTL8367_DIS_SKIP_MII_RXER(_x)		BIT(12 + (_x))
+#define   RTL8367_DIS_RGMII_SHIFT(_x)		(4 * (_x))
+#define   RTL8367_DIS_RGMII_MASK		0x7
+
+/* RGMII 2 external port */
+#define RTL8367_DIS_REG_EXT2			0x13c3	/* RGMII2 ext_port */
+#define RTL8367_DI_FORCE_REG_EXT2		0x13c4
+#define RTL8367_EXT2_RGMXF_REG			0x13c5
+
+#define RTL8367_EXT_RGMXF_REG(_x)		(0x1306 + (_x))
+#define   RTL8367_EXT_RGMXF_DUMMY0_SHIFT	5
+#define   RTL8367_EXT_RGMXF_DUMMY0_MASK	0x7ff
+#define   RTL8367_EXT_RGMXF_TXDELAY_SHIFT	3
+#define   RTL8367_EXT_RGMXF_TXDELAY_MASK	1
+#define   RTL8367_EXT_RGMXF_RXDELAY_MASK	0x7
+
+#define RTL8367_DI_FORCE_REG(_x)		(0x1310 + (_x))
+#define   RTL8367_DI_FORCE_MODE			BIT(12)
+#define   RTL8367_DI_FORCE_NWAY			BIT(7)
+#define   RTL8367_DI_FORCE_TXPAUSE		BIT(6)
+#define   RTL8367_DI_FORCE_RXPAUSE		BIT(5)
+#define   RTL8367_DI_FORCE_LINK			BIT(4)
+#define   RTL8367_DI_FORCE_DUPLEX		BIT(2)
+#define   RTL8367_DI_FORCE_SPEED_MASK		3
+#define   RTL8367_DI_FORCE_SPEED_10		0
+#define   RTL8367_DI_FORCE_SPEED_100		1
+#define   RTL8367_DI_FORCE_SPEED_1000		2
+
+#define RTL8367_MAC_FORCE_REG(_x)		(0x1312 + (_x))
+
+#define RTL8367_CHIP_RESET_REG			0x1322
+#define   RTL8367_CHIP_RESET_SW			BIT(1)
+#define   RTL8367_CHIP_RESET_HW			BIT(0)
+
+#define RTL8367_PORT_STATUS_REG(_p)		(0x1352 + (_p))
+#define   RTL8367_PORT_STATUS_NWAY		BIT(7)
+#define   RTL8367_PORT_STATUS_TXPAUSE		BIT(6)
+#define   RTL8367_PORT_STATUS_RXPAUSE		BIT(5)
+#define   RTL8367_PORT_STATUS_LINK		BIT(4)
+#define   RTL8367_PORT_STATUS_DUPLEX		BIT(2)
+#define   RTL8367_PORT_STATUS_SPEED_MASK	0x0003
+#define   RTL8367_PORT_STATUS_SPEED_10		0
+#define   RTL8367_PORT_STATUS_SPEED_100		1
+#define   RTL8367_PORT_STATUS_SPEED_1000	2
+
+#define RTL8367_RTL_NO_REG			0x13c0
+#define   RTL8367_RTL_NO_8367R			0x3670
+#define   RTL8367_RTL_NO_8367M			0x3671
+
+#define RTL8367_RTL_VER_REG			0x13c1
+#define   RTL8367_RTL_VER_MASK			0xf
+
+#define RTL8367_RTL_MAGIC_ID_REG		0x13c2
+#define   RTL8367_RTL_MAGIC_ID_VAL		0x0249
+
+#define RTL8367_LED_SYS_CONFIG_REG		0x1b00
+#define RTL8367_LED_MODE_REG			0x1b02
+#define   RTL8367_LED_MODE_RATE_M		0x7
+#define   RTL8367_LED_MODE_RATE_S		1
+
+#define RTL8367_LED_CONFIG_REG			0x1b03
+#define   RTL8367_LED_CONFIG_DATA_S		12
+#define   RTL8367_LED_CONFIG_DATA_M		0x3
+#define   RTL8367_LED_CONFIG_SEL		BIT(14)
+#define   RTL8367_LED_CONFIG_LED_CFG_M		0xf
+
+#define RTL8367_PARA_LED_IO_EN1_REG		0x1b24
+#define RTL8367_PARA_LED_IO_EN2_REG		0x1b25
+#define   RTL8367_PARA_LED_IO_EN_PMASK		0xff
+
+#define RTL8367_IA_CTRL_REG			0x1f00
+#define   RTL8367_IA_CTRL_RW(_x)		((_x) << 1)
+#define   RTL8367_IA_CTRL_RW_READ		RTL8367_IA_CTRL_RW(0)
+#define   RTL8367_IA_CTRL_RW_WRITE		RTL8367_IA_CTRL_RW(1)
+#define   RTL8367_IA_CTRL_CMD_MASK		BIT(0)
+
+#define RTL8367_IA_STATUS_REG			0x1f01
+#define   RTL8367_IA_STATUS_PHY_BUSY		BIT(2)
+#define   RTL8367_IA_STATUS_SDS_BUSY		BIT(1)
+#define   RTL8367_IA_STATUS_MDX_BUSY		BIT(0)
+
+#define RTL8367_IA_ADDRESS_REG			0x1f02
+
+#define RTL8367_IA_WRITE_DATA_REG		0x1f03
+#define RTL8367_IA_READ_DATA_REG		0x1f04
+
+#define RTL8367_INTERNAL_PHY_REG(_a, _r)	(0x2000 + 32 * (_a) + (_r))
+
+#define RTL8367_CPU_PORT_NUM		9
+#define RTL8367_NUM_PORTS		10
+#define RTL8367_NUM_VLANS		32
+#define RTL8367_NUM_LEDGROUPS		4
+#define RTL8367_NUM_VIDS		4096
+#define RTL8367_PRIORITYMAX		7
+#define RTL8367_FIDMAX			7
+
+#define RTL8367_PORT_0			BIT(0)
+#define RTL8367_PORT_1			BIT(1)
+#define RTL8367_PORT_2			BIT(2)
+#define RTL8367_PORT_3			BIT(3)
+#define RTL8367_PORT_4			BIT(4)
+#define RTL8367_PORT_5			BIT(5)
+#define RTL8367_PORT_6			BIT(6)
+#define RTL8367_PORT_7			BIT(7)
+#define RTL8367_PORT_E1			BIT(8)	/* external port 1 */
+#define RTL8367_PORT_E0			BIT(9)	/* external port 0 */
+
+#define RTL8367_PORTS_ALL					\
+	(RTL8367_PORT_0 | RTL8367_PORT_1 | RTL8367_PORT_2 |	\
+	 RTL8367_PORT_3 | RTL8367_PORT_4 | RTL8367_PORT_5 |	\
+	 RTL8367_PORT_6 | RTL8367_PORT_7 | RTL8367_PORT_E1 |	\
+	 RTL8367_PORT_E0)
+
+#define RTL8367_PORTS_ALL_BUT_CPU				\
+	(RTL8367_PORT_0 | RTL8367_PORT_1 | RTL8367_PORT_2 |	\
+	 RTL8367_PORT_3 | RTL8367_PORT_4 | RTL8367_PORT_5 |	\
+	 RTL8367_PORT_6 | RTL8367_PORT_7 | RTL8367_PORT_E1)
+
+struct rtl8367_initval {
+	u16 reg;
+	u16 val;
+};
+
+static struct rtl8366_mib_counter rtl8367_mib_counters[] = {
+	{ 0,  0, 4, "IfInOctets"				},
+	{ 0,  4, 2, "Dot3StatsFCSErrors"			},
+	{ 0,  6, 2, "Dot3StatsSymbolErrors"			},
+	{ 0,  8, 2, "Dot3InPauseFrames"				},
+	{ 0, 10, 2, "Dot3ControlInUnknownOpcodes"		},
+	{ 0, 12, 2, "EtherStatsFragments"			},
+	{ 0, 14, 2, "EtherStatsJabbers"				},
+	{ 0, 16, 2, "IfInUcastPkts"				},
+	{ 0, 18, 2, "EtherStatsDropEvents"			},
+	{ 0, 20, 4, "EtherStatsOctets"				},
+
+	{ 0, 24, 2, "EtherStatsUnderSizePkts"			},
+	{ 0, 26, 2, "EtherOversizeStats"			},
+	{ 0, 28, 2, "EtherStatsPkts64Octets"			},
+	{ 0, 30, 2, "EtherStatsPkts65to127Octets"		},
+	{ 0, 32, 2, "EtherStatsPkts128to255Octets"		},
+	{ 0, 34, 2, "EtherStatsPkts256to511Octets"		},
+	{ 0, 36, 2, "EtherStatsPkts512to1023Octets"		},
+	{ 0, 38, 2, "EtherStatsPkts1024to1518Octets"		},
+	{ 0, 40, 2, "EtherStatsMulticastPkts"			},
+	{ 0, 42, 2, "EtherStatsBroadcastPkts"			},
+
+	{ 0, 44, 4, "IfOutOctets"				},
+
+	{ 0, 48, 2, "Dot3StatsSingleCollisionFrames"		},
+	{ 0, 50, 2, "Dot3StatMultipleCollisionFrames"		},
+	{ 0, 52, 2, "Dot3sDeferredTransmissions"		},
+	{ 0, 54, 2, "Dot3StatsLateCollisions"			},
+	{ 0, 56, 2, "EtherStatsCollisions"			},
+	{ 0, 58, 2, "Dot3StatsExcessiveCollisions"		},
+	{ 0, 60, 2, "Dot3OutPauseFrames"			},
+	{ 0, 62, 2, "Dot1dBasePortDelayExceededDiscards"	},
+	{ 0, 64, 2, "Dot1dTpPortInDiscards"			},
+	{ 0, 66, 2, "IfOutUcastPkts"				},
+	{ 0, 68, 2, "IfOutMulticastPkts"			},
+	{ 0, 70, 2, "IfOutBroadcastPkts"			},
+	{ 0, 72, 2, "OutOampduPkts"				},
+	{ 0, 74, 2, "InOampduPkts"				},
+	{ 0, 76, 2, "PktgenPkts"				},
+};
+
+#define REG_RD(_smi, _reg, _val)					\
+	do {								\
+		err = rtl8366_smi_read_reg(_smi, _reg, _val);		\
+		if (err)						\
+			return err;					\
+	} while (0)
+
+#define REG_WR(_smi, _reg, _val)					\
+	do {								\
+		err = rtl8366_smi_write_reg(_smi, _reg, _val);		\
+		if (err)						\
+			return err;					\
+	} while (0)
+
+#define REG_RMW(_smi, _reg, _mask, _val)				\
+	do {								\
+		err = rtl8366_smi_rmwr(_smi, _reg, _mask, _val);	\
+		if (err)						\
+			return err;					\
+	} while (0)
+
+static const struct rtl8367_initval rtl8367_initvals_0_0[] = {
+	{0x133f, 0x0030}, {0x133e, 0x000e}, {0x221f, 0x0000}, {0x2215, 0x1006},
+	{0x221f, 0x0005}, {0x2200, 0x00c6}, {0x221f, 0x0007}, {0x221e, 0x0048},
+	{0x2215, 0x6412}, {0x2216, 0x6412}, {0x2217, 0x6412}, {0x2218, 0x6412},
+	{0x2219, 0x6412}, {0x221A, 0x6412}, {0x221f, 0x0001}, {0x220c, 0xdbf0},
+	{0x2209, 0x2576}, {0x2207, 0x287E}, {0x220A, 0x68E5}, {0x221D, 0x3DA4},
+	{0x221C, 0xE7F7}, {0x2214, 0x7F52}, {0x2218, 0x7FCE}, {0x2208, 0x04B7},
+	{0x2206, 0x4072}, {0x2210, 0xF05E}, {0x221B, 0xB414}, {0x221F, 0x0003},
+	{0x221A, 0x06A6}, {0x2210, 0xF05E}, {0x2213, 0x06EB}, {0x2212, 0xF4D2},
+	{0x220E, 0xE120}, {0x2200, 0x7C00}, {0x2202, 0x5FD0}, {0x220D, 0x0207},
+	{0x221f, 0x0002}, {0x2205, 0x0978}, {0x2202, 0x8C01}, {0x2207, 0x3620},
+	{0x221C, 0x0001}, {0x2203, 0x0420}, {0x2204, 0x80C8}, {0x133e, 0x0ede},
+	{0x221f, 0x0002}, {0x220c, 0x0073}, {0x220d, 0xEB65}, {0x220e, 0x51d1},
+	{0x220f, 0x5dcb}, {0x2210, 0x3044}, {0x2211, 0x1800}, {0x2212, 0x7E00},
+	{0x2213, 0x0000}, {0x133f, 0x0010}, {0x133e, 0x0ffe}, {0x207f, 0x0002},
+	{0x2074, 0x3D22}, {0x2075, 0x2000}, {0x2076, 0x6040}, {0x2077, 0x0000},
+	{0x2078, 0x0f0a}, {0x2079, 0x50AB}, {0x207a, 0x0000}, {0x207b, 0x0f0f},
+	{0x205f, 0x0002}, {0x2054, 0xFF00}, {0x2055, 0x000A}, {0x2056, 0x000A},
+	{0x2057, 0x0005}, {0x2058, 0x0005}, {0x2059, 0x0000}, {0x205A, 0x0005},
+	{0x205B, 0x0005}, {0x205C, 0x0005}, {0x209f, 0x0002}, {0x2094, 0x00AA},
+	{0x2095, 0x00AA}, {0x2096, 0x00AA}, {0x2097, 0x00AA}, {0x2098, 0x0055},
+	{0x2099, 0x00AA}, {0x209A, 0x00AA}, {0x209B, 0x00AA}, {0x1363, 0x8354},
+	{0x1270, 0x3333}, {0x1271, 0x3333}, {0x1272, 0x3333}, {0x1330, 0x00DB},
+	{0x1203, 0xff00}, {0x1200, 0x7fc4}, {0x121d, 0x1006}, {0x121e, 0x03e8},
+	{0x121f, 0x02b3}, {0x1220, 0x028f}, {0x1221, 0x029b}, {0x1222, 0x0277},
+	{0x1223, 0x02b3}, {0x1224, 0x028f}, {0x1225, 0x029b}, {0x1226, 0x0277},
+	{0x1227, 0x00c0}, {0x1228, 0x00b4}, {0x122f, 0x00c0}, {0x1230, 0x00b4},
+	{0x1229, 0x0020}, {0x122a, 0x000c}, {0x1231, 0x0030}, {0x1232, 0x0024},
+	{0x0219, 0x0032}, {0x0200, 0x03e8}, {0x0201, 0x03e8}, {0x0202, 0x03e8},
+	{0x0203, 0x03e8}, {0x0204, 0x03e8}, {0x0205, 0x03e8}, {0x0206, 0x03e8},
+	{0x0207, 0x03e8}, {0x0218, 0x0032}, {0x0208, 0x029b}, {0x0209, 0x029b},
+	{0x020a, 0x029b}, {0x020b, 0x029b}, {0x020c, 0x029b}, {0x020d, 0x029b},
+	{0x020e, 0x029b}, {0x020f, 0x029b}, {0x0210, 0x029b}, {0x0211, 0x029b},
+	{0x0212, 0x029b}, {0x0213, 0x029b}, {0x0214, 0x029b}, {0x0215, 0x029b},
+	{0x0216, 0x029b}, {0x0217, 0x029b}, {0x0900, 0x0000}, {0x0901, 0x0000},
+	{0x0902, 0x0000}, {0x0903, 0x0000}, {0x0865, 0x3210}, {0x087b, 0x0000},
+	{0x087c, 0xff00}, {0x087d, 0x0000}, {0x087e, 0x0000}, {0x0801, 0x0100},
+	{0x0802, 0x0100}, {0x1700, 0x014C}, {0x0301, 0x00FF}, {0x12AA, 0x0096},
+	{0x133f, 0x0030}, {0x133e, 0x000e}, {0x221f, 0x0005}, {0x2200, 0x00C4},
+	{0x221f, 0x0000}, {0x2210, 0x05EF}, {0x2204, 0x05E1}, {0x2200, 0x1340},
+	{0x133f, 0x0010}, {0x20A0, 0x1940}, {0x20C0, 0x1940}, {0x20E0, 0x1940},
+};
+
+static const struct rtl8367_initval rtl8367_initvals_0_1[] = {
+	{0x133f, 0x0030}, {0x133e, 0x000e}, {0x221f, 0x0000}, {0x2215, 0x1006},
+	{0x221f, 0x0005}, {0x2200, 0x00c6}, {0x221f, 0x0007}, {0x221e, 0x0048},
+	{0x2215, 0x6412}, {0x2216, 0x6412}, {0x2217, 0x6412}, {0x2218, 0x6412},
+	{0x2219, 0x6412}, {0x221A, 0x6412}, {0x221f, 0x0001}, {0x220c, 0xdbf0},
+	{0x2209, 0x2576}, {0x2207, 0x287E}, {0x220A, 0x68E5}, {0x221D, 0x3DA4},
+	{0x221C, 0xE7F7}, {0x2214, 0x7F52}, {0x2218, 0x7FCE}, {0x2208, 0x04B7},
+	{0x2206, 0x4072}, {0x2210, 0xF05E}, {0x221B, 0xB414}, {0x221F, 0x0003},
+	{0x221A, 0x06A6}, {0x2210, 0xF05E}, {0x2213, 0x06EB}, {0x2212, 0xF4D2},
+	{0x220E, 0xE120}, {0x2200, 0x7C00}, {0x2202, 0x5FD0}, {0x220D, 0x0207},
+	{0x221f, 0x0002}, {0x2205, 0x0978}, {0x2202, 0x8C01}, {0x2207, 0x3620},
+	{0x221C, 0x0001}, {0x2203, 0x0420}, {0x2204, 0x80C8}, {0x133e, 0x0ede},
+	{0x221f, 0x0002}, {0x220c, 0x0073}, {0x220d, 0xEB65}, {0x220e, 0x51d1},
+	{0x220f, 0x5dcb}, {0x2210, 0x3044}, {0x2211, 0x1800}, {0x2212, 0x7E00},
+	{0x2213, 0x0000}, {0x133f, 0x0010}, {0x133e, 0x0ffe}, {0x207f, 0x0002},
+	{0x2074, 0x3D22}, {0x2075, 0x2000}, {0x2076, 0x6040}, {0x2077, 0x0000},
+	{0x2078, 0x0f0a}, {0x2079, 0x50AB}, {0x207a, 0x0000}, {0x207b, 0x0f0f},
+	{0x205f, 0x0002}, {0x2054, 0xFF00}, {0x2055, 0x000A}, {0x2056, 0x000A},
+	{0x2057, 0x0005}, {0x2058, 0x0005}, {0x2059, 0x0000}, {0x205A, 0x0005},
+	{0x205B, 0x0005}, {0x205C, 0x0005}, {0x209f, 0x0002}, {0x2094, 0x00AA},
+	{0x2095, 0x00AA}, {0x2096, 0x00AA}, {0x2097, 0x00AA}, {0x2098, 0x0055},
+	{0x2099, 0x00AA}, {0x209A, 0x00AA}, {0x209B, 0x00AA}, {0x1363, 0x8354},
+	{0x1270, 0x3333}, {0x1271, 0x3333}, {0x1272, 0x3333}, {0x1330, 0x00DB},
+	{0x1203, 0xff00}, {0x1200, 0x7fc4}, {0x121d, 0x1b06}, {0x121e, 0x07f0},
+	{0x121f, 0x0438}, {0x1220, 0x040f}, {0x1221, 0x040f}, {0x1222, 0x03eb},
+	{0x1223, 0x0438}, {0x1224, 0x040f}, {0x1225, 0x040f}, {0x1226, 0x03eb},
+	{0x1227, 0x0144}, {0x1228, 0x0138}, {0x122f, 0x0144}, {0x1230, 0x0138},
+	{0x1229, 0x0020}, {0x122a, 0x000c}, {0x1231, 0x0030}, {0x1232, 0x0024},
+	{0x0219, 0x0032}, {0x0200, 0x07d0}, {0x0201, 0x07d0}, {0x0202, 0x07d0},
+	{0x0203, 0x07d0}, {0x0204, 0x07d0}, {0x0205, 0x07d0}, {0x0206, 0x07d0},
+	{0x0207, 0x07d0}, {0x0218, 0x0032}, {0x0208, 0x0190}, {0x0209, 0x0190},
+	{0x020a, 0x0190}, {0x020b, 0x0190}, {0x020c, 0x0190}, {0x020d, 0x0190},
+	{0x020e, 0x0190}, {0x020f, 0x0190}, {0x0210, 0x0190}, {0x0211, 0x0190},
+	{0x0212, 0x0190}, {0x0213, 0x0190}, {0x0214, 0x0190}, {0x0215, 0x0190},
+	{0x0216, 0x0190}, {0x0217, 0x0190}, {0x0900, 0x0000}, {0x0901, 0x0000},
+	{0x0902, 0x0000}, {0x0903, 0x0000}, {0x0865, 0x3210}, {0x087b, 0x0000},
+	{0x087c, 0xff00}, {0x087d, 0x0000}, {0x087e, 0x0000}, {0x0801, 0x0100},
+	{0x0802, 0x0100}, {0x1700, 0x0125}, {0x0301, 0x00FF}, {0x12AA, 0x0096},
+	{0x133f, 0x0030}, {0x133e, 0x000e}, {0x221f, 0x0005}, {0x2200, 0x00C4},
+	{0x221f, 0x0000}, {0x2210, 0x05EF}, {0x2204, 0x05E1}, {0x2200, 0x1340},
+	{0x133f, 0x0010},
+};
+
+static const struct rtl8367_initval rtl8367_initvals_1_0[] = {
+	{0x1B24, 0x0000}, {0x1B25, 0x0000}, {0x1B26, 0x0000}, {0x1B27, 0x0000},
+	{0x207F, 0x0002}, {0x2079, 0x0200}, {0x207F, 0x0000}, {0x133F, 0x0030},
+	{0x133E, 0x000E}, {0x221F, 0x0005}, {0x2201, 0x0700}, {0x2205, 0x8B82},
+	{0x2206, 0x05CB}, {0x221F, 0x0002}, {0x2204, 0x80C2}, {0x2205, 0x0938},
+	{0x221F, 0x0003}, {0x2212, 0xC4D2}, {0x220D, 0x0207}, {0x221F, 0x0001},
+	{0x2207, 0x267E}, {0x221C, 0xE5F7}, {0x221B, 0x0424}, {0x221F, 0x0007},
+	{0x221E, 0x0040}, {0x2218, 0x0000}, {0x221F, 0x0007}, {0x221E, 0x002C},
+	{0x2218, 0x008B}, {0x221F, 0x0005}, {0x2205, 0xFFF6}, {0x2206, 0x0080},
+	{0x2205, 0x8000}, {0x2206, 0xF8E0}, {0x2206, 0xE000}, {0x2206, 0xE1E0},
+	{0x2206, 0x01AC}, {0x2206, 0x2408}, {0x2206, 0xE08B}, {0x2206, 0x84F7},
+	{0x2206, 0x20E4}, {0x2206, 0x8B84}, {0x2206, 0xFC05}, {0x2206, 0xF8FA},
+	{0x2206, 0xEF69}, {0x2206, 0xE08B}, {0x2206, 0x86AC}, {0x2206, 0x201A},
+	{0x2206, 0xBF80}, {0x2206, 0x59D0}, {0x2206, 0x2402}, {0x2206, 0x803D},
+	{0x2206, 0xE0E0}, {0x2206, 0xE4E1}, {0x2206, 0xE0E5}, {0x2206, 0x5806},
+	{0x2206, 0x68C0}, {0x2206, 0xD1D2}, {0x2206, 0xE4E0}, {0x2206, 0xE4E5},
+	{0x2206, 0xE0E5}, {0x2206, 0xEF96}, {0x2206, 0xFEFC}, {0x2206, 0x05FB},
+	{0x2206, 0x0BFB}, {0x2206, 0x58FF}, {0x2206, 0x9E11}, {0x2206, 0x06F0},
+	{0x2206, 0x0C81}, {0x2206, 0x8AE0}, {0x2206, 0x0019}, {0x2206, 0x1B89},
+	{0x2206, 0xCFEB}, {0x2206, 0x19EB}, {0x2206, 0x19B0}, {0x2206, 0xEFFF},
+	{0x2206, 0x0BFF}, {0x2206, 0x0425}, {0x2206, 0x0807}, {0x2206, 0x2640},
+	{0x2206, 0x7227}, {0x2206, 0x267E}, {0x2206, 0x2804}, {0x2206, 0xB729},
+	{0x2206, 0x2576}, {0x2206, 0x2A68}, {0x2206, 0xE52B}, {0x2206, 0xAD00},
+	{0x2206, 0x2CDB}, {0x2206, 0xF02D}, {0x2206, 0x67BB}, {0x2206, 0x2E7B},
+	{0x2206, 0x0F2F}, {0x2206, 0x7365}, {0x2206, 0x31AC}, {0x2206, 0xCC32},
+	{0x2206, 0x2300}, {0x2206, 0x332D}, {0x2206, 0x1734}, {0x2206, 0x7F52},
+	{0x2206, 0x3510}, {0x2206, 0x0036}, {0x2206, 0x0600}, {0x2206, 0x370C},
+	{0x2206, 0xC038}, {0x2206, 0x7FCE}, {0x2206, 0x3CE5}, {0x2206, 0xF73D},
+	{0x2206, 0x3DA4}, {0x2206, 0x6530}, {0x2206, 0x3E67}, {0x2206, 0x0053},
+	{0x2206, 0x69D2}, {0x2206, 0x0F6A}, {0x2206, 0x012C}, {0x2206, 0x6C2B},
+	{0x2206, 0x136E}, {0x2206, 0xE100}, {0x2206, 0x6F12}, {0x2206, 0xF771},
+	{0x2206, 0x006B}, {0x2206, 0x7306}, {0x2206, 0xEB74}, {0x2206, 0x94C7},
+	{0x2206, 0x7698}, {0x2206, 0x0A77}, {0x2206, 0x5000}, {0x2206, 0x788A},
+	{0x2206, 0x1579}, {0x2206, 0x7F6F}, {0x2206, 0x7A06}, {0x2206, 0xA600},
+	{0x2205, 0x8B90}, {0x2206, 0x8000}, {0x2205, 0x8B92}, {0x2206, 0x8000},
+	{0x2205, 0x8B94}, {0x2206, 0x8014}, {0x2208, 0xFFFA}, {0x2202, 0x3C65},
+	{0x2205, 0xFFF6}, {0x2206, 0x00F7}, {0x221F, 0x0000}, {0x221F, 0x0007},
+	{0x221E, 0x0042}, {0x2218, 0x0000}, {0x221E, 0x002D}, {0x2218, 0xF010},
+	{0x221E, 0x0020}, {0x2215, 0x0000}, {0x221E, 0x0023}, {0x2216, 0x8000},
+	{0x221F, 0x0000}, {0x133F, 0x0010}, {0x133E, 0x0FFE}, {0x1362, 0x0115},
+	{0x1363, 0x0002}, {0x1363, 0x0000}, {0x1306, 0x000C}, {0x1307, 0x000C},
+	{0x1303, 0x0067}, {0x1304, 0x4444}, {0x1203, 0xFF00}, {0x1200, 0x7FC4},
+	{0x121D, 0x7D16}, {0x121E, 0x03E8}, {0x121F, 0x024E}, {0x1220, 0x0230},
+	{0x1221, 0x0244}, {0x1222, 0x0226}, {0x1223, 0x024E}, {0x1224, 0x0230},
+	{0x1225, 0x0244}, {0x1226, 0x0226}, {0x1227, 0x00C0}, {0x1228, 0x00B4},
+	{0x122F, 0x00C0}, {0x1230, 0x00B4}, {0x0208, 0x03E8}, {0x0209, 0x03E8},
+	{0x020A, 0x03E8}, {0x020B, 0x03E8}, {0x020C, 0x03E8}, {0x020D, 0x03E8},
+	{0x020E, 0x03E8}, {0x020F, 0x03E8}, {0x0210, 0x03E8}, {0x0211, 0x03E8},
+	{0x0212, 0x03E8}, {0x0213, 0x03E8}, {0x0214, 0x03E8}, {0x0215, 0x03E8},
+	{0x0216, 0x03E8}, {0x0217, 0x03E8}, {0x0900, 0x0000}, {0x0901, 0x0000},
+	{0x0902, 0x0000}, {0x0903, 0x0000}, {0x0865, 0x3210}, {0x087B, 0x0000},
+	{0x087C, 0xFF00}, {0x087D, 0x0000}, {0x087E, 0x0000}, {0x0801, 0x0100},
+	{0x0802, 0x0100}, {0x0A20, 0x2040}, {0x0A21, 0x2040}, {0x0A22, 0x2040},
+	{0x0A23, 0x2040}, {0x0A24, 0x2040}, {0x0A28, 0x2040}, {0x0A29, 0x2040},
+	{0x133F, 0x0030}, {0x133E, 0x000E}, {0x221F, 0x0000}, {0x2200, 0x1340},
+	{0x221F, 0x0000}, {0x133F, 0x0010}, {0x133E, 0x0FFE}, {0x20A0, 0x1940},
+	{0x20C0, 0x1940}, {0x20E0, 0x1940}, {0x130c, 0x0050},
+};
+
+static const struct rtl8367_initval rtl8367_initvals_1_1[] = {
+	{0x1B24, 0x0000}, {0x1B25, 0x0000}, {0x1B26, 0x0000}, {0x1B27, 0x0000},
+	{0x207F, 0x0002}, {0x2079, 0x0200}, {0x207F, 0x0000}, {0x133F, 0x0030},
+	{0x133E, 0x000E}, {0x221F, 0x0005}, {0x2201, 0x0700}, {0x2205, 0x8B82},
+	{0x2206, 0x05CB}, {0x221F, 0x0002}, {0x2204, 0x80C2}, {0x2205, 0x0938},
+	{0x221F, 0x0003}, {0x2212, 0xC4D2}, {0x220D, 0x0207}, {0x221F, 0x0001},
+	{0x2207, 0x267E}, {0x221C, 0xE5F7}, {0x221B, 0x0424}, {0x221F, 0x0007},
+	{0x221E, 0x0040}, {0x2218, 0x0000}, {0x221F, 0x0007}, {0x221E, 0x002C},
+	{0x2218, 0x008B}, {0x221F, 0x0005}, {0x2205, 0xFFF6}, {0x2206, 0x0080},
+	{0x2205, 0x8000}, {0x2206, 0xF8E0}, {0x2206, 0xE000}, {0x2206, 0xE1E0},
+	{0x2206, 0x01AC}, {0x2206, 0x2408}, {0x2206, 0xE08B}, {0x2206, 0x84F7},
+	{0x2206, 0x20E4}, {0x2206, 0x8B84}, {0x2206, 0xFC05}, {0x2206, 0xF8FA},
+	{0x2206, 0xEF69}, {0x2206, 0xE08B}, {0x2206, 0x86AC}, {0x2206, 0x201A},
+	{0x2206, 0xBF80}, {0x2206, 0x59D0}, {0x2206, 0x2402}, {0x2206, 0x803D},
+	{0x2206, 0xE0E0}, {0x2206, 0xE4E1}, {0x2206, 0xE0E5}, {0x2206, 0x5806},
+	{0x2206, 0x68C0}, {0x2206, 0xD1D2}, {0x2206, 0xE4E0}, {0x2206, 0xE4E5},
+	{0x2206, 0xE0E5}, {0x2206, 0xEF96}, {0x2206, 0xFEFC}, {0x2206, 0x05FB},
+	{0x2206, 0x0BFB}, {0x2206, 0x58FF}, {0x2206, 0x9E11}, {0x2206, 0x06F0},
+	{0x2206, 0x0C81}, {0x2206, 0x8AE0}, {0x2206, 0x0019}, {0x2206, 0x1B89},
+	{0x2206, 0xCFEB}, {0x2206, 0x19EB}, {0x2206, 0x19B0}, {0x2206, 0xEFFF},
+	{0x2206, 0x0BFF}, {0x2206, 0x0425}, {0x2206, 0x0807}, {0x2206, 0x2640},
+	{0x2206, 0x7227}, {0x2206, 0x267E}, {0x2206, 0x2804}, {0x2206, 0xB729},
+	{0x2206, 0x2576}, {0x2206, 0x2A68}, {0x2206, 0xE52B}, {0x2206, 0xAD00},
+	{0x2206, 0x2CDB}, {0x2206, 0xF02D}, {0x2206, 0x67BB}, {0x2206, 0x2E7B},
+	{0x2206, 0x0F2F}, {0x2206, 0x7365}, {0x2206, 0x31AC}, {0x2206, 0xCC32},
+	{0x2206, 0x2300}, {0x2206, 0x332D}, {0x2206, 0x1734}, {0x2206, 0x7F52},
+	{0x2206, 0x3510}, {0x2206, 0x0036}, {0x2206, 0x0600}, {0x2206, 0x370C},
+	{0x2206, 0xC038}, {0x2206, 0x7FCE}, {0x2206, 0x3CE5}, {0x2206, 0xF73D},
+	{0x2206, 0x3DA4}, {0x2206, 0x6530}, {0x2206, 0x3E67}, {0x2206, 0x0053},
+	{0x2206, 0x69D2}, {0x2206, 0x0F6A}, {0x2206, 0x012C}, {0x2206, 0x6C2B},
+	{0x2206, 0x136E}, {0x2206, 0xE100}, {0x2206, 0x6F12}, {0x2206, 0xF771},
+	{0x2206, 0x006B}, {0x2206, 0x7306}, {0x2206, 0xEB74}, {0x2206, 0x94C7},
+	{0x2206, 0x7698}, {0x2206, 0x0A77}, {0x2206, 0x5000}, {0x2206, 0x788A},
+	{0x2206, 0x1579}, {0x2206, 0x7F6F}, {0x2206, 0x7A06}, {0x2206, 0xA600},
+	{0x2205, 0x8B90}, {0x2206, 0x8000}, {0x2205, 0x8B92}, {0x2206, 0x8000},
+	{0x2205, 0x8B94}, {0x2206, 0x8014}, {0x2208, 0xFFFA}, {0x2202, 0x3C65},
+	{0x2205, 0xFFF6}, {0x2206, 0x00F7}, {0x221F, 0x0000}, {0x221F, 0x0007},
+	{0x221E, 0x0042}, {0x2218, 0x0000}, {0x221E, 0x002D}, {0x2218, 0xF010},
+	{0x221E, 0x0020}, {0x2215, 0x0000}, {0x221E, 0x0023}, {0x2216, 0x8000},
+	{0x221F, 0x0000}, {0x133F, 0x0010}, {0x133E, 0x0FFE}, {0x1362, 0x0115},
+	{0x1363, 0x0002}, {0x1363, 0x0000}, {0x1306, 0x000C}, {0x1307, 0x000C},
+	{0x1303, 0x0067}, {0x1304, 0x4444}, {0x1203, 0xFF00}, {0x1200, 0x7FC4},
+	{0x0900, 0x0000}, {0x0901, 0x0000}, {0x0902, 0x0000}, {0x0903, 0x0000},
+	{0x0865, 0x3210}, {0x087B, 0x0000}, {0x087C, 0xFF00}, {0x087D, 0x0000},
+	{0x087E, 0x0000}, {0x0801, 0x0100}, {0x0802, 0x0100}, {0x0A20, 0x2040},
+	{0x0A21, 0x2040}, {0x0A22, 0x2040}, {0x0A23, 0x2040}, {0x0A24, 0x2040},
+	{0x0A25, 0x2040}, {0x0A26, 0x2040}, {0x0A27, 0x2040}, {0x0A28, 0x2040},
+	{0x0A29, 0x2040}, {0x133F, 0x0030}, {0x133E, 0x000E}, {0x221F, 0x0000},
+	{0x2200, 0x1340}, {0x221F, 0x0000}, {0x133F, 0x0010}, {0x133E, 0x0FFE},
+	{0x1B03, 0x0876},
+};
+
+static const struct rtl8367_initval rtl8367_initvals_2_0[] = {
+	{0x1b24, 0x0000}, {0x1b25, 0x0000}, {0x1b26, 0x0000}, {0x1b27, 0x0000},
+	{0x133f, 0x0030}, {0x133e, 0x000e}, {0x221f, 0x0007}, {0x221e, 0x0048},
+	{0x2219, 0x4012}, {0x221f, 0x0003}, {0x2201, 0x3554}, {0x2202, 0x63e8},
+	{0x2203, 0x99c2}, {0x2204, 0x0113}, {0x2205, 0x303e}, {0x220d, 0x0207},
+	{0x220e, 0xe100}, {0x221f, 0x0007}, {0x221e, 0x0040}, {0x2218, 0x0000},
+	{0x221f, 0x0007}, {0x221e, 0x002c}, {0x2218, 0x008b}, {0x221f, 0x0005},
+	{0x2205, 0xfff6}, {0x2206, 0x0080}, {0x221f, 0x0005}, {0x2205, 0x8000},
+	{0x2206, 0x0280}, {0x2206, 0x2bf7}, {0x2206, 0x00e0}, {0x2206, 0xfff7},
+	{0x2206, 0xa080}, {0x2206, 0x02ae}, {0x2206, 0xf602}, {0x2206, 0x804e},
+	{0x2206, 0x0201}, {0x2206, 0x5002}, {0x2206, 0x0163}, {0x2206, 0x0201},
+	{0x2206, 0x79e0}, {0x2206, 0x8b8c}, {0x2206, 0xe18b}, {0x2206, 0x8d1e},
+	{0x2206, 0x01e1}, {0x2206, 0x8b8e}, {0x2206, 0x1e01}, {0x2206, 0xa000},
+	{0x2206, 0xe4ae}, {0x2206, 0xd8bf}, {0x2206, 0x8b88}, {0x2206, 0xec00},
+	{0x2206, 0x19a9}, {0x2206, 0x8b90}, {0x2206, 0xf9ee}, {0x2206, 0xfff6},
+	{0x2206, 0x00ee}, {0x2206, 0xfff7}, {0x2206, 0xfce0}, {0x2206, 0xe140},
+	{0x2206, 0xe1e1}, {0x2206, 0x41f7}, {0x2206, 0x2ff6}, {0x2206, 0x28e4},
+	{0x2206, 0xe140}, {0x2206, 0xe5e1}, {0x2206, 0x4104}, {0x2206, 0xf8fa},
+	{0x2206, 0xef69}, {0x2206, 0xe08b}, {0x2206, 0x86ac}, {0x2206, 0x201a},
+	{0x2206, 0xbf80}, {0x2206, 0x77d0}, {0x2206, 0x6c02}, {0x2206, 0x2978},
+	{0x2206, 0xe0e0}, {0x2206, 0xe4e1}, {0x2206, 0xe0e5}, {0x2206, 0x5806},
+	{0x2206, 0x68c0}, {0x2206, 0xd1d2}, {0x2206, 0xe4e0}, {0x2206, 0xe4e5},
+	{0x2206, 0xe0e5}, {0x2206, 0xef96}, {0x2206, 0xfefc}, {0x2206, 0x0425},
+	{0x2206, 0x0807}, {0x2206, 0x2640}, {0x2206, 0x7227}, {0x2206, 0x267e},
+	{0x2206, 0x2804}, {0x2206, 0xb729}, {0x2206, 0x2576}, {0x2206, 0x2a68},
+	{0x2206, 0xe52b}, {0x2206, 0xad00}, {0x2206, 0x2cdb}, {0x2206, 0xf02d},
+	{0x2206, 0x67bb}, {0x2206, 0x2e7b}, {0x2206, 0x0f2f}, {0x2206, 0x7365},
+	{0x2206, 0x31ac}, {0x2206, 0xcc32}, {0x2206, 0x2300}, {0x2206, 0x332d},
+	{0x2206, 0x1734}, {0x2206, 0x7f52}, {0x2206, 0x3510}, {0x2206, 0x0036},
+	{0x2206, 0x0600}, {0x2206, 0x370c}, {0x2206, 0xc038}, {0x2206, 0x7fce},
+	{0x2206, 0x3ce5}, {0x2206, 0xf73d}, {0x2206, 0x3da4}, {0x2206, 0x6530},
+	{0x2206, 0x3e67}, {0x2206, 0x0053}, {0x2206, 0x69d2}, {0x2206, 0x0f6a},
+	{0x2206, 0x012c}, {0x2206, 0x6c2b}, {0x2206, 0x136e}, {0x2206, 0xe100},
+	{0x2206, 0x6f12}, {0x2206, 0xf771}, {0x2206, 0x006b}, {0x2206, 0x7306},
+	{0x2206, 0xeb74}, {0x2206, 0x94c7}, {0x2206, 0x7698}, {0x2206, 0x0a77},
+	{0x2206, 0x5000}, {0x2206, 0x788a}, {0x2206, 0x1579}, {0x2206, 0x7f6f},
+	{0x2206, 0x7a06}, {0x2206, 0xa600}, {0x2201, 0x0701}, {0x2200, 0x0405},
+	{0x221f, 0x0000}, {0x2200, 0x1340}, {0x221f, 0x0000}, {0x133f, 0x0010},
+	{0x133e, 0x0ffe}, {0x1203, 0xff00}, {0x1200, 0x7fc4}, {0x121d, 0x7D16},
+	{0x121e, 0x03e8}, {0x121f, 0x024e}, {0x1220, 0x0230}, {0x1221, 0x0244},
+	{0x1222, 0x0226}, {0x1223, 0x024e}, {0x1224, 0x0230}, {0x1225, 0x0244},
+	{0x1226, 0x0226}, {0x1227, 0x00c0}, {0x1228, 0x00b4}, {0x122f, 0x00c0},
+	{0x1230, 0x00b4}, {0x0208, 0x03e8}, {0x0209, 0x03e8}, {0x020a, 0x03e8},
+	{0x020b, 0x03e8}, {0x020c, 0x03e8}, {0x020d, 0x03e8}, {0x020e, 0x03e8},
+	{0x020f, 0x03e8}, {0x0210, 0x03e8}, {0x0211, 0x03e8}, {0x0212, 0x03e8},
+	{0x0213, 0x03e8}, {0x0214, 0x03e8}, {0x0215, 0x03e8}, {0x0216, 0x03e8},
+	{0x0217, 0x03e8}, {0x0900, 0x0000}, {0x0901, 0x0000}, {0x0902, 0x0000},
+	{0x0903, 0x0000}, {0x0865, 0x3210}, {0x087b, 0x0000}, {0x087c, 0xff00},
+	{0x087d, 0x0000}, {0x087e, 0x0000}, {0x0801, 0x0100}, {0x0802, 0x0100},
+	{0x0A20, 0x2040}, {0x0A21, 0x2040}, {0x0A22, 0x2040}, {0x0A23, 0x2040},
+	{0x0A24, 0x2040}, {0x0A28, 0x2040}, {0x0A29, 0x2040}, {0x20A0, 0x1940},
+	{0x20C0, 0x1940}, {0x20E0, 0x1940}, {0x130c, 0x0050},
+};
+
+static const struct rtl8367_initval rtl8367_initvals_2_1[] = {
+	{0x1b24, 0x0000}, {0x1b25, 0x0000}, {0x1b26, 0x0000}, {0x1b27, 0x0000},
+	{0x133f, 0x0030}, {0x133e, 0x000e}, {0x221f, 0x0007}, {0x221e, 0x0048},
+	{0x2219, 0x4012}, {0x221f, 0x0003}, {0x2201, 0x3554}, {0x2202, 0x63e8},
+	{0x2203, 0x99c2}, {0x2204, 0x0113}, {0x2205, 0x303e}, {0x220d, 0x0207},
+	{0x220e, 0xe100}, {0x221f, 0x0007}, {0x221e, 0x0040}, {0x2218, 0x0000},
+	{0x221f, 0x0007}, {0x221e, 0x002c}, {0x2218, 0x008b}, {0x221f, 0x0005},
+	{0x2205, 0xfff6}, {0x2206, 0x0080}, {0x221f, 0x0005}, {0x2205, 0x8000},
+	{0x2206, 0x0280}, {0x2206, 0x2bf7}, {0x2206, 0x00e0}, {0x2206, 0xfff7},
+	{0x2206, 0xa080}, {0x2206, 0x02ae}, {0x2206, 0xf602}, {0x2206, 0x804e},
+	{0x2206, 0x0201}, {0x2206, 0x5002}, {0x2206, 0x0163}, {0x2206, 0x0201},
+	{0x2206, 0x79e0}, {0x2206, 0x8b8c}, {0x2206, 0xe18b}, {0x2206, 0x8d1e},
+	{0x2206, 0x01e1}, {0x2206, 0x8b8e}, {0x2206, 0x1e01}, {0x2206, 0xa000},
+	{0x2206, 0xe4ae}, {0x2206, 0xd8bf}, {0x2206, 0x8b88}, {0x2206, 0xec00},
+	{0x2206, 0x19a9}, {0x2206, 0x8b90}, {0x2206, 0xf9ee}, {0x2206, 0xfff6},
+	{0x2206, 0x00ee}, {0x2206, 0xfff7}, {0x2206, 0xfce0}, {0x2206, 0xe140},
+	{0x2206, 0xe1e1}, {0x2206, 0x41f7}, {0x2206, 0x2ff6}, {0x2206, 0x28e4},
+	{0x2206, 0xe140}, {0x2206, 0xe5e1}, {0x2206, 0x4104}, {0x2206, 0xf8fa},
+	{0x2206, 0xef69}, {0x2206, 0xe08b}, {0x2206, 0x86ac}, {0x2206, 0x201a},
+	{0x2206, 0xbf80}, {0x2206, 0x77d0}, {0x2206, 0x6c02}, {0x2206, 0x2978},
+	{0x2206, 0xe0e0}, {0x2206, 0xe4e1}, {0x2206, 0xe0e5}, {0x2206, 0x5806},
+	{0x2206, 0x68c0}, {0x2206, 0xd1d2}, {0x2206, 0xe4e0}, {0x2206, 0xe4e5},
+	{0x2206, 0xe0e5}, {0x2206, 0xef96}, {0x2206, 0xfefc}, {0x2206, 0x0425},
+	{0x2206, 0x0807}, {0x2206, 0x2640}, {0x2206, 0x7227}, {0x2206, 0x267e},
+	{0x2206, 0x2804}, {0x2206, 0xb729}, {0x2206, 0x2576}, {0x2206, 0x2a68},
+	{0x2206, 0xe52b}, {0x2206, 0xad00}, {0x2206, 0x2cdb}, {0x2206, 0xf02d},
+	{0x2206, 0x67bb}, {0x2206, 0x2e7b}, {0x2206, 0x0f2f}, {0x2206, 0x7365},
+	{0x2206, 0x31ac}, {0x2206, 0xcc32}, {0x2206, 0x2300}, {0x2206, 0x332d},
+	{0x2206, 0x1734}, {0x2206, 0x7f52}, {0x2206, 0x3510}, {0x2206, 0x0036},
+	{0x2206, 0x0600}, {0x2206, 0x370c}, {0x2206, 0xc038}, {0x2206, 0x7fce},
+	{0x2206, 0x3ce5}, {0x2206, 0xf73d}, {0x2206, 0x3da4}, {0x2206, 0x6530},
+	{0x2206, 0x3e67}, {0x2206, 0x0053}, {0x2206, 0x69d2}, {0x2206, 0x0f6a},
+	{0x2206, 0x012c}, {0x2206, 0x6c2b}, {0x2206, 0x136e}, {0x2206, 0xe100},
+	{0x2206, 0x6f12}, {0x2206, 0xf771}, {0x2206, 0x006b}, {0x2206, 0x7306},
+	{0x2206, 0xeb74}, {0x2206, 0x94c7}, {0x2206, 0x7698}, {0x2206, 0x0a77},
+	{0x2206, 0x5000}, {0x2206, 0x788a}, {0x2206, 0x1579}, {0x2206, 0x7f6f},
+	{0x2206, 0x7a06}, {0x2206, 0xa600}, {0x2201, 0x0701}, {0x2200, 0x0405},
+	{0x221f, 0x0000}, {0x2200, 0x1340}, {0x221f, 0x0000}, {0x133f, 0x0010},
+	{0x133e, 0x0ffe}, {0x1203, 0xff00}, {0x1200, 0x7fc4}, {0x0900, 0x0000},
+	{0x0901, 0x0000}, {0x0902, 0x0000}, {0x0903, 0x0000}, {0x0865, 0x3210},
+	{0x087b, 0x0000}, {0x087c, 0xff00}, {0x087d, 0x0000}, {0x087e, 0x0000},
+	{0x0801, 0x0100}, {0x0802, 0x0100}, {0x0A20, 0x2040}, {0x0A21, 0x2040},
+	{0x0A22, 0x2040}, {0x0A23, 0x2040}, {0x0A24, 0x2040}, {0x0A25, 0x2040},
+	{0x0A26, 0x2040}, {0x0A27, 0x2040}, {0x0A28, 0x2040}, {0x0A29, 0x2040},
+	{0x130c, 0x0050},
+};
+
+static const struct rtl8367_initval rtl8367rb_initval_table[] = {
+	{0x1B03, 0x0876}, {0x1200, 0x7FC4}, {0x0301, 0x0026}, {0x1722, 0x0E14},
+	{0x205F, 0x0002}, {0x2059, 0x1A00}, {0x205F, 0x0000}, {0x207F, 0x0002},
+	{0x2077, 0x0000}, {0x2078, 0x0000}, {0x2079, 0x0000}, {0x207A, 0x0000},
+	{0x207B, 0x0000}, {0x207F, 0x0000}, {0x205F, 0x0002}, {0x2053, 0x0000},
+	{0x2054, 0x0000}, {0x2055, 0x0000}, {0x2056, 0x0000}, {0x2057, 0x0000},
+	{0x205F, 0x0000}, {0x12A4, 0x110A}, {0x12A6, 0x150A}, {0x13F1, 0x0013},
+	{0x13F4, 0x0010}, {0x13F5, 0x0000}, {0x0018, 0x0F00}, {0x0038, 0x0F00},
+	{0x0058, 0x0F00}, {0x0078, 0x0F00}, {0x0098, 0x0F00}, {0x12B6, 0x0C02},
+	{0x12B7, 0x030F}, {0x12B8, 0x11FF}, {0x12BC, 0x0004}, {0x1362, 0x0115},
+	{0x1363, 0x0002}, {0x1363, 0x0000}, {0x133F, 0x0030}, {0x133E, 0x000E},
+	{0x221F, 0x0007}, {0x221E, 0x002D}, {0x2218, 0xF030}, {0x221F, 0x0007},
+	{0x221E, 0x0023}, {0x2216, 0x0005}, {0x2215, 0x00B9}, {0x2219, 0x0044},
+	{0x2215, 0x00BA}, {0x2219, 0x0020}, {0x2215, 0x00BB}, {0x2219, 0x00C1},
+	{0x2215, 0x0148}, {0x2219, 0x0096}, {0x2215, 0x016E}, {0x2219, 0x0026},
+	{0x2216, 0x0000}, {0x2216, 0x0000}, {0x221E, 0x002D}, {0x2218, 0xF010},
+	{0x221F, 0x0007}, {0x221E, 0x0020}, {0x2215, 0x0D00}, {0x221F, 0x0000},
+	{0x221F, 0x0000}, {0x2217, 0x2160}, {0x221F, 0x0001}, {0x2210, 0xF25E},
+	{0x221F, 0x0007}, {0x221E, 0x0042}, {0x2215, 0x0F00}, {0x2215, 0x0F00},
+	{0x2216, 0x7408}, {0x2215, 0x0E00}, {0x2215, 0x0F00}, {0x2215, 0x0F01},
+	{0x2216, 0x4000}, {0x2215, 0x0E01}, {0x2215, 0x0F01}, {0x2215, 0x0F02},
+	{0x2216, 0x9400}, {0x2215, 0x0E02}, {0x2215, 0x0F02}, {0x2215, 0x0F03},
+	{0x2216, 0x7408}, {0x2215, 0x0E03}, {0x2215, 0x0F03}, {0x2215, 0x0F04},
+	{0x2216, 0x4008}, {0x2215, 0x0E04}, {0x2215, 0x0F04}, {0x2215, 0x0F05},
+	{0x2216, 0x9400}, {0x2215, 0x0E05}, {0x2215, 0x0F05}, {0x2215, 0x0F06},
+	{0x2216, 0x0803}, {0x2215, 0x0E06}, {0x2215, 0x0F06}, {0x2215, 0x0D00},
+	{0x2215, 0x0100}, {0x221F, 0x0001}, {0x2210, 0xF05E}, {0x221F, 0x0000},
+	{0x2217, 0x2100}, {0x221F, 0x0000}, {0x220D, 0x0003}, {0x220E, 0x0015},
+	{0x220D, 0x4003}, {0x220E, 0x0006}, {0x221F, 0x0000}, {0x2200, 0x1340},
+	{0x133F, 0x0010}, {0x12A0, 0x0058}, {0x12A1, 0x0058}, {0x133E, 0x000E},
+	{0x133F, 0x0030}, {0x221F, 0x0000}, {0x2210, 0x0166}, {0x221F, 0x0000},
+	{0x133E, 0x000E}, {0x133F, 0x0010}, {0x133F, 0x0030}, {0x133E, 0x000E},
+	{0x221F, 0x0005}, {0x2205, 0xFFF6}, {0x2206, 0x0080}, {0x2205, 0x8B6E},
+	{0x2206, 0x0000}, {0x220F, 0x0100}, {0x2205, 0x8000}, {0x2206, 0x0280},
+	{0x2206, 0x28F7}, {0x2206, 0x00E0}, {0x2206, 0xFFF7}, {0x2206, 0xA080},
+	{0x2206, 0x02AE}, {0x2206, 0xF602}, {0x2206, 0x0153}, {0x2206, 0x0201},
+	{0x2206, 0x6602}, {0x2206, 0x80B9}, {0x2206, 0xE08B}, {0x2206, 0x8CE1},
+	{0x2206, 0x8B8D}, {0x2206, 0x1E01}, {0x2206, 0xE18B}, {0x2206, 0x8E1E},
+	{0x2206, 0x01A0}, {0x2206, 0x00E7}, {0x2206, 0xAEDB}, {0x2206, 0xEEE0},
+	{0x2206, 0x120E}, {0x2206, 0xEEE0}, {0x2206, 0x1300}, {0x2206, 0xEEE0},
+	{0x2206, 0x2001}, {0x2206, 0xEEE0}, {0x2206, 0x2166}, {0x2206, 0xEEE0},
+	{0x2206, 0xC463}, {0x2206, 0xEEE0}, {0x2206, 0xC5E8}, {0x2206, 0xEEE0},
+	{0x2206, 0xC699}, {0x2206, 0xEEE0}, {0x2206, 0xC7C2}, {0x2206, 0xEEE0},
+	{0x2206, 0xC801}, {0x2206, 0xEEE0}, {0x2206, 0xC913}, {0x2206, 0xEEE0},
+	{0x2206, 0xCA30}, {0x2206, 0xEEE0}, {0x2206, 0xCB3E}, {0x2206, 0xEEE0},
+	{0x2206, 0xDCE1}, {0x2206, 0xEEE0}, {0x2206, 0xDD00}, {0x2206, 0xEEE2},
+	{0x2206, 0x0001}, {0x2206, 0xEEE2}, {0x2206, 0x0100}, {0x2206, 0xEEE4},
+	{0x2206, 0x8860}, {0x2206, 0xEEE4}, {0x2206, 0x8902}, {0x2206, 0xEEE4},
+	{0x2206, 0x8C00}, {0x2206, 0xEEE4}, {0x2206, 0x8D30}, {0x2206, 0xEEEA},
+	{0x2206, 0x1480}, {0x2206, 0xEEEA}, {0x2206, 0x1503}, {0x2206, 0xEEEA},
+	{0x2206, 0xC600}, {0x2206, 0xEEEA}, {0x2206, 0xC706}, {0x2206, 0xEE85},
+	{0x2206, 0xEE00}, {0x2206, 0xEE85}, {0x2206, 0xEF00}, {0x2206, 0xEE8B},
+	{0x2206, 0x6750}, {0x2206, 0xEE8B}, {0x2206, 0x6632}, {0x2206, 0xEE8A},
+	{0x2206, 0xD448}, {0x2206, 0xEE8A}, {0x2206, 0xD548}, {0x2206, 0xEE8A},
+	{0x2206, 0xD649}, {0x2206, 0xEE8A}, {0x2206, 0xD7F8}, {0x2206, 0xEE8B},
+	{0x2206, 0x85E2}, {0x2206, 0xEE8B}, {0x2206, 0x8700}, {0x2206, 0xEEFF},
+	{0x2206, 0xF600}, {0x2206, 0xEEFF}, {0x2206, 0xF7FC}, {0x2206, 0x04F8},
+	{0x2206, 0xE08B}, {0x2206, 0x8EAD}, {0x2206, 0x2023}, {0x2206, 0xF620},
+	{0x2206, 0xE48B}, {0x2206, 0x8E02}, {0x2206, 0x2877}, {0x2206, 0x0225},
+	{0x2206, 0xC702}, {0x2206, 0x26A1}, {0x2206, 0x0281}, {0x2206, 0xB302},
+	{0x2206, 0x8496}, {0x2206, 0x0202}, {0x2206, 0xA102}, {0x2206, 0x27F1},
+	{0x2206, 0x0228}, {0x2206, 0xF902}, {0x2206, 0x2AA0}, {0x2206, 0x0282},
+	{0x2206, 0xB8E0}, {0x2206, 0x8B8E}, {0x2206, 0xAD21}, {0x2206, 0x08F6},
+	{0x2206, 0x21E4}, {0x2206, 0x8B8E}, {0x2206, 0x0202}, {0x2206, 0x80E0},
+	{0x2206, 0x8B8E}, {0x2206, 0xAD22}, {0x2206, 0x05F6}, {0x2206, 0x22E4},
+	{0x2206, 0x8B8E}, {0x2206, 0xE08B}, {0x2206, 0x8EAD}, {0x2206, 0x2305},
+	{0x2206, 0xF623}, {0x2206, 0xE48B}, {0x2206, 0x8EE0}, {0x2206, 0x8B8E},
+	{0x2206, 0xAD24}, {0x2206, 0x08F6}, {0x2206, 0x24E4}, {0x2206, 0x8B8E},
+	{0x2206, 0x0227}, {0x2206, 0x6AE0}, {0x2206, 0x8B8E}, {0x2206, 0xAD25},
+	{0x2206, 0x05F6}, {0x2206, 0x25E4}, {0x2206, 0x8B8E}, {0x2206, 0xE08B},
+	{0x2206, 0x8EAD}, {0x2206, 0x260B}, {0x2206, 0xF626}, {0x2206, 0xE48B},
+	{0x2206, 0x8E02}, {0x2206, 0x830D}, {0x2206, 0x021D}, {0x2206, 0x6BE0},
+	{0x2206, 0x8B8E}, {0x2206, 0xAD27}, {0x2206, 0x05F6}, {0x2206, 0x27E4},
+	{0x2206, 0x8B8E}, {0x2206, 0x0281}, {0x2206, 0x4402}, {0x2206, 0x045C},
+	{0x2206, 0xFC04}, {0x2206, 0xF8E0}, {0x2206, 0x8B83}, {0x2206, 0xAD23},
+	{0x2206, 0x30E0}, {0x2206, 0xE022}, {0x2206, 0xE1E0}, {0x2206, 0x2359},
+	{0x2206, 0x02E0}, {0x2206, 0x85EF}, {0x2206, 0xE585}, {0x2206, 0xEFAC},
+	{0x2206, 0x2907}, {0x2206, 0x1F01}, {0x2206, 0x9E51}, {0x2206, 0xAD29},
+	{0x2206, 0x20E0}, {0x2206, 0x8B83}, {0x2206, 0xAD21}, {0x2206, 0x06E1},
+	{0x2206, 0x8B84}, {0x2206, 0xAD28}, {0x2206, 0x42E0}, {0x2206, 0x8B85},
+	{0x2206, 0xAD21}, {0x2206, 0x06E1}, {0x2206, 0x8B84}, {0x2206, 0xAD29},
+	{0x2206, 0x36BF}, {0x2206, 0x34BF}, {0x2206, 0x022C}, {0x2206, 0x31AE},
+	{0x2206, 0x2EE0}, {0x2206, 0x8B83}, {0x2206, 0xAD21}, {0x2206, 0x10E0},
+	{0x2206, 0x8B84}, {0x2206, 0xF620}, {0x2206, 0xE48B}, {0x2206, 0x84EE},
+	{0x2206, 0x8ADA}, {0x2206, 0x00EE}, {0x2206, 0x8ADB}, {0x2206, 0x00E0},
+	{0x2206, 0x8B85}, {0x2206, 0xAD21}, {0x2206, 0x0CE0}, {0x2206, 0x8B84},
+	{0x2206, 0xF621}, {0x2206, 0xE48B}, {0x2206, 0x84EE}, {0x2206, 0x8B72},
+	{0x2206, 0xFFBF}, {0x2206, 0x34C2}, {0x2206, 0x022C}, {0x2206, 0x31FC},
+	{0x2206, 0x04F8}, {0x2206, 0xFAEF}, {0x2206, 0x69E0}, {0x2206, 0x8B85},
+	{0x2206, 0xAD21}, {0x2206, 0x42E0}, {0x2206, 0xE022}, {0x2206, 0xE1E0},
+	{0x2206, 0x2358}, {0x2206, 0xC059}, {0x2206, 0x021E}, {0x2206, 0x01E1},
+	{0x2206, 0x8B72}, {0x2206, 0x1F10}, {0x2206, 0x9E2F}, {0x2206, 0xE48B},
+	{0x2206, 0x72AD}, {0x2206, 0x2123}, {0x2206, 0xE18B}, {0x2206, 0x84F7},
+	{0x2206, 0x29E5}, {0x2206, 0x8B84}, {0x2206, 0xAC27}, {0x2206, 0x10AC},
+	{0x2206, 0x2605}, {0x2206, 0x0205}, {0x2206, 0x23AE}, {0x2206, 0x1602},
+	{0x2206, 0x0535}, {0x2206, 0x0282}, {0x2206, 0x30AE}, {0x2206, 0x0E02},
+	{0x2206, 0x056A}, {0x2206, 0x0282}, {0x2206, 0x75AE}, {0x2206, 0x0602},
+	{0x2206, 0x04DC}, {0x2206, 0x0282}, {0x2206, 0x04EF}, {0x2206, 0x96FE},
+	{0x2206, 0xFC04}, {0x2206, 0xF8F9}, {0x2206, 0xE08B}, {0x2206, 0x87AD},
+	{0x2206, 0x2321}, {0x2206, 0xE0EA}, {0x2206, 0x14E1}, {0x2206, 0xEA15},
+	{0x2206, 0xAD26}, {0x2206, 0x18F6}, {0x2206, 0x27E4}, {0x2206, 0xEA14},
+	{0x2206, 0xE5EA}, {0x2206, 0x15F6}, {0x2206, 0x26E4}, {0x2206, 0xEA14},
+	{0x2206, 0xE5EA}, {0x2206, 0x15F7}, {0x2206, 0x27E4}, {0x2206, 0xEA14},
+	{0x2206, 0xE5EA}, {0x2206, 0x15FD}, {0x2206, 0xFC04}, {0x2206, 0xF8F9},
+	{0x2206, 0xE08B}, {0x2206, 0x87AD}, {0x2206, 0x233A}, {0x2206, 0xAD22},
+	{0x2206, 0x37E0}, {0x2206, 0xE020}, {0x2206, 0xE1E0}, {0x2206, 0x21AC},
+	{0x2206, 0x212E}, {0x2206, 0xE0EA}, {0x2206, 0x14E1}, {0x2206, 0xEA15},
+	{0x2206, 0xF627}, {0x2206, 0xE4EA}, {0x2206, 0x14E5}, {0x2206, 0xEA15},
+	{0x2206, 0xE2EA}, {0x2206, 0x12E3}, {0x2206, 0xEA13}, {0x2206, 0x5A8F},
+	{0x2206, 0x6A20}, {0x2206, 0xE6EA}, {0x2206, 0x12E7}, {0x2206, 0xEA13},
+	{0x2206, 0xF726}, {0x2206, 0xE4EA}, {0x2206, 0x14E5}, {0x2206, 0xEA15},
+	{0x2206, 0xF727}, {0x2206, 0xE4EA}, {0x2206, 0x14E5}, {0x2206, 0xEA15},
+	{0x2206, 0xFDFC}, {0x2206, 0x04F8}, {0x2206, 0xF9E0}, {0x2206, 0x8B87},
+	{0x2206, 0xAD23}, {0x2206, 0x38AD}, {0x2206, 0x2135}, {0x2206, 0xE0E0},
+	{0x2206, 0x20E1}, {0x2206, 0xE021}, {0x2206, 0xAC21}, {0x2206, 0x2CE0},
+	{0x2206, 0xEA14}, {0x2206, 0xE1EA}, {0x2206, 0x15F6}, {0x2206, 0x27E4},
+	{0x2206, 0xEA14}, {0x2206, 0xE5EA}, {0x2206, 0x15E2}, {0x2206, 0xEA12},
+	{0x2206, 0xE3EA}, {0x2206, 0x135A}, {0x2206, 0x8FE6}, {0x2206, 0xEA12},
+	{0x2206, 0xE7EA}, {0x2206, 0x13F7}, {0x2206, 0x26E4}, {0x2206, 0xEA14},
+	{0x2206, 0xE5EA}, {0x2206, 0x15F7}, {0x2206, 0x27E4}, {0x2206, 0xEA14},
+	{0x2206, 0xE5EA}, {0x2206, 0x15FD}, {0x2206, 0xFC04}, {0x2206, 0xF8FA},
+	{0x2206, 0xEF69}, {0x2206, 0xE08B}, {0x2206, 0x86AD}, {0x2206, 0x2146},
+	{0x2206, 0xE0E0}, {0x2206, 0x22E1}, {0x2206, 0xE023}, {0x2206, 0x58C0},
+	{0x2206, 0x5902}, {0x2206, 0x1E01}, {0x2206, 0xE18B}, {0x2206, 0x651F},
+	{0x2206, 0x109E}, {0x2206, 0x33E4}, {0x2206, 0x8B65}, {0x2206, 0xAD21},
+	{0x2206, 0x22AD}, {0x2206, 0x272A}, {0x2206, 0xD400}, {0x2206, 0x01BF},
+	{0x2206, 0x34F2}, {0x2206, 0x022C}, {0x2206, 0xA2BF}, {0x2206, 0x34F5},
+	{0x2206, 0x022C}, {0x2206, 0xE0E0}, {0x2206, 0x8B67}, {0x2206, 0x1B10},
+	{0x2206, 0xAA14}, {0x2206, 0xE18B}, {0x2206, 0x660D}, {0x2206, 0x1459},
+	{0x2206, 0x0FAE}, {0x2206, 0x05E1}, {0x2206, 0x8B66}, {0x2206, 0x590F},
+	{0x2206, 0xBF85}, {0x2206, 0x6102}, {0x2206, 0x2CA2}, {0x2206, 0xEF96},
+	{0x2206, 0xFEFC}, {0x2206, 0x04F8}, {0x2206, 0xF9FA}, {0x2206, 0xFBEF},
+	{0x2206, 0x79E2}, {0x2206, 0x8AD2}, {0x2206, 0xAC19}, {0x2206, 0x2DE0},
+	{0x2206, 0xE036}, {0x2206, 0xE1E0}, {0x2206, 0x37EF}, {0x2206, 0x311F},
+	{0x2206, 0x325B}, {0x2206, 0x019E}, {0x2206, 0x1F7A}, {0x2206, 0x0159},
+	{0x2206, 0x019F}, {0x2206, 0x0ABF}, {0x2206, 0x348E}, {0x2206, 0x022C},
+	{0x2206, 0x31F6}, {0x2206, 0x06AE}, {0x2206, 0x0FF6}, {0x2206, 0x0302},
+	{0x2206, 0x0470}, {0x2206, 0xF703}, {0x2206, 0xF706}, {0x2206, 0xBF34},
+	{0x2206, 0x9302}, {0x2206, 0x2C31}, {0x2206, 0xAC1A}, {0x2206, 0x25E0},
+	{0x2206, 0xE022}, {0x2206, 0xE1E0}, {0x2206, 0x23EF}, {0x2206, 0x300D},
+	{0x2206, 0x311F}, {0x2206, 0x325B}, {0x2206, 0x029E}, {0x2206, 0x157A},
+	{0x2206, 0x0258}, {0x2206, 0xC4A0}, {0x2206, 0x0408}, {0x2206, 0xBF34},
+	{0x2206, 0x9E02}, {0x2206, 0x2C31}, {0x2206, 0xAE06}, {0x2206, 0xBF34},
+	{0x2206, 0x9C02}, {0x2206, 0x2C31}, {0x2206, 0xAC1B}, {0x2206, 0x4AE0},
+	{0x2206, 0xE012}, {0x2206, 0xE1E0}, {0x2206, 0x13EF}, {0x2206, 0x300D},
+	{0x2206, 0x331F}, {0x2206, 0x325B}, {0x2206, 0x1C9E}, {0x2206, 0x3AEF},
+	{0x2206, 0x325B}, {0x2206, 0x1C9F}, {0x2206, 0x09BF}, {0x2206, 0x3498},
+	{0x2206, 0x022C}, {0x2206, 0x3102}, {0x2206, 0x83C5}, {0x2206, 0x5A03},
+	{0x2206, 0x0D03}, {0x2206, 0x581C}, {0x2206, 0x1E20}, {0x2206, 0x0207},
+	{0x2206, 0xA0A0}, {0x2206, 0x000E}, {0x2206, 0x0284}, {0x2206, 0x17AD},
+	{0x2206, 0x1817}, {0x2206, 0xBF34}, {0x2206, 0x9A02}, {0x2206, 0x2C31},
+	{0x2206, 0xAE0F}, {0x2206, 0xBF34}, {0x2206, 0xC802}, {0x2206, 0x2C31},
+	{0x2206, 0xBF34}, {0x2206, 0xC502}, {0x2206, 0x2C31}, {0x2206, 0x0284},
+	{0x2206, 0x52E6}, {0x2206, 0x8AD2}, {0x2206, 0xEF97}, {0x2206, 0xFFFE},
+	{0x2206, 0xFDFC}, {0x2206, 0x04F8}, {0x2206, 0xBF34}, {0x2206, 0xDA02},
+	{0x2206, 0x2CE0}, {0x2206, 0xE58A}, {0x2206, 0xD3BF}, {0x2206, 0x34D4},
+	{0x2206, 0x022C}, {0x2206, 0xE00C}, {0x2206, 0x1159}, {0x2206, 0x02E0},
+	{0x2206, 0x8AD3}, {0x2206, 0x1E01}, {0x2206, 0xE48A}, {0x2206, 0xD3D1},
+	{0x2206, 0x00BF}, {0x2206, 0x34DA}, {0x2206, 0x022C}, {0x2206, 0xA2D1},
+	{0x2206, 0x01BF}, {0x2206, 0x34D4}, {0x2206, 0x022C}, {0x2206, 0xA2BF},
+	{0x2206, 0x34CB}, {0x2206, 0x022C}, {0x2206, 0xE0E5}, {0x2206, 0x8ACE},
+	{0x2206, 0xBF85}, {0x2206, 0x6702}, {0x2206, 0x2CE0}, {0x2206, 0xE58A},
+	{0x2206, 0xCFBF}, {0x2206, 0x8564}, {0x2206, 0x022C}, {0x2206, 0xE0E5},
+	{0x2206, 0x8AD0}, {0x2206, 0xBF85}, {0x2206, 0x6A02}, {0x2206, 0x2CE0},
+	{0x2206, 0xE58A}, {0x2206, 0xD1FC}, {0x2206, 0x04F8}, {0x2206, 0xE18A},
+	{0x2206, 0xD1BF}, {0x2206, 0x856A}, {0x2206, 0x022C}, {0x2206, 0xA2E1},
+	{0x2206, 0x8AD0}, {0x2206, 0xBF85}, {0x2206, 0x6402}, {0x2206, 0x2CA2},
+	{0x2206, 0xE18A}, {0x2206, 0xCFBF}, {0x2206, 0x8567}, {0x2206, 0x022C},
+	{0x2206, 0xA2E1}, {0x2206, 0x8ACE}, {0x2206, 0xBF34}, {0x2206, 0xCB02},
+	{0x2206, 0x2CA2}, {0x2206, 0xE18A}, {0x2206, 0xD3BF}, {0x2206, 0x34DA},
+	{0x2206, 0x022C}, {0x2206, 0xA2E1}, {0x2206, 0x8AD3}, {0x2206, 0x0D11},
+	{0x2206, 0xBF34}, {0x2206, 0xD402}, {0x2206, 0x2CA2}, {0x2206, 0xFC04},
+	{0x2206, 0xF9A0}, {0x2206, 0x0405}, {0x2206, 0xE38A}, {0x2206, 0xD4AE},
+	{0x2206, 0x13A0}, {0x2206, 0x0805}, {0x2206, 0xE38A}, {0x2206, 0xD5AE},
+	{0x2206, 0x0BA0}, {0x2206, 0x0C05}, {0x2206, 0xE38A}, {0x2206, 0xD6AE},
+	{0x2206, 0x03E3}, {0x2206, 0x8AD7}, {0x2206, 0xEF13}, {0x2206, 0xBF34},
+	{0x2206, 0xCB02}, {0x2206, 0x2CA2}, {0x2206, 0xEF13}, {0x2206, 0x0D11},
+	{0x2206, 0xBF85}, {0x2206, 0x6702}, {0x2206, 0x2CA2}, {0x2206, 0xEF13},
+	{0x2206, 0x0D14}, {0x2206, 0xBF85}, {0x2206, 0x6402}, {0x2206, 0x2CA2},
+	{0x2206, 0xEF13}, {0x2206, 0x0D17}, {0x2206, 0xBF85}, {0x2206, 0x6A02},
+	{0x2206, 0x2CA2}, {0x2206, 0xFD04}, {0x2206, 0xF8E0}, {0x2206, 0x8B85},
+	{0x2206, 0xAD27}, {0x2206, 0x2DE0}, {0x2206, 0xE036}, {0x2206, 0xE1E0},
+	{0x2206, 0x37E1}, {0x2206, 0x8B73}, {0x2206, 0x1F10}, {0x2206, 0x9E20},
+	{0x2206, 0xE48B}, {0x2206, 0x73AC}, {0x2206, 0x200B}, {0x2206, 0xAC21},
+	{0x2206, 0x0DAC}, {0x2206, 0x250F}, {0x2206, 0xAC27}, {0x2206, 0x0EAE},
+	{0x2206, 0x0F02}, {0x2206, 0x84CC}, {0x2206, 0xAE0A}, {0x2206, 0x0284},
+	{0x2206, 0xD1AE}, {0x2206, 0x05AE}, {0x2206, 0x0302}, {0x2206, 0x84D8},
+	{0x2206, 0xFC04}, {0x2206, 0xEE8B}, {0x2206, 0x6800}, {0x2206, 0x0402},
+	{0x2206, 0x84E5}, {0x2206, 0x0285}, {0x2206, 0x2804}, {0x2206, 0x0285},
+	{0x2206, 0x4904}, {0x2206, 0xEE8B}, {0x2206, 0x6800}, {0x2206, 0xEE8B},
+	{0x2206, 0x6902}, {0x2206, 0x04F8}, {0x2206, 0xF9E0}, {0x2206, 0x8B85},
+	{0x2206, 0xAD26}, {0x2206, 0x38D0}, {0x2206, 0x0B02}, {0x2206, 0x2B4D},
+	{0x2206, 0x5882}, {0x2206, 0x7882}, {0x2206, 0x9F2D}, {0x2206, 0xE08B},
+	{0x2206, 0x68E1}, {0x2206, 0x8B69}, {0x2206, 0x1F10}, {0x2206, 0x9EC8},
+	{0x2206, 0x10E4}, {0x2206, 0x8B68}, {0x2206, 0xE0E0}, {0x2206, 0x00E1},
+	{0x2206, 0xE001}, {0x2206, 0xF727}, {0x2206, 0xE4E0}, {0x2206, 0x00E5},
+	{0x2206, 0xE001}, {0x2206, 0xE2E0}, {0x2206, 0x20E3}, {0x2206, 0xE021},
+	{0x2206, 0xAD30}, {0x2206, 0xF7F6}, {0x2206, 0x27E4}, {0x2206, 0xE000},
+	{0x2206, 0xE5E0}, {0x2206, 0x01FD}, {0x2206, 0xFC04}, {0x2206, 0xF8FA},
+	{0x2206, 0xEF69}, {0x2206, 0xE08B}, {0x2206, 0x86AD}, {0x2206, 0x2212},
+	{0x2206, 0xE0E0}, {0x2206, 0x14E1}, {0x2206, 0xE015}, {0x2206, 0xAD26},
+	{0x2206, 0x9CE1}, {0x2206, 0x85E0}, {0x2206, 0xBF85}, {0x2206, 0x6D02},
+	{0x2206, 0x2CA2}, {0x2206, 0xEF96}, {0x2206, 0xFEFC}, {0x2206, 0x04F8},
+	{0x2206, 0xFAEF}, {0x2206, 0x69E0}, {0x2206, 0x8B86}, {0x2206, 0xAD22},
+	{0x2206, 0x09E1}, {0x2206, 0x85E1}, {0x2206, 0xBF85}, {0x2206, 0x6D02},
+	{0x2206, 0x2CA2}, {0x2206, 0xEF96}, {0x2206, 0xFEFC}, {0x2206, 0x0464},
+	{0x2206, 0xE48C}, {0x2206, 0xFDE4}, {0x2206, 0x80CA}, {0x2206, 0xE480},
+	{0x2206, 0x66E0}, {0x2206, 0x8E70}, {0x2206, 0xE076}, {0x2205, 0xE142},
+	{0x2206, 0x0701}, {0x2205, 0xE140}, {0x2206, 0x0405}, {0x220F, 0x0000},
+	{0x221F, 0x0000}, {0x2200, 0x1340}, {0x133E, 0x000E}, {0x133F, 0x0010},
+	{0x13EB, 0x11BB}, {0x13E0, 0x0010},
+};
+
+static int rtl8367_write_initvals(struct rtl8366_smi *smi,
+				  const struct rtl8367_initval *initvals,
+				  int count)
+{
+	int err;
+	int i;
+
+	for (i = 0; i < count; i++)
+		REG_WR(smi, initvals[i].reg, initvals[i].val);
+
+	return 0;
+}
+
+static int rtl8367_read_phy_reg(struct rtl8366_smi *smi,
+				u32 phy_addr, u32 phy_reg, u32 *val)
+{
+	int timeout;
+	u32 data;
+	int err;
+
+	if (phy_addr > RTL8367_PHY_ADDR_MAX)
+		return -EINVAL;
+
+	if (phy_reg > RTL8367_PHY_REG_MAX)
+		return -EINVAL;
+
+	REG_RD(smi, RTL8367_IA_STATUS_REG, &data);
+	if (data & RTL8367_IA_STATUS_PHY_BUSY)
+		return -ETIMEDOUT;
+
+	/* prepare address */
+	REG_WR(smi, RTL8367_IA_ADDRESS_REG,
+	       RTL8367_INTERNAL_PHY_REG(phy_addr, phy_reg));
+
+	/* send read command */
+	REG_WR(smi, RTL8367_IA_CTRL_REG,
+	       RTL8367_IA_CTRL_CMD_MASK | RTL8367_IA_CTRL_RW_READ);
+
+	timeout = 5;
+	do {
+		REG_RD(smi, RTL8367_IA_STATUS_REG, &data);
+		if ((data & RTL8367_IA_STATUS_PHY_BUSY) == 0)
+			break;
+
+		if (timeout--) {
+			dev_err(smi->parent, "phy read timed out\n");
+			return -ETIMEDOUT;
+		}
+
+		udelay(1);
+	} while (1);
+
+	/* read data */
+	REG_RD(smi, RTL8367_IA_READ_DATA_REG, val);
+
+	dev_dbg(smi->parent, "phy_read: addr:%02x, reg:%02x, val:%04x\n",
+		phy_addr, phy_reg, *val);
+	return 0;
+}
+
+static int rtl8367_write_phy_reg(struct rtl8366_smi *smi,
+				 u32 phy_addr, u32 phy_reg, u32 val)
+{
+	int timeout;
+	u32 data;
+	int err;
+
+	dev_dbg(smi->parent, "phy_write: addr:%02x, reg:%02x, val:%04x\n",
+		phy_addr, phy_reg, val);
+
+	if (phy_addr > RTL8367_PHY_ADDR_MAX)
+		return -EINVAL;
+
+	if (phy_reg > RTL8367_PHY_REG_MAX)
+		return -EINVAL;
+
+	REG_RD(smi, RTL8367_IA_STATUS_REG, &data);
+	if (data & RTL8367_IA_STATUS_PHY_BUSY)
+		return -ETIMEDOUT;
+
+	/* preapre data */
+	REG_WR(smi, RTL8367_IA_WRITE_DATA_REG, val);
+
+	/* prepare address */
+	REG_WR(smi, RTL8367_IA_ADDRESS_REG,
+	       RTL8367_INTERNAL_PHY_REG(phy_addr, phy_reg));
+
+	/* send write command */
+	REG_WR(smi, RTL8367_IA_CTRL_REG,
+	       RTL8367_IA_CTRL_CMD_MASK | RTL8367_IA_CTRL_RW_WRITE);
+
+	timeout = 5;
+	do {
+		REG_RD(smi, RTL8367_IA_STATUS_REG, &data);
+		if ((data & RTL8367_IA_STATUS_PHY_BUSY) == 0)
+			break;
+
+		if (timeout--) {
+			dev_err(smi->parent, "phy write timed out\n");
+			return -ETIMEDOUT;
+		}
+
+		udelay(1);
+	} while (1);
+
+	return 0;
+}
+
+static int rtl8367_init_regs0(struct rtl8366_smi *smi, unsigned mode)
+{
+	const struct rtl8367_initval *initvals;
+	int count;
+	int err;
+
+	switch (mode) {
+	case 0:
+		initvals = rtl8367_initvals_0_0;
+		count = ARRAY_SIZE(rtl8367_initvals_0_0);
+		break;
+
+	case 1:
+	case 2:
+		initvals = rtl8367_initvals_0_1;
+		count = ARRAY_SIZE(rtl8367_initvals_0_1);
+		break;
+
+	default:
+		dev_err(smi->parent, "%s: unknow mode %u\n", __func__, mode);
+		return -ENODEV;
+	}
+
+	err = rtl8367_write_initvals(smi, initvals, count);
+	if (err)
+		return err;
+
+	/* TODO: complete this */
+
+	return 0;
+}
+
+static int rtl8367_init_regs1(struct rtl8366_smi *smi, unsigned mode)
+{
+	const struct rtl8367_initval *initvals;
+	int count;
+
+	switch (mode) {
+	case 0:
+		initvals = rtl8367_initvals_1_0;
+		count = ARRAY_SIZE(rtl8367_initvals_1_0);
+		break;
+
+	case 1:
+	case 2:
+		initvals = rtl8367_initvals_1_1;
+		count = ARRAY_SIZE(rtl8367_initvals_1_1);
+		break;
+
+	default:
+		dev_err(smi->parent, "%s: unknow mode %u\n", __func__, mode);
+		return -ENODEV;
+	}
+
+	return rtl8367_write_initvals(smi, initvals, count);
+}
+
+static int rtl8367_init_regs2(struct rtl8366_smi *smi, unsigned mode)
+{
+	const struct rtl8367_initval *initvals;
+	int count;
+
+	switch (mode) {
+	case 0:
+		initvals = rtl8367_initvals_2_0;
+		count = ARRAY_SIZE(rtl8367_initvals_2_0);
+		break;
+
+	case 1:
+	case 2:
+		initvals = rtl8367_initvals_2_1;
+		count = ARRAY_SIZE(rtl8367_initvals_2_1);
+		break;
+
+	default:
+		dev_err(smi->parent, "%s: unknow mode %u\n", __func__, mode);
+		return -ENODEV;
+	}
+
+	return rtl8367_write_initvals(smi, initvals, count);
+}
+
+static int rtl8367rb_init_all_regs(struct rtl8366_smi *smi, u32 mode)
+{
+	const struct rtl8367_initval *initvals;
+	int count;
+	int err;
+
+	initvals = rtl8367rb_initval_table;
+	count = ARRAY_SIZE(rtl8367rb_initval_table);
+
+	err = rtl8367_write_initvals(smi, initvals, count);
+	return err;
+}
+
+/* This chip has no register where getting an ID so if the device is
+ * compatible then its configuration is loaded suring the setup stage.
+ */
+static int rtl8367rb_init_regs(struct rtl8366_smi *smi)
+{
+	u32 data;
+	u32 mode;
+	int err;
+
+	REG_WR(smi, RTL8367_RTL_MAGIC_ID_REG, RTL8367_RTL_MAGIC_ID_VAL);
+	REG_RD(smi, RTL8367_CHIP_MODE_REG, &data);
+	mode = data & RTL8367_CHIP_MODE_MASK;
+
+	dev_dbg(smi->parent, "data 0x%x, mode 0x%x\n", data, mode);
+
+	err = rtl8367rb_init_all_regs(smi, mode);
+
+	return err;
+}
+
+#ifdef CONFIG_RTL8366_SMI_DEBUG_FS
+static struct dentry *rtl8367rb_mac_debug;
+static struct dentry *rtl8367rb_port_debug;
+static struct dentry *rtl8367rb_dir;
+
+static int rtl8367rb_port_read(struct seq_file *seq, void *v)
+{
+	u32 data = 0;
+	int err;
+	u32 speed, state, duplex, rx_flow, tx_flow, aneg, port;
+	struct rtl8366_smi *smi = seq->private;
+
+	if (!smi)
+		return -EINVAL;
+
+	for (port = 0; port < RTL8367_NUM_PORTS; port++) {
+
+		REG_RD(smi, RTL8367_PORT_STATUS_REG(port), &data);
+
+		state = !!(data & RTL8367_PORT_STATUS_LINK);
+		duplex = !!(data & RTL8367_PORT_STATUS_DUPLEX);
+		rx_flow = !!(data & RTL8367_PORT_STATUS_RXPAUSE);
+		tx_flow = !!(data & RTL8367_PORT_STATUS_TXPAUSE);
+		aneg = !!(data & RTL8367_PORT_STATUS_NWAY);
+
+		speed = (data & RTL8367_PORT_STATUS_SPEED_MASK);
+		switch (speed) {
+		case 0:
+			speed = 10;
+			break;
+		case 1:
+			speed = 100;
+			break;
+		case 2:
+			speed = 1000;
+			break;
+		default:
+			speed = -1;
+			break;
+		}
+
+		seq_printf(seq, "%d: link %d, speed %d, duplex %d, aneg %d\n",
+			   port, state, speed, duplex, aneg);
+	}
+	return 0;
+}
+
+static int rtl8367rb_port_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, rtl8367rb_port_read, inode->i_private);
+}
+
+static const struct file_operations rtl8367rb_port_debug_fops = {
+	.owner = THIS_MODULE,
+	.open = rtl8367rb_port_open,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = single_release,
+};
+
+static int rtl8367rb_ext_mac_read(struct seq_file *seq, void *v)
+{
+	u32 data = 0;
+	int err;
+	u32 i;
+	struct rtl8366_smi *smi = seq->private;
+
+	if (!smi)
+		return -EINVAL;
+
+	seq_printf(seq, "--- External Interface Mode Ctrl Reg ---\n");
+	for (i = 0; i < 6; i++) {
+		REG_RD(smi, RTL8367_CHIP_NUMBER_REG + i, &data);
+		seq_printf(seq, "0x%x, 0x%x\n", RTL8367_CHIP_NUMBER_REG + i,
+			   data);
+	}
+	for (i = 0; i < 3; i++) {
+		REG_RD(smi, RTL8367_DIS_REG_EXT2 + i, &data);
+		seq_printf(seq, "0x%x, 0x%x\n", RTL8367_DIS_REG_EXT2 + i, data);
+	}
+	seq_printf(seq, "\n--- Force Ability Reg ---\n");
+	for (i = 0x10; i < 0x17; i++) {
+		REG_RD(smi, RTL8367_CHIP_NUMBER_REG + i, &data);
+		seq_printf(seq, "0x%x, 0x%x\n", RTL8367_CHIP_NUMBER_REG + i,
+			   data);
+	}
+
+	return 0;
+}
+
+static int rtl8367rb_ext_mac_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, rtl8367rb_ext_mac_read, inode->i_private);
+}
+
+static const struct file_operations rtl8367rb_mac_debug_fops = {
+	.owner = THIS_MODULE,
+	.open = rtl8367rb_ext_mac_open,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = single_release,
+};
+
+/* This is to add some extra debug into the main debugfs entry for 8366 */
+static void rtl8367rb_init_debug_fs(struct rtl8366_smi *smi)
+{
+
+	rtl8367rb_dir = debugfs_create_dir("rtl8367rb", smi->debugfs_root);
+
+	rtl8367rb_mac_debug = debugfs_create_file("debug", S_IRUGO,
+						  rtl8367rb_dir, smi,
+						  &rtl8367rb_mac_debug_fops);
+	if (!rtl8367rb_mac_debug || IS_ERR(rtl8367rb_mac_debug))
+		pr_err("rtl8367: cannot create mac debugFS entry\n");
+
+	rtl8367rb_port_debug = debugfs_create_file("ports", S_IRUGO,
+						   rtl8367rb_dir, smi,
+						   &rtl8367rb_port_debug_fops);
+	if (!rtl8367rb_port_debug || IS_ERR(rtl8367rb_port_debug))
+		pr_err("rtl8367: cannot create port debugFS entry\n");
+}
+
+static void rtl8367rb_exit_debug_fs(void)
+{
+	debugfs_remove(rtl8367rb_port_debug);
+	debugfs_remove(rtl8367rb_mac_debug);
+	debugfs_remove(rtl8367rb_dir);
+}
+#else
+#define rtl8367rb_init_debug_fs(...)	do {} while (0)
+#define rtl8367rb_exit_debug_fs()	do {} while (0)
+#endif
+
+static int rtl8367_init_regs(struct rtl8366_smi *smi)
+{
+	u32 data;
+	u32 rlvid;
+	u32 mode;
+	int err;
+
+	REG_WR(smi, RTL8367_RTL_MAGIC_ID_REG, RTL8367_RTL_MAGIC_ID_VAL);
+
+	REG_RD(smi, RTL8367_CHIP_VER_REG, &data);
+	rlvid = (data >> RTL8367_CHIP_VER_RLVID_SHIFT) &
+		RTL8367_CHIP_VER_RLVID_MASK;
+
+	REG_RD(smi, RTL8367_CHIP_MODE_REG, &data);
+	mode = data & RTL8367_CHIP_MODE_MASK;
+
+	switch (rlvid) {
+	case 0:
+		err = rtl8367_init_regs0(smi, mode);
+		break;
+
+	case 1:
+		err = rtl8367_write_phy_reg(smi, 0, 31, 5);
+		if (err)
+			break;
+
+		err = rtl8367_write_phy_reg(smi, 0, 5, 0x3ffe);
+		if (err)
+			break;
+
+		err = rtl8367_read_phy_reg(smi, 0, 6, &data);
+		if (err)
+			break;
+
+		if (data == 0x94eb) {
+			err = rtl8367_init_regs1(smi, mode);
+		} else if (data == 0x2104) {
+			err = rtl8367_init_regs2(smi, mode);
+		} else {
+			dev_err(smi->parent, "unknow phy data %04x\n", data);
+			return -ENODEV;
+		}
+
+		break;
+
+	default:
+		dev_err(smi->parent, "unknow rlvid %u\n", rlvid);
+		err = -ENODEV;
+		break;
+	}
+
+	return err;
+}
+
+static int rtl8367_reset_chip(struct rtl8366_smi *smi)
+{
+	int timeout = 10;
+	int err;
+	u32 data;
+
+	REG_WR(smi, RTL8367_CHIP_RESET_REG, RTL8367_CHIP_RESET_HW);
+	msleep(RTL8367_RESET_DELAY);
+
+	do {
+		REG_RD(smi, RTL8367_CHIP_RESET_REG, &data);
+		if (!(data & RTL8367_CHIP_RESET_HW))
+			break;
+
+		msleep(RTL8367_RESET_DELAY);
+	} while (--timeout);
+
+	if (!timeout) {
+		dev_err(smi->parent, "chip reset timed out\n");
+		return -ETIMEDOUT;
+	}
+
+	return 0;
+}
+
+static int rtl8367_extif_set_mode(struct rtl8366_smi *smi, int id,
+				  enum rtl8367_extif_mode mode)
+{
+	int err;
+
+	/* set port mode */
+	switch (mode) {
+	case RTL8367_EXTIF_MODE_RGMII:
+	case RTL8367_EXTIF_MODE_RGMII_33V:
+		REG_WR(smi, RTL8367_CHIP_DEBUG0_REG, 0x0367);
+		REG_WR(smi, RTL8367_CHIP_DEBUG1_REG, 0x7777);
+		break;
+
+	case RTL8367_EXTIF_MODE_TMII_MAC:
+	case RTL8367_EXTIF_MODE_TMII_PHY:
+		REG_RMW(smi, RTL8367_BYPASS_LINE_RATE_REG,
+			BIT((id + 1) % 2), BIT((id + 1) % 2));
+		break;
+
+	case RTL8367_EXTIF_MODE_GMII:
+		REG_RMW(smi, RTL8367_CHIP_DEBUG0_REG,
+			RTL8367_CHIP_DEBUG0_DUMMY0(id),
+			RTL8367_CHIP_DEBUG0_DUMMY0(id));
+		REG_RMW(smi, RTL8367_EXT_RGMXF_REG(id), BIT(6), BIT(6));
+		break;
+
+	case RTL8367_EXTIF_MODE_MII_MAC:
+	case RTL8367_EXTIF_MODE_MII_PHY:
+	case RTL8367_EXTIF_MODE_DISABLED:
+		REG_RMW(smi, RTL8367_BYPASS_LINE_RATE_REG,
+			BIT((id + 1) % 2), 0);
+		REG_RMW(smi, RTL8367_EXT_RGMXF_REG(id), BIT(6), 0);
+		break;
+
+	default:
+		dev_err(smi->parent,
+			"invalid mode for external interface %d\n", id);
+		return -EINVAL;
+	}
+
+	REG_RMW(smi, 0x03f7, id, 0);
+
+	if (0 == id || 1 == id)
+		REG_RMW(smi, RTL8367_DIS_REG,
+			RTL8367_DIS_RGMII_MASK << RTL8367_DIS_RGMII_SHIFT(id),
+			mode << RTL8367_DIS_RGMII_SHIFT(id));
+	else if (id == 2)	/* rgmii 2 available on RB series */
+		REG_RMW(smi, RTL8367_DIS_REG_EXT2, 0xF, mode);
+
+	return 0;
+}
+
+static int rtl8367_extif_set_force(struct rtl8366_smi *smi, int id,
+				   struct rtl8367_port_ability *pa)
+{
+	u32 mask;
+	u32 val;
+	int err;
+
+	mask = (RTL8367_DI_FORCE_MODE |
+		RTL8367_DI_FORCE_NWAY |
+		RTL8367_DI_FORCE_TXPAUSE |
+		RTL8367_DI_FORCE_RXPAUSE |
+		RTL8367_DI_FORCE_LINK |
+		RTL8367_DI_FORCE_DUPLEX |
+		RTL8367_DI_FORCE_SPEED_MASK);
+
+	val = pa->speed;
+	val |= pa->force_mode ? RTL8367_DI_FORCE_MODE : 0;
+	val |= pa->nway ? RTL8367_DI_FORCE_NWAY : 0;
+	val |= pa->txpause ? RTL8367_DI_FORCE_TXPAUSE : 0;
+	val |= pa->rxpause ? RTL8367_DI_FORCE_RXPAUSE : 0;
+	val |= pa->link ? RTL8367_DI_FORCE_LINK : 0;
+	val |= pa->duplex ? RTL8367_DI_FORCE_DUPLEX : 0;
+
+	if (0 == id || 1 == id)
+		REG_RMW(smi, RTL8367_DI_FORCE_REG(id), mask, val);
+	else if (id == 2)	/* rgmii 2 */
+		REG_RMW(smi, RTL8367_DI_FORCE_REG_EXT2, mask, val);
+
+	return 0;
+}
+
+static int rtl8367_extif_set_rgmii_delay(struct rtl8366_smi *smi, int id,
+					 unsigned txdelay, unsigned rxdelay)
+{
+	u32 mask;
+	u32 val;
+	int err;
+
+	mask = (RTL8367_EXT_RGMXF_RXDELAY_MASK |
+		(RTL8367_EXT_RGMXF_TXDELAY_MASK <<
+			RTL8367_EXT_RGMXF_TXDELAY_SHIFT));
+
+	val = rxdelay;
+	val |= txdelay << RTL8367_EXT_RGMXF_TXDELAY_SHIFT;
+
+	if (0 == id || 1 == id)
+		REG_RMW(smi, RTL8367_EXT_RGMXF_REG(id), mask, val);
+	else if (id == 2)	/* rgmii 2 */
+		REG_RMW(smi, RTL8367_EXT2_RGMXF_REG, mask, val);
+
+	return 0;
+}
+
+static int rtl8367_extif_init(struct rtl8366_smi *smi, int id,
+			      struct rtl8367_extif_config *cfg)
+{
+	enum rtl8367_extif_mode mode;
+	int err;
+
+	dev_info(smi->parent, "Configuring Extend MAC%d\n", id);
+
+	mode = (cfg) ? cfg->mode : RTL8367_EXTIF_MODE_DISABLED;
+
+	err = rtl8367_extif_set_mode(smi, id, mode);
+	if (err)
+		return err;
+
+	if (mode != RTL8367_EXTIF_MODE_DISABLED) {
+		err = rtl8367_extif_set_force(smi, id, &cfg->ability);
+		if (err)
+			return err;
+
+		err = rtl8367_extif_set_rgmii_delay(smi, id, cfg->txdelay,
+						     cfg->rxdelay);
+		if (err)
+			return err;
+	}
+
+	return 0;
+}
+
+static int rtl8367_led_group_set_ports(struct rtl8366_smi *smi,
+				       unsigned int group, u16 port_mask)
+{
+	u32 reg;
+	u32 s;
+	int err;
+
+	port_mask &= RTL8367_PARA_LED_IO_EN_PMASK;
+	s = (group % 2) * 8;
+	reg = RTL8367_PARA_LED_IO_EN1_REG + (group / 2);
+
+	REG_RMW(smi, reg, (RTL8367_PARA_LED_IO_EN_PMASK << s), port_mask << s);
+
+	return 0;
+}
+
+static int rtl8367_led_group_set_mode(struct rtl8366_smi *smi,
+				      unsigned int mode)
+{
+	u16 mask;
+	u16 set;
+	int err;
+
+	mode &= RTL8367_LED_CONFIG_DATA_M;
+
+	mask = (RTL8367_LED_CONFIG_DATA_M << RTL8367_LED_CONFIG_DATA_S) |
+		RTL8367_LED_CONFIG_SEL;
+	set = (mode << RTL8367_LED_CONFIG_DATA_S) | RTL8367_LED_CONFIG_SEL;
+
+	REG_RMW(smi, RTL8367_LED_CONFIG_REG, mask, set);
+
+	return 0;
+}
+
+static int rtl8367_led_group_set_config(struct rtl8366_smi *smi,
+					unsigned int led, unsigned int cfg)
+{
+	u16 mask;
+	u16 set;
+	int err;
+
+	mask = (RTL8367_LED_CONFIG_LED_CFG_M << (led * 4)) |
+		RTL8367_LED_CONFIG_SEL;
+	set = (cfg & RTL8367_LED_CONFIG_LED_CFG_M) << (led * 4);
+
+	REG_RMW(smi, RTL8367_LED_CONFIG_REG, mask, set);
+	return 0;
+}
+
+static int rtl8367_led_op_select_parallel(struct rtl8366_smi *smi)
+{
+	int err;
+
+	REG_WR(smi, RTL8367_LED_SYS_CONFIG_REG, 0x1472);
+	return 0;
+}
+
+static int rtl8367_led_blinkrate_set(struct rtl8366_smi *smi, unsigned int rate)
+{
+	u16 mask;
+	u16 set;
+	int err;
+
+	mask = RTL8367_LED_MODE_RATE_M << RTL8367_LED_MODE_RATE_S;
+	set = (rate & RTL8367_LED_MODE_RATE_M) << RTL8367_LED_MODE_RATE_S;
+	REG_RMW(smi, RTL8367_LED_MODE_REG, mask, set);
+
+	return 0;
+}
+
+#ifdef CONFIG_OF
+static void rtl8367_probe_config_dt(struct rtl8366_smi *smi)
+{
+	struct device_node *np = smi->parent->of_node;
+	struct rtl8367_platform_data *pdata;
+	int mac;
+
+	pdata = devm_kzalloc(smi->parent, sizeof(struct rtl8367_platform_data),
+			     GFP_KERNEL);
+	if (!pdata) {
+		dev_err(smi->parent, "unable to allocate platform data\n");
+		return;
+	}
+
+	smi->parent->platform_data = pdata;
+
+	mac = of_property_read_bool(np, "rtl8367rb,extif0");
+	if (mac) {
+		pdata->extif0_cfg = devm_kzalloc(smi->parent,
+						 sizeof(struct
+							rtl8367_extif_config),
+						 GFP_KERNEL);
+		of_property_read_u32(np, "rtl8367rb,extif0-mode",
+				     &pdata->extif0_cfg->mode);
+		of_property_read_u32(np, "rtl8367rb,extif0-txdelay",
+				     &pdata->extif0_cfg->txdelay);
+		of_property_read_u32(np, "rtl8367rb,extif0-rxdelay",
+				     &pdata->extif0_cfg->rxdelay);
+		of_property_read_u32(np, "rtl8367rb,extif0-force_mode",
+				     &pdata->extif0_cfg->ability.force_mode);
+		of_property_read_u32(np, "rtl8367rb,extif0-txpause",
+				     &pdata->extif0_cfg->ability.txpause);
+		of_property_read_u32(np, "rtl8367rb,extif0-rxpause",
+				     &pdata->extif0_cfg->ability.rxpause);
+		of_property_read_u32(np, "rtl8367rb,extif0-link",
+				     &pdata->extif0_cfg->ability.link);
+		of_property_read_u32(np, "rtl8367rb,extif0-duplex",
+				     &pdata->extif0_cfg->ability.duplex);
+		of_property_read_u32(np, "rtl8367rb,extif0-speed",
+				     &pdata->extif0_cfg->ability.speed);
+		of_property_read_u32(np, "rtl8367rb,extif0-nway",
+				     &pdata->extif0_cfg->ability.nway);
+	}
+	mac = of_property_read_bool(np, "rtl8367rb,extif1");
+	if (mac) {
+		pdata->extif1_cfg = devm_kzalloc(smi->parent,
+						 sizeof(struct
+							rtl8367_extif_config),
+						 GFP_KERNEL);
+		of_property_read_u32(np, "rtl8367rb,extif1-mode",
+				     &pdata->extif1_cfg->mode);
+		of_property_read_u32(np, "rtl8367rb,extif1-txdelay",
+				     &pdata->extif1_cfg->txdelay);
+		of_property_read_u32(np, "rtl8367rb,extif1-rxdelay",
+				     &pdata->extif1_cfg->rxdelay);
+		of_property_read_u32(np, "rtl8367rb,extif1-force_mode",
+				     &pdata->extif1_cfg->ability.force_mode);
+		of_property_read_u32(np, "rtl8367rb,extif1-txpause",
+				     &pdata->extif1_cfg->ability.txpause);
+		of_property_read_u32(np, "rtl8367rb,extif1-rxpause",
+				     &pdata->extif1_cfg->ability.rxpause);
+		of_property_read_u32(np, "rtl8367rb,extif1-link",
+				     &pdata->extif1_cfg->ability.link);
+		of_property_read_u32(np, "rtl8367rb,extif1-duplex",
+				     &pdata->extif1_cfg->ability.duplex);
+		of_property_read_u32(np, "rtl8367rb,extif1-speed",
+				     &pdata->extif1_cfg->ability.speed);
+		of_property_read_u32(np, "rtl8367rb,extif1-nway",
+				     &pdata->extif1_cfg->ability.nway);
+	}
+	mac = of_property_read_bool(np, "rtl8367rb,extif2");
+	if (mac) {
+		pdata->extif2_cfg = devm_kzalloc(smi->parent,
+						 sizeof(struct
+							rtl8367_extif_config),
+						 GFP_KERNEL);
+		of_property_read_u32(np, "rtl8367rb,extif2-mode",
+				     &pdata->extif2_cfg->mode);
+		of_property_read_u32(np, "rtl8367rb,extif2-txdelay",
+				     &pdata->extif2_cfg->txdelay);
+		of_property_read_u32(np, "rtl8367rb,extif2-rxdelay",
+				     &pdata->extif2_cfg->rxdelay);
+		of_property_read_u32(np, "rtl8367rb,extif2-force_mode",
+				     &pdata->extif2_cfg->ability.force_mode);
+		of_property_read_u32(np, "rtl8367rb,extif2-txpause",
+				     &pdata->extif2_cfg->ability.txpause);
+		of_property_read_u32(np, "rtl8367rb,extif2-rxpause",
+				     &pdata->extif2_cfg->ability.rxpause);
+		of_property_read_u32(np, "rtl8367rb,extif2-link",
+				     &pdata->extif2_cfg->ability.link);
+		of_property_read_u32(np, "rtl8367rb,extif2-duplex",
+				     &pdata->extif2_cfg->ability.duplex);
+		of_property_read_u32(np, "rtl8367rb,extif2-speed",
+				     &pdata->extif2_cfg->ability.speed);
+		of_property_read_u32(np, "rtl8367rb,extif2-nway",
+				     &pdata->extif2_cfg->ability.nway);
+	}
+}
+#else
+static void rtl8367_probe_config_dt(struct rtl8366_smi *smi)
+{
+	return NULL;
+}
+#endif /* CONFIG_OF */
+
+static int rtl8367_setup(struct rtl8366_smi *smi)
+{
+	struct rtl8367_platform_data *pdata;
+	struct device_node *np = smi->parent->of_node;
+	int err;
+
+	if (np)
+		rtl8367_probe_config_dt(smi);
+
+	pdata = smi->parent->platform_data;
+	if (!pdata)
+		return -ENODEV;
+
+	dev_info(smi->parent, "Realtek Switch Setup ...\n");
+
+	if (of_device_is_compatible(np, "realtek,rtl8367rb")) {
+		err = rtl8367rb_init_regs(smi);
+		rtl8367rb_init_debug_fs(smi);
+		/* FIXME: do not support VLAN yet */
+		smi->ops->enable_vlan = NULL;
+		smi->ops->enable_vlan4k = NULL;
+	} else
+		err = rtl8367_init_regs(smi);
+
+	if (err)
+		return err;
+
+	/* Initialize external interfaces if provided from the platform */
+	if (pdata->extif0_cfg) {
+		err = rtl8367_extif_init(smi, 0, pdata->extif0_cfg);
+		if (err)
+			return err;
+	}
+	if (pdata->extif1_cfg) {
+		err = rtl8367_extif_init(smi, 1, pdata->extif1_cfg);
+		if (err)
+			return err;
+	}
+	if (pdata->extif2_cfg) {
+		err = rtl8367_extif_init(smi, 2, pdata->extif2_cfg);
+		if (err)
+			return err;
+	}
+
+	/* set maximum packet length to 1536 bytes */
+	REG_RMW(smi, RTL8367_SWC0_REG, RTL8367_SWC0_MAX_LENGTH_MASK,
+		RTL8367_SWC0_MAX_LENGTH_1536);
+
+	/* setup LEDs */
+	err = rtl8367_led_group_set_ports(smi, 0, RTL8367_PORTS_ALL);
+	if (err)
+		return err;
+
+	err = rtl8367_led_group_set_mode(smi, 0);
+	if (err)
+		return err;
+
+	err = rtl8367_led_op_select_parallel(smi);
+	if (err)
+		return err;
+
+	err = rtl8367_led_blinkrate_set(smi, 1);
+	if (err)
+		return err;
+
+	err = rtl8367_led_group_set_config(smi, 0, 2);
+	if (err)
+		return err;
+
+	return 0;
+}
+
+static int rtl8367_get_mib_counter(struct rtl8366_smi *smi, int counter,
+				   int port, unsigned long long *val)
+{
+	struct rtl8366_mib_counter *mib;
+	int offset;
+	int i;
+	int err;
+	u32 addr, data;
+	u64 mibvalue;
+
+	if (port > RTL8367_NUM_PORTS || counter >= RTL8367_MIB_COUNT)
+		return -EINVAL;
+
+	mib = &rtl8367_mib_counters[counter];
+	addr = RTL8367_MIB_COUNTER_PORT_OFFSET * port + mib->offset;
+
+	/* Writing access counter address first
+	 * then ASIC will prepare 64bits counter wait for being retrived
+	 */
+	REG_WR(smi, RTL8367_MIB_ADDRESS_REG, addr >> 2);
+
+	/* read MIB control register */
+	REG_RD(smi, RTL8367_MIB_CTRL_REG(0), &data);
+
+	if (data & RTL8367_MIB_CTRL_BUSY_MASK)
+		return -EBUSY;
+
+	if (data & RTL8367_MIB_CTRL_RESET_MASK)
+		return -EIO;
+
+	if (mib->length == 4)
+		offset = 3;
+	else
+		offset = (mib->offset + 1) % 4;
+
+	mibvalue = 0;
+	for (i = 0; i < mib->length; i++) {
+		REG_RD(smi, RTL8367_MIB_COUNTER_REG(offset - i), &data);
+		mibvalue = (mibvalue << 16) | (data & 0xFFFF);
+	}
+
+	*val = mibvalue;
+	return 0;
+}
+
+static int rtl8367_get_vlan_4k(struct rtl8366_smi *smi, u32 vid,
+				struct rtl8366_vlan_4k *vlan4k)
+{
+	u32 data[RTL8367_TA_VLAN_DATA_SIZE];
+	int err;
+	int i;
+
+	memset(vlan4k, '\0', sizeof(struct rtl8366_vlan_4k));
+
+	if (vid >= RTL8367_NUM_VIDS)
+		return -EINVAL;
+
+	/* write VID */
+	REG_WR(smi, RTL8367_TA_ADDR_REG, vid);
+
+	/* write table access control word */
+	REG_WR(smi, RTL8367_TA_CTRL_REG, RTL8367_TA_CTRL_CVLAN_READ);
+
+	for (i = 0; i < ARRAY_SIZE(data); i++)
+		REG_RD(smi, RTL8367_TA_DATA_REG(i), &data[i]);
+
+	vlan4k->vid = vid;
+	vlan4k->member = (data[0] >> RTL8367_TA_VLAN_MEMBER_SHIFT) &
+			 RTL8367_TA_VLAN_MEMBER_MASK;
+	vlan4k->fid = (data[1] >> RTL8367_TA_VLAN_FID_SHIFT) &
+		      RTL8367_TA_VLAN_FID_MASK;
+	vlan4k->untag = (data[2] >> RTL8367_TA_VLAN_UNTAG1_SHIFT) &
+			RTL8367_TA_VLAN_UNTAG1_MASK;
+	vlan4k->untag |= ((data[3] >> RTL8367_TA_VLAN_UNTAG2_SHIFT) &
+			  RTL8367_TA_VLAN_UNTAG2_MASK) << 2;
+
+	return 0;
+}
+
+static int rtl8367_set_vlan_4k(struct rtl8366_smi *smi,
+				const struct rtl8366_vlan_4k *vlan4k)
+{
+	u32 data[RTL8367_TA_VLAN_DATA_SIZE];
+	int err;
+	int i;
+
+	if (vlan4k->vid >= RTL8367_NUM_VIDS ||
+	    vlan4k->member > RTL8367_TA_VLAN_MEMBER_MASK ||
+	    vlan4k->untag > RTL8367_UNTAG_MASK ||
+	    vlan4k->fid > RTL8367_FIDMAX)
+		return -EINVAL;
+
+	data[0] = (vlan4k->member & RTL8367_TA_VLAN_MEMBER_MASK) <<
+		  RTL8367_TA_VLAN_MEMBER_SHIFT;
+	data[1] = (vlan4k->fid & RTL8367_TA_VLAN_FID_MASK) <<
+		  RTL8367_TA_VLAN_FID_SHIFT;
+	data[2] = (vlan4k->untag & RTL8367_TA_VLAN_UNTAG1_MASK) <<
+		  RTL8367_TA_VLAN_UNTAG1_SHIFT;
+	data[3] = ((vlan4k->untag >> 2) & RTL8367_TA_VLAN_UNTAG2_MASK) <<
+		  RTL8367_TA_VLAN_UNTAG2_SHIFT;
+
+	for (i = 0; i < ARRAY_SIZE(data); i++)
+		REG_WR(smi, RTL8367_TA_DATA_REG(i), data[i]);
+
+	/* write VID */
+	REG_WR(smi, RTL8367_TA_ADDR_REG,
+	       vlan4k->vid & RTL8367_TA_VLAN_VID_MASK);
+
+	/* write table access control word */
+	REG_WR(smi, RTL8367_TA_CTRL_REG, RTL8367_TA_CTRL_CVLAN_WRITE);
+
+	return 0;
+}
+
+static int rtl8367_get_vlan_mc(struct rtl8366_smi *smi, u32 index,
+				struct rtl8366_vlan_mc *vlanmc)
+{
+	u32 data[RTL8367_VLAN_MC_DATA_SIZE];
+	int err;
+	int i;
+
+	memset(vlanmc, '\0', sizeof(struct rtl8366_vlan_mc));
+
+	if (index >= RTL8367_NUM_VLANS)
+		return -EINVAL;
+
+	for (i = 0; i < ARRAY_SIZE(data); i++)
+		REG_RD(smi, RTL8367_VLAN_MC_BASE(index) + i, &data[i]);
+
+	vlanmc->member = (data[0] >> RTL8367_VLAN_MC_MEMBER_SHIFT) &
+			 RTL8367_VLAN_MC_MEMBER_MASK;
+	vlanmc->fid = (data[1] >> RTL8367_VLAN_MC_FID_SHIFT) &
+		      RTL8367_VLAN_MC_FID_MASK;
+	vlanmc->vid = (data[3] >> RTL8367_VLAN_MC_EVID_SHIFT) &
+		      RTL8367_VLAN_MC_EVID_MASK;
+
+	return 0;
+}
+
+static int rtl8367_set_vlan_mc(struct rtl8366_smi *smi, u32 index,
+				const struct rtl8366_vlan_mc *vlanmc)
+{
+	u32 data[RTL8367_VLAN_MC_DATA_SIZE];
+	int err;
+	int i;
+
+	if (index >= RTL8367_NUM_VLANS ||
+	    vlanmc->vid >= RTL8367_NUM_VIDS ||
+	    vlanmc->priority > RTL8367_PRIORITYMAX ||
+	    vlanmc->member > RTL8367_VLAN_MC_MEMBER_MASK ||
+	    vlanmc->untag > RTL8367_UNTAG_MASK ||
+	    vlanmc->fid > RTL8367_FIDMAX)
+		return -EINVAL;
+
+	data[0] = (vlanmc->member & RTL8367_VLAN_MC_MEMBER_MASK) <<
+		  RTL8367_VLAN_MC_MEMBER_SHIFT;
+	data[1] = (vlanmc->fid & RTL8367_VLAN_MC_FID_MASK) <<
+		  RTL8367_VLAN_MC_FID_SHIFT;
+	data[2] = 0;
+	data[3] = (vlanmc->vid & RTL8367_VLAN_MC_EVID_MASK) <<
+		   RTL8367_VLAN_MC_EVID_SHIFT;
+
+	for (i = 0; i < ARRAY_SIZE(data); i++)
+		REG_WR(smi, RTL8367_VLAN_MC_BASE(index) + i, data[i]);
+
+	return 0;
+}
+
+static int rtl8367_get_mc_index(struct rtl8366_smi *smi, int port, int *val)
+{
+	u32 data;
+	int err;
+
+	if (port >= RTL8367_NUM_PORTS)
+		return -EINVAL;
+
+	REG_RD(smi, RTL8367_VLAN_PVID_CTRL_REG(port), &data);
+
+	*val = (data >> RTL8367_VLAN_PVID_CTRL_SHIFT(port)) &
+	       RTL8367_VLAN_PVID_CTRL_MASK;
+
+	return 0;
+}
+
+static int rtl8367_set_mc_index(struct rtl8366_smi *smi, int port, int index)
+{
+	if (port >= RTL8367_NUM_PORTS || index >= RTL8367_NUM_VLANS)
+		return -EINVAL;
+
+	return rtl8366_smi_rmwr(smi, RTL8367_VLAN_PVID_CTRL_REG(port),
+				RTL8367_VLAN_PVID_CTRL_MASK <<
+					RTL8367_VLAN_PVID_CTRL_SHIFT(port),
+				(index & RTL8367_VLAN_PVID_CTRL_MASK) <<
+					RTL8367_VLAN_PVID_CTRL_SHIFT(port));
+}
+
+static int rtl8367_enable_vlan(struct rtl8366_smi *smi, int enable)
+{
+	int i;
+	int err;
+
+	/* discard VLAN tagged packets if the port is not a member of
+	 * the VLAN with which the packets is associated.
+	 */
+	REG_WR(smi, RTL8367_VLAN_INGRESS_REG, RTL8367_PORTS_ALL);
+
+	/* Setup egress tag mode for each port. */
+	for (i = 0; i < RTL8367_NUM_PORTS; i++)
+		REG_RMW(smi,
+			RTL8367_PORT_CFG_REG(i),
+			RTL8367_PORT_CFG_EGRESS_MODE_MASK <<
+			RTL8367_PORT_CFG_EGRESS_MODE_SHIFT,
+			RTL8367_PORT_CFG_EGRESS_MODE_ORIGINAL <<
+			RTL8367_PORT_CFG_EGRESS_MODE_SHIFT);
+
+	return rtl8366_smi_rmwr(smi, RTL8367_VLAN_CTRL_REG,
+				RTL8367_VLAN_CTRL_ENABLE,
+				(enable) ? RTL8367_VLAN_CTRL_ENABLE : 0);
+}
+
+static int rtl8367_enable_vlan4k(struct rtl8366_smi *smi, int enable)
+{
+	return 0;
+}
+
+static int rtl8367_is_vlan_valid(struct rtl8366_smi *smi, unsigned vlan)
+{
+	unsigned max = RTL8367_NUM_VLANS;
+
+	if (smi->vlan4k_enabled)
+		max = RTL8367_NUM_VIDS - 1;
+
+	if (vlan == 0 || vlan >= max)
+		return 0;
+
+	return 1;
+}
+
+static int rtl8367_enable_port(struct rtl8366_smi *smi, int port, int enable)
+{
+	int err;
+
+	REG_WR(smi, RTL8367_PORT_ISOLATION_REG(port),
+	       (enable) ? RTL8367_PORTS_ALL : 0);
+
+	return 0;
+}
+
+static int rtl8367_sw_reset_mibs(struct switch_dev *dev,
+				  const struct switch_attr *attr,
+				  struct switch_val *val)
+{
+	struct rtl8366_smi *smi = sw_to_rtl8366_smi(dev);
+
+	return rtl8366_smi_rmwr(smi, RTL8367_MIB_CTRL_REG(0), 0,
+				RTL8367_MIB_CTRL_GLOBAL_RESET_MASK);
+}
+
+static int rtl8367_sw_get_port_link(struct switch_dev *dev,
+				    int port,
+				    struct switch_port_link *link)
+{
+	struct rtl8366_smi *smi = sw_to_rtl8366_smi(dev);
+	u32 data = 0;
+	u32 speed;
+
+	if (port >= RTL8367_NUM_PORTS)
+		return -EINVAL;
+
+	rtl8366_smi_read_reg(smi, RTL8367_PORT_STATUS_REG(port), &data);
+
+	link->link = !!(data & RTL8367_PORT_STATUS_LINK);
+	if (!link->link)
+		return 0;
+
+	link->duplex = !!(data & RTL8367_PORT_STATUS_DUPLEX);
+	link->rx_flow = !!(data & RTL8367_PORT_STATUS_RXPAUSE);
+	link->tx_flow = !!(data & RTL8367_PORT_STATUS_TXPAUSE);
+	link->aneg = !!(data & RTL8367_PORT_STATUS_NWAY);
+
+	speed = (data & RTL8367_PORT_STATUS_SPEED_MASK);
+	switch (speed) {
+	case 0:
+		link->speed = SWITCH_PORT_SPEED_10;
+		break;
+	case 1:
+		link->speed = SWITCH_PORT_SPEED_100;
+		break;
+	case 2:
+		link->speed = SWITCH_PORT_SPEED_1000;
+		break;
+	default:
+		link->speed = SWITCH_PORT_SPEED_UNKNOWN;
+		break;
+	}
+
+	return 0;
+}
+
+static int rtl8367_sw_get_max_length(struct switch_dev *dev,
+				     const struct switch_attr *attr,
+				     struct switch_val *val)
+{
+	struct rtl8366_smi *smi = sw_to_rtl8366_smi(dev);
+	u32 data;
+
+	rtl8366_smi_read_reg(smi, RTL8367_SWC0_REG, &data);
+	val->value.i = (data & RTL8367_SWC0_MAX_LENGTH_MASK) >>
+			RTL8367_SWC0_MAX_LENGTH_SHIFT;
+
+	return 0;
+}
+
+static int rtl8367_sw_set_max_length(struct switch_dev *dev,
+				     const struct switch_attr *attr,
+				     struct switch_val *val)
+{
+	struct rtl8366_smi *smi = sw_to_rtl8366_smi(dev);
+	u32 max_len;
+
+	switch (val->value.i) {
+	case 0:
+		max_len = RTL8367_SWC0_MAX_LENGTH_1522;
+		break;
+	case 1:
+		max_len = RTL8367_SWC0_MAX_LENGTH_1536;
+		break;
+	case 2:
+		max_len = RTL8367_SWC0_MAX_LENGTH_1552;
+		break;
+	case 3:
+		max_len = RTL8367_SWC0_MAX_LENGTH_16000;
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	return rtl8366_smi_rmwr(smi, RTL8367_SWC0_REG,
+				RTL8367_SWC0_MAX_LENGTH_MASK, max_len);
+}
+
+static int rtl8367_sw_reset_port_mibs(struct switch_dev *dev,
+				       const struct switch_attr *attr,
+				       struct switch_val *val)
+{
+	struct rtl8366_smi *smi = sw_to_rtl8366_smi(dev);
+	int port;
+
+	port = val->port_vlan;
+	if (port >= RTL8367_NUM_PORTS)
+		return -EINVAL;
+
+	return rtl8366_smi_rmwr(smi, RTL8367_MIB_CTRL_REG(port / 8), 0,
+				RTL8367_MIB_CTRL_PORT_RESET_MASK(port % 8));
+}
+
+static struct switch_attr rtl8367_globals[] = {
+	{
+		.type = SWITCH_TYPE_INT,
+		.name = "enable_vlan",
+		.description = "Enable VLAN mode",
+		.set = rtl8366_sw_set_vlan_enable,
+		.get = rtl8366_sw_get_vlan_enable,
+		.max = 1,
+		.ofs = 1
+	}, {
+		.type = SWITCH_TYPE_INT,
+		.name = "enable_vlan4k",
+		.description = "Enable VLAN 4K mode",
+		.set = rtl8366_sw_set_vlan_enable,
+		.get = rtl8366_sw_get_vlan_enable,
+		.max = 1,
+		.ofs = 2
+	}, {
+		.type = SWITCH_TYPE_NOVAL,
+		.name = "reset_mibs",
+		.description = "Reset all MIB counters",
+		.set = rtl8367_sw_reset_mibs,
+	}, {
+		.type = SWITCH_TYPE_INT,
+		.name = "max_length",
+		.description = "Get/Set the maximum length of valid packets"
+			       "(0:1522, 1:1536, 2:1552, 3:16000)",
+		.set = rtl8367_sw_set_max_length,
+		.get = rtl8367_sw_get_max_length,
+		.max = 3,
+	}
+};
+
+static struct switch_attr rtl8367_port[] = {
+	{
+		.type = SWITCH_TYPE_NOVAL,
+		.name = "reset_mib",
+		.description = "Reset single port MIB counters",
+		.set = rtl8367_sw_reset_port_mibs,
+	}, {
+		.type = SWITCH_TYPE_STRING,
+		.name = "mib",
+		.description = "Get MIB counters for port",
+		.max = 33,
+		.set = NULL,
+		.get = rtl8366_sw_get_port_mib,
+	},
+};
+
+static struct switch_attr rtl8367_vlan[] = {
+	{
+		.type = SWITCH_TYPE_STRING,
+		.name = "info",
+		.description = "Get vlan information",
+		.max = 1,
+		.set = NULL,
+		.get = rtl8366_sw_get_vlan_info,
+	},
+};
+
+static const struct switch_dev_ops rtl8367_sw_ops = {
+	.attr_global = {
+		.attr = rtl8367_globals,
+		.n_attr = ARRAY_SIZE(rtl8367_globals),
+	},
+	.attr_port = {
+		.attr = rtl8367_port,
+		.n_attr = ARRAY_SIZE(rtl8367_port),
+	},
+	.attr_vlan = {
+		.attr = rtl8367_vlan,
+		.n_attr = ARRAY_SIZE(rtl8367_vlan),
+	},
+
+	.get_vlan_ports = rtl8366_sw_get_vlan_ports,
+	.set_vlan_ports = rtl8366_sw_set_vlan_ports,
+	.get_port_pvid = rtl8366_sw_get_port_pvid,
+	.set_port_pvid = rtl8366_sw_set_port_pvid,
+	.reset_switch = rtl8366_sw_reset_switch,
+	.get_port_link = rtl8367_sw_get_port_link,
+};
+
+static int rtl8367_switch_init(struct rtl8366_smi *smi)
+{
+	struct switch_dev *dev = &smi->sw_dev;
+	int err;
+
+	dev->name = "RTL8367";
+	dev->cpu_port = RTL8367_CPU_PORT_NUM;
+	dev->ports = RTL8367_NUM_PORTS;
+	dev->vlans = RTL8367_NUM_VIDS;
+	dev->ops = &rtl8367_sw_ops;
+	dev->alias = dev_name(smi->parent);
+
+	err = register_switch(dev, NULL);
+	if (err)
+		dev_err(smi->parent, "switch registration failed\n");
+
+	return err;
+}
+
+static void rtl8367_switch_cleanup(struct rtl8366_smi *smi)
+{
+	unregister_switch(&smi->sw_dev);
+}
+
+static int rtl8367_mii_read(struct mii_bus *bus, int addr, int reg)
+{
+	struct rtl8366_smi *smi = bus->priv;
+	u32 val = 0;
+	int err;
+
+	err = rtl8367_read_phy_reg(smi, addr, reg, &val);
+	if (err)
+		return 0xffff;
+
+	return val;
+}
+
+static int rtl8367_mii_write(struct mii_bus *bus, int addr, int reg, u16 val)
+{
+	struct rtl8366_smi *smi = bus->priv;
+	u32 t;
+	int err;
+
+	err = rtl8367_write_phy_reg(smi, addr, reg, val);
+	if (err)
+		return err;
+
+	/* flush write */
+	(void) rtl8367_read_phy_reg(smi, addr, reg, &t);
+
+	return err;
+}
+
+static int rtl8367_detect(struct rtl8366_smi *smi)
+{
+	u32 rtl_no = 0;
+	u32 rtl_ver = 0;
+	char *chip_name;
+	int ret;
+
+	/* Some chips have not internal register to report ID value */
+	if (of_device_is_compatible(smi->parent->of_node, "realtek,rtl8367rb"))
+		return 0;
+
+	ret = rtl8366_smi_read_reg(smi, RTL8367_RTL_NO_REG, &rtl_no);
+	if (ret) {
+		dev_err(smi->parent, "unable to read chip number\n");
+		return ret;
+	}
+
+	switch (rtl_no) {
+	case RTL8367_RTL_NO_8367R:
+		chip_name = "8367R";
+		break;
+	case RTL8367_RTL_NO_8367M:
+		chip_name = "8367M";
+		break;
+	default:
+		dev_err(smi->parent, "unknown chip number (%04x)\n", rtl_no);
+		return -ENODEV;
+	}
+
+	ret = rtl8366_smi_read_reg(smi, RTL8367_RTL_VER_REG, &rtl_ver);
+	if (ret) {
+		dev_err(smi->parent, "unable to read chip version\n");
+		return ret;
+	}
+
+	dev_info(smi->parent, "RTL%s ver. %u chip found\n",
+		 chip_name, rtl_ver & RTL8367_RTL_VER_MASK);
+
+	return 0;
+}
+
+static struct rtl8366_smi_ops rtl8367_smi_ops = {
+	.detect		= rtl8367_detect,
+	.reset_chip	= rtl8367_reset_chip,
+	.setup		= rtl8367_setup,
+
+	.mii_read	= rtl8367_mii_read,
+	.mii_write	= rtl8367_mii_write,
+
+	.get_vlan_mc	= rtl8367_get_vlan_mc,
+	.set_vlan_mc	= rtl8367_set_vlan_mc,
+	.get_vlan_4k	= rtl8367_get_vlan_4k,
+	.set_vlan_4k	= rtl8367_set_vlan_4k,
+	.get_mc_index	= rtl8367_get_mc_index,
+	.set_mc_index	= rtl8367_set_mc_index,
+	.get_mib_counter = rtl8367_get_mib_counter,
+	.is_vlan_valid	= rtl8367_is_vlan_valid,
+	.enable_vlan	= rtl8367_enable_vlan,
+	.enable_vlan4k	= rtl8367_enable_vlan4k,
+	.enable_port	= rtl8367_enable_port,
+};
+
+static int rtl8367_probe(struct platform_device *pdev)
+{
+	struct rtl8366_smi *smi;
+	int err;
+
+	smi = rtl8366_smi_probe(pdev);
+	if (!smi)
+		return -ENODEV;
+
+	smi->clk_delay = 1500;
+	smi->cmd_read = 0xb9;
+	smi->cmd_write = 0xb8;
+	smi->ops = &rtl8367_smi_ops;
+	smi->cpu_port = RTL8367_CPU_PORT_NUM;
+	smi->num_ports = RTL8367_NUM_PORTS;
+	smi->num_vlan_mc = RTL8367_NUM_VLANS;
+	smi->mib_counters = rtl8367_mib_counters;
+	smi->num_mib_counters = ARRAY_SIZE(rtl8367_mib_counters);
+
+	err = rtl8366_smi_init(smi);
+	if (err)
+		goto err_free_smi;
+
+	platform_set_drvdata(pdev, smi);
+
+	err = rtl8367_switch_init(smi);
+	if (err)
+		goto err_clear_drvdata;
+
+	return 0;
+
+ err_clear_drvdata:
+	platform_set_drvdata(pdev, NULL);
+	rtl8366_smi_cleanup(smi);
+ err_free_smi:
+	kfree(smi);
+	return err;
+}
+
+static int __exit rtl8367_remove(struct platform_device *pdev)
+{
+	struct rtl8366_smi *smi = platform_get_drvdata(pdev);
+
+	if (smi) {
+		if (of_device_is_compatible(smi->parent->of_node,
+					    "realtek,rtl8367rb"))
+			rtl8367rb_exit_debug_fs();
+
+		rtl8367_switch_cleanup(smi);
+		platform_set_drvdata(pdev, NULL);
+		rtl8366_smi_cleanup(smi);
+		kfree(smi);
+	}
+
+	return 0;
+}
+
+static void rtl8367_shutdown(struct platform_device *pdev)
+{
+	struct rtl8366_smi *smi = platform_get_drvdata(pdev);
+
+	if (smi) {
+		if (of_device_is_compatible(smi->parent->of_node,
+					    "realtek,rtl8367rb"))
+			return;
+
+		rtl8367_reset_chip(smi);
+	}
+}
+
+#ifdef CONFIG_OF
+static const struct of_device_id rtl8367_match[] = {
+	{.compatible = "realtek,rtl8367"},
+	{.compatible = "realtek,rtl8367rb"},
+	{},
+};
+MODULE_DEVICE_TABLE(of, rtl83767_match);
+#endif
+
+
+#ifdef CONFIG_PM
+
+static int rtl8367_pm_resume(struct device *dev)
+{
+	int ret = 0;
+	struct rtl8366_smi *smi = dev_get_drvdata(dev);
+
+	if (gpio_is_valid(smi->gpio_reset)) {
+		gpio_direction_output(smi->gpio_reset, 1);
+		mdelay(10);
+		dev_info(dev, "reset done via GPIO...\n");
+	}
+	ret = rtl8367_setup(smi);
+
+	return ret;
+}
+
+static int rtl8367_pm_suspend(struct device *dev)
+{
+	struct rtl8366_smi *smi = dev_get_drvdata(dev);
+
+	if (of_device_is_compatible(smi->parent->of_node,
+				    "realtek,rtl8367rb"))
+		rtl8367rb_exit_debug_fs();
+
+	return 0;
+}
+
+static const struct dev_pm_ops rtl8367_pm_ops = {
+	.resume_early = rtl8367_pm_resume,
+	.suspend = rtl8367_pm_suspend,
+};
+#else
+#define	rtl8367_pm_ops	NULL
+#endif
+
+static struct platform_driver rtl8367_driver = {
+	.driver = {
+		.name		= RTL8367_DRIVER_NAME,
+		.owner		= THIS_MODULE,
+		.pm		= &rtl8367_pm_ops,
+#ifdef CONFIG_OF
+		.of_match_table = of_match_ptr(rtl8367_match),
+#endif
+	},
+	.probe		= rtl8367_probe,
+	.remove		= rtl8367_remove,
+	.shutdown	= rtl8367_shutdown,
+};
+
+static int __init rtl8367_module_init(void)
+{
+	return platform_driver_register(&rtl8367_driver);
+}
+module_init(rtl8367_module_init);
+
+static void __exit rtl8367_module_exit(void)
+{
+	platform_driver_unregister(&rtl8367_driver);
+}
+module_exit(rtl8367_module_exit);
+
+MODULE_DESCRIPTION(RTL8367_DRIVER_DESC);
+MODULE_AUTHOR("Gabor Juhos <juhosg@openwrt.org>");
+MODULE_LICENSE("GPL v2");
+MODULE_ALIAS("platform:" RTL8367_DRIVER_NAME);

@@ -1,0 +1,9 @@
+debian/tmp/usr/include/ffmpeg/avcodec.h
+debian/tmp/usr/include/ffmpeg/opt.h
+debian/tmp/usr/include/ffmpeg/golomb.h
+debian/tmp/usr/include/ffmpeg/bswap.h
+debian/tmp/usr/include/ffmpeg/bitstream.h
+debian/tmp/usr/include/ffmpeg/intreadwrite.h
+debian/tmp/usr/lib/libavcodec.a
+debian/tmp/usr/lib/libavcodec.so
+debian/tmp/usr/lib/pkgconfig/libavcodec.pc

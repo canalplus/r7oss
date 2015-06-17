@@ -1,0 +1,815 @@
+* stmfb-3.1_stm23_0032
+- [Bugzilla: 9051] More aggressive audio clock initial setup for HDMI compatibility
+- [Bugzilla: 9064] VGA is sometimes not in HDMI valid mode list
+- [Bugzilla: 9068] artefacts when using video plug's plane saturation
+- [Bugzilla: 9144] v4l2: update return codes for ioctl commands
+- [Bugzilla: 9271] Changes to video plane code in 0030 and 0027_p4 has broken 
+  de-interlacing
+- [Bugzilla: 9331] BDisp update for sti7106 and sti5206
+
+* stmfb-3.1_stm23_0031
+- [Bugzilla: 8740] Panning broken when using DirectFB's stmfbdev system
+- [Bugzilla: 8326] YCbCr to RGB conversion is totally broken
+- [Bugzilla: 8767] faster (stretch-) blits on newer SoCs
+- [Bugzilla: 8824] Display driver does not correctly resume from suspend-to-ram on 7105
+- [Bugzilla: 8141] stmfb 028 fix on iptv7105
+- [Bugzilla: 8847] Non-linear video zoom can fail to select filter coefficients
+- [Bugzilla: 8762] restore support for interlaced sources on GDPs
+- [Bugzilla: 8849] HMP7100 derived board designs not supported by coredisplay
+- [Bugzilla: 8888] Update to video vertical re-scale filter coefficients
+- [Bugzilla: 8910] add support for subpixel source origins for YCbCr blits
+- [Bugzilla: 8764] several YCbCr formats not implement in bdisp driver (YUV420 YVU420 YUV422P)
+- [Bugzilla: 8929] build failure on sti7200
+
+* stmfb-3.1_stm23_0030
+- [Bugzilla: 8259] XOR does not work as expected
+- [Bugzilla: 7863] more IQI controls in v4l2
+- add a GTK+ app to control V4L2 controls
+- v4l2: remove V4L2_CID_STM_MIXER_BACKGROUND_ARGB again
+- v4l2: only expose FMD controls if FMD is actually available
+- v4l2: always link FMD params to correct plane
+- v4l2: completely remove the (long deprecated) _VID0 controls
+- v4l2: fix typo V4L2_CID_STM_PLANE_BRIGTHNESS -> V4L2_CID_STM_PLANE_BRIGHTNESS
+- v4l2: do parameter checking when an extended control is being set using old V4L2 API
+- [Bugzilla: 8298] build again with CONFIG_PM set
+- [Bugzilla: 8130] iqi: implement PSI plane controls (but don't use them)
+- [Bugzilla: 8352]  memleak when unloading stmfb on stb7100
+- [Bugzilla: 8340] implement a 'kernel blitter'
+- [Bugzilla: 8464] failure setting SD standard after having been in an ED mode
+- [Bugzilla: 8476] Allow 7105/11/41 users to provide custom HDMI PHY
+  configurations in their board support
+- [Bugzilla: 8481] Artifacts when stopping playback
+- [Bugzilla: 8406] problems w/ YCbCr422r fast blits
+- [Bugzilla: 8517] BDisp downscale limitation is 1/63.99 not 1/31.99
+- [Bugzilla: 8532] hdmi-info wait for hotplug option is incorrectly setting the
+  sysfs attribute path
+- v4l2stream: new parameters h1 and h2 - for aligning two planes next to each other
+- [Bugzilla: 8593] iqi: more enhacements needed
+- [Bugzilla: 8594] various GDP rescale improvements
+- [Bugzilla: 8638] 1080p59 does not work on STi5206 and STi7108
+- [Bugzilla: 8640] framebuffer plane can get hidden when switching between
+                   modes that do not change the resolution (using fbdev API)
+- [Bugzilla: 8602] YCbCr to full range RGB conversion support in BDispII driver
+- [Bugzilla: 8639] switching between certain 1080p modes unreliable
+- [Bugzilla: 8680] Add control to select FDVO output data clock polarity
+- [Bugzilla: 8681] optimised component output support for hdk7108 board
+- [Bugzilla: 8682] new device ID for 7108's BDisp
+
+* stmfb-3.1_stm23_0029
+- [Bugzilla: 7993] API required to disable video plane in the mixer
+- [Bugzilla: 7995] APIs needed for changing screen & plane config using DirectFB
+- [Bugzilla: 8065] allow more pixelformats on framebuffer plane
+- a crash could occur in var_ext handling on framebuffer devices without HDMI
+- remove all internal references to any 'aux' output
+- [Bugzilla: 8193] Framebuffer panning and GDP immediate buffer address updates
+   NOTE: This changes the semantics of the DirectFB1.0 flip flags hence will
+   effect the behaviour of existing applications.
+- [Bugzilla: 8213] replace FBIO_GETVSYNC_ELAPSED with standard FBIOGET_VBLANK
+  framebuffer ioctl
+
+* stmfb-3.1_stm23_0028
+- [Bugzilla: 7098] Add 7106 Linux support. NOTE: Requires kernel
+  linux-sh4-2.6.23.17_stm23_0123 with 7106 support.
+- [Bugzilla: 7123] Improve 64/64bit division handling in stmfb
+- [Bugzilla: 7308] Compatibility of HDMI output
+- [Bugzilla: 7325] Complete 7108 Linux support
+- [Bugzilla: 7469] Add support for a NULL display plane
+- [Bugzilla: 7514] A race condition exists in the mixer class
+- [Bugzilla: 7834] FMD hardware processing can be disabled when not needed
+- [Bugzilla: 7835] allow to set HD DEI configuration using Plane Control
+- [Bugzilla: 7836] implement various V4L2 controls for modifying FMD thresholds
+- [Bugzilla: 7332] stgfx2 DirectFB driver should be default when possible
+
+* stmfb-3.1_stm23_0027
+- [Bugzilla: 6773] Re-factoring exercise
+- [Bugzilla: 6826] kernel oops when unloading stmfb
+- [Bugzilla: 6828] problems enumerating V4L2 devices
+- [Bugzilla: 6870] Add TMDS status to hdmi-info
+- [Bugzilla: 6890] Display driver fails to initialize on MB680 with kernel 121
+- [Bugzilla: 6937] Add provisional support for STx5206/5289
+- [Bugzilla: 6938] Integrate board support for IPIDTV 7105 platform
+- [Bugzilla: 6958] RGB Analogue output on 7105 has incorrect red voltage
+- [Bugzilla: 6971] Add preliminary support for 7108/MB837
+- [Bugzilla: 7040] empty blit node crashes BDisp
+- [Bugzilla: 7041] BDisp: always filter when doing stretch blits
+- [Bugzilla: 7047] A STi7200 HDMI Phy macro definition is incorrect
+- [Bugzilla: 7048] BDisp: vertical filter should not have an initial phase
+- [Bugzilla: 7159] Grey Screen of Death
+- [Bugzilla: 7268] don't modify display buffers when FlexVP (TNR) is in use
+- various HDCP related fixes
+- add BIOS support
+
+* stmfb-3.1_stm23_0026
+- [Bugzilla: 6365] Support scaling specific GDP filter coefficients
+- [Bugzilla: 6372] Lock access to BDisp shared area when necessary
+- [Bugzilla: 6542] No sanity check in CalculatingNonLinearZoom 
+- [Bugzilla: 6581] STx7106 and Deepcolour HDMI support
+
+* stmfb-3.1_stm23_0025
+- [Bugzilla: 5822] Add an interface to force the display output YCbCr
+  colourspace
+- [Bugzilla: 5823] Update graphics planes to support video playback.
+  WARNING: this changes the default buffer handling on interlaced displays,
+  V4L2 users should read the bug to see the impact and how to get back to the
+  previous behaviour.
+- [Bugzilla: 5831] correctly implement hide and show of video planes
+- [Bugzilla: 5834] Always use de-interlacer (when available and enabled) for
+  interlaced output.
+- [Bugzilla: 5844] Remove V4L2_BUF_FLAG_BOTTOM_FIELD_FIRST
+- [Bugzilla: 5845] Fully implement display standard APIs for V4L2 output devices
+- [Bugzilla: 5879] v4l2: when queuing MMAP buffers CLUT is not considered
+- [Bugzilla: 5899] PAL/NTSC output on main display pipeline sometimes has bad
+  sync
+- [Bugzilla: 5919] HDMI hotplug misbehaving on SDK-7105 board.
+- [Bugzilla: 5929] HDMI connection status can be confused by short
+  hotplug pulses
+- [Bugzilla: 5932] STMHDMIIO_SET_SAFE_MODE_PROTOCOL locking broken
+- [Bugzilla: 5935] STMHDMIIO_SET_EDID_MODE_HANDLING should take immediate effect
+- [Bugzilla: 5956] Temporal deinterlacing produces a bad frame on scene change
+- [Bugzilla: 5975] Allow HDMI device to be disabled on module load
+- [Bugzilla: 5888] GDP and Video layers are not aligned properly when rescaled
+- [Bugzilla: 6095] need to re init v4l2 buffer list nodes on VIDIOC_STREAMOFF
+- [Bugzilla: 6006] V4L2 Sliced VBI Output for EBU Teletext
+- [Bugzilla: 6113] Should use rounded division to calculate N
+- [Bugzilla: 6148] Allow other hardware drivers to hook into the primary vsync
+  interrupt handler
+- [Bugzilla: 6169] HDMI vertical active area is incorrect for 480i
+- [Bugzilla: 6294] Video pipeline hardware accessing memory when inactive, 
+  but with bypass enabled.
+- [Bugzilla: 6298] Support for graphics buffers with an alpha range of 0-128
+
+* stmfb-3.1_stm23_0024
+- [Bugzilla: 5796] finish implementation of V4L2 controls for color keying
+  Note: Please recompile your applications, binary compatibility has been
+  broken.
+- [Bugzilla: 5801] PLANE_CTRL_CAPS_PSI_CONTROLS is never set in plane
+  control caps
+- [Bugzilla: 5598] v4l2 video plug controls for PSI
+- [Bugzilla: 5799] add macroblock blitting support to BDisp driver
+
+* stmfb-3.1_stm23_0023
+- NEW: core driver support for pixel aspect ratio correction, preserving the
+  original image aspect ratio on 16:9 displays, in a defined central region.
+- NEW: main DVO support on 7111/7141/7105
+- [Bugzilla: 5449] 7200cut2 1080i DVP capture and main video pipeline display
+  artifacts
+- [Bugzilla: 5453] Delay EDID read retries
+- [Bugzilla: 5497] Add new output control STM_CTRL_422_CHROMA_FILTER, currently
+  implemented on DVO output on 7200 and later chips to optionally decimate
+  chroma from 4:4:4 to 4:2:2 with a 1:2:1 three tap filter.
+- [Bugzilla: 5531] Add stmfb board support for 7200cut3.
+- [Bugzilla: 5587] Add an override to allow the EDID safe mode to use HDMI
+  instead of DVI.
+- [Bugzilla: 5588] Use readl/writel etc. for accessing ioreamp()ed registers,
+  instead of ctrl_inl/ctrl_outl etc.
+- [Bugzilla: 5608] Add coredisplay driver support for PDK7105 board.
+- [Bugzilla: 5631] Add scaling limits to the display plane capabilities
+  structure
+- [Bugzilla: 5646]  Remove HDMI rawedid sysfs attribute
+- [Bugzilla: 5655] TV EDID being re-read unnecessarily
+- [Bugzilla: 5683] Audio InfoFrames cannot be queued for transmission
+- [Bugzilla: 5704] Improve Interlaced Video Trick Modes with DEI and P2I
+- [Bugzilla: 5752] 7109 De-interlacer only supports sources up to 720
+  pixels wide
+- [Bugzilla: 5142] homogenise v4l2 drivers
+- [Bugzilla: 4961] add definition of upcoming V4L2 controls for color keying
+
+* stmfb-3.1_stm23_0022
+- [Bugzilla: 5311] APIs required to hide and show video planes.
+
+* stmfb-3.1_stm23_0021
+- WARNING: The HDMI InfoFrame mechanism has been completely rewritten so that
+  new hardware can be accomodated and so that the current hardware can be 
+  programmed using a DMA engine instead of the CPU. Do not be suprised to find
+  bugs despite our best efforts; if you do not want to experiment stay with
+  stmfb-3.0_stm23_0020.
+- CHANGE: The HDMI device interface for sending various InfoFrames and other
+  data island packets has changed. ISRC packets and a usable mechanism for
+  queuing multiple Vendor specific InfoFrames is now available.
+- NEW: The IOCTL STMHDMIIO_SET_HOTPLUG_MODE has been added to the HDMI device,
+  allowing one of 3 different behaviours when a hotplug de-assert is detected.
+  See Linux/stm/coredisplay/stmhdmi.h for details.
+- NEW: The IOCTL STMHDMIIO_SET_CEA_MODE_SELECTION has been added to the HDMI
+  device. This allows the method, by which the CEA mode number in the AVI
+  InfoFrame for modes that support 4:3 and 16:9 variants, is selected. See
+  Linux/stm/coredisplay/stmhdmi.h for details.
+- [Bugzilla: 4881] Change HDMI SPD InfoFrame transmission rate to every
+  1/2 second.
+- [Bugzilla: 4943] HD output over HDMI is broken since -0019 on 7109c3.
+- [Bugzilla: 4994] Fix IOCTL argument copying sizes.
+- [Bugzilla: 5049] Analogue WSS defaults to 4x3 instead of NO_AFD
+- [Bugzilla: 5072] Incorrect HDMI vsync lengths in interlaced display modes
+- [Bugzilla: 5090] stmfb build system doesn't allow to override CROSS_COMPILE
+- [Bugzilla: 5094] Component analogue sync generation for 1080i modes incorrect
+- [Bugzilla: 5106] Make TMDS clock status available to userspace
+- [Bugzilla: 5122] 7109 HDMI output is horizontally shifted to the right by
+  several pixels
+- [Bugzilla: 5161] HDMI AVI InfoFrames no longer indicate a 709 colourspace for
+  HD modes
+- [Bugzilla: 5164] MB519 Analogue YPrPb output disappears after display mode
+  change
+- [Bugzilla: 5180] Review of video output alignments required
+- [Bugzilla: 5216] Definition of HDMI_AVI_INFOFRAME_NOSCANDATA is incorrect.
+- [Bugzilla: 5279] 7200cut2 FVP clock running at the wrong speed.
+
+* stmfb-3.0_stm23_0020
+- [Bugzilla: 4734] Computer Monitor EDIDs may be incorrectly treated as invalid.
+- [Bugzilla: 4740] Framebuffer fails to set 1080p@59.94Hz
+- [Bugzilla: 4757] driver fails to load on STi7105
+- [Bugzilla: 4771] Support different plane queue sizes for different plane types
+
+* stmfb-3.0_stm23_0019
+- NEW: Added support for accessing the BDisp directly from userspace
+- CHANGE: Instead of sharing one BDisp AQ between all the video output
+  pipelines, use a different AQ for every output on platforms that
+  support this.
+- [Bugzilla: 4583] Changes requested to HDMI EDID block0/1 error handling
+- [Bugzilla: 4653] More robust reading of EDID extension blocks.
+- [Bugzilla: 4683] Support for HDMI quad pixel repeated modes required
+  for Dolby TrueHD certification.
+- [Bugzilla: 4689] RLE hardware decoding locks BDisp on some source data
+- [Bugzilla: 4694] Show output IDs in display pipeline's "info" sysfs attribute.
+- [Bugzilla: 4706] Aux SD YPrPB output disabled when main HD display mode
+  changed.
+- [Bugzilla: 4711] Video range clipping may not be correct on Aux display
+  SD YPrPb output on 7111,7105,7141 and 7200cut2.
+- [Bugzilla: 4724] Progressive planar and 422 raster formatted video
+  incorrectly presented.
+
+* stmfb-3.0_stm23_0018
+- NEW: Added status information to display planes, this is available both in
+  the buffer completed callback status information and via
+  stm_display_plane_get_status().
+- [Bugzilla: 4503] Fix incorrect reading of CEA block DTD EDID entries.
+- [Bugzilla: 4506]: colorkey was incorrectly calculated for the ARGB1555 format
+- [Bugzilla: 4536] HDMI output unreliable on Sony KDL-40V3000
+
+* stmfb-3.0_stm23_0017
+- NEW: Support for STx7105.
+- NEW: Support for STi5202/MB602.
+- NEW: Support for HDMI IT content information in the AVI InfoFrame via a new
+  HDMI device IOCTL STMHDMIIO_SET_CONTENT_TYPE.
+- NEW: Added output API function stm_display_output_soft_reset() which when
+  called on master outputs will reset the timing generator causing a top
+  field vsync to be issued immediately. To be used to do a coarse adjustment
+  of the output vsync relative to the input vsync of captured video.
+- NEW: HDMI safe mode when EDID is unreadable, as documented in CEA-861-E
+  section F.3.5. The safe mode reports the sink as DVI supporting 640x480p.
+- NEW: Added new HDMI device IOCTL STMHDMIIO_SET_EDID_MODE_HANDLING; this 
+  changes the behaviour of the HDMI management thread, allowing HDMI to 
+  transmit display modes not listed in the connected sink's EDID. The
+  hdmi-control utility has the related new option --edid-mode .
+- NEW: Added output API function stm_display_output_set_filter_coefficients()
+  which can be used to change the DENC luma and chroma filters (previous 
+  control based mechanism has been removed) and the component analogue DAC
+  sample rate converter filters on 7111/7105/7141 and 7200cut2.
+- CHANGE: Updated HDMI EDID parsing and reporting in sysfs for CEA-861-E.
+- CHANGE: Do not set the HDMI AVI InfoFrame RGB quantization bits unless
+  the corresponding QS bit in the TV's EDID VCDB block has been set and we
+  are outputting RGB.
+- CHANGE: HDMI AVI InfoFrame under/over scan information now supports setting
+  the "not known" value, a new HDMI device IOCTL STMHDMIIO_SET_OVERSCAN_MODE and
+  argument type stmhdmiio_overscan_mode_t has been added; the previous IOCTL
+  STMHDMIIO_SET_VIDEO_SCAN_TYPE has been removed.
+- CHANGE: support 1080p50/60 on analogue out where hardware is capable
+- [Bugzilla: 4347] Fix 7200cut2 HDMI/SPDIF configuration error.
+- [Bugzilla: 4435] Fix HDMI AVI InfoFrame colorimetry bits when outputting RGB.
+
+* stmfb-3.0_stm23_0016
+- NEW: Add support for HDMI ACP packets
+- NEW: Added /sys/class/stmcoredisplay/info attribute which reports useful
+  information about the driver build. Use this to determine if you are running
+  the driver version you think you are running before reporting bugs.
+- NEW: Support soruce video crop coordinates in 1/32nd of a pixel as well as
+  1/16th and whole pixels.
+- NEW: Support for STx7141, it has exactly the same feature set as STi7111.
+- CHANGE: 1080i de-interlacing using full conf motion mode with 8bit motion
+  buffers provoked memory bandwidth artifacts. This change selects the reduced
+  4bit motion mode for content width >960 pixels and appears to eliminate
+  the artifacts.
+- CHANGE: allow HW de-interlacing for all allowable downscales when displaying
+  on an interlaced display. This allows better quality 1080i->PAL/NTSC
+  conversion. When doing SD->1/4SD scaling, for example as part of an EPG,
+  de-interlacing can always be explicitly turned off using the plane controls
+  if required.
+- CHANGE: the fixed point maths that calculates the HW sample rate converter
+  steps when doing a stretch blit has been changed to round the result instead
+  of doing a "floor". This minimises the absolute pixel position error that can
+  be introduced by the 10bit fixed point maths used by the HW.
+- CHANGE: on the 7200cut2, de-interlacer motion buffers (approximately 3Mb) are
+  now allocated from the bigphysarea partition instead of the coredisplay-video
+  partition. This is to balance memory bandwidth usage while processing 1080i
+  video.
+- [Bugzilla: 3740] fix subpixel position register programming in BDisp nodes 
+  when generating a stretchblit operation that requires multiple spans.
+- [Bugzilla: 4330] set the current output format when starting the auxillary
+  display pipeline. This now correctly configures YPrPb/RGB output via the
+  HD DACs on all SoCs that support "SCART mode" on the auxillary display.
+
+* stmfb-3.0_stm23_0015
+- NEW: Add preliminary support for 7200cut2.
+- NEW: Add support for HDMI YUV 422 output.
+- NEW: Add DVO output format configuration support to STMFBIO_SET_OUTPUT_CONFIG
+  ioctl and stfbset.
+- NEW: Hardware progressive to interlaced conversion enabled on 7111 and
+  7200cut2 main video pipelines, allowing the full range of the vertical 
+  rescaler to be used in all circumstances.
+- NEW: De-interlacing of 1080i content enabled on 7111 and 7200cut2.
+- NEW: IQI supported on 7111
+- NEW: AWG firmware filename changes. (See stmcoredisplay.txt for updated
+  modprobe.conf)
+- NEW: Support 8 channel HDMI audio.
+- NEW: Allow HDMI audio processing to be disabled and audio packets to be 
+       invalidated.
+- NEW: Add support for all HDMI audio packet types (1-bit,DST,HBR), supported
+       on 7111 and 7200Cut2.
+- NEW: add DEI plane controls
+- NEW: yuvplayer test program to play back raw yuv (video) streams.
+- [Bugzilla: 3908] Issues with 59/60Hz only sinks and fast mode changes. It
+  has been necessary to disable fast mode changes between 50Hz and 59.94/60Hz
+  modes to avoid problems with HDMI on US TV's that do not support 50Hz.
+- [Bugzilla: 4004] Support new config name for HMS1 board in -0111 kernel.
+- [Bugzilla: 4005] Fix simultaneous SD SCART and HD HDMI output on 7111.
+- [Bugzilla: 4006] Rework VTG setup for the DENC in 7200 and 7111.
+- [Bugzilla: 3906] Make switching video modes more reliable on 710x/HDMI.
+  There seems to be an issue in the HDMI cell, making the serializer fail
+  sometimes. A work-around has been found by experimentation which has
+  been successfully tested on 7100c3.3, 7109c3.0 & 7109c3.2
+- [Bugzilla: 4107] Fix the video filter coefficient loading logic such that
+  multiple instances of the class do not interfere with each other.
+- [Bugzilla: 4165] same as 3906 but for STi7200.
+- [Bugzilla: 4224] cope with 64MB banks in blitter
+
+====================
+stmfb-3.0_stm23_0014
+====================
+
+New Features
+------------
+1. Add preliminary HD FlexDVO support to STi7200 (note external H/V sync
+   only, no embedded EAV/SAV supported at this point).
+
+Changes/Fixes
+-------------
+1. Bug#3724. Fix kernel fault when loading the framebuffer module before the
+   coredriver module.
+2. Bug#3742. Fix stfbset mis-setting DVO configuration.
+3. Changes to 7200 and 7111 HDMI PHY setup, improving behaviour in SD/ED modes
+   on some TVs.
+4. Bug#3786. Change the HDMI maximum extended control period delay for
+   1080p@24/25/30Hz display modes to 1 vsync, hence <50ms.
+5. Bug#3876. Surface fromat query broken on 7200 FlexVP video plane.
+
+====================
+stmfb-3.0_stm23_0013
+====================
+
+New Features
+------------
+
+1. Preliminary STi7111 support.
+2. Support TNR through xVP70.
+3. Add Linux support for changing the video clipping range independently on
+   analogue and digital outputs, for display setup using Pluge patterns. This 
+   is part of the output config IOCTL, stfbset has been extended to report and
+   change these values.
+4. Added new output interface stm_display_output_setup_clock_reference() that
+   allows board support code to specify the input crystal frequency (27 or
+   30Mhz) and an error value in ppm for the clock reference.
+5. Added new output control STM_CTRL_CLOCK_ADJUSTMENT which allows the display
+   clock frequency to be adjusted upto +-500ppm for use in digital clock
+   recovery or "software" genlocking to a DVP captured video source.
+
+Changes/Fixes
+-------------
+1. Bug#3347. Fix 7200 GDP breakup in 1080i@60Hz when the CPU is saturating the
+   bus.
+2. API change: the node's pCompletedCallback() signature was changed to
+   include CRC values (only valid for main display pipeline and with DEI
+   turned off).
+3. Bug#3395. Fix HDMI sync output polarity for negative sync modes. This
+   improves 480p and 480i on some TVs that were not tolerant to the reversed
+   syncs.
+4. Bug#3491. Fix upscaling some small video image sizes to 1080i caused diagonal
+   striped images.
+5. Horizontal and vertical video resize filters updated to latest reference
+   tables for VDP/DEI based video planes (7109 main, all 7200 and 7111 video
+   planes). This includes separate filter tables for chroma sampling, better
+   chroma upsampling when luma is not being resampled and corrected
+   interpolation when doing subpixel pan and scan but no luma resampling.
+6. Bug#3508. Fix incorrect HDMI VSync lengths in NTSC & PAL.
+7. Removed support for 483p display modes. This was a leftover to allow 
+   DirectFB to change between 480i and 480p, but this is no longer required as
+   DirectFB layer configuration has been extended by ST to distinguish between
+   interlaced and progressive display modes.
+8. Bug#3523. Fix EDID parsing for CEA extended block tags.
+9. CHANGED: The default framebuffer graphics plane behaviour is now NOT to 
+   rescale graphics to video range. See the stmfb documentation for 
+   futher details on this.
+10.Bug#3574. Fix HDMI I2C probing corrupts Quantum Data 882 EDID contents.
+11.Restore 7109Cut2 support for Tribbox.
+12.Cope with I2C bus number change in current 2.6.23 kernels for MB411.
+13.Undo the change to setting HDMI overscan/underscan in 0012, it is a property
+   of the content not the TV.
+15.Removed stfbcontrol from the source tree.
+16.Change the default mixer background colour so all components are in the sRGB
+   video range, i.e. no component < 16.
+17.Fix the reporting of TVs with no name in hdmi-info, it mistakenly reported
+   that no information about the TV could be discovered as if it wasn't
+   responding to I2C.
+
+====================
+stmfb-3.0_stm23_0012
+====================
+
+New Features
+------------
+1. Fully interpret the HDMI 1.3 vendor specific data block; attributes
+   have been added to the hdmi sysfs class to report these to userspace. Note
+   that this includes the CEC address assigned to us by the downstream device.
+
+Changes/Fixes
+-------------
+1. Bug#3075. The bottom few lines on video planes can be corrupted in HD modes
+2. Added memory transaction config support for DEI/VDP based video planes, this
+   for example removes video artifacts when downscaling HD video to SD.
+3. Workaround for unreliable video resize filter coefficient loading in 7200
+   VDP.
+4. Improved analogue video signal generation for ED/HD modes on 7200. This
+   requires a new set of AWG firmwares.
+5. Fixed horizontal video rescaling by 1/4 on 7109 DEI and all 7200 video planes
+6. Bug#3220. Wrong I2C bus used on CB101. 
+7. Added support for using additional memory (from LMI_VID). This requires an
+   updated options line to stmfb.ko and an updated DirectFB package as well.
+8. TIME HAS CHANGED!!!! The driver now expects presentation timestamps relative
+   to the POSIX monotonic clock, not the wall clock (gettimeofday). Kernel users
+   needs to use ktime_get/ktime_to_us and V4L2 users need to use clock_gettime
+   to get the value of CLOCK_MONOTONIC (the test v4l2stream has been updated to
+   show how to do this). This avoids video presentation glitches when the wall
+   clock is adjusted, for instance by a network time daemon.
+9. Don't allow HDMI underscan to be set if the connected TV does not specify
+   support for this in the CEA extension format flags.
+10.Added some required glue setup for HDMI audio on 7200 so the kernel ALSA
+   drivers do not need to touch any display registers.
+
+====================
+stmfb-3.0_stm23_0011
+====================
+
+New Features
+------------
+1. Cursor plane support in the core driver.
+   (o) It just acts like any other plane, but with size and format limitations
+   (o) Animations can be done by queuing buffers just like graphics or video
+   (o) New plane flags and controls support a global XY screen position
+       for the cursor plane, so many immediate changes to the mouse cursor
+       position can be made without lag.
+2. New output control STM_CTRL_SIGNAL_RANGE allows control of digital video
+   signal clipping before the output stage. The default for all outputs is now
+   STM_SIGNAL_FILTER_SAV_EAV, which removes 0 and 255. Signals can be clipped
+   to 16-235/240 by setting the control value STM_SIGNAL_VIDEO_RANGE. Note there
+   is no Linux userspace interface to this at the moment.
+3. New application "stfbset" which replaces "stfbcontrol":
+     o supports selecting which framebuffer device to control
+     o can show the current configuration
+     o can change the mixer background colour
+     o uses standard unix command line option format
+4. The DENC luma and chroma filter setup can now be configured in the 
+   Linux core driver board support files. See the comments in the 7100 and 7109
+   board files for Luma filter examples.
+
+Changes/Fixes
+-------------
+1. Bug#2880. Correct display of 1080p images in 422R and planar YUV formats on
+   the 7109 and 7200 main video pipelines.
+2. Bug#2933. Correct error path cleanup when core driver initialization fails.
+3. Bug#3023. Fix obvious horizontal rescale artifacts at span boundaries on
+   7109/7200 BDisp implementation.
+4. Fix a problem with blended blits if the copy direction was reversed (i.e. 
+   bottom/right -> top/left).
+5. Bug#3049. Fix kernel crash when FBIO_WAITFORVSYNC ioctl is called.
+
+====================
+stmfb-3.0_stm23_0010
+====================
+
+Changes/Fixes
+-------------
+1. Remove 7109C2 module support in Linux.
+2. Fix 2.6.23 builds on MB411,MB442 and MB448 platforms, a late change to
+   kernel config defines was missed.
+3. Removed debugfs register entries on 710x, this mechanism will not work in
+   32bit (SE) mode.
+4. Support HDMI AV Mute set/clear in hdmi-control test.
+5. Updated coredisplay documentation, yes we do support STi7200
+
+====================
+stmfb-3.0_stm23_0009
+====================
+
+New Features
+------------
+1. Add a character device for HDMI. Reading the device returns the full raw
+   edid (all 255 possible blocks) if a TV is connected. An IOCTL interface is
+   also defined in Linux/include/stmhdmi.h (also available in the target 
+   filesystem as part of the kernel headers package).
+2. Port to 2.6.23 kernel (supports 29bit and 32bit SH4 configurations).
+
+Changes/Fixes
+-------------
+1. Better reporting of HDMI CEA short codes, including marking of native modes
+   with an asterix
+2. Preliminary code for reading all extended HDMI EDID blocks.
+3. Class device and sysfs usage has changed, there is now a "stmcoredisplay"
+   class entry in sysfs containing entries displayN for each display pipeline.
+   HDMI entries now exist underneath the display pipeline the HDMI output
+   belongs to.
+4. The hdmi-info application has been changed to match the new class device
+   structure in sysfs. Added support for reporting the device name and to
+   select the device to query.
+5. Removed the blitter IOCTL interface in the V4L2 module. This was never
+   intended for general use so is being removed for the LDDE2.3 release.
+
+====================
+stmfb-3.0_stm23_0008
+====================
+
+New Features
+------------
+1. Support for PAL-60 output on CVBS.
+2. New Linux framebuffer IOCTLs to get/set the output configuration: controling
+   analogue output enables, SD TV standard, hdmi enable and properties, mixer
+   background colour and DENC picture controls (brightness,contrast etc..). 
+   Previous individual IOCTLs for these have been removed.
+3. Analogue DACs and HDMI can now be individually enabled and disabled. When
+   HDMI is disabled, the HDMI management thread still recognises hotplug events
+   and makes the EDID information available in sysfs, even though the display
+   link is not switched on.
+
+Changes/Fixes
+-------------
+1. Fix BCH clock in HD modes on 7200 HDMI output. Info frames and YUV output
+   now appear to work.
+2. Some changes to the blitter implementations to help support DirectFB
+   colour modulation flags in a wider set of circumstances. Ideally this
+   needs to be matched with an updated DirectFB package, to be made available
+   soon. 
+3. Bug#2186. Fix NTSC-443 colour.
+4. Removed completely STi5528 and STm8000 code from the tree.
+5. Bug#2379. Fix bdisp initialzation.
+6. Fix a HDMI management state issue which prevented HDMI restarting immediately
+   if the framebuffer module was loaded and then immediately reloaded again.
+7. Speed up driver loading of display firmwares (requires firmware
+   package v1.8+1.3).
+
+====================
+stmfb-3.0_stm23_0007
+====================
+
+New Features
+------------
+1. A brand new package name (spot the difference?) now we really can't be
+   confused with STAPI. Note this is now a LDDE2.3 only package.
+2. A new version number, because the V4L2 driver has changed name and the
+   coredriver API is not compatible and will break users of
+   WrenDVD/LinuxDVB(Player1); see (4) and (6) in changes/fixes.
+3. Preliminary 7200/MB519 support.
+    + All three display pipelines available.
+    + All planes available, graphics and video.
+    + The same blitter functionality as 7109, DirectFB supported.
+    + Analogue and HDMI outputs.
+    - HDMI YUV output fails in HD modes (possibly corrupted info frames), use
+      RGB instead for the moment.
+4. Preliminary internal support for blit composited "virtual" planes, displayed
+   on a GDP.
+
+Changes/Fixes
+-------------
+1. Core driver now supports internal memory allocation from a Linux bpa2 
+   partition named "coredisplay-video" for LMI VID on 710x.
+2. The 7109DEI now switches which de-interlacing mode it uses depending on
+   if it could allocate motion buffer memory from the correct place (e.g. LMI
+   VID). If it can it will use full motion de-interlacing, if not than it
+   uses the median filtering mode that has been the default in previous
+   releases. This requires a 1MB "coredisplay-video" bpa2 partition to be
+   configured in the kernel board setup.
+3. The 7100DEI now allows hardware de-interlacing on buffers up to
+   960pixels wide as supported by the hardware. Previously it was limited to
+   736 pixels.
+4. The V4L2 output driver provided in this package has been rewritten to
+   create devices based on the display pipeline information available from
+   the core driver module's platform device data. This has changed the device
+   mapping, and changes the way planes on the secondary displays are handled.
+   The created devices can be enumerated by looking at the entries in
+   /sys/class/video4linux once the module has loaded. Note the driver has now
+   changed to a generic name, without a chip postfix, as the implementation is
+   no longer chip specific.
+5. The V4L2 output driver now allocates buffer memory from a bpa2 partition
+   called "v4l2-video-buffers", for planes on the 710x that need to use LMI VID.
+   If bpa2 is not configured in the kernel or no such partition is configured
+   in the kernel board setup then it will not be possible to request buffers
+   for these planes. The build options CONFIG_STG_LMI_VID_BASE and
+   CONFIG_STG_LMI_VID_SIZE have been removed.
+6. The core driver buffer queuing interface has been changed such that it now
+   requires a physical hardware address for the buffer data, not a virtual
+   address. This impacts all drivers using the core driver, but on the bright
+   side will mean the driver is completely clean in its usage of Linux address
+   spaces and might actually work when 32bit SH4 Linux becomes available.
+7. Fix rangechecking bug in stmcore_get_display_pipeline.
+8. Fix a bug in the C interface device lock handling, resulting in the interface
+   not being thread safe if a device handle had more than one user.
+9. Bug#1129. Move HDMI hotplug PIO configuration and polling into the Linux core
+   driver and the platform specific setup.
+10.Bug#1278. Incorrect CLUT used on console when display driver first loaded
+11.Bug#1897. Fix CLUT support on GDPs and missing framebuffer release lock on
+   set videomode error path.
+12. Bug#1965. Flicker filter capability not reported before a display mode is
+   is set, which prevents the Linux framebuffer code from using the FF.
+13. Bug#2022. STMFBIO_SET_HDMI_VIDEO fails when no TV is connected.
+
+====================
+stgfb-2.0_stm22_0006
+====================
+
+New Features
+------------
+1. Bug#1574. Added provisional support for PAL-Nc and NTSC-443 SD encodings,
+   including adding linux framebuffer module parameter support to select these
+   as the default SD encoding.
+2. Support for HMS1 board, as in -39 kernel. Note only for 7100 and 7109Cut3.
+3. Add the ability to rescale colour values from full range (0-255) to 
+   the normal TV video output range (16-235) on GDPs. The framebuffer now has
+   this switched _on_ by default to prevent graphics images from clipping when
+   output. The behaviour can be changed via the framebuffer extended var IOCTL,
+   and stfbcontrol.
+
+Changes/Fixes
+-------------
+1. Bug#1472. Disable flicker filter on 8bit framebuffers.
+2. Accelerated DirectFB stretch blit is now supported on source images >128
+   pixels wide on 7109.
+3. Bug#1571. Changed analogue vsync line generation for 480p and 576p, the
+   negative pulse ended too close to the end of the line.
+4. Bug#1573. Changed the sync generation for 295M (1920x1080i @50Hz 1250 total
+   lines) to match the ST reference driver settings.
+5. Changed analogue generation of VGA so that a signal is only
+   produced when RGB output is selected and so that there are no embedded
+   syncs. Therefore a D-Sub connector is required with H&V sync connected to
+   the external sync outputs of the chip.
+6. Bug#1576. Reinstate PAL-M as an available standard for 480i
+7  Bug#1575. Fixed the generation of PAL-N to match the description in Video
+   Demystified.
+8. Bug#1577. Changed the signal black/blank levels on component outputs to 
+   match the descriptions in Video Demystified.
+9. Changed plane buffer management so that buffers are released immediately
+   after being removed from display in the case where the plane does not need
+   a historic buffer for de-interlacing. This allows GDPs to use a two buffer
+   double buffering scheme again in V4L2.
+10. Bug#1596. GDP STBus transaction configuration on 7109Cut3.x
+11. Change to support of single field queueing for video, new explicit
+    buffer flags to specify top or bottom field only.
+12. Bug#1783. Fixed HDMI initialization crash on <Cut3.0 7100, where HDMI isn't
+    supported.
+
+====================
+stgfb-2.0_stm22_0005
+====================
+
+New Features
+------------
+1. Driver split into "core" and "framebuffer" modules, it is no longer necessary
+   for a framebuffer to be active on a display pipeline before another driver
+   can use it. See Linux/Documentation/stmcoredisplay.txt for more details on
+   the core modules.
+2. Extended screen parameters are now queried and set using new
+   IOCTLs STMFBIO_GET_VAR_SCREENINFO_EX and STMFBIO_SET_VAR_SCREENINFO_EX,
+   rather than individual IOCTLs.
+3. Support for plane re-ordering.
+4. Added support for RGB gain control on GDPs, allowing the brightness of
+   graphics planes to be attenuated.
+5. Added support for changing the alpha values used by the hardware when
+   in ARGB1555 for the two alpha states (a=0 or a=1) on GDPs.
+6. 7109 BDisp application queue is now supported for accelerated graphics as
+   used by DirectFB.
+7. 8bit CLUT framebuffer is now available on 7109C3.  
+
+Changes/Fixes
+-------------
+1. Screen parameters such as global alpha are now all persistent across
+   display mode changes.
+2. The default framebuffer layer blend mode has been changed to assume RGB
+   has been premultiplied by the alpha channel.
+3. The IOCTLs STMFBIO_SET_TRANSPARENCY, STMFBIO_SET_COLOURKEY,
+   STMFBIO_SET_PREMULTIPLIED_ALPHA & STMFBIO_SET_FLICKER_FILTER have
+   been removed.
+4. stfbcontrol now uses the VAR_SCREENINFO_EX IOCTLs.
+5. New Linux module parameter setup for the framebuffer module, see
+   Linux/Docmuentation/stmfb.txt for full details.
+6. Remove Linux support for STm8000 and STi5528 as these chips are not
+   supported on LDDE2.2
+
+
+====================
+stgfb-1.0_stm22_0004
+====================
+
+New Features
+------------
+1. Support 7109Cut3 GDP flicker filter. To get flicker filtering the image
+   buffer must be marked as progressive when queued, the display output must
+   be interlaced and the total lines in the source and destination viewports
+   must be the same.
+2. Support flicker filter setup in the Linux framebuffer and add test support
+   into stfbcontrol.
+3. Support for 7109 de-interlacer, although it is currently limited to median
+   filtering until LMI VID allocation is available to allocate motion buffers
+   for full temporal mode.
+
+Changes/Fixes
+-------------
+1. Allow horizontal downscale to 1/2 size on 7109Cut3 GDPs.
+2. Correct the support for single field interlaced buffer queuing.
+3. Fix vertical cropping problem on 7109 main video plane.
+4. Bug#1116 - fix blitter interrupt deregistration.
+
+
+====================
+stgfb-1.0_stm22_0003
+====================
+
+New Features
+------------
+1. Internal support for 7109Cut3 DVO features, 24bit RGB HD output (for extended
+   package) and loopback of output to DVP.
+2. Support NTSC-J as a default standard for the Linux framebuffer (tvstandard=J)
+
+Changes/Fixes
+-------------
+1. Use new HDMI clocksetup on 7109Cut3 to allow the correct clock setup for
+   the DVO in ED modes.
+2. HDMI audio data flat bits are now set when the HDMI link is first started
+   and when audio is not running and only cleared when valid audio is being
+   generated. This should prevent invalid audio being presented by the TV;
+   but it appears that not all TVs take any notice of the flat bits.
+3. Bug#1054. Framebuffer crashes on exit on 7109.   
+4. Bug#1056. HDMI audio source switch broken on 7109Cut3.
+
+
+====================
+stgfb-1.0_stm22_0002
+====================
+
+Changes/Fixes
+-------------
+1. Fix Bug#1010. Blitter rescaling filtering is disabled
+2. Major internal interface rewrite. Kernel drivers wanting to use services
+   from the core display driver now need to use the interfaces defined in
+   stgfb/include/stmdisplay*.h . The previous Linux specific Devfb* interfaces
+   no longer exist. OS21 based applications now need to be written to these
+   new interfaces, rather than using the core driver C++ classes directly,
+   as they are thread safe.
+3. Changed how planes are locked for use; this is no longer done when the
+   plane instance is got from the device. Instead a lock/unlock interface
+   is provided to prevent multiple references to a plane queueing buffers.
+   However other plane operations are available to all.
+4. Fix Bug#1029. Bad video display on 7109 with certain horizontal
+                 cropping parameters
+5. Fix Bug#1036. A number of the FB IOCTLs are specified with the wrong macro
+6. Fix Bug#1037. NTSC Line 20/283 VBI generation incorrect
+7. Added support for all 625line and HDMI wide screen signalling modes. The
+   V4L2 controls for TV aspect ratio, Video aspect ratio and letterbox mode
+   (which is now an enumeration instead of a boolean) control the possibilities.
+   On HDMI the TV aspect ratio control sets the "Picture Aspect Ratio" and
+   sets the appropriate 4x3 or 16x9 CEA video code for the output display mode.
+   The video aspect ratio and letterbox mode combine to set WSS/Active Format
+   bits; undefined combinations result in a full screen display.
+
+
+====================
+stgfb-1.0_stm22_0001
+====================
+
+New Features
+------------
+1. Port to STLinux2.2 (Linux 2.6.17 and above), note that the driver is not
+   backwards compatible with the STLinux2.0 2.6.11.12 kernels.
+   
+Changes/Fixes
+-------------
+1. Removed AVS initialisation from Linux framebuffer driver, if you want
+   a real AV switch driver, write your own!
+2. Changed kbuild support, all modules now build into a single directory
+   Linux/kbuild.
+3. Remove building of the kernel cfb.. software drawing modules. This can
+   now be configured as part of the kernel graphics driver support in 2.6.17.
+4. Major change to GDP (graphics plane) handling to support power management
+   resume correctly in interlaced modes and faster display frame rates with
+   DirectFB.
+5. Change to linux framebuffer pan semantics, using the FB_ACTIVATE_VBL flag
+   will cause the pan not to wait for the change to take effect - as long as
+   there isn't more than one outstanding framebuffer change queued up. This
+   allows DirectFB triple buffering to run at the real display refresh rate
+   (as long as your drawing can keep up).
+6. Remove unused triangle code from from the blitter driver and FB IOCTL
+   interface.
+

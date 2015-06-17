@@ -1,0 +1,8 @@
+# zlib
+
+klib-y := adler32.o compress.o crc32.o gzio.o
+klib-y += uncompr.o deflate.o trees.o zutil.o
+klib-y += inflate.o infback.o inftrees.o inffast.o
+
+# zlib specific flag
+EXTRA_KLIBCCFLAGS := -DDYNAMIC_CRC_TABLE

@@ -1,0 +1,85 @@
+directfb (1.6.3-1) precise; urgency=low
+
+  * new upstream version
+
+ -- Andreas Shimokawa <andi@directfb.org>  Tue, 15 Jan 2013 13:09:52 +0100
+
+directfb (1.6.2-1) precise; urgency=low
+
+  * new upstream version
+
+ -- Andreas Shimokawa <andi@directfb.org>  Thu, 20 Sep 2012 16:22:56 +0100
+
+directfb (1.6.0-1) natty; urgency=low
+
+  * new upstream version
+
+ -- Andreas Shimokawa <andi@directfb.org>  Thu, 14 Jun 2012 17:54:59 +0100
+
+directfb (1.6.0-0rc1) natty; urgency=low
+
+  * new upstream version
+
+ -- Andreas Shimokawa <andi@directfb.org>  Wed, 31 Aug 2011 12:56:41 +0100
+
+directfb (1.5.2-1) natty; urgency=low
+
+  * new upstream version
+
+ -- Andreas Shimokawa <andi@directfb.org>  Fri, 29 Jul 2011 12:52:44 +0100
+
+directfb (1.5.0-20110503) maverick; urgency=low
+
+  * new upstream version
+
+ -- Andreas Shimokawa <andi@directfb.org>  Tue, 03 Mar 2011 11:05:16 +0100
+
+directfb (1.5.0-20110422) maverick; urgency=low
+
+  * new upstream version
+
+ -- Andreas Shimokawa <andi@directfb.org>  Fri, 22 Apr 2011 12:28:16 +0100
+
+directfb (1.5.0-20110418) maverick; urgency=low
+
+  * package requestors and dispatchers for voodoo operation
+  * include voodooplay and dfbproxy in libdirectfb-bin package
+
+ -- Andreas Shimokawa <andi@directfb.org>  Mon, 18 Apr 2011 20:28:16 +0100
+
+directfb (1.5.0-20110413) maverick; urgency=low
+
+  * new upstream version
+
+ -- Andreas Shimokawa <andi@directfb.org>  Wed, 13 Apr 2011 15:28:16 +0100
+
+directfb (1.5.0-20110330) maverick; urgency=low
+
+  * new upstream version
+
+ -- Andreas Shimokawa <andi@directfb.org>  Thu, 24 Mar 2011 12:28:16 +0100
+
+directfb (1.5.0-20110329) maverick; urgency=low
+
+  * new upstream version
+  * package vnc system
+
+ -- Andreas Shimokawa <andi@directfb.org>  Thu, 24 Mar 2011 12:28:16 +0100
+
+directfb (1.5.0-20110324) maverick; urgency=low
+
+  * new upstream version, rename pacakage names for later 1.4 packaging
+
+ -- Andreas Shimokawa <andi@directfb.org>  Thu, 24 Mar 2011 12:28:16 +0100
+
+directfb (1.5.0-20110322) maverick; urgency=low
+
+  * change naming scheme of modules, set package version to current date
+
+ -- Andreas Shimokawa <andi@directfb.org>  Tue, 22 Mar 2011 23:59:16 +0100
+
+directfb (1.5.0-1) maverick; urgency=low
+
+  * initial package of DirectFB 1.5
+
+ -- Andreas Shimokawa <andi@directfb.org>  Tue, 22 Mar 2011 15:58:16 +0100

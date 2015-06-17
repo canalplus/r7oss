@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+
+<!-- TODO: add definitions for StartServiceByName, UpdateActivationEnvironment, GetNameOwner, GetConnectionUnixUser, GetConnectionUnixProcessID, AddMatch, RemoveMatch, GetId -->
+
+<node name="/any" xmlns:tp="http://telepathy.freedesktop.org/wiki/DbusSpec#extensions-v0">
+	<interface name="org.freedesktop.DBus">
+		<tp:docstring xmlns="http://www.w3.org/1999/xhtml">
+			<p>The special message bus name <code>org.freedesktop.DBus</code> responds to a number of additional messages.</p>
+		</tp:docstring>
+
+		<method name="Hello">
+			<tp:docstring xmlns="http://www.w3.org/1999/xhtml">
+				<p>
+					Before an application is able to send messages to other applications
+					it must send the <tp:member-ref>Hello</tp:member-ref> message to the message bus to obtain a unique name.
+					If an application without a unique name tries to send a message to another application, or a
+					message to the message bus itself that isn't the <tp:member-ref>Hello</tp:member-ref> message,
+					it will be disconnected from the bus.
+				</p>
+				<p>
+					There is no corresponding "disconnect" request; if a client wishes to
+					disconnect from the bus, it simply closes the socket (or other communication channel).
+				</p>
+			</tp:docstring>
+
+			<arg name="connection_name" type="s" direction="out">
+				<tp:docstring>Unique name assigned to the connection</tp:docstring>
+			</arg>
+		</method>
+
+		<method name="ListNames">
+			<tp:docstring>Returns a list of all currently-owned names on the bus.</tp:docstring>
+
+			<arg name="names" type="as" direction="out">
+				<tp:docstring>Array of strings where each string is a bus name</tp:docstring>
+			</arg>
+		</method>
+
+		<method name="ListActivatableNames">
+			<tp:docstring>Returns a list of all names that can be activated on the bus.</tp:docstring>
+
+			<arg name="names" type="as" direction="out">
+				<tp:docstring>Array of strings where each string is a bus name</tp:docstring>
+			</arg>
+		</method>
+
+		<method name="NameHasOwner">
+			<tp:docstring>Checks if the specified name exists (ie. currently has an owner)</tp:docstring>
+
+			<arg name="name" type="s" direction="in">
+				<tp:docstring>Bus name to check</tp:docstring>
+			</arg>
+
+			<arg name="exists" type="b" direction="out">
+				<tp:docstring>True if the name exists</tp:docstring>
+			</arg>
+		</method>
+
+		<signal name="NameOwnerChanged">
+			<tp:docstring>This signal indicates that the owner of a name has changed. It's also the signal to use to detect the appearance of new names on the bus.</tp:docstring>
+
+			<arg type="s" name="name">
+				<tp:docstring>Bus Name with a new owner</tp:docstring>
+			</arg>
+
+			<arg type="s" name="old_owner">
+				<tp:docstring>Old owner or empty string if none</tp:docstring>
+			</arg>
+
+			<arg type="s" name="new_owner">
+				<tp:docstring>New owner or empty string if none</tp:docstring>
+			</arg>
+		</signal>
+
+		<signal name="NameLost">
+			<tp:docstring>This signal is sent to a specific application when it loses ownership of a name.</tp:docstring>
+
+			<arg type="s" name="name">
+				<tp:docstring>Name which was lost</tp:docstring>
+			</arg>
+		</signal>
+
+		<signal name="NameAcquired">
+			<tp:docstring>This signal is sent to a specific application when it gains ownership of a name.</tp:docstring>
+
+			<arg type="s" name="name">
+				<tp:docstring>Name which was acquired</tp:docstring>
+			</arg>
+
+		</signal>
+	</interface>
+</node>
+

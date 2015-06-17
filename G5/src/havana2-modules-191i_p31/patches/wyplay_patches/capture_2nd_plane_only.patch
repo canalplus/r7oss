@@ -1,0 +1,125 @@
+Index: player2/player/manifestor/manifestor_video_stmfb.cpp
+===================================================================
+--- player2.orig/player/manifestor/manifestor_video_stmfb.cpp	2011-04-22 12:38:22.000000000 +0000
++++ player2/player/manifestor/manifestor_video_stmfb.cpp	2011-10-28 08:57:43.016287666 +0000
+@@ -92,6 +92,7 @@
+ 
+     DisplayDevice               = NULL;
+     Plane                       = NULL;
++    PlaneId                     = -1;
+     Output                      = NULL;
+     Visible                     = false;
+     ClockRateAdjustment         = 0;
+@@ -148,9 +149,11 @@
+ 
+     CloseOutputSurface ();
+ 
+-    // Again Julian, a hack...
+-    ManifestorLastDisplayedBuffer = NULL;
+-    wake_up_interruptible (&g_ManifestorLastWaitQueue);
++    if (PlaneId > 2) {
++        // Again Julian, a hack...
++        ManifestorLastDisplayedBuffer = NULL;
++        wake_up_interruptible (&g_ManifestorLastWaitQueue);
++    }
+ }
+ //}}}
+ //{{{  Halt
+@@ -170,9 +173,11 @@
+         PtsOnDisplay    = INVALID_TIME;
+     }
+ 
+-    // Again Julian, a hack...
+-    ManifestorLastDisplayedBuffer = NULL;
+-    wake_up_interruptible (&g_ManifestorLastWaitQueue);
++    if (PlaneId > 2) {
++        // Again Julian, a hack...
++        ManifestorLastDisplayedBuffer = NULL;
++        wake_up_interruptible (&g_ManifestorLastWaitQueue);
++    }
+ 
+     return Manifestor_Video_c::Halt ();
+ }
+@@ -193,9 +198,11 @@
+         DisplayBuffer[i].info.pCompletedCallback        = NULL;
+     }
+ 
+-    // Again Julian, a hack...
+-    ManifestorLastDisplayedBuffer = NULL;
+-    wake_up_interruptible (&g_ManifestorLastWaitQueue);
++    if (PlaneId > 2) {
++        // Again Julian, a hack...
++        ManifestorLastDisplayedBuffer = NULL;
++        wake_up_interruptible (&g_ManifestorLastWaitQueue);
++    }
+ 
+     return Manifestor_Video_c::Reset ();
+ }
+@@ -283,6 +290,7 @@
+         return ManifestorError;
+     }
+ 
++    this->PlaneId = PlaneId;
+     stm_display_plane_connect_to_output (Plane, Output);
+ 
+ //
+@@ -327,11 +335,14 @@
+ 
+     DisplayDevice       = NULL;
+     Plane               = NULL;
++    PlaneId             = -1;
+     Output              = NULL;
+ 
+-    // Again Julian, a hack...
+-    ManifestorLastDisplayedBuffer = NULL;
+-    wake_up_interruptible (&g_ManifestorLastWaitQueue);
++    if (PlaneId > 2) {
++        // Again Julian, a hack...
++        ManifestorLastDisplayedBuffer = NULL;
++        wake_up_interruptible (&g_ManifestorLastWaitQueue);
++    }
+ 
+     return ManifestorNoError;
+ }
+@@ -1024,9 +1035,11 @@
+     }
+ #endif
+ 
+-    // Again Julian, a hack...
+-    ManifestorLastDisplayedBuffer = NULL;
+-    wake_up_interruptible (&g_ManifestorLastWaitQueue);
++    if (PlaneId > 2) {
++        // Again Julian, a hack...
++        ManifestorLastDisplayedBuffer = NULL;
++        wake_up_interruptible (&g_ManifestorLastWaitQueue);
++    }
+ 
+     return ManifestorNoError;
+ }
+@@ -1245,9 +1258,11 @@
+     PtsOnDisplay                = Buffer->NativePlaybackTime;
+     FrameCount++;
+ 
+-    // Again Julian, sorry for this hack.
+-    ManifestorLastDisplayedBuffer = &DisplayBuffer[BufferOnDisplay];
+-    wake_up_interruptible (&g_ManifestorLastWaitQueue);
++    if (PlaneId > 2) {
++        // Again Julian, sorry for this hack.
++        ManifestorLastDisplayedBuffer = &DisplayBuffer[BufferOnDisplay];
++        wake_up_interruptible (&g_ManifestorLastWaitQueue);
++    }
+ 
+     DisplayAddress              = (unsigned char*)(DisplayBuffer[BufferOnDisplay].src.ulVideoBufferAddr);
+     DisplaySize                 = DisplayBuffer[BufferOnDisplay].src.ulVideoBufferSize;
+Index: player2/player/manifestor/manifestor_video_stmfb.h
+===================================================================
+--- player2.orig/player/manifestor/manifestor_video_stmfb.h	2011-10-28 08:53:19.000000000 +0000
++++ player2/player/manifestor/manifestor_video_stmfb.h	2011-10-28 08:53:40.402042192 +0000
+@@ -50,6 +50,7 @@
+ private:
+     stm_display_device_t*       DisplayDevice;
+     stm_display_plane_t*        Plane;
++    int                         PlaneId;
+     stm_display_output_t*       Output;
+ 
+     stm_plane_crop_t            srcRect;

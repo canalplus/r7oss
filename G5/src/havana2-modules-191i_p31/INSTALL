@@ -1,0 +1,22 @@
+Kernel mode build
+=================
+
+1. Just type make (like you might with the kernel build system)
+
+   make ARCH=sh4 modules modules_install
+    
+PS. If you install your kernel in a non standard place you will need to set the environment variables:
+
+CONFIG_KERNEL_BUILD=/opt/STM/STLinux-2.2/devkit/build/build.hms1
+CONFIG_KERNEL_PATH=/opt/STM/STLinux-2.2/devkit/sources/kernel/linux
+
+(sorry it can't work these out for itself)
+
+User mode build
+===============
+
+1. Just type make
+
+   make
+
+NB.  This is an intermediate build system, this system will be updated so that one set of makefile will do for both kernel and user build, one step at a time.

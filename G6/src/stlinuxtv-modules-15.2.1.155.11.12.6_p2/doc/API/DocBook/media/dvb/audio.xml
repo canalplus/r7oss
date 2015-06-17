@@ -1,0 +1,3411 @@
+<title>DVB Audio Device</title>
+<para>The DVB audio device controls the MPEG2 audio decoder of the DVB hardware. It
+can be accessed through <emphasis role="tt">/dev/dvb/adapter0/audio0</emphasis>. Data types and and
+ioctl definitions can be accessed by including <emphasis role="tt">linux/dvb/video.h</emphasis> in your
+application.
+</para>
+<para>Please note that some DVB cards don&#8217;t have their own MPEG decoder, which results in
+the omission of the audio and video device.
+</para>
+
+<section id="audio_data_types">
+<title>Audio Data Types</title>
+<para>This section describes the structures, data types and defines used when talking to the
+audio device.
+</para>
+
+<section id="audio-stream-source-t">
+<title>audio_stream_source_t</title>
+<para>The audio stream source is set through the AUDIO_SELECT_SOURCE call and can take
+the following values, depending on whether we are replaying from an internal (demux) or
+external (user write) source.
+</para>
+<programlisting>
+typedef enum {
+	AUDIO_SOURCE_DEMUX,
+	AUDIO_SOURCE_MEMORY
+} audio_stream_source_t;
+</programlisting>
+<para>AUDIO_SOURCE_DEMUX selects the demultiplexer (fed either by the frontend or the
+DVR device) as the source of the video stream. If AUDIO_SOURCE_MEMORY
+is selected the stream comes from the application through the <emphasis role="tt">write()</emphasis> system
+call.
+</para>
+
+</section>
+<section id="audio-play-state-t">
+<title>audio_play_state_t</title>
+<para>The following values can be returned by the AUDIO_GET_STATUS call representing the
+state of audio playback.
+</para>
+<programlisting>
+typedef enum {
+	AUDIO_STOPPED,
+	AUDIO_PLAYING,
+	AUDIO_PAUSED
+} audio_play_state_t;
+</programlisting>
+
+</section>
+<section id="audio-channel-select-t">
+<title>audio_channel_select_t</title>
+<para>The audio channel selected via AUDIO_CHANNEL_SELECT is determined by the
+following values.
+</para>
+<programlisting>
+typedef enum {
+	AUDIO_STEREO,
+	AUDIO_MONO_LEFT,
+	AUDIO_MONO_RIGHT,
+	AUDIO_MONO,
+	AUDIO_STEREO_SWAPPED
+} audio_channel_select_t;
+</programlisting>
+
+</section>
+<section id="audio-status">
+<title>struct audio_status</title>
+<para>The AUDIO_GET_STATUS call returns the following structure informing about various
+states of the playback operation.
+</para>
+<programlisting>
+typedef struct audio_status {
+	boolean AV_sync_state;
+	boolean mute_state;
+	audio_play_state_t play_state;
+	audio_stream_source_t stream_source;
+	audio_channel_select_t channel_select;
+	boolean bypass_mode;
+	audio_mixer_t mixer_state;
+} audio_status_t;
+</programlisting>
+
+</section>
+<section id="audio-mixer">
+<title>struct audio_mixer</title>
+<para>The following structure is used by the AUDIO_SET_MIXER call to set the audio
+volume.
+</para>
+<programlisting>
+typedef struct audio_mixer {
+	unsigned int volume_left;
+	unsigned int volume_right;
+} audio_mixer_t;
+</programlisting>
+
+</section>
+<section id="audio_encodings">
+<title>audio encodings</title>
+<para>A call to AUDIO_GET_CAPABILITIES returns an unsigned integer with the following
+bits set according to the hardwares capabilities.
+</para>
+<programlisting>
+ #define AUDIO_CAP_DTS    1
+ #define AUDIO_CAP_LPCM   2
+ #define AUDIO_CAP_MP1    4
+ #define AUDIO_CAP_MP2    8
+ #define AUDIO_CAP_MP3   16
+ #define AUDIO_CAP_AAC   32
+ #define AUDIO_CAP_OGG   64
+ #define AUDIO_CAP_SDDS 128
+ #define AUDIO_CAP_AC3  256
+</programlisting>
+
+</section>
+<section id="audio-karaoke">
+<title>struct audio_karaoke</title>
+<para>The ioctl AUDIO_SET_KARAOKE uses the following format:
+</para>
+<programlisting>
+typedef
+struct audio_karaoke {
+	int vocal1;
+	int vocal2;
+	int melody;
+} audio_karaoke_t;
+</programlisting>
+<para>If Vocal1 or Vocal2 are non-zero, they get mixed into left and right t at 70% each. If both,
+Vocal1 and Vocal2 are non-zero, Vocal1 gets mixed into the left channel and Vocal2 into the
+right channel at 100% each. Ff Melody is non-zero, the melody channel gets mixed into left
+and right.
+</para>
+
+</section>
+<section id="audio-attributes-t">
+<title>audio attributes</title>
+<para>The following attributes can be set by a call to AUDIO_SET_ATTRIBUTES:
+</para>
+<programlisting>
+ typedef uint16_t audio_attributes_t;
+ /&#x22C6;   bits: descr. &#x22C6;/
+ /&#x22C6;   15-13 audio coding mode (0=ac3, 2=mpeg1, 3=mpeg2ext, 4=LPCM, 6=DTS, &#x22C6;/
+ /&#x22C6;   12    multichannel extension &#x22C6;/
+ /&#x22C6;   11-10 audio type (0=not spec, 1=language included) &#x22C6;/
+ /&#x22C6;    9- 8 audio application mode (0=not spec, 1=karaoke, 2=surround) &#x22C6;/
+ /&#x22C6;    7- 6 Quantization / DRC (mpeg audio: 1=DRC exists)(lpcm: 0=16bit,  &#x22C6;/
+ /&#x22C6;    5- 4 Sample frequency fs (0=48kHz, 1=96kHz) &#x22C6;/
+ /&#x22C6;    2- 0 number of audio channels (n+1 channels) &#x22C6;/
+</programlisting>
+
+</section>
+<section id="audio-encoding_t">
+<title>audio_encoding_t [STMicroelectronics extension]</title>
+<para>The ioctl AUDIO_SET_ENCODING allows to set the audio stream encoding using the following values:
+</para>
+<programlisting>
+typedef enum {
+	AUDIO_ENCODING_AUTO,
+	AUDIO_ENCODING_PCM,
+	AUDIO_ENCODING_LPCM,
+	AUDIO_ENCODING_MPEG1,
+	AUDIO_ENCODING_MPEG2,
+	AUDIO_ENCODING_MP3,
+	AUDIO_ENCODING_AC3,
+	AUDIO_ENCODING_DTS,
+	AUDIO_ENCODING_AAC,
+	AUDIO_ENCODING_WMA,
+	AUDIO_ENCODING_RAW,
+	AUDIO_ENCODING_LPCMA,
+	AUDIO_ENCODING_LPCMH,
+	AUDIO_ENCODING_LPCMB,
+	AUDIO_ENCODING_SPDIF, /* Data coming through SPDIF link :: compressed or PCM data */
+	AUDIO_ENCODING_DTS_LBR,
+	AUDIO_ENCODING_MLP,
+	AUDIO_ENCODING_RMA,
+	AUDIO_ENCODING_AVS,
+	AUDIO_ENCODING_VORBIS,
+	AUDIO_ENCODING_FLAC,
+	AUDIO_ENCODING_DRA,
+	AUDIO_ENCODING_NONE,
+	AUDIO_ENCODING_MS_ADPCM,
+	AUDIO_ENCODING_IMA_ADPCM,
+	AUDIO_ENCODING_PRIVATE
+} audio_encoding_t;
+</programlisting>
+<para>AUDIO_ENCODING_AUTO let the Audio driver tries to figure out the encoding by checking the first packet sent for decode. AUDIO_ENCODING_NONE indicates that there is no audio in the stream being played.</para>
+
+</section>
+<section id="audio-discontinuity-type">
+<title>audio_discontinuity_t [STMicroelectronics extension]</title>
+<para>The ioctl AUDIO_DISCONTINUITY uses the following values as input:
+</para>
+<programlisting>
+typedef enum {
+	AUDIO_DISCONTINUITY_SKIP,
+	AUDIO_DISCONTINUITY_CONTINUOUS_REVERSE,
+	AUDIO_DISCONTINUITY_SURPLUS_DATA
+	AUDIO_DISCONTINUITY_EOS
+} audio_discontinuity_t;
+</programlisting>
+
+</section>
+<section id="audio_spdif_source">
+<title>audio_spdif_source_t [STMicroelectronics extension]</title>
+<para>The ioctl AUDIO_SET_SPDIF_SOURCE uses the following values as input:
+</para>
+<programlisting>
+typedef enum audio_spdif_source{ 
+	AUDIO_SPDIF_SOURCE_PP,	/*&lt;! normal decoder output */
+	AUDIO_SPDIF_SOURCE_DEC,	/*&lt;! decoder output w/o post-proc */
+	AUDIO_SPDIF_SOURCE_ES,	/*&lt;! raw elementary stream data */
+} audio_spdif_source_t;
+</programlisting>
+
+</section>
+<section id="audio-play-interval-type">
+<title>audio_play_interval_t [STMicroelectronics extension]</title>
+<para>The ioctl AUDIO_SET_PLAY_INTERVAL uses the following structure as input:
+</para>
+<programlisting>
+#define DVB_TIME_NOT_BOUNDED            0xfedcba9876543210ULL
+
+typedef struct dvb_play_interval_s {
+        unsigned long long              start;
+        unsigned long long              end;
+}dvb_play_interval_t;
+
+typedef dvb_play_interval_t             audio_play_interval_t;
+</programlisting>
+
+</section>
+<section id="audio_aac_profile_e">
+<title>audio_aac_profile_t [STMicroelectronics extension]</title>
+<para>The audio_mpeg4aac_t structure embed the information of AAC Profile that can be the following values:
+</para>
+<programlisting>
+typedef enum audio_aac_profile_e {
+	AUDIO_AAC_LC_TS_PROFILE,	/* Auto detect */
+	AUDIO_AAC_LC_ADTS_PROFILE,	/* ADTS force */
+	AUDIO_AAC_LC_LOAS_PROFILE,	/* LOAS force */
+	AUDIO_AAC_LC_RAW_PROFILE,	/* RAW  force */
+	AUDIO_AAC_BSAC_PROFILE,		/* BSAC force */
+} audio_aac_profile_t;
+</programlisting>
+
+</section>
+<section id="audio_mpeg4aac_s">
+<title>audio_mpeg4aac_t [STMicroelectronics extension]</title>
+<para>The structure struct audio_mpeg4aac_s describe the MPEG4 AAC type and is used by the ioctl AUDIO_SET_AAC_DECODER_CONFIG
+</para>
+<programlisting>
+typedef struct audio_mpeg4aac_s {
+	audio_aac_profile_t aac_profile;
+	unsigned char sbr_enable;
+	unsigned char sbr_96k_enable;
+	unsigned char ps_enable;
+} audio_mpeg4aac_t;
+</programlisting>
+
+</section>
+<section id="audio_play_time_t">
+<title>audio_play_time_t [STMicroelectronics extension]</title>
+<para>The ioctl AUDIO_GET_PLAY_TIME returns information using the following structure:
+</para>
+<programlisting>
+typedef struct dvb_play_time_s {
+	unsigned long long system_time;
+	unsigned long long presentation_time;
+	unsigned long long pts;
+} dvb_play_time_t;
+
+typedef dvb_play_time_t audio_play_time_t;
+</programlisting>
+
+</section>
+<section id="audio_play_info_t">
+<title>audio_play_info_t [STMicroelectronics extension]</title>
+<para>The ioctl AUDIO_GET_PLAY_INFO returns information using the following structure:
+</para>
+<programlisting>
+typedef struct dvb_play_info_s {
+	unsigned long long system_time;
+	unsigned long long presentation_time;
+	unsigned long long pts;
+	unsigned long long frame_count;
+} dvb_play_info_t;
+
+typedef dvb_play_info_t audio_play_info_t;
+</programlisting>
+
+<para>Structure elements:</para>
+<programlisting>
+system_time                         The current value of the system clock.
+presentation_time                   The reference time defined by an encoder clock
+pts                                 The timestamp of the frame on display
+frame_count                         The number of frames put on the display regardless of play direction.
+</programlisting>
+</section>
+
+<section id="audio_clock_data_point_t">
+<title>audio_clock_data_point_t [STMicroelectronics extension]</title>
+<para>The ioctl AUDIO_{GET/SET}_CLOCK_DATA_POINT uses the following structure:
+</para>
+<programlisting>
+typedef enum {
+	DVB_CLOCK_FORMAT_US = 0x00,
+	DVB_CLOCK_FORMAT_PTS = 0x01,
+	DVB_CLOCK_FORMAT_27MHz = 0x02,
+	DVB_CLOCK_FORMAT_MASK = 0xff,
+	DVB_CLOCK_INITIALIZE = 0x100
+} dvb_clock_flags_t;
+
+typedef struct dvb_clock_data_point_s {
+	dvb_clock_flags_t flags;
+	unsigned long long source_time;
+	unsigned long long system_time;
+} dvb_clock_data_point_t;
+
+typedef dvb_clock_data_point_t audio_clock_data_point_t;
+</programlisting>
+
+</section>
+<section id="audio_time_mapping_t">
+<title>audio_time_mapping_t [STMicroelectronics extension]</title>
+<para>The ioctl AUDIO_SET_TIME_MAPPING uses the following structure:
+</para>
+<programlisting>
+typedef struct dvb_time_mapping_s {
+        unsigned long long native_stream_time;
+        unsigned long long system_presentation_time;
+} dvb_time_mapping_t;
+
+typedef dvb_time_mapping_t audio_time_mapping_t;
+</programlisting>
+</section>
+
+<section id="audio_application_t">
+<title>audio_application_t [STMicroelectronics extension]</title>
+<para>This enum audio_application_t describes the audio applications supported and is used by the ioctl AUDIO_SET_APPLICATION_TYPE
+</para>
+<programlisting>
+typedef enum audio_application_e {
+        AUDIO_APPLICATION_ISO = 0,
+        AUDIO_APPLICATION_DVD,
+        AUDIO_APPLICATION_DVB,
+        AUDIO_APPLICATION_MS10,
+        AUDIO_APPLICATION_MS11,
+        AUDIO_APPLICATION_MS12,
+} audio_application_t;
+</programlisting>
+
+</section>
+
+<section id="audio_service_t">
+<title>audio_service_t [STMicroelectronics extension]</title>
+<para>This enum audio_service_t describes the audio services supported and is used by the ioctl AUDIO_SET_SERVICE_TYPE
+</para>
+<programlisting>
+typedef enum audio_service_e {
+        AUDIO_SERVICE_PRIMARY = 0,
+        AUDIO_SERVICE_SECONDARY,
+        AUDIO_SERVICE_MAIN,
+        AUDIO_SERVICE_AUDIO_DESCRIPTION,
+        AUDIO_SERVICE_MAIN_AND_AUDIO_DESCRIPTION,
+        AUDIO_SERVICE_CLEAN_AUDIO,
+} audio_service_t;
+</programlisting>
+
+</section>
+
+<section id="audio_region_t">
+<title>audio_region_t [STMicroelectronics extension]</title>
+<para>This enum audio_region_t describes the audio regions supported and is used by the ioctl AUDIO_SET_REGION_TYPE
+</para>
+<programlisting>
+typedef enum audio_region_e {
+        AUDIO_REGION_UNDEFINED = 0,
+        AUDIO_REGION_ATSC,
+        AUDIO_REGION_DVB,
+        AUDIO_REGION_NORDIG,
+        AUDIO_REGION_DTG,
+        AUDIO_REGION_ARIB,
+        AUDIO_REGION_DTMB,
+} audio_region_t;
+</programlisting>
+
+</section>
+
+<section id="audio_channel_assignment_t">
+<title>audio_channel_assignment_t [STMicroelectronics extension]</title>
+<para>This structure will provide the channel map information which are returned by the AUDIO_GET_EVENT call.
+</para>
+<programlisting>
+typedef struct audio_channel_assignment {
+	unsigned int pair0:6;
+	unsigned int pair1:6;
+	unsigned int pair2:6;
+	unsigned int pair3:6;
+	unsigned int pair4:6;
+	unsigned int reserved0:1;
+	unsigned int malleable:1;
+} audio_channel_assignment_t;
+</programlisting>
+
+<para>Structure elements:</para>
+<programlisting>
+pair0				Left Front and Right front channels.
+pair1				Centre and LFE channels.
+pair2				Left Surround and Right Surround channels.
+pair3				Left Rear Surround and Right rear surround channels.
+pair4				Down mix combination.
+reserved0			Should be set to zero.
+malleable			Used to describe speaker topologies that can dynamically adjust to the
+				input provided (e.g. multichannel HDMI receivers).
+</programlisting>
+</section>
+
+<section id="audio_parameters_t">
+<title>audio_parameters_t [STMicroelectronics extension]</title>
+<para>The following is the structure audio_parameters_t which are returned by the AUDIO_GET_EVENT call.
+</para>
+<programlisting>
+typedef struct audio_parameters_s {
+	audio_encoding_t coding;
+	audio_channel_assignment_t channel_assignment;
+	int           bitrate;
+	unsigned int  sampling_freq;
+	unsigned char num_channels;
+	int           dual_mono;
+} audio_parameters_t;
+</programlisting>
+
+</section>
+
+<section id="enum audio_event_type">
+<title>audio_event_type[STMicroelectronics extension]</title>
+<para>The following enum defines the audio events which can be retrieved with AUDIO_GET_EVENT call.</para>
+<programlisting>
+enum audio_event_type {
+	AUDIO_EVENT_PARAMETERS_CHANGED	= 1,
+	AUDIO_EVENT_STREAM_UNPLAYABLE,
+	AUDIO_EVENT_TRICK_MODE_CHANGE,
+	AUDIO_EVENT_LOST,
+	AUDIO_EVENT_END_OF_STREAM,
+	AUDIO_EVENT_FRAME_STARVATION,
+	AUDIO_EVENT_FRAME_SUPPLIED,
+	AUDIO_EVENT_FRAME_DECODED_LATE,
+	AUDIO_EVENT_DATA_DELIVERED_LATE,
+	AUDIO_EVENT_FATAL_ERROR,
+	AUDIO_EVENT_FATAL_HARDWARE_FAILURE,
+	AUDIO_EVENT_FRAME_DECODED,
+	AUDIO_EVENT_FRAME_RENDERED,
+};
+</programlisting>
+</section>
+
+<section id="audio-event">
+<title>audio_event [STMicroelectronics extension]</title>
+<para>The following is the structure audio event as it is returned by the AUDIO_GET_EVENT call.
+</para>
+<programlisting>
+struct audio_event {
+	int  type;
+	union {
+		unsigned int value;
+		audio_parameters_t audio_parameters;
+	} u;
+};
+</programlisting>
+
+<informaltable>
+  <tgroup cols="3">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>type</para>
+        </entry>
+        <entry align="char">
+          <para>Purpose</para>
+        </entry>
+        <entry align="char">
+          <para>Parameter field</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>AUDIO_EVENT_PARAMETERS_CHANGED</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports a change in at least one of the parameters of the audio frames decoded from a stream.</para>
+        </entry>
+        <entry align="char">
+          <para>u.audio_parameters</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>AUDIO_EVENT_STREAM_UNPLAYABLE</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports that the audio stream is unplayable</para>
+        </entry>
+        <entry align="char">
+          <para>u.value</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>AUDIO_EVENT_TRICK_MODE_CHANGE</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports the adoption of an alternative approach to minimize decoder bandwidth during trick mode playback.</para>
+        </entry>
+        <entry align="char">
+          <para>u.value</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>AUDIO_EVENT_LOST</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports that the internal decoder event queue overflowed and the last event have been discarded and replaced with this event.</para>
+        </entry>
+        <entry align="char">
+          <para>u.value</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>AUDIO_EVENT_END_OF_STREAM</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports that an end-of-stream marker has reached the output of the decoder. The end-of-stream marker can be pushed directly into the decoder via AUDIO_DISCONTINUITY or even from an upper location in the pipeline.</para>
+        </entry>
+        <entry align="char">
+          <para>N/A</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>AUDIO_EVENT_FRAME_STARVATION</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports that the audio decoder has not been fed with compressed data for an unexpected period of time and all the internal queues of the pipeline are empty.</para>
+        </entry>
+        <entry align="char">
+          <para>N/A</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>AUDIO_EVENT_FRAME_SUPPLIED</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports that the audio decoder has started playing out new decoded data. It is sent on startup, when exiting a pause or when data is being fed again after a starvation.</para>
+        </entry>
+        <entry align="char">
+          <para>N/A</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>AUDIO_EVENT_FRAME_DECODED_LATE</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports decoded audio data that left the decoder too late to be rendered at the correct time</para>
+        </entry>
+        <entry align="char">
+          <para>N/A</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>AUDIO_EVENT_DATA_DELIVERED_LATE</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports decoded audio data that left the decoder too late to be rendered at the correct time and the fault was caused by the data not being available for decode early enough</para>
+        </entry>
+        <entry align="char">
+          <para>N/A</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>AUDIO_EVENT_FATAL_ERROR</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports a serious internal failure. Application can now close down the decoders and try restarting again.</para>
+        </entry>
+        <entry align="char">
+          <para>N/A</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>AUDIO_EVENT_FATAL_HARDWARE_FAILURE</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports that the hardware has entered an unrecoverable failure state</para>
+        </entry>
+        <entry align="char">
+          <para>N/A</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>AUDIO_EVENT_FRAME_DECODED</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports that audio data has been decoded</para>
+        </entry>
+        <entry align="char">
+          <para>N/A</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>AUDIO_EVENT_FRAME_RENDERED</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports that decoded audio data has been rendered</para>
+        </entry>
+        <entry align="char">
+          <para>N/A</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+</section>
+
+<section id="audio-option-t">
+<title>audio_option_t [STMicroelectronics extension]</title>
+<para>The following is the structure audio_option_t which is used to pass option to the audio decoder via the AUDIO_COMMAND ioctl
+</para>
+<programlisting>
+typedef struct audio_option_s {
+	unsigned int option;
+	unsigned int value;
+} audio_option_t;
+</programlisting>
+</section>
+
+<section id="audio-command">
+<title>audio_command [STMicroelectronics extension]</title>
+<para>The following is the structure audio_command used to pass command to the audio decoder via the AUDIO_COMMAND ioctl
+</para>
+<programlisting>
+struct audio_command {
+	unsigned int cmd;
+#define AUDIO_CMD_SET_OPTION 1
+	union {
+		audio_option_t option;
+	} u;
+}
+</programlisting>
+</section>
+</section>
+
+
+<section id="audio_function_calls">
+<title>Audio Function Calls</title>
+
+
+<section id="audio_fopen">
+<title>open()</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This system call opens a named audio device (e.g. /dev/dvb/adapter0/audio0)
+ for subsequent use. When an open() call has succeeded, the device will be ready
+ for use. The significance of blocking or non-blocking mode is described in the
+ documentation for functions where there is a difference. It does not affect the
+ semantics of the open() call itself. A device opened in blocking mode can later
+ be put into non-blocking mode (and vice versa) using the F_SETFL command
+ of the fcntl system call. This is a standard system call, documented in the Linux
+ manual page for fcntl. Only one user can open the Audio Device in O_RDWR
+ mode. All other attempts to open the device in this mode will fail, and an error
+ code will be returned. If the Audio Device is opened in O_RDONLY mode, the
+ only ioctl call that can be used is AUDIO_GET_STATUS. All other call will
+ return with an error code.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int open(const char &#x22C6;deviceName, int flags);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>const char
+ *deviceName</para>
+</entry><entry
+ align="char">
+<para>Name of specific audio device.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int flags</para>
+</entry><entry
+ align="char">
+<para>A bit-wise OR of the following flags:</para>
+</entry>
+ </row><row><entry
+ align="char">
+</entry><entry
+ align="char">
+<para>O_RDONLY read-only access</para>
+</entry>
+ </row><row><entry
+ align="char">
+</entry><entry
+ align="char">
+<para>O_RDWR read/write access</para>
+</entry>
+ </row><row><entry
+ align="char">
+</entry><entry
+ align="char">
+<para>O_NONBLOCK open in non-blocking mode</para>
+</entry>
+ </row><row><entry
+ align="char">
+</entry><entry
+ align="char">
+<para>(blocking mode is the default)</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>RETURN VALUE</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>ENODEV</para>
+</entry><entry
+ align="char">
+<para>Device driver not loaded/available.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>EBUSY</para>
+</entry><entry
+ align="char">
+<para>Device or resource busy.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>EINVAL</para>
+</entry><entry
+ align="char">
+<para>Invalid argument.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+
+</section>
+<section id="audio_fclose">
+<title>close()</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This system call closes a previously opened audio device.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int close(int fd);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>RETURN VALUE</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>EBADF</para>
+</entry><entry
+ align="char">
+<para>fd is not a valid open file descriptor.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+
+</section>
+<section id="audio_fwrite">
+<title>write()</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This system call can only be used if AUDIO_SOURCE_MEMORY is selected
+ in the ioctl call AUDIO_SELECT_SOURCE. The data provided shall be in
+ PES format. If O_NONBLOCK is not specified the function will block until
+ buffer space is available. The amount of data to be transferred is implied by
+ count.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>size_t write(int fd, const void &#x22C6;buf, size_t count);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>void *buf</para>
+</entry><entry
+ align="char">
+<para>Pointer to the buffer containing the PES data.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>size_t count</para>
+</entry><entry
+ align="char">
+<para>Size of buf.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>RETURN VALUE</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>EPERM</para>
+</entry><entry
+ align="char">
+<para>Mode AUDIO_SOURCE_MEMORY not selected.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>ENOMEM</para>
+</entry><entry
+ align="char">
+<para>Attempted to write more data than the internal buffer can
+ hold.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>EBADF</para>
+</entry><entry
+ align="char">
+<para>fd is not a valid open file descriptor.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+
+</section><section id="AUDIO_STOP"
+role="subsection"><title>AUDIO_STOP</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl call asks the Audio Device to stop playing the current stream.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(int fd, int request = AUDIO_STOP);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals AUDIO_STOP for this command.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="AUDIO_PLAY"
+role="subsection"><title>AUDIO_PLAY</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl call asks the Audio Device to start playing an audio stream from the
+ selected source. AUDIO_PLAY must be used to resume playback at 1x speed after a call
+ to AUDIO_PAUSE in trick mode.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(int fd, int request = AUDIO_PLAY);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals AUDIO_PLAY for this command.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="AUDIO_PAUSE"
+role="subsection"><title>AUDIO_PAUSE</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl call suspends the audio stream being played. Decoding and playing
+ are paused. It is then possible to restart again decoding and playing process of
+ the audio stream using AUDIO_CONTINUE command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>If AUDIO_SOURCE_MEMORY is selected in the ioctl call
+ AUDIO_SELECT_SOURCE, the DVB-subsystem will not decode (consume)
+ any more data until the ioctl call AUDIO_CONTINUE or AUDIO_PLAY is
+ performed.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(int fd, int request = AUDIO_PAUSE);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals AUDIO_PAUSE for this command.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="AUDIO_CONTINUE"
+role="subsection"><title>AUDIO_CONTINUE</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl restarts the decoding and playing process previously paused
+with AUDIO_PAUSE command. AUDIO_CONTINUE will make the playback resume at the
+same speed which was set before a call to AUDIO_PAUSE.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>It only works if the stream were previously stopped with AUDIO_PAUSE</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(int fd, int request = AUDIO_CONTINUE);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals AUDIO_CONTINUE for this command.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="AUDIO_SELECT_SOURCE"
+role="subsection"><title>AUDIO_SELECT_SOURCE</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl call informs the audio device which source shall be used
+ for the input data. The possible sources are demux or memory. If
+ AUDIO_SOURCE_MEMORY is selected, the data is fed to the Audio Device
+ through the write command.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(int fd, int request = AUDIO_SELECT_SOURCE,
+ audio_stream_source_t source);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals AUDIO_SELECT_SOURCE for this command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>audio_stream_source_t
+ source</para>
+</entry><entry
+ align="char">
+<para>Indicates the source that shall be used for the Audio
+ stream.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="AUDIO_SET_MUTE"
+role="subsection"><title>AUDIO_SET_MUTE</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl call asks the audio device to mute the stream that is currently being
+ played.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(int fd, int request = AUDIO_SET_MUTE,
+ boolean state);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals AUDIO_SET_MUTE for this command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>boolean state</para>
+</entry><entry
+ align="char">
+<para>Indicates if audio device shall mute or not.</para>
+</entry>
+ </row><row><entry
+ align="char">
+</entry><entry
+ align="char">
+<para>TRUE Audio Mute</para>
+</entry>
+ </row><row><entry
+ align="char">
+</entry><entry
+ align="char">
+<para>FALSE Audio Un-mute</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="AUDIO_SET_AV_SYNC"
+role="subsection"><title>AUDIO_SET_AV_SYNC</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl call asks the Audio Device to turn ON or OFF A/V synchronization.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(int fd, int request = AUDIO_SET_AV_SYNC,
+ boolean state);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals AUDIO_AV_SYNC for this command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>boolean state</para>
+</entry><entry
+ align="char">
+<para>Tells the DVB subsystem if A/V synchronization shall be
+ ON or OFF.</para>
+</entry>
+ </row><row><entry
+ align="char">
+</entry><entry
+ align="char">
+<para>TRUE AV-sync ON</para>
+</entry>
+ </row><row><entry
+ align="char">
+</entry><entry
+ align="char">
+<para>FALSE AV-sync OFF</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="AUDIO_SET_BYPASS_MODE"
+role="subsection"><title>AUDIO_SET_BYPASS_MODE (NOT SUPPORTED)</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl call asks the Audio Device to bypass the Audio decoder and forward
+ the stream without decoding. This mode shall be used if streams that can&#8217;t be
+ handled by the DVB system shall be decoded. Dolby DigitalTM streams are
+ automatically forwarded by the DVB subsystem if the hardware can handle it.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(int fd, int request =
+ AUDIO_SET_BYPASS_MODE, boolean mode);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals AUDIO_SET_BYPASS_MODE for this
+ command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>boolean mode</para>
+</entry><entry
+ align="char">
+<para>Enables or disables the decoding of the current Audio
+ stream in the DVB subsystem.</para>
+</entry>
+ </row><row><entry
+ align="char">
+</entry><entry
+ align="char">
+<para>TRUE Bypass is disabled</para>
+</entry>
+ </row><row><entry
+ align="char">
+</entry><entry
+ align="char">
+<para>FALSE Bypass is enabled</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="AUDIO_CHANNEL_SELECT"
+role="subsection"><title>AUDIO_CHANNEL_SELECT</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl call asks the Audio Device to select the requested channel if possible.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(int fd, int request =
+ AUDIO_CHANNEL_SELECT, audio_channel_select_t);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals AUDIO_CHANNEL_SELECT for this
+ command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>audio_channel_select_t
+ ch</para>
+</entry><entry
+ align="char">
+<para>Select the output format of the audio (mono left/right,
+ stereo).</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="AUDIO_GET_STATUS"
+role="subsection"><title>AUDIO_GET_STATUS</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl call asks the Audio Device to return the current state of the Audio
+ Device.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(int fd, int request = AUDIO_GET_STATUS,
+ struct audio_status &#x22C6;status);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals AUDIO_GET_STATUS for this command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>struct audio_status
+ *status</para>
+</entry><entry
+ align="char">
+<para>Returns the current state of Audio Device.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="AUDIO_GET_CAPABILITIES"
+role="subsection"><title>AUDIO_GET_CAPABILITIES</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl call asks the Audio Device to tell us about the decoding capabilities
+ of the audio hardware.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(int fd, int request =
+ AUDIO_GET_CAPABILITIES, unsigned int &#x22C6;cap);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals AUDIO_GET_CAPABILITIES for this
+ command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>unsigned int *cap</para>
+</entry><entry
+ align="char">
+<para>Returns a bit array of supported sound formats.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="AUDIO_CLEAR_BUFFER"
+role="subsection"><title>AUDIO_CLEAR_BUFFER</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl call asks the Audio Device to clear all software and hardware buffers
+ of the audio decoder device.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(int fd, int request = AUDIO_CLEAR_BUFFER);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals AUDIO_CLEAR_BUFFER for this command.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="AUDIO_SET_ID"
+role="subsection"><title>AUDIO_SET_ID</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl selects which sub-stream is to be decoded if a program or system
+ stream is sent to the video device. If no audio stream type is set the id has to be
+ in [0xC0,0xDF] for MPEG sound, in [0x80,0x87] for AC3 and in [0xA0,0xA7]
+ for LPCM. More specifications may follow for other stream types. If the stream
+ type is set the id just specifies the substream id of the audio stream and only
+ the first 5 bits are recognized.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(int fd, int request = AUDIO_SET_ID, int
+ id);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals AUDIO_SET_ID for this command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int id</para>
+</entry><entry
+ align="char">
+<para>audio sub-stream id</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="AUDIO_SET_MIXER"
+role="subsection"><title>AUDIO_SET_MIXER (NOT SUPPORTED)</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl lets you adjust the mixer settings of the audio decoder.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(int fd, int request = AUDIO_SET_MIXER,
+ audio_mixer_t &#x22C6;mix);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals AUDIO_SET_ID for this command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>audio_mixer_t *mix</para>
+</entry><entry
+ align="char">
+<para>mixer settings.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="AUDIO_SET_STREAMTYPE"
+role="subsection"><title>AUDIO_SET_STREAMTYPE</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl tells the driver which kind of audio stream to expect. This is useful
+ if the stream offers several audio sub-streams like LPCM and AC3.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(fd, int request = AUDIO_SET_STREAMTYPE,
+ int type);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals AUDIO_SET_STREAMTYPE for this
+ command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int type</para>
+</entry><entry
+ align="char">
+<para>stream type</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>EINVAL</para>
+</entry><entry
+ align="char">
+<para>type is not a valid or supported stream type.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+
+</section><section id="AUDIO_SET_EXT_ID"
+role="subsection"><title>AUDIO_SET_EXT_ID (NOT SUPPORTED)</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl can be used to set the extension id for MPEG streams in DVD
+ playback. Only the first 3 bits are recognized.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(fd, int request = AUDIO_SET_EXT_ID, int
+ id);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals AUDIO_SET_EXT_ID for this command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int id</para>
+</entry><entry
+ align="char">
+<para>audio sub_stream_id</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>EINVAL</para>
+</entry><entry
+ align="char">
+<para>id is not a valid id.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+
+</section><section id="AUDIO_SET_ATTRIBUTES"
+role="subsection"><title>AUDIO_SET_ATTRIBUTES (NOT SUPPORTED)</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl is intended for DVD playback and allows you to set certain
+ information about the audio stream.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(fd, int request = AUDIO_SET_ATTRIBUTES,
+ audio_attributes_t attr );</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals AUDIO_SET_ATTRIBUTES for this command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>audio_attributes_t
+ attr</para>
+</entry><entry
+ align="char">
+<para>audio attributes according to <xref linkend="audio-attributes-t" /></para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>EINVAL</para>
+</entry><entry
+ align="char">
+<para>attr is not a valid or supported attribute setting.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+
+</section><section id="AUDIO_SET_KARAOKE"
+role="subsection"><title>AUDIO_SET_KARAOKE (NOT SUPPORTED)</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl allows one to set the mixer settings for a karaoke DVD.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(fd, int request = AUDIO_SET_KARAOKE,
+ audio_karaoke_t &#x22C6;karaoke);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals AUDIO_SET_KARAOKE for this
+ command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>audio_karaoke_t
+ *karaoke</para>
+</entry><entry
+ align="char">
+<para>karaoke settings according to <xref linkend="audio-karaoke" />.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>EINVAL</para>
+</entry><entry
+ align="char">
+<para>karaoke is not a valid or supported karaoke setting.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+ </section>
+
+
+<section id="AUDIO-GET-PTS" role="subsection">
+
+<title>AUDIO_GET_PTS [Undocumented kernel feature]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl reads the 33 bit presentation time stamp as
+          defined in ITU T-REC-H.222.0 / ISO/IEC 13818-1.  The PTS
+          should belong to the currently played frame if possible, but
+          may also be a value close to it like the PTS of the last
+          decoded frame or the last PTS extracted by the PES
+          parser.</para>
+
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = AUDIO_GET_PTS, unsigned long long *pts);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals AUDIO_GET_PTS for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>unsigned long long *pts</para>
+        </entry>
+        <entry align="char">
+          <para>PTS from system.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+
+<section id="AUDIO-SET-ENCODING" role="subsection">
+<title>AUDIO_SET_ENCODING [STMicroelectronics extension]</title>
+<para>DESCRIPTION</para>
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl tells the Audio Device the encoding of the audio stream. It is used by the
+          Audio Device to select the correct codec to decode the
+          stream.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = AUDIO_SET_ENCODING, audio_encoding_t encoding);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals AUDIO_SET_ENCODING for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>audio_encoding_t encoding</para>
+        </entry>
+        <entry align="char">
+          <para>Indicates which encoding has been used to encode the audio stream according to <xref linkend="audio-encoding_t"/></para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+
+<section id="AUDIO-FLUSH" role="subsection">
+
+<title>AUDIO_FLUSH [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl call asks the audio device to play out the
+          data already injected. The ioctl does not return until all
+          of the previously injected data has been rendered.</para>
+
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = AUDIO_FLUSH);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals AUDIO_FLUSH for this command.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+
+<section id="AUDIO-SET-SPDIF-SOURCE" role="subsection">
+
+<title>AUDIO_SET_SPDIF_SOURCE [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>Select which type of SPDIF data to expect.</para>
+
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = AUDIO_SET_SPDIF_SOURCE, audio_spdif_source_t source);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals AUDIO_SET_SPDIF_SOURCE for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>audio_spdif_source_t source</para>
+        </entry>
+        <entry align="char">
+          <para>Indicates the source of SPDIF input according to <xref linkend="audio_spdif_source"/>.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+<section id="AUDIO-SET-SPEED" role="subsection">
+
+<title>AUDIO_SET_SPEED [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl call asks the audio device to play the
+          current video stream at the defined speed. The desired speed
+          is defined as follows:</para>
+
+          <para>speed = 1000 	: normal play</para>
+
+          <para>0 &lt; speed &lt; 1000 	: slow forward</para>
+
+          <para>speed > 1000 	: fast forward</para>
+
+          <para>speed = -1000 	: reverse play</para>
+
+          <para>-1000 &lt; speed &lt; 0 	: slow reverse</para>
+
+          <para>speed &lt; -1000 	: fast reverse</para>
+
+          <para>The normal play speed is defined by the name DVB_SPEED_NORMAL_PLAY.</para>
+
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = AUDIO_SET_SPEED, int speed);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals AUDIO_SET_SPEED for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int speed</para>
+        </entry>
+        <entry align="char">
+          <para>Speed definition as above.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+
+<section id="AUDIO-DISCONTINUITY" role="subsection">
+
+<title>AUDIO_DISCONTINUITY [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl call tells the audio device that the next
+          block of data is discontinuous with the previous blocks of
+          data received. The discontinuity may be because the
+          application has skipped in the stream or because the
+          application is playing the stream in reverse. If the
+          application has written data to the audio device in excess
+          of an exact number of frames it can inform the audio device
+          of this fact by setting the surplus data flag.</para>
+
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = AUDIO_DISCONTINUITY, audio_discontinuity_t discontinuity);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals AUDIO_DISCONTINUITY for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>audio_discontinuity_t discontinuity</para>
+        </entry>
+        <entry align="char">
+          <para>Type of discontinuity as according to <xref linkend="audio-discontinuity-type" />.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+
+<section id="AUDIO_SET_PLAY_INTERVAL" role="subsection">
+
+<title>AUDIO_SET_PLAY_INTERVAL [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl call tells the audio device the PTS range
+          for audible frames. Frames with PTS times within this range
+          will be rendered. Frames outside the range will not be
+          rendered. The value DVB_TIME_NOT_BOUNDED indicates that that
+          end of the range is unbounded.</para>
+
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = AUDIO_SET_PLAY_INTERVAL, audio_play_interval_t *play_interval);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals AUDIO_SET_PLAY_INTERVAL for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>audio_play_interval_t *play_interval</para>
+        </entry>
+        <entry align="char">
+          <para>Play interval start and stop as according to <xref linkend="audio-play-interval-type" />.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+
+<section id="AUDIO-SET-SYNC-GROUP" role="subsection">
+
+<title>AUDIO_SET_SYNC_GROUP [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl call tells the audio device to synchronise
+          the stream on this device with the streams on the specified
+          LinuxDVB device.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = AUDIO_SET_SYNC_GROUP, unsigned int group);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals AUDIO_SET_SYNC_GROUP for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>unsigned int group</para>
+        </entry>
+        <entry align="char">
+          <para>Device with which device/demux to synchronise this stream to.</para>
+          <para>     group = 0xGGvvvvvv</para>
+          <para> GG: 00 = invalid group type</para>
+          <para>     01 = demux group: sync to a playback attached to a specific demux (AUDIO_SYNC_GROUP_DEMUX)</para>
+          <para>     10 = audio group: sync to a audio device (AUDIO_SYNC_GROUP_AUDIO)</para>
+          <para>     11 = video group: sync to a video device (AUDIO_SYNC_GROUP_VIDEO)</para>
+          <para>  (AUDIO_SYNC_GROUP_MASK = AUDIO_SYNC_GROUP_DEMUX | AUDIO_SYNC_GROUP_AUDIO | AUDIO_SYNC_GROUP_VIDEO)</para>
+          <para>   VVVVVV: id of the device within the selected group</para>
+          <para>example: group = AUDIO_SYNC_GROUP_AUDIO | 0x01 will allow sync the audio device with the audio1 device </para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+<section id="AUDIO-GET-PLAY-TIME" role="subsection">
+
+<title>AUDIO_GET_PLAY_TIME [STMicroelectronics extension] (DEPRECATED)</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>DEPRECATED - see <xref linkend="AUDIO-GET-PLAY-INFO" />.</para>
+
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = AUDIO_GET_PLAY_TIME, audio_play_time_t *param);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals AUDIO_GET_PLAY_TIME for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>audio_play_time_t *param</para>
+        </entry>
+        <entry align="char">
+          <para>Reference to audio_play_time_t structure — see <xref linkend="audio_play_time_t" />.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+
+<section id="AUDIO-GET-PLAY-INFO" role="subsection">
+
+<title>AUDIO_GET_PLAY_INFO [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl call returns timing and frame count information about the audio.</para>
+
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = AUDIO_GET_PLAY_INFO, audio_play_info_t *param);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals AUDIO_GET_PLAY_INFO for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>audio_play_info_t *param</para>
+        </entry>
+        <entry align="char">
+          <para>Reference to audio_play_info_t structure – see <xref linkend="audio_play_info_t" />.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+<section id="AUDIO-SET-CLOCK-DATA-POINT" role="subsection">
+
+<title>AUDIO_SET_CLOCK_DATA_POINT [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>The clock data point values are intended to enable the
+          system to recover the broadcast clock. This function
+          provides the mechanism to inject the PCR data pairs which
+          have previously been obtained from the demux device (DMX_SET_PES_FILTER)</para>
+
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = AUDIO_SET_CLOCK_DATA_POINT, audio_clock_data_point *param);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals AUDIO_SET_CLOCK_DATA_POINT for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>audio_clock_data_point *param</para>
+        </entry>
+        <entry align="char">
+          <para>Reference to audio_clock_data_point_t structure – see <xref linkend="audio_clock_data_point_t" />.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+
+<section id="AUDIO-SET-TIME-MAPPING" role="subsection">
+
+<title>AUDIO_SET_TIME_MAPPING [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>AUDIO_SET_TIME_MAPPING is used to set a specific the
+          relationship between PTS values in the stream and the system
+          clock. This can be used, for example, to adjust the latency
+          on a specific stream to match that on another stream.</para>
+
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = AUDIO_SET_TIME_MAPPING, audio_time_mapping_t *param);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals AUDIO_SET_TIME_MAPPING for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>audio_time_mapping_t *param</para>
+        </entry>
+        <entry align="char">
+          <para>Reference to audio_time_mapping_t structure - see section <xref linkend="audio_time_mapping_t" />.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+
+
+<section id="AUDIO-GET-CLOCK-DATA-POINT" role="subsection">
+
+<title>AUDIO_GET_CLOCK_DATA_POINT [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>The clock data point values are intended to enable the
+          system to recover the broadcast clock.</para>
+
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = AUDIO_GET_CLOCK_DATA_POINT, audio_clock_data_point *param);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals AUDIO_GET_CLOCK_DATA_POINT for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>audio_clock_data_point *param</para>
+        </entry>
+        <entry align="char">
+          <para>Reference to audio_clock_data_point_t structure – see <xref linkend="audio_clock_data_point_t" />.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+
+
+<section id="AUDIO_SET_APPLICATION_TYPE" role="subsection">
+
+<title>AUDIO_SET_APPLICATION_TYPE [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl call specifies and sets the application profile for audio decoding purposes. E.g. ISO, DVD, DVB, MS10.MS11 and MS12.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = AUDIO_SET_APPLICATION_TYPE, audio_application_t type);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals AUDIO_SET_APPLICATION_TYPE for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>audio_application_t type</para>
+        </entry>
+        <entry align="char">
+          <para>Application profile. See <xref linkend="audio_application_t"/></para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+<section id="AUDIO_SET_AAC_DECODER_CONFIG" role="subsection">
+
+<title>AUDIO_SET_AAC_DECODER_CONFIG [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl call will set the decoder config for AAC.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd,int request = AUDIO_SET_AAC_DECODER_CONFIG, audio_mpeg4aac_t *param);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals AUDIO_SET_AAC_DECODER_CONFIG for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>audio_mpeg4aac_t *param</para>
+        </entry>
+        <entry align="char">
+          <para>Pointer to the audio_mpeg4aac_t structure, see <xref linkend="audio_mpeg4aac_s"/></para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+<section id="AUDIO_SET_SERVICE_TYPE" role="subsection">
+
+<title>AUDIO_SET_SERVICE_TYPE [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl call sets the audio service provided by the target play stream. E.g. Primary
+Secondary, Main, Audio Description, Main and audio description </para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = AUDIO_SET_SERVICE_TYPE, audio_service_t type);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals AUDIO_SET_SERVICE_TYPE for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>audio_service_t type</para>
+        </entry>
+        <entry align="char">
+          <para>Service type, see <xref linkend="audio_service_t"/></para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+<section id="AUDIO_STREAMDRIVEN_DUALMONO" role="subsection">
+
+<title>AUDIO_STREAMDRIVEN_DUALMONO [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl allows to specify whether to restrict the application of dual-mono user-setting to only dual-mono encoded streams.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = AUDIO_STREAMDRIVEN_DUALMONO, unsigned int apply);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals AUDIO_STREAMDRIVEN_DUALMONO for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>unsigned int apply</para>
+        </entry>
+        <entry align="char">
+          <para> Apply dual-mono settings to all streams: 0</para>
+          <para> Apply dual-mono settings to only dual-mono streams: 1</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+<section id="AUDIO_SET_REGION_TYPE" role="subsection">
+
+<title>AUDIO_SET_REGION_TYPE [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl allows to specify the Region in order to apply the proper audio post-processing settings</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = AUDIO_SET_REGION_TYPE, audio_region_t region);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals AUDIO_SET_REGION_TYPE for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>audio_region_t region</para>
+        </entry>
+        <entry align="char">
+          <para>Region, see <xref linkend="audio_region_t"/></para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+<section id="AUDIO_SET_PROGRAM_REFERENCE_LEVEL" role="subsection">
+
+<title>AUDIO_SET_PROGRAM_REFERENCE_LEVEL [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl allows to specify the reference level of a stream.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = AUDIO_SET_PROGRAM_REFERENCE_LEVEL, unsigned int level);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals AUDIO_SET_PROGRAM_REFERENCE_LEVEL for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>unsigned int level</para>
+        </entry>
+        <entry align="char">
+          <para>Reference level value</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+<section id="AUDIO_GET_EVENT" role="subsection">
+
+<title>AUDIO_GET_EVENT [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl call returns an event of type audio_event if available. If an event is
+		not available, the behavior depends on whether the device is in blocking or
+		non-blocking mode. In the latter case, the call fails immediately with errno
+		set to EWOULDBLOCK. In the former case, the call blocks until an event
+		becomes available. The standard Linux poll() and/or select() system calls can
+		be used with the device file descriptor to watch for new events. For select(),
+		the file descriptor should be included in the exceptfds argument, and for
+		poll(), POLLPRI should be specified as the wake-up condition. Read-only
+		permissions are sufficient for this ioctl call.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para> int ioctl(fd, int request = AUDIO_GET_EVENT, struct audio_event *param);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals AUDIO_GET_EVENT for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>struct audio_event</para>
+        </entry>
+        <entry align="char">
+          <para>Points to the location where the event to be stored</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>EWOULDBLOCK</para>
+        </entry>
+        <entry align="char">
+          <para>There is no event pending, and the device is in
+                non-blocking mode.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>EOVERFLOW</para>
+        </entry>
+        <entry align="char">
+          <para>Overflow in event queue - one or more events were lost.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+</section>
+
+<section id="AUDIO_STREAM_DOWNMIX" role="subsection">
+
+<title>AUDIO_STREAM_DOWNMIX [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl allow to specify how the audio stream should be
+		rendered to the speakers. It allows to set the varios downmix
+		configuration.
+	  </para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para> int ioctl(fd, int request = AUDIO_STREAM_DOWNMIX, unsigned int channel_number);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals AUDIO_STREAM_DOWNMIX for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>unsigned int channel_number</para>
+        </entry>
+        <entry align="char">
+          <para>Number of channel generated after downmix: 1 (1.0CH), 2 (2.0CH), 3 (3.1CH), 6 (5.1CH), 8 (7.1CH).</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+<section id="AUDIO_STREAMDRIVEN_STEREO" role="subsection">
+
+<title>AUDIO_STREAMDRIVEN_STEREO [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl allow to specify whether to apply the stereo downmix
+		recommended in the decoded stream.
+	  </para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para> int ioctl(fd, int request = AUDIO_STREAMDRIVEN_STEREO, unsigned int apply);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals AUDIO_STREAMDRIVEN_STEREO for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>unsigned int apply</para>
+        </entry>
+        <entry align="char">
+          <para>apply = 0: Stereo downmix recommended in decoded stream is not applied</para>
+          <para>apply = 1: Stereo downmix recommended in decoded stream is applied</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+<section id="AUDIO_COMMAND" role="subsection">
+
+<title>AUDIO_COMMAND [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl allows to set the various audio command to decoder </para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para> int ioctl(fd, int request = AUDIO_COMMAND, struct audio_command *cmd);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals AUDIO_COMMAND for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>struct audio_command *cmd</para>
+        </entry>
+        <entry align="char">
+          <para>audio command to be applied at the decoder</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+
+</section>
+
+
+
+</section>

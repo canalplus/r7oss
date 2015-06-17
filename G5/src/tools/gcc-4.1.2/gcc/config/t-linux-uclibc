@@ -1,0 +1,5 @@
+# Remove glibc specific files added in t-linux
+SHLIB_MAPFILES := $(filter-out $(srcdir)/config/libgcc-glibc.ver, $(SHLIB_MAPFILES))
+
+# Use unwind-dw2-fde instead of unwind-dw2-fde-glibc
+LIB2ADDEH := $(subst unwind-dw2-fde-glibc.c,unwind-dw2-fde.c,$(LIB2ADDEH))

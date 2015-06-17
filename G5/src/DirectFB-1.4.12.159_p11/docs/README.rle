@@ -1,0 +1,371 @@
+--------------------------------------------------------------------------------
+                            RLE Image Provider
+--------------------------------------------------------------------------------
+
+Support for RLE image format.
+
+
+
+*** CURRENT RLE IMAGE PROVIDER SPECIFICATIONS ***
+
+--------------------------------------------------------------------------------
+[A] Supported payload formats:
+
+  [1] Compressed:   [RLEIC_RLE8]
+
+  * RLE8      8 bits LUT-indexed / run-length-compressed / block mode
+
+  * BD-RLE8   8 bits LUT-indexed / run-length-compressed / block mode
+
+  [2] Uncompressed: [RLEIC_NONE] / backward compatibility
+
+  * Uncompressed 1/2/4/8 bits LUT-indexed / row mode
+
+  * Uncompressed 16/24 bits fixed RGB bit-field components / row mode
+
+
+  NB:  Single plane picture only
+       Provisions for extensions / RLE formats variants
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+[B] Supported source buffer structure:
+
+  * Header : 54 bytes  (unoptimized - byte-packed, BMP standard layout)
+
+  * Palette: indexed RGB24 - (3x8 bits + 1x8 bits) x max_colors (2-256)
+
+  * Payload: encapsulated within packet at given offset location
+
+
+  NB:  Provisions for static memory/file access or streaming modes
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+[C] Supported output surface:
+
+  * ARGB 32 surface - Opaque alpha channel (set to 0xff)
+
+  * LUT8 indexed support provision
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+[D] Supported Image-Provider modes:
+
+  * Direct memory static DFB buffer
+
+  * Standard File loader
+
+  * No hardware acceleration
+
+  * Non optimized software fall-back only
+
+  NB:  Provisions for DFB streaming mode
+       Provisions for future hardware acceleration
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+[E] Packaging:
+
+  * Ships with unit-test code
+    [1]  Unit-test (DirectFB sample code) :
+         Brief application source code showing how to use a DFB static memory
+         buffer issued Image-Provider instance in order to render the RLE
+         object stored in memory to some surface
+         - Packet build helper function provided (see rle_build_packet.c).
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+[F] Standard Compliance:
+
+- Little Endian / byte alignment
+
+- BMP-Compliant - BMP packet/file header (see enclosed specs below)
+
+- RLE-8  - Run-Lenght RLE-8 decoder - Top or Bottom first (see enclosed specs)
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+[G] Lisensing:
+
+- Released under the terms of the GNU General Public License version 2
+
+  NB:  Until further notice (TBD)
+
+--------------------------------------------------------------------------------
+
+
+================================================================================
+
+    ANNEX A    -    RLE-8 Specifications    (RLE-8 Payload data)
+
+================================================================================
+RLE-8 bitmaps are compressed by using a run-length encoding (rle) format for an
+8-bit bitmap. this format can be compressed in encoded or absolute modes. both
+modes can occur anywhere in the same bitmap.
+--------------------------------------------------------------------------------
+    * encoded mode consists of two bytes:
+
+        The first byte specifies the number of consecutive pixels to be drawn
+        using the color index contained in the second byte. in addition, the
+        first byte of the pair can be set to zero to indicate an escape that
+        denotes an end of line, end of bitmap, or delta. the interpretation
+        of the escape depends on the value of the second byte of the pair,
+        which can be one of the following:
+
+            0        end of line.
+
+            1        end of bitmap.
+
+            2        delta. the two bytes following the escape contain unsigned
+                    values indicating the horizontal and vertical offsets of the
+                    next pixel from the current position.
+--------------------------------------------------------------------------------
+    * absolute mode.
+
+        The first byte is zero and the second byte is a value in the range 03h
+        through ffh. the second byte represents the number of bytes that follow,
+        each of which contains the color index of a single pixel. when the
+        second byte is 2 or less, the escape has the same meaning as in encoded
+        mode. in absolute mode, each run must be aligned on a word boundary.
+--------------------------------------------------------------------------------
+    The following example shows the hexadecimal values of an 8-bit compressed
+    bitmap:
+
+        03 04 05 06 00 03 45 56 67 00 02 78 00 02 05 01 02 78 00 00 09 1e 00 01
+
+    This bitmap would expand as follows (two-digit values represent a color
+    index for a single pixel):
+        04 04 04
+        06 06 06 06 06
+        45 56 67
+        78 78
+
+    Move current position 5 right and 1 down
+        78 78
+
+    End of line
+        1e 1e 1e 1e 1e 1e 1e 1e 1e
+
+    End of rle bitmap
+================================================================================
+
+
+
+
+================================================================================
+
+    ANNEX B    -    PACKET/FILE FORMAT: (BMP specifications except identifier)
+
+================================================================================
+offset        field               size        contents
+================================================================================
+0000h       identifier             2 bytes  the signature identifying the bitmap.
+                                            Possible entries :  'BM' or 'RL'
+--------------------------------------------------------------------------------
+0002h        file/packet size      1 dword  complete file/packet size in bytes.
+--------------------------------------------------------------------------------
+0006h        reserved              1 dword  reserved for later use.
+--------------------------------------------------------------------------------
+000ah        bitmap data offset    1 dword  offset from beginning of file/packet
+                                            to the beginning of the bitmap data.
+--------------------------------------------------------------------------------
+000eh        bitmap header size    1 dword  length of the bitmap info header
+                                            used to describe the bitmap colors,
+                                            compression;
+                                            the following sizes are possible:
+                                             40 = 28h - Default
+                                             12 = 0ch - UNSUPPORTED
+                                            240 = f0h - UNSUPPORTED
+--------------------------------------------------------------------------------
+0012h        width                 1 dword  horizontal width of bitmap in pixels.
+0016h        height                1 dword  vertical height of bitmap in pixels.
+001ah        planes                1 word   number of planes in this bitmap.
+001ch        bits per pixel        1 word   bits per pixel used to store palette
+                                            entry information. this also
+                                            identifies in an indirect way the
+                                            number of possible colors.
+                                            possible values are:
+                                              1 - monochrome bitmap
+                                              4 - 16 color bitmap
+                                              8 - 256 color bitmap
+                                             16 - 16bit (high color) bitmap
+                                             24 - 24bit (true color) bitmap
+                                             32 - 32bit (true color) bitmap
+--------------------------------------------------------------------------------
+001eh        compression           1 dword  compression specifications.
+                                            the following values are possible:
+                                            0 - none       (ID: bi_rgb)
+                                            1 - rle 8-bit (bi_rle8)
+                                            2 - rle 4-bit (bi_rle4)  UNSUPPORTED
+                                            3 - fields (bi_bitfield) UNSUPPORTED
+--------------------------------------------------------------------------------
+0022h        bitmap data size      1 dword  size of the bitmap data in bytes.
+                                            this number must be rounded to the
+                                            next 4 byte boundary.
+--------------------------------------------------------------------------------
+0026h        hresolution           1 dword  horizontal resolution expressed in
+                                            pixel per meter.         UNSUPPORTED
+--------------------------------------------------------------------------------
+002ah        vresolution           1 dword  vertical resolution expressed in
+                                            pixels per meter.        UNSUPPORTED
+--------------------------------------------------------------------------------
+002eh        colors                1 dword  number of colors used by this bitmap.
+                                            for a 8-bit / pixel bitmap this will
+                                            be 100h or 256.
+--------------------------------------------------------------------------------
+0032h        important colors      1 dword  number of important colors. this
+                                            number will be equal to the number
+                                            of colors when any color is important.
+--------------------------------------------------------------------------------
+0036h        palette            n * 4 byte  colormap specification. for every
+                                            entry in the palette four bytes are
+                                            used to describe the rgb values of
+                                            the color in the following way:
+                                                1 byte for blue  component
+                                                1 byte for green component
+                                                1 byte for red   component
+                                                1 byte filler which is set to 0
+--------------------------------------------------------------------------------
+0436h        bitmap data           x bytes  depending on the compression specs,
+                                            this field contains all the bitmap
+                                            data bytes which represent indexes
+                                            in the color palette for indexed
+                                            formats.
+================================================================================
+
+
+
+
+================================================================================
+
+    ANNEX C    -    PACKET/FILE FORMAT: FIELDS DETAILS
+
+================================================================================
+
+height field:
+
+    the height field identifies the height of the bitmap in pixels. in other
+    words, it describes the number of scan lines of the bitmap. if this field
+    is negative, indicating a top-down dib, the compression field must be either
+    bi_rgb or bi_bitfields. top-down dibs cannot be compressed.
+
+bits per pixel field:
+
+    the bits per pixel (bbp) field of the bitmap file determines the number of
+    bits that define each pixel and the maximum number of colors in the bitmap.
+
+    * when this field is equal to 1.
+        the bitmap is monochrome, and the palette contains two entries. each bit
+        in the bitmap array represents a pixel. if the bit is clear, the pixel
+        is displayed with the color of the first entry in the palette; if the
+        bit is set, the pixel has the color of the second entry in the table.
+
+    * when this field is equal to 4.
+        the bitmap has a maximum of 16 colors, and the palette contains up to 16
+        entries. each pixel in the bitmap is represented by a 4-bit index into
+        the palette. for example, if the first byte in the bitmap is 1fh, the
+        byte represents two pixels. the first pixel contains the color in the
+        second palette entry, and the second pixel contains the color in the
+        sixteenth palette entry.
+
+    * when this field is equal to 8.
+        the bitmap has a maximum of 256 colors, and the palette contains up to
+        256 entries. in this case, each byte in the array represents a single
+        pixel.
+
+    * when this field is equal to 16.
+        the bitmap has a maximum of 2^16 colors. if the compression field of the
+        bitmap file is set to bi_rgb, the palette field does not contain any
+        entries. each word in the bitmap array represents a single pixel. the
+        relative intensities of red, green, and blue are represented with 5 bits
+        for each color component. the value for blue is in the least significant
+        5 bits, followed by 5 bits each for green and red, respectively. the
+        most significant bit is not used.
+
+    * when this field is equal to 24.
+        the bitmap has a maximum of 2^24 colors, and the palette field does not
+        contain any entries. each 3-byte triplet in the bitmap array represents
+        the relative intensities of blue, green, and red, respectively, for a
+        pixel.
+
+    * when this field is equal to 32.
+        the bitmap has a maximum of 2^32 colors. if the compression field of the
+        bitmap is set to bi_rgb, the palette field does not contain any entries.
+        each dword in the bitmap array represents the relative intensities of
+        blue, green, and red, respectively, for a pixel. the high byte in each
+        dword is not used.
+
+        NOTE:
+        if the compression field of the bitmap file is set to bi_bitfields, the
+        palette field contains three dword color masks that specify the red,
+        green, and blue components, respectively, of each pixel. each word in
+        the bitmap array represents a single pixel.
+
+compression field:
+
+    The compression field specifies the way the bitmap data is stored in the
+    file/packet. this information together with the bits per pixel (bpp) field
+    identifies the compression algorithm to follow.
+
+    The following values are possible in this field:
+
+    ============================================================================
+    value                meaning
+    ============================================================================
+
+    bi_rgb              An uncompressed format.
+
+    bi_rle8             A run-length encoded (rle) format for bitmaps with 8
+                        bits per pixel. the compression format is a two-byte
+                        format consisting of a count byte followed by a byte
+                        containing a color index. for more information, see the
+                        following remarks section.
+
+
+    bi_rle4             A rle format for bitmaps with 4 bits per pixel. the
+                        compression format is a two-byte format consisting of a
+        (UNSUPPORTED)   count byte followed by two word-length color indexes.
+                        for more information, see the following remarks section.
+
+
+    bi_bitfields        Specifies that the bitmap is not compressed and that the
+                        color table consists of three double word color masks
+        (UNSUPPORTED)   that specify the red, green, and blue components,
+                        respectively, of each pixel. this is valid when used
+                        with 16- and 32- bits-per-pixel bitmaps.
+                        UNSUPPORTED
+
+    ============================================================================
+
+colors field:
+
+    The colors field specifies the number of color indexes in the color table
+    that are actually used by the bitmap. if this value is zero, the bitmap uses
+    the maximum number of colors corresponding to the value of the bbp field for
+    the compression mode specified by the compression field.
+
+    if the colors field is nonzero and the bbp field less than 16, the colors
+    field specifies the actual number of colors the graphics engine or device
+    driver accesses.
+
+    if the bbp field is 16 or greater, then colors field specifies the size of
+    the color table used to optimize performance of windows color palettes.
+
+    if bbp equals 16 or 32, the optimal color palette starts immediately
+    following the three double word masks.
+
+    if the bitmap is a packed bitmap (a bitmap in which the bitmap array
+    immediately follows the bitmap header and which is referenced by a single
+    pointer), the colors field must be either 0 or the actual size of the color
+    table.
+
+important colors field:
+        (UNSUPPORTED)
+    The important colors field specifies the number of color indexes that are
+    considered important for displaying the bitmap. if this value is zero, all
+    colors are important.
+
+================================================================================

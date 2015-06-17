@@ -1,0 +1,5 @@
+Some part of the DSM-CC specification are not implemented in libdsmcc:
+- Groups and SuperGroups (ETSI TR 101 202 4.6.2 to 4.6.4)
+- BIOP Lite Options Profile Body (ETSI TR 101 202 4.7.3.3)
+- BIOP Message Stream (ETSI TR 101 202 4.7.4.3)
+- BIOP Message StreamEvent (ETSI TR 101 202 4.7.4.5)

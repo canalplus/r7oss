@@ -1,0 +1,9 @@
+usplash
+/sbin/usplash
+initng-usplash-shutdown
+/sbin/initng-usplash-shutdown
+initng-usplash
+/sbin/initng-usplash
+udevd
+/sbin/udevd
+

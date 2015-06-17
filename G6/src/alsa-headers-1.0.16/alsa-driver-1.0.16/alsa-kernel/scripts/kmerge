@@ -1,0 +1,197 @@
+#!/bin/bash
+#
+# Syntax:
+#
+#   kmerge [kernel_directory] [[kernel sound directory]]
+#
+
+PATCH_FILE=patch-2.5
+
+KDIR=/usr/src/linux
+if [ "x$1" != "x" ]; then
+  KDIR="$1"
+fi
+KADIR=$KDIR/sound
+ADIR=$PWD/..
+if [ "x$2" != "x" ]; then
+  ADIR="$2"
+fi
+
+if [ ! -r $ADIR/include/version.h ]; then
+	cat << EOF
+	
+ERROR:
+	
+$ADIR/include/version.h does not exist, building will fail
+without it, please run ./configure in $ADIR first to set
+up the information required to build, then run kmerge to
+merge drivers to the kernel.
+	
+EOF
+	exit 1
+fi
+
+function copy_file () {
+	ln -svf $ADIR/$1 $KADIR/$2
+}
+
+function copy_dir () {
+	pushd $PWD > /dev/null
+	cd $ADIR/$1
+	mkdir -p $KADIR/$2
+	if [ -r Makefile ]; then
+		ln -svf $ADIR/$1/Makefile $KADIR/$2/Makefile
+	fi
+	if [ -r Config.in ]; then
+		ln -svf $ADIR/$1/Config.in $KADIR/$2/Config.in
+	fi
+	if [ -r Config.help ]; then
+		ln -svf $ADIR/$1/Config.help $KADIR/$2/Config.help
+	fi
+	if [ 1 -eq 1 ]; then
+		for i in *.[ch]; do
+			ln -svf $ADIR/$1/$i $KADIR/$2/$i
+		done
+	fi
+	popd > /dev/null
+}
+
+function copy_include_dir () {
+	pushd $PWD > /dev/null
+	cd $ADIR/$1
+	for i in *.h; do
+		rm -f $KDIR/include/sound/$i
+		ln -svf $ADIR/$1/$i $KDIR/include/sound
+	done
+	popd > /dev/null
+	
+	#
+	# The library and utils look for <sound/asound.h> (among other things)
+	# to configure and compile. This is a quick, crude and ugly fix to
+	# avoid breaking alsa-lib and alsa-utils's heart, and to stop
+	# frustrating users trying to compile alsa-lib when the driver is
+	# in the kernel :)
+	#
+	# -WV
+	#
+
+	ln -svf $KDIR/include/sound /usr/include/sound
+}
+
+function showdiff () {
+	if ! cmp $KDIR/$1 ../$2; then
+		diff -u $KDIR/$1 ../$2
+		echo -n "ok? (y/ ) "
+		read line
+		if [ -z "$line" ] || [ "$line" = "y" ] || [ "$line" = "Y" ]; then
+			echo "Continue"
+		else
+			exit 1
+		fi
+	fi
+}
+
+only_symlinks=n
+
+if [ ! -r $ADIR/core/sound.c ]; then
+  echo "Can't find ALSA sources..."
+  exit
+fi
+if [ ! -r $KDIR/drivers/sound/sound_core.c ]; then
+  if [ -r $KDIR/sound/oss/Config.in ]; then
+    only_symlinks=y
+    echo "OSS code already moved, creating symlinks only"
+  else
+    echo "Can't find kernel sources..."
+    exit
+  fi
+fi
+
+if [ "$only_symlinks" = "n" ]; then
+  showdiff drivers/sound/sound_core.c sound_core.c
+  showdiff drivers/sound/sound_firmware.c sound_firmware.c
+  showdiff drivers/sound/Makefile oss/Makefile
+fi
+
+pushd $PWD > /dev/null
+if [ "$only_symlinks" = "n" ]; then
+  cd $KDIR
+  cat $ADIR/scripts/$PATCH_FILE | patch -p1
+  rm -rf $KADIR
+  mkdir -p $KADIR
+  mv $KDIR/drivers/sound $KADIR/oss
+  rm -f $KADIR/oss/Makefile
+  rm -f $KADIR/oss/sound_core.c
+  rm -f $KADIR/oss/sound_firmware.c
+fi
+mkdir -p $KDIR/include/sound
+copy_include_dir include
+copy_file Config.in Config.in
+copy_file Makefile Makefile
+copy_file sound_core.c sound_core.c
+copy_file sound_firmware.c sound_firmware.c
+copy_file last.c last.c
+copy_file oss/Makefile oss/Makefile
+copy_dir core core
+copy_dir core/seq core/seq
+copy_dir core/seq/instr core/seq/instr
+copy_dir core/seq/oss core/seq/oss
+copy_dir core/oss core/oss
+copy_dir drivers drivers
+copy_dir drivers/mpu401 drivers/mpu401
+copy_dir drivers/opl3 drivers/opl3
+copy_dir i2c i2c
+copy_dir isa isa
+copy_dir isa/ad1816a isa/ad1816a
+copy_dir isa/ad1848 isa/ad1848
+copy_dir isa/cs423x isa/cs423x
+copy_dir isa/es1688 isa/es1688
+copy_dir isa/gus isa/gus
+copy_dir isa/opti9xx isa/opti9xx
+copy_dir isa/sb isa/sb
+copy_dir isa/wavefront isa/wavefront
+copy_dir pci pci
+copy_dir pci/ac97 pci/ac97
+copy_dir pci/ali5451 pci/ali5451
+copy_dir pci/cs46xx pci/cs46xx
+copy_dir pci/emu10k1 pci/emu10k1
+copy_dir pci/korg1212 pci/korg1212
+copy_dir pci/nm256 pci/nm256
+copy_dir pci/rme9652 pci/rme9652
+copy_dir pci/trident pci/trident
+copy_dir pci/ymfpci pci/ymfpci
+copy_dir ppc ppc
+copy_dir synth synth
+copy_dir synth/emux synth/emux
+rm -f $KDIR/include/sound/sound
+popd > /dev/null
+
+#
+# Warn users about the symlinky nature of the merge, so they
+# don't go deleting the alsa-driver sources and upsetting the
+# kernel and other things :)
+#
+# -WV
+#
+
+cat << EOF
+
+WARNING:
+
+The kmerge script merges the ALSA driver into the kernel by
+creating symbolic links to files in the alsa-driver source
+tree.
+
+DO NOT delete this source tree, as this will upset the kernel
+and other things such as /usr/include/sound/ which the library
+et al looks for.
+
+Experienced users: If you want to delete this, make sure
+to copy all the needed includes et al into the proper areas
+of $KDIR FIRST.
+
+If you want to delete your kernel sources, make sure to copy
+the includes to /usr/include/sound, otherwise alsa-lib and
+other programs will scream at you :)
+
+EOF

@@ -1,0 +1,27 @@
+--- a/player/manifestor/mixer_mme.cpp	
++++ a/player/manifestor/mixer_mme.cpp	
+@@ -3731,9 +3731,10 @@ PlayerStatus_t Status;
+         // both numbers should be divisible by 25
+         Rational_c ResamplingFactor(Clients[Id].Parameters.Source.SampleRateHz, MixerSamplingFrequency, 25, false);
+         
+-        if( 0 == Id && (OutputConfiguration.spdif_bypass || OutputConfiguration.hdmi_bypass) )
++        if( 0 == Id )
+         {
+-            Status = Clients[Id].Manifestor->FillOutInputBuffer( MixerGranuleSize, ResamplingFactor,
++            if (OutputConfiguration.spdif_bypass || OutputConfiguration.hdmi_bypass)
++                Status = Clients[Id].Manifestor->FillOutInputBuffer( MixerGranuleSize, ResamplingFactor,
+                                                                  Clients[Id].State == STOPPING,
+                                                                  MixerCommand.Command.DataBuffers_p[Id],
+                                                                  MixerCommand.InputParams.InputParam + Id,
+@@ -3741,6 +3742,11 @@ PlayerStatus_t Status;
+                                                                  MixerCommand.InputParams.InputParam + MIXER_CODED_DATA_INPUT,
+                                                                  &OutputEncoding,
+                                                                  OutputConfiguration.spdif_bypass?Manifestor_AudioKsound_c::SPDIF:Manifestor_AudioKsound_c::HDMI);
++            else                                     
++                Status = Clients[Id].Manifestor->FillOutInputBuffer( MixerGranuleSize, ResamplingFactor,
++                                                                 Clients[Id].State == STOPPING,
++                                                                 MixerCommand.Command.DataBuffers_p[Id],
++                                                                 MixerCommand.InputParams.InputParam + Id );
+                                                                  
+             if( PlayerNoError ==  Status && OutputEncoding != PrimaryCodedDataType )
+             {

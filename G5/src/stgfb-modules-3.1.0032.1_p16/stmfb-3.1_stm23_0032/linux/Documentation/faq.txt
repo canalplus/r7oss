@@ -1,0 +1,157 @@
+STGFB FAQ
+=========
+
+Q. I have followed the build instructions on the web site and when I load
+   the modules I have missing symbols "cfbXXXX", why?
+
+A. The web documentation has not caught up with the LDDE2.2 distribution. An
+   extra kernel option is now required:
+     Device Drivers -> Graphics support -> Enable Software Drawing Helpers
+
+===============================================================================
+Q. When I try to build the display driver modules the build fails with the
+   message "#error Kernel must have the BPA2 memory allocator configured",
+   what is this?
+
+A. The display driver requires the ability to reserve and allocate large
+   chunks of physically contiguous memory for graphics surfaces and other
+   hardware buffers. This is done with a kernel interface called BPA2 
+   (Big Physical Area Version 2), please enable the following in your kernel
+   configuration:
+     System Type -> Memory management options -> Big Physical Area version 2
+
+===============================================================================
+Q. When I install the display driver modules the process warns of missing
+   symbols "request_firmware" and "release_firmware", what are these?
+
+A. The display driver requires the ability to load firmware files from the
+   root filesystem; ensure the following kernel configuration option is enabled:
+
+   Device Driver -> Generic Driver Options -> Userspace firmware loading support
+
+===============================================================================
+Q. I have built and loaded the display driver modules but when an application
+   tries to mmap /dev/fb0 it fails. If I cat /proc/fb I see:
+   
+   0 - Virtual FB
+   1 - STi7200c2-main
+
+A. You have enabled the virtual framebuffer in your kernel config; this is 
+   a test device and should be disabled by unchecking the option:
+     Device Drivers -> Graphics support -> Virtual Framebuffer Support
+
+===============================================================================
+Q. I have followed the web site instructions to enable virtual terminals and
+   the framebuffer console, but when I do "cat /proc/interrupts >/dev/tty0" I
+   just see a blank screen.
+   
+A1. The most likely problem is that the console blanking timer has elapsed and
+    the console is now a black screen. The blanking function can be stopped and
+    the console contents displayed using:
+      "setterm -term linux -blank 0 > /dev/tty0".
+
+===============================================================================
+Q. I am trying to unload the display driver modules, but stmfb cannot be removed
+   because it is in use, why?
+
+A. Assuming you do not have any active applications with an open file handle 
+   for any framebuffer device, the most likely reason is that you have the
+   framebuffer console code built directly into your kernel. Once a framebuffer
+   registers with the kernel the console code activates and hooks into the
+   framebuffer driver. It is likely that you really did not want the console
+   at all, so it can be removed from the kernel config. But if you did want to
+   see text output on "/dev/tty0" then the console code can also be built as
+   a kernel module. It can then be unloaded before unloading the display
+   driver. The kernel option to change is:
+     Device Drivers -> Graphics support -> Console display driver support ->
+        Framebuffer console support
+
+===============================================================================
+Q. I have connected a TV to the CVBS phono output on my MB618 STx7111 board
+   but there is no signal when I configure either PAL or NTSC, why?
+
+A. By default the MB618 is shipped with CVBS routed to the SCART switch, not
+   the CVBS phono output. You must move Jumper 38 on the the board to position
+   2-3 to activate the CVBS phono output.
+
+===============================================================================
+Q. I have connected a TV to the HD component outputs on my MB680 STx7105 board
+   but blue and red are swapped, why?
+
+A. The labels on the box are wrong, the board and software are correct. The
+   correct order top to bottom is BGR.
+
+===============================================================================
+
+Q. I have plugged in a TV using the HDMI connection but do not get a display,
+   why?
+   
+A1. Are you using a Rev A or Rev B MB411 or an MB442 (7100Ref/CoCo) older than
+    Rev C. In which case HDMI is not expected to work due to a number of
+    hardware issues. The best solution is to arrage to obtain an up to date
+    board with the latest silicon revision.
+    
+A2. Are you trying to display PAL or NTSC on a "HD Ready" TV using HDMI? If so
+    it is likely that the TV does not support SD modes on this input. The 
+    supported modes can be found, assuming the TV is connected and switched to
+    the HDMI input, by using the command:
+
+      hdmi-info -v
+
+    Note that if SD modes are supported they will be listed as "1440x480i" and
+    "1440x576i" not "720x..." as SD modes are pixel doubled to meet the minimum
+    timing requirements of the TMDS link.
+    
+A3. Are you trying to display PAL or NTSC on a "HD TV" with a DVI (not HDMI) 
+    connector? In which case it is not possible to transmit SD signals over
+    DVI as their timings are outside of the TMDS specification.
+    
+===============================================================================
+
+Q. I have plugged in a DVI capable computer monitor into the HDMI output
+   and the mode list provided by "hdmi-info" shows various HD modes
+   are available but not all seem to work, why? 
+   
+A. The mode list is constructed from the monitor's EDID information giving the
+   minimum and maximum horizontal and vertical refresh frequencies the monitor
+   can support. All modes that fit those timings will be listed, but experience
+   has shown that this is no guarentee that the monitor will successfuly
+   display all modes; in particular 1080i appears to give problems.
+   Unfortunately a DVI device's EDID information does not give us any additional
+   help to detect the unsupported modes that otherwise meet the monitor's
+   timing requirements.
+   
+===============================================================================
+
+Q. df_dok runs very slowly with LDDE2.2 and stgfb on a STb7100 based system, it
+   is no faster than using the --dfb:no-hardware option but I thought the
+   graphics were accelerated, why is this?
+   
+A. You are using the DirectFB package that was shipped with the LDDE2.2
+   distribution ISO image. Unfortunately this package was built against old
+   stgfb header files, which causes all accelerated graphics operations
+   to fail and fall back to software rendering. The solution is to update your
+   DirectFB package to the latest available, either via stmyum or directly from
+   the STLinux ftp site updates directory.
+   
+===============================================================================
+
+Q. I run a DirectFB example and the screen goes blank, if I do an fbset in
+   another terminal it reports the display has changed to 640x480 (VGA), why?
+   
+A. This is DirectFB's default behaviour. If it isn't configured with a specific
+   display mode either on the command line, in $HOME/.directfbrc or
+   /etc/directfbrc it picks the first mode the chip can support in
+   /etc/fb.modes which happens to be VGA.
+
+===============================================================================
+
+Q. The first time I run a DirectFB application it runs very very slowly,
+   if I then kill it and start it again it runs full speed, why?
+   
+A. This is actually a problem with the LiRC daemon when no LiRC device has
+   been configured in the kernel. DirectFB opens a connection to LiRC and the
+   daemon then crashes as it tries to open a non-existant device; the result
+   is all round badness. The second time a DirectFB application is run it 
+   cannot find the LiRC daemon because it is no longer running and everything
+   is fine, except for the lack of remote control input.

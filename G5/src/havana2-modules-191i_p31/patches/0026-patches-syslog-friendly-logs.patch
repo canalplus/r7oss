@@ -1,0 +1,102 @@
+From c0cd8a567dbeb66269c9bfbee93321aad0ed5a03 Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:20:00 +0100
+Subject: [PATCH 26/36] patches/syslog-friendly-logs
+
+---
+ components/infrastructure/report.c        |   11 +++++++----
+ player/collator/collator_base.cpp         |    2 +-
+ player/collator2/collator2_base.cpp       |    2 +-
+ player/output_timer/output_timer_base.cpp |    8 ++++++--
+ 4 files changed, 15 insertions(+), 8 deletions(-)
+
+diff --git a/components/infrastructure/report.c b/components/infrastructure/report.c
+index 3fac697..20aa715 100644
+--- a/components/infrastructure/report.c
++++ b/components/infrastructure/report.c
+@@ -94,7 +94,7 @@ void report_restricted_severity_levels( int lower_restriction,
+ 
+ /* --- */
+ 
+-static void report_output( void )
++static void report_output( int level )
+ {
+ #if defined (REPORT_UART)
+     UartOutput( report_buffer );
+@@ -122,7 +122,10 @@ static void report_output( void )
+     kptrace_write_record( report_buffer );
+ #endif
+ #ifdef REPORT_PRINTK
+-    printk( "%s", report_buffer );
++    if (level < severity_error)
++        printk( KERN_INFO"%s", report_buffer );
++    else
++        printk( "%s", report_buffer );
+ #endif
+ #else
+     printf( "%s", report_buffer );
+@@ -156,14 +159,14 @@ va_list      list;
+ 		((report_severity >= severity_fatal) ? "Fatal" : "Error"),
+ 		OS_ThreadName() );
+ 
+-	report_output();
++	report_output(report_severity);
+     }
+ 
+     va_start(list, format);
+     vsnprintf(report_buffer, REPORT_STRING_SIZE, format, list);
+     va_end(list);
+ 
+-    report_output();
++    report_output(report_severity);
+ 
+     if( report_severity == severity_fatal ) 
+     {
+diff --git a/player/collator/collator_base.cpp b/player/collator/collator_base.cpp
+index 092e2c4..b9f5def 100644
+--- a/player/collator/collator_base.cpp
++++ b/player/collator/collator_base.cpp
+@@ -588,7 +588,7 @@ CollatorStatus_t   Collator_Base_c::AccumulateData(
+ {
+     if( (AccumulatedDataSize + Length) > MaximumCodedFrameSize )
+     {
+-      report( severity_error, "Collator_Base_c::AccumulateData - Buffer overflow. (%d > %d)\n", (AccumulatedDataSize + Length) , MaximumCodedFrameSize);
++      report( severity_error, "Collator_Base_c::AccumulateData - Buffer overflow.\n");
+       return CollatorBufferOverflow;
+     }
+ 
+diff --git a/player/collator2/collator2_base.cpp b/player/collator2/collator2_base.cpp
+index e659d7d..2cbc805 100644
+--- a/player/collator2/collator2_base.cpp
++++ b/player/collator2/collator2_base.cpp
+@@ -1125,7 +1125,7 @@ CollatorStatus_t	Status;
+ 
+     if( (NextPartition->PartitionSize + Length) > MaximumCodedFrameSize )
+     {
+-      report( severity_error, "Collator2_Base_c::AccumulateData - Buffer overflow. (%d > %d)\n", (NextPartition->PartitionSize + Length) , MaximumCodedFrameSize);
++      report( severity_error, "Collator2_Base_c::AccumulateData - Buffer overflow.\n");
+ 
+       EmptyCurrentPartition();		// Dump any collected data in the current partition
+       InitializePartition();
+diff --git a/player/output_timer/output_timer_base.cpp b/player/output_timer/output_timer_base.cpp
+index 9e88839..ef7a582 100644
+--- a/player/output_timer/output_timer_base.cpp
++++ b/player/output_timer/output_timer_base.cpp
+@@ -1455,8 +1455,12 @@ static unsigned int 	  HistoryIndex	= 0;
+ 
+ 	    SynchronizationError	= SynchronizationAccumulatedError / SynchronizationErrorIntegrationCount;
+ 
+-	    report( severity_info, "AVDsync %s %s - %6lld us\n", ((ExternalMappingPolicy == PolicyValueApply) ? "Error" : "Correction"), 
+-									 LookupStreamType( Configuration.StreamType ), SynchronizationError );
++	    if (SynchronizationError < 10000)
++	        report( severity_info, "AVDsync %s %s - < 10000 us\n", ((ExternalMappingPolicy == PolicyValueApply) ? "Error" : "Correction"), 
++									     LookupStreamType( Configuration.StreamType ) );
++	    else
++	        report( severity_info, "AVDsync %s %s - %6lld us\n", ((ExternalMappingPolicy == PolicyValueApply) ? "Error" : "Correction"), 
++									     LookupStreamType( Configuration.StreamType ), SynchronizationError );
+ #ifdef DUMP_HISTORY
+ 	    if( !SynchronizationAtStartup && (Configuration.StreamType == HISTORY_STREAMTYPE) )
+ 	    {
+-- 
+1.7.9.5
+

@@ -1,0 +1,23 @@
+* ST LPC WDT
+
+Required properties:
+- compatible : "st,<soc>-lpc-wdt"
+- reg: LPC registers base address + range
+- clock-names : Should be "lpc_wdt"
+- clocks: Clock used by LPC device
+- timeout-sec: watchdog timeout in seconds
+- st,syscfg: syscfg node used to configure
+		cpu reset type and mask.
+- st,rst_type: Choose between "warm" or "cold" reset
+
+Example:
+	wdt@0xfde05000 {
+	        compatible	= "st,stih416-lpc-wdt";
+		reg		= <0xfde05000 0x1000>;
+		clock-names	= "lpc_wdt";
+		clocks		= <&CLK_M_MPETHSENS>;
+		timeout-sec	= <600>;
+		st,syscfg	= <&syscfg_system>;
+		st,rst_type	= "warm";
+	};
+

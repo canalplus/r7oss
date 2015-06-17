@@ -1,0 +1,36 @@
+.TH "initng" "8" "" "" ""
+.SH "NAME"
+initng \- a full replacement of the old and in many ways depricated sysvinit
+.SH "SYNOPSIS"
+\fBinitng\fR
+.SH "DESCRIPTION"
+\fBInitng\fR is a full replacement of the old and in many ways deprecated sysvinit
+tool. It is designed with speed in mind, doing as much as possible
+asynchronously. In other words: It will boot your unix\-system much faster, and
+give you more control and statistics over your system.
+
+The basic premise is that startup commands can be launched as soon as their
+dependencies are met. This limits the effect of bottlenecks like I/O operations;
+while one program is performing I/O, another can be utilizing the processor.
+Initng tracks the individual service dependencies in its configuration files.
+
+It is designed to use a minimum of system resources and to boot your system
+quickly and safely.
+
+\fIlilo\fR users need to add the line '\fIappend="init=/sbin/initng"\fR' in their \fI/etc/lilo.conf\fR,
+\fIgrub\fR users can just append '\fIinit=/sbin/initng\fR' to their "kernel image options" line in \fI/boot/grub/menu.lst\fR.
+.SH "OPTIONS"
+Initng is the first process the kernel starts. It has no parameters.
+It will start the services defined in /etc/initng.
+.SH "SEE ALSO"
+.BR ngc(8),
+.BR ngdc(8),
+.BR ng\-update(8),
+.BR gen_system_runlevel(8),
+.BR install_service(8),
+.BR system_off(8).
+.SH "AUTHOR"
+initng was written by  Jimmy Wennlund <jimmy.wennlund@gmail.com> and can be found at http://www.initng.org/.
+.PP 
+This manual page was written by Armin Berres <a.berres@web.de> based on the readme file written by 
+Patrick Boehnke.

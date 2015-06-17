@@ -1,0 +1,748 @@
+diff -urN linux-2.6.14/arch/i386/Kconfig linux-2.6.14-pcsp-kern/arch/i386/Kconfig
+--- linux-2.6.14/arch/i386/Kconfig	2005-11-02 10:04:17.000000000 +0300
++++ linux-2.6.14-pcsp-kern/arch/i386/Kconfig	2005-11-02 11:38:35.000000000 +0300
+@@ -1345,3 +1345,8 @@
+ 	bool
+ 	depends on X86 && !EMBEDDED
+ 	default y
++
++config HAVE_PCSP_HOOK
++	bool
++	depends on X86_PC
++	default y
+diff -urN linux-2.6.14/arch/i386/kernel/time.c linux-2.6.14-pcsp-kern/arch/i386/kernel/time.c
+--- linux-2.6.14/arch/i386/kernel/time.c	2005-11-02 10:04:17.000000000 +0300
++++ linux-2.6.14-pcsp-kern/arch/i386/kernel/time.c	2005-11-02 11:38:35.000000000 +0300
+@@ -78,6 +78,9 @@
+ 
+ EXPORT_SYMBOL(jiffies_64);
+ 
++volatile int pit_counter0_offset = 0;
++EXPORT_SYMBOL(pit_counter0_offset);
++
+ unsigned int cpu_khz;	/* Detected as we calibrate the TSC */
+ EXPORT_SYMBOL(cpu_khz);
+ 
+@@ -245,6 +248,41 @@
+ EXPORT_SYMBOL(profile_pc);
+ #endif
+ 
++static int timer_mark_offset(struct pt_regs *regs)
++{
++	/*
++	 * Here we are in the timer irq handler. We just have irqs locally
++	 * disabled but we don't know if the timer_bh is running on the other
++	 * CPU. We need to avoid to SMP race with it. NOTE: we don' t need
++	 * the irq version of write_lock because as just said we have irq
++	 * locally disabled. -arca
++	 */
++	write_seqlock(&xtime_lock);
++	cur_timer->mark_offset();
++	write_sequnlock(&xtime_lock);
++	return 0;
++}
++
++static int do_process_time(struct pt_regs *regs)
++{
++#ifndef CONFIG_SMP
++	update_process_times(user_mode(regs));
++#endif
++/*
++ * In the SMP case we use the local APIC timer interrupt to do the
++ * profiling, except when we simulate SMP mode on a uniprocessor
++ * system, in that case we have to call the local interrupt handler.
++ */
++#ifndef CONFIG_X86_LOCAL_APIC
++	profile_tick(CPU_PROFILING, regs);
++#else
++	if (!using_apic_timer)
++		smp_local_timer_interrupt(regs);
++#endif
++	return 0;
++}
++
++
+ /*
+  * timer_interrupt() needs to keep up the real-time clock,
+  * as well as call the "do_timer()" routine every clocktick
+@@ -292,20 +330,7 @@
+  */
+ irqreturn_t timer_interrupt(int irq, void *dev_id, struct pt_regs *regs)
+ {
+-	/*
+-	 * Here we are in the timer irq handler. We just have irqs locally
+-	 * disabled but we don't know if the timer_bh is running on the other
+-	 * CPU. We need to avoid to SMP race with it. NOTE: we don' t need
+-	 * the irq version of write_lock because as just said we have irq
+-	 * locally disabled. -arca
+-	 */
+-	write_seqlock(&xtime_lock);
+-
+-	cur_timer->mark_offset();
+- 
+ 	do_timer_interrupt(irq, regs);
+-
+-	write_sequnlock(&xtime_lock);
+ 	return IRQ_HANDLED;
+ }
+ 
+@@ -444,6 +469,10 @@
+ 
+ device_initcall(time_init_device);
+ 
++static struct timer_hook hook0 = { .hook_fn = timer_mark_offset, .run_always = 0 };
++static struct timer_hook hook1 = { .hook_fn = do_timer, .run_always = 0 };
++static struct timer_hook hook2 = { .hook_fn = do_process_time, .run_always = 0 };
++
+ #ifdef CONFIG_HPET_TIMER
+ extern void (*late_time_init)(void);
+ /* Duplicate of time_init() below, with hpet_enable part added */
+@@ -461,7 +490,11 @@
+ 	cur_timer = select_timer();
+ 	printk(KERN_INFO "Using %s for high-res timesource\n",cur_timer->name);
+ 
++	/* register timer hooks in reverse order */
+ 	time_init_hook();
++	setup_timer_hook(&hook2);
++	setup_timer_hook(&hook1);
++	setup_timer_hook(&hook0);
+ }
+ #endif
+ 
+@@ -485,5 +518,9 @@
+ 	cur_timer = select_timer();
+ 	printk(KERN_INFO "Using %s for high-res timesource\n",cur_timer->name);
+ 
++	/* register timer hooks in reverse order */
+ 	time_init_hook();
++	setup_timer_hook(&hook2);
++	setup_timer_hook(&hook1);
++	setup_timer_hook(&hook0);
+ }
+diff -urN linux-2.6.14/arch/i386/kernel/timers/timer_pit.c linux-2.6.14-pcsp-kern/arch/i386/kernel/timers/timer_pit.c
+--- linux-2.6.14/arch/i386/kernel/timers/timer_pit.c	2005-11-02 10:04:17.000000000 +0300
++++ linux-2.6.14-pcsp-kern/arch/i386/kernel/timers/timer_pit.c	2005-11-02 11:38:35.000000000 +0300
+@@ -137,6 +137,12 @@
+ 	} else
+ 		jiffies_p = jiffies_t;
+ 
++       /*
++        * when using PCSP, we must add the accumulated
++        * clockticks from the PCSP driver
++        */
++	count += pit_counter0_offset;
++
+ 	count_p = count;
+ 
+ 	spin_unlock_irqrestore(&i8253_lock, flags);
+diff -urN linux-2.6.14/arch/i386/mach-visws/setup.c linux-2.6.14-pcsp-kern/arch/i386/mach-visws/setup.c
+--- linux-2.6.14/arch/i386/mach-visws/setup.c	2005-11-02 10:04:17.000000000 +0300
++++ linux-2.6.14-pcsp-kern/arch/i386/mach-visws/setup.c	2005-11-02 11:32:20.000000000 +0300
+@@ -117,6 +117,15 @@
+ 	.name =		"timer",
+ };
+ 
++static int co_clear_timerint(struct pt_regs *regs)
++{
++	/* Clear the interrupt */
++	co_cpu_write(CO_CPU_STAT,co_cpu_read(CO_CPU_STAT) & ~CO_STAT_TIMEINTR);
++	return 0;
++}
++
++
++static struct timer_hook hook = { .hook_fn = co_clear_timerint, .run_always = 1 };
+ void __init time_init_hook(void)
+ {
+ 	printk(KERN_INFO "Starting Cobalt Timer system clock\n");
+@@ -130,6 +139,8 @@
+ 	/* Enable (unmask) the timer interrupt */
+ 	co_cpu_write(CO_CPU_CTRL, co_cpu_read(CO_CPU_CTRL) & ~CO_CTRL_TIMEMASK);
+ 
++	setup_timer_hook(&hook);
++
+ 	/* Wire cpu IDT entry to s/w handler (and Cobalt APIC to IDT) */
+ 	setup_irq(0, &irq0);
+ }
+diff -urN linux-2.6.14/arch/i386/mach-voyager/setup.c linux-2.6.14-pcsp-kern/arch/i386/mach-voyager/setup.c
+--- linux-2.6.14/arch/i386/mach-voyager/setup.c	2005-11-02 10:04:17.000000000 +0300
++++ linux-2.6.14-pcsp-kern/arch/i386/mach-voyager/setup.c	2005-11-02 11:32:20.000000000 +0300
+@@ -7,6 +7,7 @@
+ #include <linux/interrupt.h>
+ #include <asm/acpi.h>
+ #include <asm/arch_hooks.h>
++#include <asm/voyager.h>
+ 
+ void __init pre_intr_init_hook(void)
+ {
+@@ -40,8 +41,9 @@
+ }
+ 
+ static struct irqaction irq0  = { timer_interrupt, SA_INTERRUPT, CPU_MASK_NONE, "timer", NULL, NULL};
+-
++static struct timer_hook hook = { .hook_fn = voyager_timer_interrupt, .run_always = 1 };
+ void __init time_init_hook(void)
+ {
++	setup_timer_hook(&hook);
+ 	setup_irq(0, &irq0);
+ }
+diff -urN linux-2.6.14/arch/i386/mach-voyager/voyager_basic.c linux-2.6.14-pcsp-kern/arch/i386/mach-voyager/voyager_basic.c
+--- linux-2.6.14/arch/i386/mach-voyager/voyager_basic.c	2005-11-02 10:04:17.000000000 +0300
++++ linux-2.6.14-pcsp-kern/arch/i386/mach-voyager/voyager_basic.c	2005-11-02 11:32:20.000000000 +0300
+@@ -164,8 +164,7 @@
+ /* voyager specific handling code for timer interrupts.  Used to hand
+  * off the timer tick to the SMP code, since the VIC doesn't have an
+  * internal timer (The QIC does, but that's another story). */
+-void
+-voyager_timer_interrupt(struct pt_regs *regs)
++int voyager_timer_interrupt(struct pt_regs *regs)
+ {
+ 	if((jiffies & 0x3ff) == 0) {
+ 
+@@ -203,6 +202,7 @@
+ #ifdef CONFIG_SMP
+ 	smp_vic_timer_interrupt(regs);
+ #endif
++	return 0;
+ }
+ 
+ void
+diff -urN linux-2.6.14/CREDITS linux-2.6.14-pcsp-kern/CREDITS
+--- linux-2.6.14/CREDITS	2005-11-02 10:04:17.000000000 +0300
++++ linux-2.6.14-pcsp-kern/CREDITS	2005-11-02 11:38:35.000000000 +0300
+@@ -391,6 +391,8 @@
+ N: Erik Inge Bolsø
+ E: knan@mo.himolde.no
+ D: Misc kernel hacks
++D: Updated PC speaker driver for 2.3
++S: Norway
+ 
+ N: Andreas E. Bombe
+ E: andreas.bombe@munich.netsurf.de
+@@ -3022,6 +3024,12 @@
+ S: Sunnyvale, California 94088-4132
+ S: USA
+ 
++N: Stas Sergeev
++E: stsp@users.sourceforge.net
++D: PC-Speaker driver maintainer
++D: misc fixes and improvements
++S: Russia
++
+ N: Simon Shapiro
+ E: shimon@i-Connect.Net
+ W: http://www.-i-Connect.Net/~shimon
+diff -urN linux-2.6.14/drivers/input/gameport/gameport.c linux-2.6.14-pcsp-kern/drivers/input/gameport/gameport.c
+--- linux-2.6.14/drivers/input/gameport/gameport.c	2005-11-02 10:03:55.000000000 +0300
++++ linux-2.6.14-pcsp-kern/drivers/input/gameport/gameport.c	2005-11-02 11:38:35.000000000 +0300
+@@ -74,6 +74,7 @@
+ 	outb_p(0x00, 0x43);
+ 	count = inb_p(0x40);
+ 	count |= inb_p(0x40) << 8;
++	count += pit_counter0_offset;
+ 	spin_unlock_irqrestore(&i8253_lock, flags);
+ 
+ 	return count;
+diff -urN linux-2.6.14/drivers/input/joystick/analog.c linux-2.6.14-pcsp-kern/drivers/input/joystick/analog.c
+--- linux-2.6.14/drivers/input/joystick/analog.c	2005-11-02 10:04:22.000000000 +0300
++++ linux-2.6.14-pcsp-kern/drivers/input/joystick/analog.c	2005-11-02 11:38:35.000000000 +0300
+@@ -155,6 +155,7 @@
+         outb_p(0x00, 0x43);
+         count = inb_p(0x40);
+         count |= inb_p(0x40) << 8;
++        count += pit_counter0_offset;
+         spin_unlock_irqrestore(&i8253_lock, flags);
+ 
+         return count;
+diff -urN linux-2.6.14/drivers/input/misc/pcspkr.c linux-2.6.14-pcsp-kern/drivers/input/misc/pcspkr.c
+--- linux-2.6.14/drivers/input/misc/pcspkr.c	2005-11-02 10:03:28.000000000 +0300
++++ linux-2.6.14-pcsp-kern/drivers/input/misc/pcspkr.c	2005-11-02 11:30:30.000000000 +0300
+@@ -27,25 +27,16 @@
+ static char pcspkr_phys[] = "isa0061/input0";
+ static struct input_dev pcspkr_dev;
+ 
++/* Please replace this with i8253_lock to properly serialize an
++ * accesses to port 0x43 */
+ static DEFINE_SPINLOCK(i8253_beep_lock);
+ 
+-static int pcspkr_event(struct input_dev *dev, unsigned int type, unsigned int code, int value)
++enum { PCSPKR_NORMAL, PCSPKR_SUSPENDED };
++
++static void pcspkr_do_sound(unsigned int count)
+ {
+-	unsigned int count = 0;
+ 	unsigned long flags;
+ 
+-	if (type != EV_SND)
+-		return -1;
+-
+-	switch (code) {
+-		case SND_BELL: if (value) value = 1000;
+-		case SND_TONE: break;
+-		default: return -1;
+-	}
+-
+-	if (value > 20 && value < 32767)
+-		count = PIT_TICK_RATE / value;
+-
+ 	spin_lock_irqsave(&i8253_beep_lock, flags);
+ 
+ 	if (count) {
+@@ -62,6 +53,40 @@
+ 	}
+ 
+ 	spin_unlock_irqrestore(&i8253_beep_lock, flags);
++}
++
++static int pcspkr_event(struct input_dev *dev, unsigned int type,
++		unsigned int code, int value)
++{
++	unsigned int count = 0;
++
++	switch (type) {
++	case EV_SND:
++		switch (code) {
++		case SND_BELL:
++			if (value)
++				value = 1000;
++		case SND_TONE:
++			break;
++		case SND_SILENT:
++			dev->state = value ? PCSPKR_SUSPENDED : PCSPKR_NORMAL;
++			return 0;
++		default:
++			return -1;
++		}
++		break;
++
++	default:
++		return -1;
++	}
++
++	if (dev->state == PCSPKR_SUSPENDED)
++		return 0;
++
++	if (value > 20 && value < 32767)
++		count = PIT_TICK_RATE / value;
++
++	pcspkr_do_sound(count);
+ 
+ 	return 0;
+ }
+@@ -69,7 +94,7 @@
+ static int __init pcspkr_init(void)
+ {
+ 	pcspkr_dev.evbit[0] = BIT(EV_SND);
+-	pcspkr_dev.sndbit[0] = BIT(SND_BELL) | BIT(SND_TONE);
++	pcspkr_dev.sndbit[0] = BIT(SND_BELL) | BIT(SND_TONE) | BIT(SND_SILENT);
+ 	pcspkr_dev.event = pcspkr_event;
+ 
+ 	pcspkr_dev.name = pcspkr_name;
+@@ -78,6 +103,7 @@
+ 	pcspkr_dev.id.vendor = 0x001f;
+ 	pcspkr_dev.id.product = 0x0001;
+ 	pcspkr_dev.id.version = 0x0100;
++	pcspkr_dev.state = PCSPKR_NORMAL;
+ 
+ 	input_register_device(&pcspkr_dev);
+ 
+@@ -88,9 +114,11 @@
+ 
+ static void __exit pcspkr_exit(void)
+ {
++	if (pcspkr_dev.state == PCSPKR_NORMAL) {
++		/* turn off the speaker */
++		pcspkr_do_sound(0);
++	}
+         input_unregister_device(&pcspkr_dev);
+-	/* turn off the speaker */
+-	pcspkr_event(NULL, EV_SND, SND_BELL, 0);
+ }
+ 
+ module_init(pcspkr_init);
+diff -urN linux-2.6.14/drivers/oprofile/timer_int.c linux-2.6.14-pcsp-kern/drivers/oprofile/timer_int.c
+--- linux-2.6.14/drivers/oprofile/timer_int.c	2005-11-02 10:03:04.000000000 +0300
++++ linux-2.6.14-pcsp-kern/drivers/oprofile/timer_int.c	2005-11-02 11:32:20.000000000 +0300
+@@ -12,11 +12,14 @@
+ #include <linux/smp.h>
+ #include <linux/oprofile.h>
+ #include <linux/profile.h>
++#include <linux/timer.h>
+ #include <linux/init.h>
+ #include <asm/ptrace.h>
+ 
+ #include "oprof.h"
+ 
++static void *hook_ptr;
++
+ static int timer_notify(struct pt_regs *regs)
+ {
+  	oprofile_add_sample(regs, 0);
+@@ -25,13 +28,14 @@
+ 
+ static int timer_start(void)
+ {
+-	return register_timer_hook(timer_notify);
++	hook_ptr = register_timer_hook(timer_notify);
++	return !hook_ptr;
+ }
+ 
+ 
+ static void timer_stop(void)
+ {
+-	unregister_timer_hook(timer_notify);
++	unregister_timer_hook(hook_ptr);
+ }
+ 
+ 
+diff -urN linux-2.6.14/include/asm-i386/mach-default/do_timer.h linux-2.6.14-pcsp-kern/include/asm-i386/mach-default/do_timer.h
+--- linux-2.6.14/include/asm-i386/mach-default/do_timer.h	2005-11-02 10:04:02.000000000 +0300
++++ linux-2.6.14-pcsp-kern/include/asm-i386/mach-default/do_timer.h	2005-11-02 11:32:20.000000000 +0300
+@@ -3,37 +3,6 @@
+ #include <asm/apic.h>
+ #include <asm/i8259.h>
+ 
+-/**
+- * do_timer_interrupt_hook - hook into timer tick
+- * @regs:	standard registers from interrupt
+- *
+- * Description:
+- *	This hook is called immediately after the timer interrupt is ack'd.
+- *	It's primary purpose is to allow architectures that don't possess
+- *	individual per CPU clocks (like the CPU APICs supply) to broadcast the
+- *	timer interrupt as a means of triggering reschedules etc.
+- **/
+-
+-static inline void do_timer_interrupt_hook(struct pt_regs *regs)
+-{
+-	do_timer(regs);
+-#ifndef CONFIG_SMP
+-	update_process_times(user_mode(regs));
+-#endif
+-/*
+- * In the SMP case we use the local APIC timer interrupt to do the
+- * profiling, except when we simulate SMP mode on a uniprocessor
+- * system, in that case we have to call the local interrupt handler.
+- */
+-#ifndef CONFIG_X86_LOCAL_APIC
+-	profile_tick(CPU_PROFILING, regs);
+-#else
+-	if (!using_apic_timer)
+-		smp_local_timer_interrupt(regs);
+-#endif
+-}
+-
+-
+ /* you can safely undefine this if you don't have the Neptune chipset */
+ 
+ #define BUGGY_NEPTUN_TIMER
+diff -urN linux-2.6.14/include/asm-i386/mach-visws/do_timer.h linux-2.6.14-pcsp-kern/include/asm-i386/mach-visws/do_timer.h
+--- linux-2.6.14/include/asm-i386/mach-visws/do_timer.h	2005-11-02 10:04:02.000000000 +0300
++++ linux-2.6.14-pcsp-kern/include/asm-i386/mach-visws/do_timer.h	2005-11-02 11:32:20.000000000 +0300
+@@ -4,28 +4,6 @@
+ #include <asm/i8259.h>
+ #include "cobalt.h"
+ 
+-static inline void do_timer_interrupt_hook(struct pt_regs *regs)
+-{
+-	/* Clear the interrupt */
+-	co_cpu_write(CO_CPU_STAT,co_cpu_read(CO_CPU_STAT) & ~CO_STAT_TIMEINTR);
+-
+-	do_timer(regs);
+-#ifndef CONFIG_SMP
+-	update_process_times(user_mode(regs));
+-#endif
+-/*
+- * In the SMP case we use the local APIC timer interrupt to do the
+- * profiling, except when we simulate SMP mode on a uniprocessor
+- * system, in that case we have to call the local interrupt handler.
+- */
+-#ifndef CONFIG_X86_LOCAL_APIC
+-	profile_tick(CPU_PROFILING, regs);
+-#else
+-	if (!using_apic_timer)
+-		smp_local_timer_interrupt(regs);
+-#endif
+-}
+-
+ static inline int do_timer_overflow(int count)
+ {
+ 	int i;
+diff -urN linux-2.6.14/include/asm-i386/mach-voyager/do_timer.h linux-2.6.14-pcsp-kern/include/asm-i386/mach-voyager/do_timer.h
+--- linux-2.6.14/include/asm-i386/mach-voyager/do_timer.h	2004-10-30 18:30:51.000000000 +0400
++++ linux-2.6.14-pcsp-kern/include/asm-i386/mach-voyager/do_timer.h	2005-11-02 11:32:20.000000000 +0300
+@@ -1,16 +1,3 @@
+-/* defines for inline arch setup functions */
+-#include <asm/voyager.h>
+-
+-static inline void do_timer_interrupt_hook(struct pt_regs *regs)
+-{
+-	do_timer(regs);
+-#ifndef CONFIG_SMP
+-	update_process_times(user_mode(regs));
+-#endif
+-
+-	voyager_timer_interrupt(regs);
+-}
+-
+ static inline int do_timer_overflow(int count)
+ {
+ 	/* can't read the ISR, just assume 1 tick
+diff -urN linux-2.6.14/include/asm-i386/timex.h linux-2.6.14-pcsp-kern/include/asm-i386/timex.h
+--- linux-2.6.14/include/asm-i386/timex.h	2005-11-02 10:04:02.000000000 +0300
++++ linux-2.6.14-pcsp-kern/include/asm-i386/timex.h	2005-11-02 11:38:35.000000000 +0300
+@@ -52,4 +52,6 @@
+ extern int read_current_timer(unsigned long *timer_value);
+ #define ARCH_HAS_READ_CURRENT_TIMER	1
+ 
++extern volatile int pit_counter0_offset;
++
+ #endif
+diff -urN linux-2.6.14/include/asm-i386/voyager.h linux-2.6.14-pcsp-kern/include/asm-i386/voyager.h
+--- linux-2.6.14/include/asm-i386/voyager.h	2004-01-09 10:00:02.000000000 +0300
++++ linux-2.6.14-pcsp-kern/include/asm-i386/voyager.h	2005-11-02 11:32:20.000000000 +0300
+@@ -505,7 +505,7 @@
+ extern void voyager_smp_intr_init(void);
+ extern __u8 voyager_extended_cmos_read(__u16 cmos_address);
+ extern void voyager_smp_dump(void);
+-extern void voyager_timer_interrupt(struct pt_regs *regs);
++extern int voyager_timer_interrupt(struct pt_regs *regs);
+ extern void smp_local_timer_interrupt(struct pt_regs * regs);
+ extern void voyager_power_off(void);
+ extern void smp_voyager_power_off(void *dummy);
+diff -urN linux-2.6.14/include/linux/input.h linux-2.6.14-pcsp-kern/include/linux/input.h
+--- linux-2.6.14/include/linux/input.h	2005-11-02 10:04:32.000000000 +0300
++++ linux-2.6.14-pcsp-kern/include/linux/input.h	2005-11-02 11:30:30.000000000 +0300
+@@ -617,6 +617,7 @@
+ #define SND_CLICK		0x00
+ #define SND_BELL		0x01
+ #define SND_TONE		0x02
++#define SND_SILENT		0x06
+ #define SND_MAX			0x07
+ 
+ /*
+diff -urN linux-2.6.14/include/linux/profile.h linux-2.6.14-pcsp-kern/include/linux/profile.h
+--- linux-2.6.14/include/linux/profile.h	2004-12-26 00:37:13.000000000 +0300
++++ linux-2.6.14-pcsp-kern/include/linux/profile.h	2005-11-02 11:32:20.000000000 +0300
+@@ -53,12 +53,6 @@
+ int profile_event_register(enum profile_type, struct notifier_block * n);
+ int profile_event_unregister(enum profile_type, struct notifier_block * n);
+ 
+-int register_timer_hook(int (*hook)(struct pt_regs *));
+-void unregister_timer_hook(int (*hook)(struct pt_regs *));
+-
+-/* Timer based profiling hook */
+-extern int (*timer_hook)(struct pt_regs *);
+-
+ struct pt_regs;
+ 
+ #else
+@@ -87,16 +81,6 @@
+ #define profile_handoff_task(a) (0)
+ #define profile_munmap(a) do { } while (0)
+ 
+-static inline int register_timer_hook(int (*hook)(struct pt_regs *))
+-{
+-	return -ENOSYS;
+-}
+-
+-static inline void unregister_timer_hook(int (*hook)(struct pt_regs *))
+-{
+-	return;
+-}
+-
+ #endif /* CONFIG_PROFILING */
+ 
+ #endif /* __KERNEL__ */
+diff -urN linux-2.6.14/include/linux/sched.h linux-2.6.14-pcsp-kern/include/linux/sched.h
+--- linux-2.6.14/include/linux/sched.h	2005-11-02 10:04:32.000000000 +0300
++++ linux-2.6.14-pcsp-kern/include/linux/sched.h	2005-11-02 11:32:20.000000000 +0300
+@@ -973,7 +973,7 @@
+ 
+ #include <asm/current.h>
+ 
+-extern void do_timer(struct pt_regs *);
++extern int do_timer(struct pt_regs *);
+ 
+ extern int FASTCALL(wake_up_state(struct task_struct * tsk, unsigned int state));
+ extern int FASTCALL(wake_up_process(struct task_struct * tsk));
+diff -urN linux-2.6.14/include/linux/timer.h linux-2.6.14-pcsp-kern/include/linux/timer.h
+--- linux-2.6.14/include/linux/timer.h	2005-11-02 10:04:32.000000000 +0300
++++ linux-2.6.14-pcsp-kern/include/linux/timer.h	2005-11-02 11:32:20.000000000 +0300
+@@ -93,4 +93,17 @@
+ extern void run_local_timers(void);
+ extern void it_real_fn(unsigned long);
+ 
++struct timer_hook {
++	int (*hook_fn)(struct pt_regs *regs);
++	int run_always;
++	struct list_head list;
++};
++extern void do_timer_interrupt_hook(struct pt_regs *regs);
++extern void setup_timer_hook(struct timer_hook *hook);
++extern void remove_timer_hook(struct timer_hook *hook);
++extern void *register_timer_hook(int (*hook)(struct pt_regs *));
++extern void unregister_timer_hook(void *hook_ptr);
++extern int grab_timer_hook(void *hook_ptr);
++extern void ungrab_timer_hook(void *hook_ptr);
++
+ #endif
+diff -urN linux-2.6.14/kernel/profile.c linux-2.6.14-pcsp-kern/kernel/profile.c
+--- linux-2.6.14/kernel/profile.c	2005-11-02 10:04:03.000000000 +0300
++++ linux-2.6.14-pcsp-kern/kernel/profile.c	2005-11-02 11:32:20.000000000 +0300
+@@ -34,9 +34,6 @@
+ #define NR_PROFILE_HIT		(PAGE_SIZE/sizeof(struct profile_hit))
+ #define NR_PROFILE_GRP		(NR_PROFILE_HIT/PROFILE_GRPSZ)
+ 
+-/* Oprofile timer tick hook */
+-int (*timer_hook)(struct pt_regs *) __read_mostly;
+-
+ static atomic_t *prof_buffer;
+ static unsigned long prof_len, prof_shift;
+ static int prof_on __read_mostly;
+@@ -175,24 +172,6 @@
+ 	return err;
+ }
+ 
+-int register_timer_hook(int (*hook)(struct pt_regs *))
+-{
+-	if (timer_hook)
+-		return -EBUSY;
+-	timer_hook = hook;
+-	return 0;
+-}
+-
+-void unregister_timer_hook(int (*hook)(struct pt_regs *))
+-{
+-	WARN_ON(hook != timer_hook);
+-	timer_hook = NULL;
+-	/* make sure all CPUs see the NULL hook */
+-	synchronize_sched();  /* Allow ongoing interrupts to complete. */
+-}
+-
+-EXPORT_SYMBOL_GPL(register_timer_hook);
+-EXPORT_SYMBOL_GPL(unregister_timer_hook);
+ EXPORT_SYMBOL_GPL(task_handoff_register);
+ EXPORT_SYMBOL_GPL(task_handoff_unregister);
+ 
+@@ -385,8 +364,6 @@
+ 
+ void profile_tick(int type, struct pt_regs *regs)
+ {
+-	if (type == CPU_PROFILING && timer_hook)
+-		timer_hook(regs);
+ 	if (!user_mode(regs) && cpu_isset(smp_processor_id(), prof_cpu_mask))
+ 		profile_hit(type, (void *)profile_pc(regs));
+ }
+diff -urN linux-2.6.14/kernel/timer.c linux-2.6.14-pcsp-kern/kernel/timer.c
+--- linux-2.6.14/kernel/timer.c	2005-11-02 10:04:32.000000000 +0300
++++ linux-2.6.14-pcsp-kern/kernel/timer.c	2005-11-02 11:32:20.000000000 +0300
+@@ -91,6 +91,13 @@
+ #endif
+ }
+ 
++struct timer_hook_list {
++	struct list_head head;
++	struct timer_hook *grab;
++	spinlock_t lock;
++};
++static struct timer_hook_list timer_hook_list;
++
+ static void check_timer_failed(struct timer_list *timer)
+ {
+ 	static int whine_count;
+@@ -946,11 +953,12 @@
+  * jiffies is defined in the linker script...
+  */
+ 
+-void do_timer(struct pt_regs *regs)
++int do_timer(struct pt_regs *regs)
+ {
+ 	jiffies_64++;
+ 	update_times();
+ 	softlockup_tick(regs);
++	return 0;
+ }
+ 
+ #ifdef __ARCH_WANT_SYS_ALARM
+@@ -1412,6 +1420,10 @@
+ 
+ void __init init_timers(void)
+ {
++	INIT_LIST_HEAD(&timer_hook_list.head);
++	spin_lock_init(&timer_hook_list.lock);
++	timer_hook_list.grab = NULL;
++
+ 	timer_cpu_notify(&timers_nb, (unsigned long)CPU_UP_PREPARE,
+ 				(void *)(long)smp_processor_id());
+ 	register_cpu_notifier(&timers_nb);
+@@ -1633,3 +1645,70 @@
+ }
+ 
+ EXPORT_SYMBOL(msleep_interruptible);
++
++
++
++void do_timer_interrupt_hook(struct pt_regs *regs)
++{
++	struct timer_hook *ptr;
++	int done = 0;
++	if (unlikely(timer_hook_list.grab))
++		done = timer_hook_list.grab->hook_fn(regs);
++	/* called within IRQ context, rcu_read_lock not needed? */
++	list_for_each_entry_rcu(ptr, &timer_hook_list.head, list) {
++		if (!done || ptr->run_always)
++			ptr->hook_fn(regs);
++	}
++}
++
++void setup_timer_hook(struct timer_hook *hook)
++{
++	spin_lock(&timer_hook_list.lock);
++	list_add_rcu(&hook->list, &timer_hook_list.head);
++	spin_unlock(&timer_hook_list.lock);
++}
++
++void remove_timer_hook(struct timer_hook *hook)
++{
++	spin_lock(&timer_hook_list.lock);
++	list_del_rcu(&hook->list);
++	spin_unlock(&timer_hook_list.lock);
++}
++
++void *register_timer_hook(int (*func)(struct pt_regs *))
++{
++	struct timer_hook *ptr;
++	ptr = kmalloc(sizeof(struct timer_hook), GFP_ATOMIC);
++	ptr->hook_fn = func;
++	ptr->run_always = 0;
++	setup_timer_hook(ptr);
++	return ptr;
++}
++
++void unregister_timer_hook(void *hook_ptr)
++{
++	struct timer_hook *ptr = (struct timer_hook *)hook_ptr;
++	remove_timer_hook(ptr);
++	kfree(ptr);
++}
++
++int grab_timer_hook(void *hook_ptr)
++{
++	if (timer_hook_list.grab)
++		return -EBUSY;
++	timer_hook_list.grab = (struct timer_hook *)hook_ptr;
++	return 0;
++}
++
++void ungrab_timer_hook(void *hook_ptr)
++{
++	WARN_ON(timer_hook_list.grab != (struct timer_hook *)hook_ptr);
++	timer_hook_list.grab = NULL;
++}
++
++EXPORT_SYMBOL_GPL(setup_timer_hook);
++EXPORT_SYMBOL_GPL(remove_timer_hook);
++EXPORT_SYMBOL_GPL(register_timer_hook);
++EXPORT_SYMBOL_GPL(unregister_timer_hook);
++EXPORT_SYMBOL_GPL(grab_timer_hook);
++EXPORT_SYMBOL_GPL(ungrab_timer_hook);

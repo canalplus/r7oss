@@ -1,0 +1,27 @@
+From 726108ada3451b2a8f835876cf9f457ecad6bbf4 Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:19:59 +0100
+Subject: [PATCH 24/36] patches/early-capture
+
+---
+ player/manifestor/manifestor_video_stmfb.cpp |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/player/manifestor/manifestor_video_stmfb.cpp b/player/manifestor/manifestor_video_stmfb.cpp
+index f2518de..39ea189 100644
+--- a/player/manifestor/manifestor_video_stmfb.cpp
++++ b/player/manifestor/manifestor_video_stmfb.cpp
+@@ -1297,6 +1297,10 @@ void Manifestor_VideoStmfb_c::InitialFrameDisplayCallback      (struct StreamBuf
+     InitialFrameState           = InitialFrameOnDisplay;
+     OS_SemaphoreSignal (&InitialFrameDisplayed);
+ 
++    // Again Julian, sorry for this hack.
++    ManifestorLastDisplayedBuffer = &DisplayBuffer[BufferOnDisplay];
++    wake_up_interruptible (&g_ManifestorLastWaitQueue);
++
+     DisplayAddress              = (unsigned char*)(DisplayBuffer[Buffer->BufferIndex].src.ulVideoBufferAddr);
+     DisplaySize                 = DisplayBuffer[Buffer->BufferIndex].src.ulVideoBufferSize;
+ 
+-- 
+1.7.9.5
+

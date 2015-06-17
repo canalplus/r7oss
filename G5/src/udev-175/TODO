@@ -1,0 +1,20 @@
+ - trigger --subsystem-match=usb/usb_device
+
+ - test (now fixed) /dev/tape/ links
+
+ - move udevadm -> --bindir
+
+ - have a $attrs{} ?
+
+ - kill rules_generator
+
+ - kill tabs?
+
+ - deprecate and warn about RUN+="socket:"
+
+ - libudev.so.1
+     - symbol versioning
+     - return object with *_unref()
+     - udev_monitor_from_socket()
+     - udev_queue_get_failed_list_entry()
+

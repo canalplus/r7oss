@@ -1,0 +1,24 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+  file=/etc/modules.conf
+else
+  file=$1
+fi
+
+if [ ! -f $file ]; then
+    echo "file $file not found"
+    exit 1
+fi
+
+rm -f $file.new
+sed -e 's/snd_//g' < $file > $file.new
+if cmp -s $file $file.new; then
+    # nothing changed
+    rm -f $file.new
+    echo "Nothing to be changed."
+else
+    diff -u $file $file.new | less
+    echo "Please, check and copy $file.new to $file"
+fi
+exit 0

@@ -1,0 +1,44 @@
+#!/bin/bash
+
+kversion=@kversion@.@kpatchlevel@.@ksublevel@@kextraversion@
+source=.
+version=`cat $source/../version`
+package=$source/../../alsa-driver-$version.tar.bz2
+xpackages=/usr/src/redhat
+test -d /usr/src/packages && xpackages=/usr/src/packages
+xbuildrpm=rpm
+rpmbuild --usage 2> /dev/null > /dev/null && xbuildrpm=rpmbuild
+
+if [ -z "$TARGET_KERNEL" ]; then
+  export TARGET_KERNEL="$kversion"
+fi
+
+make -C .. pack
+
+if [ ! -r $package ]; then
+  echo "Error: wrong package: $package"
+  exit 1
+fi
+
+cp -fv $package $xpackages/SOURCES
+
+if [ ! -r $source/buildrpm ]; then
+  echo "Error: invalid directory: $source"
+  exit 1
+fi
+
+if [ ! -d $xpackages ]; then
+  echo "Error: $xpackages directory not found"
+  exit 1
+fi
+
+if [ ! -r $source/alsa-driver.spec ]; then
+  cd $source/..
+  ./configure
+  cd utils
+fi
+
+cp -fv $source/alsa-driver.spec $xpackages/SPECS
+cd $xpackages/SPECS
+$xbuildrpm -ba alsa-driver.spec
+cd $xpackages

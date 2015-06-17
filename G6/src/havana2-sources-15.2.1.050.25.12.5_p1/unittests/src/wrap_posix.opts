@@ -1,0 +1,4 @@
+-Wl,--wrap=pthread_create
+-Wl,--wrap=pthread_cond_init
+-Wl,--wrap=pthread_mutex_init
+-Wl,--wrap=sem_wait

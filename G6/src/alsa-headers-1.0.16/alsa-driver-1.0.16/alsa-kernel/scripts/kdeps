@@ -1,0 +1,152 @@
+#! /usr/bin/python
+#  -*- Python -*-
+
+"""ALSA toplevel module dependency update utility
+
+This script allows synchronization of ALSA toplevel module dependency
+stored in scripts/Modules.dep using mod-deps tool.
+
+This tool is intended mainly for internal use of Jaroslav Kysela.
+
+Usage:
+	%(PROGRAM)s [options] command
+
+Where options is:
+
+	-h
+	--help
+		Print this help
+
+	-C <path>
+	--cvsroot=<path>
+		Set root of ALSA CVS repository
+
+"""
+
+import os
+import sys
+import string
+import re
+import time
+import dircache
+import getopt
+
+# define for documentation
+PROGRAM = sys.argv[0]
+
+# define working directories
+CVSROOT = '~/alsa'
+BKROOT = '~/linux/work'
+
+# exclude some files or directories
+ALSA_EXCLUDE_DIR = ['/', '/core/ioctl32', '/core/oss', '/core/seq/oss', '/scripts', '/oss']
+
+# dependency block identifier
+DEP_ID = ['# Toplevel Module Dependency\n',
+	  '# Module Dependency\n']
+
+def usage(code, msg=''):
+	print __doc__ % globals()
+	if msg:
+		print msg
+	sys.exit(code)
+
+def get_cvs_root():
+	return os.path.expanduser(CVSROOT + '/alsa-kernel')
+
+def print_file(fp, lines):
+	for line in lines:
+		fp.write(line)
+
+def do_diff(file):
+	path, file = os.path.split(file)
+	os.chdir(path)
+	cmd = 'cvs diff -uN %s' % file
+	fp = os.popen(cmd)
+	lines = fp.readlines()
+	fp.close()
+	print_file(sys.stdout, lines)
+
+def update_makefile(base, file):
+	fp = open(base + file)
+	lines = fp.readlines()
+	fp.close()
+
+	fidx = -1
+	idx = 0
+	while idx < len(lines):
+		# print lines[idx]
+		if DEP_ID.count(lines[idx]) > 0:
+			del lines[idx]
+			while re.compile('[' + string.letters + ']+').search(lines[idx]):
+				del lines[idx]
+			fidx = idx
+			break
+		idx = idx + 1
+
+	if fidx < 0:
+		print 'File %s does not contain dependency section' % file
+		return
+
+	xpath, xfile = os.path.split(file)
+	cmd = get_cvs_root() + '/scripts/mod-deps --makefile --dir %s ' % ('linux/sound' + xpath) + \
+	      get_cvs_root() + '/scripts/Modules.dep'
+	fp = os.popen(cmd)
+	nlines = fp.readlines()
+	fp.close()
+
+	fp = open(base + file + '.new', 'w')
+	print_file(fp, lines[0:idx])
+	print_file(fp, nlines)
+	print_file(fp, lines[idx:])
+	fp.close()
+
+	os.rename(base + file + '.new', base + file)
+
+	# do_diff(base + file)
+
+def update_makefiles(base, dir):
+	# Read all entries
+	fp = open(base + dir + 'CVS/Entries')
+	entries = fp.readlines()
+	fp.close()
+
+	# Process Makefile entries
+	if not ALSA_EXCLUDE_DIR.count(dir) and not ALSA_EXCLUDE_DIR.count(dir[0:-1]):
+		print dir[0:-1]
+		for e in entries:
+			try:
+				flags, name, rev, time, unk1, unk2 = string.split(e, '/')
+				if string.count(flags, 'D') <= 0 and name == 'Makefile':
+					update_makefile(base, dir + name)
+			except ValueError, msg:
+				pass
+
+	# Process directory entries
+	for e in entries:
+		try:
+			flags, name, rev, time, unk1, unk2 = string.split(e, '/')
+			if string.count(flags, 'D') > 0:
+				update_makefiles(base, dir + name + '/')
+		except ValueError, msg:
+			pass
+
+def main():
+	try:
+		opts, args = getopt.getopt(sys.argv[1:], 'hC:',
+					   ['cvsroot=', 'help']);
+	except getopt.error, msg:
+		usage(1, msg)
+
+	# parse the options
+	for opt, arg in opts:
+		if opt in ('-h', '--help'):
+			usage(0)
+		elif opt == '--cvsroot':
+			CVSROOT = arg
+
+	update_makefiles(get_cvs_root(), '/')
+
+if __name__ == '__main__':
+	main()
+	sys.exit(0)

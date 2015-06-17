@@ -1,0 +1,98 @@
+Specifying GPIO-Wakeup information for ST devices
+
+Required properties:
+	- compatible = "st,wakeup-pins";
+
+Each PIO is represented as a sub-node of "st,wakeup-pins":
+Subnode properties:
+
+label:
+st,pio_use: Defines usage of the configured PIO
+	Can be: <PIO_WAKEUP_MODE> or <EXT_IT_WAKEUP_MODE>
+st,ext_it_num: In case st,pio_use = <EXT_IT_WAKEUP_MODE>, this property
+defines which ext_it lines is used
+	Can be: <0>, <1> or <2>
+st,pio_dir: Defines the PIO direction
+	Can be <GPIO_AS_INPUT> or <GPIO_AS_OUTPUT>
+st,pio_level: Defines the PIO active level
+	Can be: <GPIO_ACTIVE_HIGH> or <GPIO_ACTIVE_LOW>
+st,int_enabled: Boolean to define if PIO wakeup detection is done by polling or
+interrupt mode
+
+For ST SOC that embed a SBC chip, wakeup from CPS by GPIO can have several
+configurations. Here is a summary of all possible cases.
+
+Wakeup from CPS by a GPIO configured as EXT_IT
+==============================================
+In this use-case, the corresponding GPIO has to be configured as alternate
+function
+
+GPIO: PIO3 3 ALT3 IN
+GIC Interrupt: SPI 184 (EXT_IT_2)
+SBC interrupt: number 2 (Connected to SBC EXTERNAL_IT_7),
+
+Example with PIO3 3 as ALT3 (EXT_IT_2):
+st_wakeup_pin.ext_it {
+	compatible = "st,wakeup-pins";
+	status = "disabled";
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_wk_pin>;
+	wkpin@0 {
+		interrupts = <GIC_SPI 184 IRQ_TYPE_NONE>;
+		label = "ext_it_wakeup";
+		st,pio_use = <EXT_IT_WAKEUP_MODE>;
+		st,ext_it_num = <2>;
+	};
+};
+
+In this configuration, a pinctrl pin must be declared in the xxx-pinctrl.dtsi,
+in order to select ALT3 mode for the concerned GPIO
+
+pin-controller-sbc {
+	...
+
+	wakeup-pin {
+		pinctrl_wk_pin: wkpin0 {
+			st,pins {
+				wk = <&PIO3 3 ALT3 IN>;
+			};
+		};
+	};
+
+	...
+};
+
+Wakeup from CPS by a GPIO configured as PIO, with interrupt mode enabled
+========================================================================
+In this use-case, GPIO is used as PIO wakeup in interrupt mode
+
+st_wakeup_pin.pio {
+	compatible = "st,wakeup-pins";
+	status = "disabled";
+	wkpin@0 {
+		label = "pio_wakeup";
+		gpios = <&PIO3 3>;
+		st,pio_use = <PIO_WAKEUP_MODE>;
+		st,pio_dir = <GPIO_AS_INPUT>;
+		st,int_enabled;
+	};
+};
+
+Wakeup from CPS by a GPIO configured as PIO, with polling mode enabled
+======================================================================
+In this use-case, GPIO is use as PIO wakeup in polling mode
+
+st_wakeup_pin.pio_polling {
+	compatible = "st,wakeup-pins";
+	status = "disabled";
+	wkpin@0 {
+		label = "pio_polling_wakeup";
+		gpios = <&PIO3 3>;
+		st,pio_use = <PIO_WAKEUP_MODE>;
+		st,pio_dir = <GPIO_AS_INPUT>;
+		st,pio_level = <GPIO_ACTIVE_LOW>;
+	};
+};
+
+These are only examples, each hardware configuration needs a dedicated
+configuration.

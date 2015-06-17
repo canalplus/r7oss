@@ -1,0 +1,6 @@
+debian/tmp/usr/bin/ffmpeg
+debian/tmp/usr/bin/ffplay
+debian/tmp/usr/bin/ffserver
+debian/tmp/usr/lib/vhook
+debian/tmp/usr/share/man/man1
+doc/ffserver.conf etc

@@ -1,0 +1,131 @@
+/* vi: set sw=4 ts=4: */
+/*
+ * shows keys pressed. inspired by kbd package
+ *
+ * Copyright (C) 2008 by Vladimir Dronnikov <dronnikov@gmail.com>
+ *
+ * Licensed under GPLv2, see file LICENSE in this source tree.
+ */
+
+#include "libbb.h"
+#include <linux/kd.h>
+
+
+struct globals {
+	int kbmode;
+	struct termios tio, tio0;
+};
+#define G (*ptr_to_globals)
+#define kbmode (G.kbmode)
+#define tio    (G.tio)
+#define tio0   (G.tio0)
+#define INIT_G() do { \
+	SET_PTR_TO_GLOBALS(xzalloc(sizeof(G))); \
+} while (0)
+
+
+// set raw tty mode
+// also used by microcom
+// libbb candidates?
+static void xget1(struct termios *t, struct termios *oldt)
+{
+	tcgetattr(STDIN_FILENO, oldt);
+	*t = *oldt;
+	cfmakeraw(t);
+}
+
+static void xset1(struct termios *t)
+{
+	int ret = tcsetattr(STDIN_FILENO, TCSAFLUSH, t);
+	if (ret) {
+		bb_perror_msg("can't tcsetattr for stdin");
+	}
+}
+
+int showkey_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+int showkey_main(int argc UNUSED_PARAM, char **argv)
+{
+	enum {
+		OPT_a = (1<<0), // display the decimal/octal/hex values of the keys
+		OPT_k = (1<<1), // display only the interpreted keycodes (default)
+		OPT_s = (1<<2), // display only the raw scan-codes
+	};
+
+	INIT_G();
+
+	// FIXME: aks are all mutually exclusive
+	getopt32(argv, "aks");
+
+	// get keyboard settings
+	xioctl(STDIN_FILENO, KDGKBMODE, &kbmode);
+	printf("kb mode was %s\n\nPress any keys. Program terminates %s\n\n",
+		kbmode == K_RAW ? "RAW" :
+			(kbmode == K_XLATE ? "XLATE" :
+				(kbmode == K_MEDIUMRAW ? "MEDIUMRAW" :
+					(kbmode == K_UNICODE ? "UNICODE" : "UNKNOWN")))
+		, (option_mask32 & OPT_a) ? "on EOF (ctrl-D)" : "10s after last keypress"
+	);
+
+	// prepare for raw mode
+	xget1(&tio, &tio0);
+	// put stdin in raw mode
+	xset1(&tio);
+
+	if (option_mask32 & OPT_a) {
+		unsigned char c;
+
+		// just read stdin char by char
+		while (1 == read(STDIN_FILENO, &c, 1)) {
+			printf("%3u 0%03o 0x%02x\r\n", c, c, c);
+			if (04 /*CTRL-D*/ == c)
+				break;
+		}
+	} else {
+		// set raw keyboard mode
+		xioctl(STDIN_FILENO, KDSKBMODE, (void *)(ptrdiff_t)((option_mask32 & OPT_k) ? K_MEDIUMRAW : K_RAW));
+
+		// we should exit on any signal; signals should interrupt read
+		bb_signals_recursive_norestart(BB_FATAL_SIGS, record_signo);
+
+		// read and show scancodes
+		while (!bb_got_signal) {
+			char buf[18];
+			int i, n;
+
+			// setup 10s watchdog
+			alarm(10);
+			// read scancodes
+			n = read(STDIN_FILENO, buf, sizeof(buf));
+			i = 0;
+			while (i < n) {
+				if (option_mask32 & OPT_s) {
+					// show raw scancodes
+					printf("0x%02x ", buf[i++]);
+				} else {
+					// show interpreted scancodes (default)
+					char c = buf[i];
+					int kc;
+					if (i+2 < n
+					 && (c & 0x7f) == 0
+					 && (buf[i+1] & 0x80) != 0
+					 && (buf[i+2] & 0x80) != 0
+					) {
+						kc = ((buf[i+1] & 0x7f) << 7) | (buf[i+2] & 0x7f);
+						i += 3;
+					} else {
+						kc = (c & 0x7f);
+						i++;
+					}
+					printf("keycode %3u %s", kc, (c & 0x80) ? "release" : "press");
+				}
+			}
+			puts("\r");
+		}
+	}
+
+	// restore keyboard and console settings
+	xset1(&tio0);
+	xioctl(STDIN_FILENO, KDSKBMODE, (void *)(ptrdiff_t)kbmode);
+
+	return EXIT_SUCCESS;
+}

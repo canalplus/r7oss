@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+#
+# Usage:
+#   env QUIET=0 quiet command....
+#   env QUIET=1 quiet command....
+#   env QUIET=<message> quiet command....
+#
+# Helper script for the unittests/Makefile.
+#
+# Displays and runs the given command.
+#
+# If the QUIET env. var. is defined:
+# - either QUIET=0 (default) and the command is outputed before execution,
+# - or QUIET=1 and the command is executed with no additional output,
+# - or QUIET="message" and the message is displayed before executing
+#   the command and after command execution with some additional time/status
+#   information.
+#
+
+set -e
+error() { echo "error: $1" >&2; exit 1; }
+
+[[ -n $1 ]] || error "missing command arguments"
+
+cleanup() {
+    trap - EXIT INT TERM QUIT
+    [ ! -f "$tmpfile" ] || rm "$tmpfile"
+}
+trap cleanup EXIT INT TERM QUIT
+
+TIME=${TIME:-"/usr/bin/time"}
+QUIET=${QUIET:-0}
+
+case "$QUIET" in
+    0)
+        echo "$@"
+        exec "$@"
+        ;;
+    1)
+        exec "$@"
+        ;;
+    *)
+        echo "$QUIET ..."
+        tmpfile=`mktemp`
+        $TIME -o $tmpfile -p "$@" || err=$?
+        [ ! -f "$tmpfile" ] || real=`awk '{ if (/^real/) { print $2 * 1000; } }' < $tmpfile`
+        echo "$QUIET . ${real+($real ms)} ${err+(error: $err)}"
+        exit ${err:0}
+esac
+
+

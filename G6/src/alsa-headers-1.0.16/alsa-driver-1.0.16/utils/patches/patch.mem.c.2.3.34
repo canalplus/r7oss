@@ -1,0 +1,22 @@
+--- mem.c.old	Tue Dec 28 18:57:58 1999
++++ mem.c	Tue Dec 28 18:59:22 1999
+@@ -37,6 +37,9 @@
+ void dmasound_init(void);
+ #endif
+ #endif
++#ifdef CONFIG_SND
++int alsa_init(void);
++#endif
+ #ifdef CONFIG_SPARCAUDIO
+ extern int sparcaudio_init(void);
+ #endif
+@@ -649,6 +652,9 @@
+ #ifdef CONFIG_DMASOUND
+ 	dmasound_init();
+ #endif	
++#endif
++#ifdef CONFIG_SND
++	alsa_init();
+ #endif
+ #ifdef CONFIG_SPARCAUDIO
+ 	sparcaudio_init();

@@ -1,0 +1,41 @@
+From 596efdad2afe3e88828f49486117313f7989a6a7 Mon Sep 17 00:00:00 2001
+From: Andrew Watkins <andrew.watkins@mathembedded.com>
+Date: Tue, 12 Mar 2013 09:34:05 +0000
+Subject: [PATCH 31/36] Added a pre/post OSD capture option
+
+---
+ linux/drivers/media/dvb/stm/dvb/dvb_capture_pipe.c |   10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/linux/drivers/media/dvb/stm/dvb/dvb_capture_pipe.c b/linux/drivers/media/dvb/stm/dvb/dvb_capture_pipe.c
+index fa6f460..112a71d 100644
+--- a/linux/drivers/media/dvb/stm/dvb/dvb_capture_pipe.c
++++ b/linux/drivers/media/dvb/stm/dvb/dvb_capture_pipe.c
+@@ -509,6 +509,7 @@ static void CapturePipeStart( struct capture_v4l2 *ldvb )
+      unsigned long *c;
+      unsigned int n;
+      unsigned long gam_cap_ctl;
++     const unsigned long gdp_plane_base_address_mask = 0xFFFFF000;
+ 
+      const unsigned long gam_cap_hsrc = get_rate_converter_increment(
+          ldvb->capture_width, ldvb->display_width );
+@@ -535,11 +536,12 @@ static void CapturePipeStart( struct capture_v4l2 *ldvb )
+ 
+      const unsigned long gam_cap_cwo = capture_height_offset << 16;
+      const unsigned long gam_cap_cws = ( ( ldvb->capture_width-1 ) << 0 ) |
+-         ( ( ldvb->capture_height-1) << 16 ) + gam_cap_cwo;
++         ( ( ldvb->capture_height+capture_height_offset-1) << 16 );
+ 
+-     iowrite32( ldvb->physical_address & 0xFFFFF000, &cap_regs_base[GAM_CAP_VTP] );
+-     iowrite32( (ldvb->physical_address & 0xFFFFF000) +bytes_per_line,
+-         &cap_regs_base[GAM_CAP_VBP] );
++     iowrite32( ldvb->physical_address & gdp_plane_base_address_mask,
++         &cap_regs_base[GAM_CAP_VTP] );
++     iowrite32( (ldvb->physical_address & gdp_plane_base_address_mask)
++         +bytes_per_line, &cap_regs_base[GAM_CAP_VBP] );
+      iowrite32( gam_cap_hsrc, &cap_regs_base[GAM_CAP_HSRC] );
+      iowrite32( gam_cap_vsrc, &cap_regs_base[GAM_CAP_VSRC] );
+      iowrite32( gam_cap_pmp, &cap_regs_base[GAM_CAP_PMP] );
+-- 
+1.7.9.5
+

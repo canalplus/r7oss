@@ -1,0 +1,55 @@
+* Integrated SoC Virtual Ethernet driver
+
+Required properties:
+- compatible: Should be "st,isve"
+- reg: Address and length of the downstream and upstream control queue
+       registers.
+- interrupts: Should contain downstream and upstream interrupts
+- interrupt-names: Should contain the interrupt names "isveirq_ds", "isveirq_us"
+		   so the downstream and upstream interrupt names.
+
+Optional properties:
+isve,queue_number		Number of the queue
+isve,skip_hdr			Extra bytes to remove (also in case of the
+				HW is programmed to remove both extra and docsis
+				headers from the incoming frames) to keep the
+				Ethernet frame aligned to 32bit.
+isve,hw_rem_hdr			This can be 1 to remove the docsis header,
+				2 to remove the extra header and 3 to remove
+				all the headers.
+
+Glue logic to manage internal docis APIs:
+
+ISVE can use a internal glue logic to manage some docsis registers shared
+among all the queues. For example to enable/disable the upstream/downstream
+queues. The glue logic needs the following properties:
+
+- compatible: Should be "st,docsis"
+- reg: downsteam and upstream base address
+
+Examples:
+
+isve interface
+
+	if17:queue_3 {
+		compatible	= "st,isve";
+		device_type = "network";
+		reg = <0xfee2e460 0x20>, <0xfee1a478 0x20>;
+		interrupts = <GIC_SPI 78 IRQ_TYPE_NONE>, < GIC_SPI 89 IRQ_TYPE_NONE>;
+		interrupt-names = "isveirq_ds", "isveirq_us";
+
+		isve,downstream_queue_size = <32>;
+		isve,upstream_queue_size = <32>;
+		isve,queue_number = <3>;
+		isve,skip_hdr = <0x2>; /* two extra bytes have to be removed */
+		isve,hw_rem_hdr = <0x3>; /* remove docsis and extra HDR */
+	};
+
+common glue logic:
+
+	docsis: docsis@fee00000 {
+		compatible = "st,docsis";
+		status = "okay";
+		reg = <0xfee2e000 0x100>, <0xfee1a000 0x100>;
+		reg-names = 	"dfwd-reg", "upiim-reg";
+	};

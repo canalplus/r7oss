@@ -1,0 +1,69 @@
+From ebc4b62ccf2866eef2a93b4659727afd7d42b84d Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:19:59 +0100
+Subject: [PATCH 20/36] patches/h264_vodfix_st10397
+
+---
+ player/frame_parser/frame_parser_video_h264.cpp |   18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
+
+diff --git a/player/frame_parser/frame_parser_video_h264.cpp b/player/frame_parser/frame_parser_video_h264.cpp
+index fb5b946..bf03cd9 100644
+--- a/player/frame_parser/frame_parser_video_h264.cpp
++++ b/player/frame_parser/frame_parser_video_h264.cpp
+@@ -595,6 +595,8 @@ unsigned int		UnitLength;
+ 			{
+ 			    ParsedFrameParameters->DataOffset	= ExtractStartCodeOffset(Code);
+ 			    Status				= CommitFrameForDecode();
++
++			    SEIPictureTiming.Valid		= 0;		// any picture timning applied only to this decode
+ 			}
+ 			break;
+ 
+@@ -5249,6 +5251,16 @@ bool					  ForceTopBottomInterlaced;
+     }
+ 
+     //
++    // Check that if the sps says we have a picture struct, then we actually have one
++    //
++
++    if( SPS->vui_seq_parameters.pict_struct_present_flag &&
++	!SEIPictureTiming.Valid )
++    {
++	report( severity_error, "FrameParser_VideoH264_c::CommitFrameForDecode - SPS demands an SEI Picture timing Message, but none present.\n" );
++    }
++
++    //
+     // Check that the aspect ratio code is valid for the specific standard
+     //
+ 
+@@ -5498,7 +5510,7 @@ report( severity_info, "NickQ NonPairedOutput - (%d %d) (%d %d) (%d %d)\n",
+ 
+     if (SPS->vui_seq_parameters.fixed_frame_rate_flag )
+     {
+-	pic_struct	= SPS->vui_seq_parameters.pict_struct_present_flag ?
++	pic_struct	= (SPS->vui_seq_parameters.pict_struct_present_flag && SEIPictureTiming.Valid) ?
+ 				SEIPictureTiming.pic_struct :
+ 				SEI_PICTURE_TIMING_PICSTRUCT_FRAME;
+ 
+@@ -5550,7 +5562,7 @@ report( severity_info, "NickQ NonPairedOutput - (%d %d) (%d %d) (%d %d)\n",
+ 
+     ParsedVideoParameters->PictureStructure		= PictureStructure;
+ 
+-    if( SPS->vui_seq_parameters.pict_struct_present_flag )
++    if( SPS->vui_seq_parameters.pict_struct_present_flag && SEIPictureTiming.Valid )
+     {
+ 	pic_struct	= SEIPictureTiming.pic_struct;
+     }
+@@ -5664,7 +5676,7 @@ report( severity_info, "NickQ NonPairedOutput - (%d %d) (%d %d) (%d %d)\n",
+     // just overrides the deduction completely.
+     //
+ 
+-    if( SPS->vui_seq_parameters.pict_struct_present_flag )
++    if( SPS->vui_seq_parameters.pict_struct_present_flag && SEIPictureTiming.Valid )
+     {
+ 	DeducedInterlacedFlag	= ParsedVideoParameters->InterlacedFrame;
+ 	DeducedTopFieldFirst	= ParsedVideoParameters->TopFieldFirst;
+-- 
+1.7.9.5
+

@@ -1,0 +1,10 @@
+/*
+ * Copyright (C) 2014 STMicroelectronics Limited.
+ * Author: Amelie Herault <amelie.herault@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+#include "stih410-clock.dtsi"
+#include "stih407-family.dtsi"

@@ -1,0 +1,40 @@
+STMicroelectronics STi family Sysconfig Picophy SoftReset Controller
+=============================================================================
+
+This binding describes a reset controller device that is used to enable and
+disable on-chip PicoPHY USB2 phy(s) using "softreset" control bits found in
+the STi family SoC system configuration registers.
+
+The actual action taken when softreset is asserted is hardware dependent.
+However, when asserted it may not be possible to access the hardware's
+registers and after an assert/deassert sequence the hardware's previous state
+may no longer be valid.
+
+Please refer to reset.txt in this directory for common reset
+controller binding usage.
+
+Required properties:
+- compatible: Should be "st,<chip>-softreset"
+- #reset-cells: 1, see below
+
+example:
+
+	picophyreset: picophyreset-controller {
+		#reset-cells = <1>;
+		compatible = "st,stih407-picophyreset";
+	};
+
+Specifying picophyreset control of devices
+=======================================
+
+Device nodes should specify the reset channel required in their "resets"
+property, containing a phandle to the picophyreset device node and an
+index specifying which channel to use, as described in reset.txt
+
+example:
+	usb2_picophy0: usbpicophy@0 {
+		resets = <&picophyreset STIH407_PICOPHY0_RESET>;
+	};
+
+Macro definitions for the supported reset channels can be found in:
+include/dt-bindings/reset-controller/stih407-resets.h

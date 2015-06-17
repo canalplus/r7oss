@@ -1,0 +1,17 @@
+#
+# STi Platform Specific Drivers
+#
+
+source "drivers/platform/sti/mali/Kconfig"
+
+config ST_SOCINFO
+	bool "Export SoC identifiers from DT and syscfg register"
+	select SOC_BUS
+	default y
+
+config ST_AMBA_BRIDGE
+	tristate "STBus<->AMBA bridge configuration on STMicroelectronics STI SoCs"
+	depends on ARCH_STI
+	help
+	  This driver allows configuration of STBus/AMBA bridge on STMicroelectronics
+	  STI series SoCs.

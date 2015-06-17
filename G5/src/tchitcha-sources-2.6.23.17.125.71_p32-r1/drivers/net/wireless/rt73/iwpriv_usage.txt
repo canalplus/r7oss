@@ -1,0 +1,274 @@
+iwpriv
+=================
+This is detailed explanation of each parameters for iwpriv.
+Before reading this document, make sure you already read README.
+
+-------------------------------------------------------------------------------------------------------
+USAGE_1:
+	iwpriv wlan0 set [parameters]=[val]
+
+NOTE:
+	Execute one iwpriv/set command simultaneously.
+
+
+DESCRIPTION
+[parameters]        	[val] /{range}
+-----------------   	-------------------------------------------------
+CountryRegion       	{0~7}
+						::Set country region
+						0: 1 ~ 11 ch
+						1: 1 ~ 13 ch
+						2: 10, 11 ch
+						3: 10 ~ 13 ch
+						4: 14 ch
+						5: 1 ~ 14 ch
+						6: 3 ~ 9 ch
+						7: 5 ~ 13 ch
+
+CountryRegionABand		{0~10}
+						::Set country region for A band
+						0: 36, 40, 44, 48, 52, 56, 60, 64, 149, 153, 157, 161, 165 ch
+						1: 36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140 ch
+						2: 36, 40, 44, 48, 52, 56, 60, 64 ch
+						3: 52, 56, 60, 64, 149, 153, 157, 161 ch
+						4: 149, 153, 157, 161, 165 ch
+						5: 149, 153, 157, 161 ch
+						6: 36, 40, 44, 48 ch
+						7: 36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 149, 153, 157, 161, 165 ch
+						8: 52, 56, 60, 64 ch
+						9: 34, 38, 42, 46 ch
+						10: 34, 36, 38, 40, 42, 44, 46, 48, 52, 56, 60, 64 ch
+
+SSID                	{0~z, 1~32 ascii characters}
+                    	::Set AP SSID
+
+WirelessMode        	{0~4}
+						::Set Wireless Mode
+                    	0:11b/g mixed,
+                    	1:11B only,
+                    	2:11A only
+                    	3:11a/b/g mixed,
+                    	4:11G only
+
+TxRate              	{0~12}
+						::Set TxRate of Infrastructure mode
+                    	0:Auto, 	1:1Mbps,
+                    	2:2Mbps, 	3:5.5Mbps,
+                    	4:11Mbps, 	5:6Mbps,
+                    	6:9Mbps, 	7:12Mbps,
+                    	8:18Mbps, 	9:24Mbps,
+                    	10:36Mbps, 	11:48Mbps,
+                    	12:54Mbps
+
+Channel             	depends on CountryRegion or CountryRegionABand
+                        ::Set Channel
+
+BGProtection        	{0~2}
+						::Set 11B/11G Protection
+                   		0:Auto,
+                   		1:Always on,
+                   		2:Always off
+
+TxPreamble          	{0~2}
+						::Set TxPreamble
+                    	0:Preamble Long,
+                    	1:Preamble Short,
+                    	2:Auto
+
+RTSThreshold        	{1~2347}
+                    	::Set RTS Threshold
+
+FragThreshold       	{256~2346}
+						::Set Fragment Threshold
+
+TxBurst             	{0,1}
+						::Set TxBurst Enable or Disable
+                  		0:Disable,
+                  		1:Enable
+
+NetworkType	    		{Infra,Adhoc}
+    					::Set Network type
+
+AdhocOfdm				{0~3}
+                        ::Set Adhoc Wireless Mode
+    				    0: WIFI mode(11b rates only),
+        				1: b/g mixed,
+        				2: 11g only,
+        				3: 11a only
+
+AuthMode            	{OPEN,SHARED,WEPAUTO,WPAPSK,WPA2PSK,WPANONE}
+                        ::Set Authentication Mode
+
+EncrypType          	{NONE,WEP,TKIP,AES}
+						::Set Encryption Type
+
+DefaultKeyID        	{1~4}
+						::Set Default Key ID
+
+
+Key1                 	{5 ascii characters or 10 hex number or
+                     	13 ascii characters or 26 hex numbers}
+                     	::Set Key1 String
+
+Key2                 	{5 ascii characters or 10 hex number or
+                     	13 ascii characters or 26 hex numbers}
+                      	::Set Key2 String
+
+Key3                 	{5 ascii characters or 10 hex number or
+                     	13 ascii characters or 26 hex numbers}
+						::Set Key3 String
+
+Key4                 	{5 ascii characters or 10 hex number or
+                     	13 ascii characters or 26 hex numbers}
+                        ::Set Key4 String
+
+WPAPSK              	{8~63 ascii or 64 hex characters}
+						::WPA Pre-Shared Key
+
+PSMode					{CAM, MAX_PSP, FAST_PSP}
+                        ::Set Power Saving Mode
+
+IEEE80211H              {0,1}
+                        ::Set IEEE80211H  Enable or Disable
+                        0:	Disable
+                        1:	Enable spectrum management
+                        (This field can be enable only in A band)
+
+
+-------------------------------------------------------------------------------------------------------
+USAGE_2:
+	iwpriv wlan0 [parameters] [val]
+
+
+DESCRIPTION
+[parameters]        	[val] range                             explaination
+-----------------   	-----------------------              ------------------------------------------
+auth                    {1~5}   1:OPEN                          Authentication Mode
+                                2:SHARED
+                                3:WPAPSK
+                                4:WPA2PSK
+                                5:WPANONE
+
+enc                     {1~4}   1:NONE                          Encryption Type
+                                2:WEP
+                                3:TKIP
+                                4:AES
+
+wpapsk                  {8~64 chars}                            WPAPSK/WPA2PSK Password
+
+psm                     {0~2}   0:constantly awake mode (CAM)   Power Saving Mode
+                                1:MAX_PSP
+                                2:FAST_PSP
+
+
+-------------------------------------------------------------------------------------------------------
+
+
+Examples
+=================
+-------------------------------------------------------------------------------------------------------
+a> Config STA to link with AP which is OPEN/NONE(Authentication/Encryption)
+	1. iwpriv wlan0 set NetworkType=Infra
+	2. iwpriv wlan0 set AuthMode=OPEN
+	3. iwpriv wlan0 set EncrypType=NONE
+	4. iwpriv wlan0 set SSID="AP's SSID"
+
+b> Config STA to link with AP and OPEN/WEP(Authentication/Encryption).
+    Default Key ID = 3
+	1. iwconfig wlan0 key [3]
+	2. iwconfig wlan0 key s:abcde
+	3. iwconfig wlan0 essid "AP's SSID"
+
+c> Config STA to link with AP which is SHARED/WEP(Authentication/Encryption).
+	1. iwpriv wlan0 set NetworkType=Infra
+	2. iwpriv wlan0 set AuthMode=SHARED
+	3. iwpriv wlan0 set EncrypType=WEP
+	4. iwpriv wlan0 set Key1="AP's wep key"
+	5. iwpriv wlan0 set DefaultKeyID=1
+	6. iwpriv wlan0 set SSID="AP's SSID"
+
+
+d> Config STA to link with AP which is WPAPSK/TKIP(Authentication/Encryption)
+	1. iwpriv wlan0 set NetworkType=Infra
+	2. iwpriv wlan0 set AuthMode=WPAPSK
+	3. iwpriv wlan0 set EncrypType=TKIP
+	4. iwpriv wlan0 set SSID="AP's SSID"
+	5. iwpriv wlan0 set WPAPSK="12345678"
+	6. iwpriv wlan0 set SSID="AP's SSID"
+
+    p.s Step 4 is part of generating wpapsk password and is necessary.
+
+e> Config STA to link with AP which is WPAPSK/AES(Authentication/Encryption)
+    1. iwconfig wlan0 mode managed
+	2. iwpriv wlan0 auth 3
+	3. iwpriv wlan0 enc  4
+	4. iwconfig wlan0 essid "AP's SSID"
+	5. iwpriv wlan0 wpapsk 12345678
+	6. iwconfig wlan0 essid "AP's SSID"
+
+f> Config STA to link with AP which is WPA2PSK/TKIP(Authentication/Encryption)
+	1. iwpriv wlan0 set NetworkType=Infra
+	2. iwpriv wlan0 set AuthMode=WPA2PSK
+	3. iwpriv wlan0 set EncrypType=TKIP
+	4. iwpriv wlan0 set SSID="AP's SSID"
+	5. iwpriv wlan0 set WPAPSK="12345678"
+	6. iwpriv wlan0 set SSID="AP's SSID"
+
+g> Config STA to create/link as adhoc mode, which is OPEN/NONE(Authentication/Encryption)
+	1. iwpriv wlan0 set NetworkType=Adhoc
+	2. iwpriv wlan0 set AuthMode=OPEN
+	3. iwpriv wlan0 set EncrypType=NONE
+	4. iwpriv wlan0 set SSID="Adhoc's SSID"
+
+h>  Config STA to create/link as adhoc mode, which is WPANONE/TKIP(Authentication/Encryption)
+    1. iwpriv wlan0 set NetworkType=Adhoc
+	2. iwpriv wlan0 set AuthMode=WPANONE
+	3. iwpriv wlan0 set EncrypType=TKIP
+	4. iwpriv wlan0 set SSID="AP's SSID"
+	5. iwpriv wlan0 set WPAPSK=12345678
+	6. iwpriv wlan0 set SSID="AP's SSID"
+
+i> Get site survey
+    iwpriv wlan0 get_site_survey
+
+j> Get Statistics
+    iwpriv wlan0 stat						; read statistic counter
+    iwpriv wlan0 set ResetCounter=0		; reset statistic counter
+
+k> Link with any AP without security        ; set ANY SSID (ssidLen=0)
+   usage: iwconfig ra0 essid ""
+   or
+   usage: iwpriv ra0 set SSID=""
+
+===================================================================
+
+iwlist
+=================
+This is detailed explanation of each parameters for iwlist.
+
+-------------------------------------------------------------------------------------------------------
+iwlist wlan0 scanning		; list the results after scanning(manual rescan)
+
+
+=======================================================================================================
+
+iwconfig
+=================
+The following are our support in standard configuration - iwconfig
+
+-------------------------------------------------------------------------------------------------------
+iwconfig wlan0 essid {NN|on|off}		        ; set ssid
+iwconfig wlan0 mode {managed|ad-hoc|...}       ; set wireless mode
+iwconfig wlan0 freq N.NNNN[k|M|G]]		        ; set frequency
+iwconfig wlan0 channel N					    ; set channel
+iwconfig wlan0 ap {N|off|auto}			        ; set ap address
+iwconfig wlan0 nick N						    ; set nickname
+iwconfig wlan0 rate {N|auto|fixed}     	    ; set rate
+iwconfig wlan0 rts {N|auto|fixed|off}		    ; set rts threshold
+iwconfig wlan0 frag {N|auto|fixed|off}	        ; set fragment threshold
+iwconfig wlan0 enc {NNNN-NNNN|off}		        ; set encryption type
+iwconfig wlan0 power {period N|timeout N}	    ; set power management modes
+iwconfig wlan0 key {[id]|s:pswd|pswd}          ; set wep key
+
+*** Please refer to man page of 'iwconfig', 'iwlist' and 'iwpriv'. ***
+

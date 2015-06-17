@@ -1,0 +1,197 @@
+From 45e5ad43affcdb0ec526220d642012ed65a16191 Mon Sep 17 00:00:00 2001
+From: Andrew Watkins <andrew.watkins@mathembedded.com>
+Date: Thu, 8 Aug 2013 10:17:19 +0100
+Subject: [PATCH] [bug 520] Back ported spanning code fixes from STLinux2.4
+
+---
+ player/collator/collator_pes_video.cpp |  129 +++++++++++++++++++++++---------
+ 1 file changed, 92 insertions(+), 37 deletions(-)
+
+diff --git a/player/collator/collator_pes_video.cpp b/player/collator/collator_pes_video.cpp
+index 505c459..614d2e9 100644
+--- a/player/collator/collator_pes_video.cpp
++++ b/player/collator/collator_pes_video.cpp
+@@ -51,6 +51,80 @@ Date        Modification                                    Name
+ // Locally defined structures
+ //
+ 
++/**
++ * Check if after concatenation buf1 and buf2 there will be Start Code crossing
++ * boundary of buffers.
++ *
++ * \return number of buffers from buf2 that attached to buf1 form Start Code.
++ * In case that there is not enough data in buf2 then assume they will form startcode
++ * startcode is a sequence of bytes: 0 0 1 x
++ *
++ * Example:
++ *   buf1= "... 0 0 1"                => 1
++ *   buf1= "..... 0 0" buf2= "1..."   => 2
++ *   buf1= "..... 0 0" buf2= ""       => 2 (there is no enough data in buf2 so assume it will make start code)
++ *
++ */
++static int ScanForSpanningStartcode(unsigned char *buf1, int len1, unsigned char *buf2, int len2)
++{
++    /*  ______  ______
++     *  buf1 | | buf2
++     *  a b c    k l
++     *
++     *  0 0 1            => 1
++     *    0 0    1       => 2
++     *      0    0 1     => 3
++     * */
++
++    unsigned a,b,c,k,l;
++    a = b = c = k = l = 0xff;
++    switch(len1)
++    {
++	default:
++	case 3: a = buf1[len1-3];
++	case 2: b = buf1[len1-2];
++	case 1: c = buf1[len1-1];
++		break;
++	case 0:
++		return 0;
++    }
++    switch(len2)
++    {
++	default:
++	case 2: l=buf2[1];
++	case 1: k=buf2[0];
++		break;
++	case 0:
++		break;
++    }
++    if( a==0 && b==0 & c==1)
++	return 1;
++    if( b==0 && c==0){
++	if( (len2 >=1 && k == 1)  || len2 == 0 )
++	    return 2;
++    }
++    if( c==0 ){
++	switch(len2){
++	    default:
++	    case 2:
++		if(k==0 && l==1)
++		    return 3;
++		else
++		    return 0;
++		break;
++	    case 1:
++		if(k == 0)
++		    return 3; // possible there is "1" in next buffer;
++		else
++		    return 0; // no hope for startcode
++		break;
++	    case 0:
++		return 3;
++	}
++    }
++    return 0;
++}
++
+ ////////////////////////////////////////////////////////////////////////////
+ ///
+ ///     Handle input, by scanning the start codes, and chunking the data
+@@ -104,8 +178,6 @@ unsigned int            i;
+ CollatorStatus_t        Status;
+ unsigned int            Transfer;
+ unsigned int            Skip;
+-unsigned int            SpanningWord;
+-unsigned int            StartingWord;
+ unsigned int            SpanningCount;
+ unsigned int            CodeOffset;
+ unsigned char           Code;
+@@ -130,7 +202,8 @@ FrameParserHeaderFlag_t	HeaderFlags;
+     RemainingData       = (unsigned char *)Data;
+     RemainingLength     = DataLength;
+ 
+-    while( RemainingLength != 0 )
++    while( (RemainingLength != 0) ||
++	   (GotPartialHeader && (GotPartialCurrentSize >= GotPartialDesiredSize)) )
+     {
+ 	//
+ 	// Are we accumulating an extended header
+@@ -304,43 +377,19 @@ FrameParserHeaderFlag_t	HeaderFlags;
+ 	    }
+ 	}
+ 
++
+ 	//
+ 	// Check for spanning header
+ 	//
+-
+-	SpanningWord             = 0xffffffff << (8 * min(AccumulatedDataSize,3));
+-	SpanningWord            |= BufferBase[AccumulatedDataSize-3] << 16;
+-	SpanningWord            |= BufferBase[AccumulatedDataSize-2] << 8;
+-	SpanningWord            |= BufferBase[AccumulatedDataSize-1];
+-
+-	StartingWord             = 0x00ffffff >> (8 * min((RemainingLength-1),3));
+-	StartingWord            |= RemainingData[0] << 24;
+-	StartingWord            |= RemainingData[1] << 16;
+-	StartingWord            |= RemainingData[2] <<  8;
+-
+-	//
+ 	// Check for a start code spanning, or in the first word
+ 	// record the nature of the span in a counter indicating how many 
+ 	// bytes of the code are in the remaining data. 
+-	// NOTE the 00 at the bottom indicates we have a byte for the code, 
+-	//      not what it is.
+-	//
+ 
+-	SpanningCount           = 0;
++	SpanningCount = ScanForSpanningStartcode(
++		BufferBase, AccumulatedDataSize,
++		RemainingData, RemainingLength );
+ 
+-	if( (SpanningWord << 8) == 0x00000100 )
+-	{
+-	    SpanningCount       = 1;
+-	}
+-	else if( ((SpanningWord << 16) | ((StartingWord >> 16) & 0xff00)) == 0x00000100 )
+-	{
+-	    SpanningCount       = 2;
+-	}
+-	else if( ((SpanningWord << 24) | ((StartingWord >> 8)  & 0xffff00)) == 0x00000100 )
+-	{
+-	    SpanningCount       = 3;
+-	}
+-	else if( StartingWord == 0x00000100 )
++	if(SpanningCount == 0 && RemainingLength >=3 && memcmp(RemainingData, "\x00\x00\x01", 3) == 0 )
+ 	{
+ 	    SpanningCount               = 4;
+ 	    UseSpanningTime             = false;
+@@ -352,7 +401,7 @@ FrameParserHeaderFlag_t	HeaderFlags;
+ 	// Check that if we have a spanning code, that the code is not to be ignored
+ 	//
+ 
+-	if( (SpanningCount != 0) && 
++	if( (SpanningCount != 0) &&  (SpanningCount <= RemainingLength) &&
+ 	    inrange(RemainingData[SpanningCount-1], Configuration.IgnoreCodesRangeStart, Configuration.IgnoreCodesRangeEnd) )
+ 	{
+ 	    SpanningCount       = 0;
+@@ -367,13 +416,19 @@ FrameParserHeaderFlag_t	HeaderFlags;
+ 	    //
+ 	    // Copy over the spanning bytes
+ 	    //
+-
+-	    for( i=0; i<SpanningCount; i++ )
++	    for( i=0; i< min(SpanningCount, RemainingLength); i++ )
+ 		BufferBase[AccumulatedDataSize + i]     = RemainingData[i];
+ 
++	    if( SpanningCount > RemainingLength ){
++		RemainingData       	+= i;
++		RemainingLength     	-= i;
++		AccumulatedDataSize 	+= i;
++		break;
++	    }
++
++	    RemainingData       	+= i;
++	    RemainingLength     	-= i;
+ 	    AccumulatedDataSize 	+= SpanningCount -4;
+-	    RemainingData       	+= SpanningCount;
+-	    RemainingLength     	-= SpanningCount;
+ 	}
+ 
+ 	//
+-- 
+1.7.9.5

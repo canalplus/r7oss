@@ -1,0 +1,108 @@
+WARNING!!! THIS IS AN ALPHA DRIVER, USE AT YOUR OWN RISK 
+Send feedback to <eblennerhassett@audioscience.com>
+This software is distributed under the GPL - see asihpi.c 
+
+SUPPORTED CARDS
+This applicable to ASI87xx, ASI6xxx, ASI5111, ASI43xx cards.
+(See also LIMITATIONs section)
+
+HOW TO INSTALL
+The patch applies to the standard driver tree obtained from alsa-driver-1.0.5a.tar.bz2
+
+I assume that
+* You have the patch file in the directory that contains the aforementioned driver.
+* IMPORTANT: You have installed built and tested the HPI driver kit USING THE COMMAND "make ALSA=1"
+(http://www.audioscience.com/internet/download/hpklinux-2.88.tar.gz)
+
+$ patch -p1 -d alsa-driver-1.0.5a < alsa-driver-0.9.6asihpi.patch
+$ cd alsa-driver-1.0.5a
+$ ./cvscompile --with-cards=asihpi,<other cards> <other options>
+$ now follow normal build using make, make install, ./snddevices 
+
+MODULE OPTIONS (defaults shown)
+mixer_dump=0   Setting to 1 enables logging of mixer controls to the message log.  You can see which controls have been converted to ALSA controls, and which haven't.
+
+adapter_fs=44100   Sets the hardware samplerate on adapters which support this operation.  E.g on 6xxx series cards, no samplerate conversion will be performed when the stream rate matches the hardware rate.
+
+The patch modifies the following files:
+	alsa-driver-1.0.5a/pci/Makefile
+	alsa-driver-1.0.5a/pci/Kconfig
+
+And creates
+	alsa-driver-1.0.5a/pci/asihpi.c
+	alsa-driver-1.0.5a/pci/hpi.h
+
+CARD INDICES
+snd-asihpi will try to allocate the ALSA card index equal to the ASI card index set by the jumpers on the card.
+However, if you have another sound card installed, and its driver is loaded first, it may already have been assigned the same index (usually zero).
+In this case the ASI card will get the next available ALSA index.
+
+You may be able to add to your modules.conf 
+   options snd-<othercard> index=2 
+to free up the desired indices for your ASI cards.
+
+ASI streams map to ALSA subdevices. Device is always zero.
+aplay -Dhw:0,0,2 sound.wav # Play on Card 0, Device 0, Stream/subdevice 2
+
+
+CONTROLS
+
+To list them all
+$ amixer controls
+
+Note that control indices are 1-based for display purposes (while subdevice indices are 0-based)
+ALSA treats controls with index==0 differently (at least amixer and alsamixer do).  
+
+"LineOut Level, index=1" refers to the first physical ouput
+"OutStr LinOut1 Volume, index=1 is a volume control between the first stream and the first output.
+
+The current default for control naming is to use ASI style names (OutStream, InStream etc) but it can be compiled with ALSA style names (PCM, PCM, etc) see asihpi.c line 27 and the corresponding #ifdefs
+
+
+Volume and level controls:
+The units of volume and level controls are deciBels.  The limits are reported correctly by amixer.
+Typically volume controls range from -192 or -100 to 0 
+Level controls range from about -10dBu to (+20dBu up to +26dBu)
+
+To set a volume control to -10dB (you need the "--" when using -ve parameter values)
+	amixer cset numid=5 -- -10 -10
+
+PROC FILE
+/proc/asound/card0/info  contains some info about the card
+There will also  be a symbolic link to the card directory eg /proc/asound/ASI6244
+
+LIMITATIONS
+This driver is only applicable to ASI6xxx, ASI5111, ASI43xx cards
+(You may be able to access play and record streams on other cards, but no mixer controls will be available)
+
+Only PCM is currently supported.
+
+Meter controls are partially supported.
+Meters are supposed to return levels in milliBels, but the current implementation requires floating point on the host, which is not feasible in a kernel driver.
+So, the floating point operations need to be implemented by the user application:
+
+	nMilliBels = raw_meter_value;
+	// don't have to touch the LogValue when it is -ve since it is already a log value
+	if(nMilliBels>=0)
+	{
+		 if(nMilliBels==0)
+			  nMilliBels = -192*100;  
+		 else
+			  nMilliBels = (short)((float)(20*log10((float)nMilliBelsr/32767.0))*100.0); 
+	}
+	// now nMilliBels contains the correct meter value
+	
+
+Still looking for a cleaner solution here.
+
+Other controls (aesebu, compander, parametric equalizer, vox, bitstream, microphone) are currently unsupported.
+Volume autofade is not supported.
+
+=================================
+Version 0.7: Patch 1.0.5a.  Use Kconfig build system
+Version 0.6: Patch 1.0.0pre2.  Handle disabled controls
+Version 0.5: Patch 0.9.7
+Version 0.4: Changed names of README and INSTALL files
+Version 0.3: Update meter control description. Patch against 0.9.6
+Version 0.2: Added hpi.h to patch file
+Version 0.1: Initial

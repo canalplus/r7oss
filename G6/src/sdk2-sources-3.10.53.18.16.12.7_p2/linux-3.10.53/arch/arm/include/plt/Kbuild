@@ -1,0 +1,7 @@
+destination-y := include/plt
+
+header-y += plt_id.h
+header-y += individual_data_mapping.h
+
+-include arch/$(SRCARCH)/include/plt/Kbuild.specific
+

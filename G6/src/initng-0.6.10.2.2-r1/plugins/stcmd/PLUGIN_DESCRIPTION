@@ -1,0 +1,10 @@
+          name : stcmd
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : 
+      commands : get_pid_of, restart_from, zap, restart, time, reload_service, poweroff,
+                 halt, reboot, print_plugins, load_module, unload_module, done, father,
+                 service_dep_on, service_dep_on_deep, service_dep_on_me,
+		 service_dep_on_me_deep, new_init 
+       options : 
+   description : This plugin contains some basic commands for controlling
+                 initng.

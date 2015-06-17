@@ -1,0 +1,230 @@
+--- ../alsa-kernel/core/memalloc.c	2007-11-28 21:06:56.000000000 +0100
++++ memalloc.c	2008-01-06 15:40:11.000000000 +0100
+@@ -1,3 +1,4 @@
++#include "memalloc.inc"
+ /*
+  *  Copyright (c) by Jaroslav Kysela <perex@perex.cz>
+  *                   Takashi Iwai <tiwai@suse.de>
+@@ -83,7 +84,50 @@
+  *  Hacks
+  */
+ 
+-#if defined(__i386__)
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 0)
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 5)
++static void *snd_dma_alloc_coherent1(struct device *dev, size_t size,
++				     dma_addr_t *dma_handle, int flags)
++{
++	if (dev)
++		return dma_alloc_coherent(dev, size, dma_handle, flags);
++	else /* FIXME: dma_alloc_coherent does't always accept dev=NULL */
++		return pci_alloc_consistent(NULL, size, dma_handle);
++}
++
++static void snd_dma_free_coherent1(struct device *dev, size_t size, void *dma_addr,
++				   dma_addr_t dma_handle)
++{
++	if (dev)
++		return dma_free_coherent(dev, size, dma_addr, dma_handle);
++	else
++		return pci_free_consistent(NULL, size, dma_addr, dma_handle);
++}
++
++#undef dma_alloc_coherent
++#define dma_alloc_coherent snd_dma_alloc_coherent1
++#undef dma_free_coherent
++#define dma_free_coherent snd_dma_free_coherent1
++#endif /* < 2.6.5 */
++
++#else
++
++/* for 2.2/2.4 kernels */
++#if defined(CONFIG_PCI) || defined(CONFIG_ISA) || defined(__i386__)
++#define dma_alloc_coherent(dev,size,addr,flags) pci_alloc_consistent((struct pci_dev *)(dev),size,addr)
++#define dma_free_coherent(dev,size,ptr,addr) pci_free_consistent((struct pci_dev *)(dev),size,ptr,addr)
++#elif CONFIG_SBUS
++#define dma_alloc_coherent(dev,size,addr,flags) sbus_alloc_consistent((struct sbus_dev *)(dev),size,addr)
++#define dma_free_coherent(dev,size,ptr,addr) sbus_free_consistent((struct sbus_dev *)(dev),size,ptr,addr)
++#else
++#error "Need a bus for dma_alloc_coherent()"
++#endif
++
++#endif /* >= 2.6.0 */
++
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 4, 0)
++#if defined(__i386__) || defined(__ppc__) || defined(__x86_64__)
++
+ /*
+  * A hack to allocate large buffers via dma_alloc_coherent()
+  *
+@@ -100,6 +144,30 @@
+  * so dma_mask doesn't have to be messed with.
+  */
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 0)
++#define VALID_DMA_MASK(dev)	(dev)->dma_mask
++#define GET_DMA_MASK(dev)	*(dev)->dma_mask
++#define SET_DMA_MASK(dev,val)	(*(dev)->dma_mask = (val))
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 5)
++#define GET_COHERENT_DMA_MASK(dev)	(dev)->coherent_dma_mask
++#define SET_COHERENT_DMA_MASK(dev,val)	((dev)->coherent_dma_mask = (val))
++#else
++#define GET_COHERENT_DMA_MASK(dev)	0 /* dummy */
++#define SET_COHERENT_DMA_MASK(dev,val)
++#endif
++#else /* 2.4.x */
++#define VALID_DMA_MASK(dev)	1
++#define GET_DMA_MASK(dev)	((struct pci_dev *)(dev))->dma_mask
++#define SET_DMA_MASK(dev,val)	(((struct pci_dev *)(dev))->dma_mask = (val))
++#ifdef CONFIG_HAVE_PCI_CONSISTENT_DMA_MASK
++#define GET_COHERENT_DMA_MASK(dev)	((struct pci_dev *)(dev))->consistent_dma_mask
++#define SET_COHERENT_DMA_MASK(dev,val)	(((struct pci_dev *)(dev))->consistent_dma_mask = (val))
++#else
++#define GET_COHERENT_DMA_MASK(dev)	0 /* dummy */
++#define SET_COHERENT_DMA_MASK(dev,val)
++#endif
++#endif
++
+ static void *snd_dma_hack_alloc_coherent(struct device *dev, size_t size,
+ 					 dma_addr_t *dma_handle,
+ 					 gfp_t flags)
+@@ -107,15 +175,15 @@
+ 	void *ret;
+ 	u64 dma_mask, coherent_dma_mask;
+ 
+-	if (dev == NULL || !dev->dma_mask)
++	if (dev == NULL || !VALID_DMA_MASK(dev))
+ 		return dma_alloc_coherent(dev, size, dma_handle, flags);
+-	dma_mask = *dev->dma_mask;
+-	coherent_dma_mask = dev->coherent_dma_mask;
+-	*dev->dma_mask = 0xffffffff; 	/* do without masking */
+-	dev->coherent_dma_mask = 0xffffffff; 	/* do without masking */
++	dma_mask = GET_DMA_MASK(dev);
++	coherent_dma_mask = GET_COHERENT_DMA_MASK(dev);
++	SET_DMA_MASK(dev, 0xffffffff); 	/* do without masking */
++	SET_COHERENT_DMA_MASK(dev, 0xffffffff); 	/* do without masking */
+ 	ret = dma_alloc_coherent(dev, size, dma_handle, flags);
+-	*dev->dma_mask = dma_mask;	/* restore */
+-	dev->coherent_dma_mask = coherent_dma_mask;	/* restore */
++	SET_DMA_MASK(dev, dma_mask);	/* restore */
++	SET_COHERENT_DMA_MASK(dev, coherent_dma_mask)	/* restore */;
+ 	if (ret) {
+ 		/* obtained address is out of range? */
+ 		if (((unsigned long)*dma_handle + size - 1) & ~dma_mask) {
+@@ -140,6 +208,8 @@
+ #define dma_alloc_coherent snd_dma_hack_alloc_coherent
+ 
+ #endif /* arch */
++#endif /* >= 2.4.0 */
++
+ 
+ /*
+  *
+@@ -159,6 +229,24 @@
+ 	snd_allocated_pages -= 1 << order;
+ }
+ 
++static void mark_pages(struct page *page, int order)
++{
++#if ! defined(__arm__) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 16)
++	struct page *last_page = page + (1 << order);
++	while (page < last_page)
++		SetPageReserved(page++);
++#endif
++}
++
++static void unmark_pages(struct page *page, int order)
++{
++#if ! defined(__arm__) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 16)
++	struct page *last_page = page + (1 << order);
++	while (page < last_page)
++		ClearPageReserved(page++);
++#endif
++}
++
+ /**
+  * snd_malloc_pages - allocate pages with the given size
+  * @size: the size to allocate in bytes
+@@ -177,8 +265,10 @@
+ 	snd_assert(gfp_flags != 0, return NULL);
+ 	gfp_flags |= __GFP_COMP;	/* compound page lets parts be mapped */
+ 	pg = get_order(size);
+-	if ((res = (void *) __get_free_pages(gfp_flags, pg)) != NULL)
++	if ((res = (void *) __get_free_pages(gfp_flags, pg)) != NULL) {
++		mark_pages(virt_to_page(res), pg);
+ 		inc_snd_pages(pg);
++	}
+ 	return res;
+ }
+ 
+@@ -197,6 +287,7 @@
+ 		return;
+ 	pg = get_order(size);
+ 	dec_snd_pages(pg);
++	unmark_pages(virt_to_page(ptr), pg);
+ 	free_pages((unsigned long) ptr, pg);
+ }
+ 
+@@ -222,8 +313,10 @@
+ 		| __GFP_NORETRY /* don't trigger OOM-killer */
+ 		| __GFP_NOWARN; /* no stack trace print - this call is non-critical */
+ 	res = dma_alloc_coherent(dev, PAGE_SIZE << pg, dma, gfp_flags);
+-	if (res != NULL)
++	if (res != NULL) {
++		mark_pages(virt_to_page(res), pg);
+ 		inc_snd_pages(pg);
++	}
+ 
+ 	return res;
+ }
+@@ -238,6 +331,7 @@
+ 		return;
+ 	pg = get_order(size);
+ 	dec_snd_pages(pg);
++	unmark_pages(virt_to_page(ptr), pg);
+ 	dma_free_coherent(dev, PAGE_SIZE << pg, ptr, dma);
+ }
+ #endif /* CONFIG_HAS_DMA */
+@@ -482,6 +576,7 @@
+ 
+ 
+ #ifdef CONFIG_PROC_FS
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 0)
+ /*
+  * proc file interface
+  */
+@@ -620,6 +715,7 @@
+ 	.release	= single_release,
+ };
+ 
++#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2, 4, 0) */
+ #endif /* CONFIG_PROC_FS */
+ 
+ /*
+@@ -629,16 +725,20 @@
+ static int __init snd_mem_init(void)
+ {
+ #ifdef CONFIG_PROC_FS
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 0)
+ 	snd_mem_proc = create_proc_entry(SND_MEM_PROC_FILE, 0644, NULL);
+ 	if (snd_mem_proc)
+ 		snd_mem_proc->proc_fops = &snd_mem_proc_fops;
+ #endif
++#endif
+ 	return 0;
+ }
+ 
+ static void __exit snd_mem_exit(void)
+ {
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 0)
+ 	remove_proc_entry(SND_MEM_PROC_FILE, NULL);
++#endif
+ 	free_all_reserved_pages();
+ 	if (snd_allocated_pages > 0)
+ 		printk(KERN_ERR "snd-malloc: Memory leak?  pages not freed = %li\n", snd_allocated_pages);
+@@ -661,3 +761,5 @@
+ 
+ EXPORT_SYMBOL(snd_malloc_pages);
+ EXPORT_SYMBOL(snd_free_pages);
++
++#include "memalloc.inc1"

@@ -1,0 +1,124 @@
+#!/bin/sh
+#
+# alsasound     This shell script takes care of starting and stopping
+#               the ALSA sound driver.
+#
+# This script requires @prefix@/sbin/alsactl program from
+# alsa-utils package.
+#
+# Copyright (c) by Jaroslav Kysela <perex@perex.cz> 
+# Modified for being POSIX-complaint by Christian Kurz <shorty@debian.org>
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+#
+#
+# For RedHat 5.0+:
+# chkconfig: 2345 87 14
+# description: ALSA driver
+#
+
+config=/etc/modules.conf
+alsactl=@prefix@/sbin/alsactl
+asoundcfg=/etc/asound.state
+if [ -x /sbin/lsmod ]; then
+  lsmod=/sbin/lsmod
+else
+  lsmod=lsmod
+fi
+
+if [ ! -r $config ]; then
+  if [ -r /etc/conf.modules ]; then
+    config=/etc/conf.modules
+  fi
+fi
+
+# See how we were called.
+case "$1" in
+  start)
+        # Start driver.
+	if [ ! -d /proc/asound ]; then
+	  #
+	  # insert all sound modules
+	  #
+	  cat $config | \
+		grep -E "^alias( |\t)+snd-card-[[:digit:]]" | \
+		awk '{print $3}' | 
+		while read line; do \
+                  if [ "$line" != off ]; then \
+		    echo -n "Starting sound driver: $line "; \
+		    /sbin/modprobe $line; \
+		    echo "done"; \
+		  fi \
+		done
+          # 
+          # restore driver settings
+          #
+          if [ -x $alsactl ]; then
+            if [ -r $asoundcfg ]; then
+              $alsactl -F -f $asoundcfg restore
+            else
+              echo "ERROR: alsactl can't start, $asoundcfg is not readable"
+            fi
+          else
+            echo "ERROR: alsactl not found"
+          fi
+  	  #
+  	  if [ -d /proc/asound ] && [ -d /var/lock/subsys ]; then
+	    touch /var/lock/subsys/alsasound
+	  fi
+        else
+	  echo "ALSA driver is already running."
+	fi
+        ;;
+  stop)
+        # Stop daemons.
+	if [ -d /proc/asound ]; then
+          echo -n "Shutting down sound driver: "
+	  #
+  	  # store driber settings
+	  #
+	  if [ -x $alsactl ]; then
+	    $alsactl -f $asoundcfg store
+	  else
+	    echo -n "ERROR: alsactl not found"
+	  fi
+	  #
+	  # remove all sound modules
+	  #
+	  $lsmod | grep -E "^snd" | grep -Ev "(snd-page-alloc|snd_page_alloc)" | while read line; do \
+		/sbin/rmmod `echo $line | cut -d ' ' -f 1`; \
+		done
+	  # remove the 2.2 soundcore module (if possible)
+	  /sbin/rmmod soundcore 2> /dev/null
+	  /sbin/rmmod gameport 2> /dev/null
+	  #
+	  if [ -d /var/lock/subsys ]; then
+	    rm -f /var/lock/subsys/alsasound
+	  fi
+ 	  echo "done"
+	else
+	  echo "ALSA driver isn't running."
+	fi
+        ;;
+  restart)
+	$0 stop
+	$0 start
+	;;
+  *)
+        echo "Usage: alsasound {start|stop|restart}"
+        exit 1
+esac
+
+exit 0

@@ -1,0 +1,37 @@
+--------------------------------------------------------------------------------
+		Integrate SoC Virtual Ethernet (ISVE)
+
+(c) 2012-2013 STMicroelectronics Limited
+
+Author: Giuseppe Cavallaro <peppe.cavallaro@st.com>
+--------------------------------------------------------------------------------
+
+This is the Virtual Ethernet driver used in the new ST SoC generations.
+
+It dials with a special HW bridge designed to allow the communication
+among DOCSIS system and CPUs.
+
+This means that all devices are connected through as sort of virtual
+Ethernet devices and can communicate just like a simple Ethernet
+network.
+
+For each device it is allocated an instance of the driver that will use
+some dedicated DMA queues for managing the transmission and reception
+processes.
+The reception process is also called Downstream Forwarding (DFWD) and provides
+a output memory queue of 32 entries.
+Transmission is the Upstream process, also called UPIIM, and provides input
+queue of 32 elements.
+
+For both RX and TX the check-sum is done in SW and all the socket buffers
+passed from/to the DMA has to be aligned to a 32-byte boundary.
+
+The TX and Rx processes are managed by using pre-allocated buffers in two
+rings.
+Streaming DMA mappings is used to map these buffer for the DMA from/to transfer,
+Reception process is managed by NAPI.
+
+ISVE also provides some internal statistic via ethtool and it's also
+to change the driver's message level.
+
+For platform parameters please see the devicetree binding documentattion.

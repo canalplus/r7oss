@@ -1,0 +1,3 @@
+This directory contains specializations of STMCommon components found in
+SoCs containing a HD TVOut and HD Formatter combination. The minimum version
+is that found in the STx7111 and STx7200Cut2, STx7200Cut1 is not supported. 

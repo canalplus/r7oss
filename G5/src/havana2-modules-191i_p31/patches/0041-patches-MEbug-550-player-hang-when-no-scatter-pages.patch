@@ -1,0 +1,107 @@
+From 4ffa5e2fc439efd1b20a6263459382a510049b5e Mon Sep 17 00:00:00 2001
+From: Chaitanya Ray <chaitanya.ray@mathembedded.com>
+Date: Wed, 30 Oct 2013 13:15:04 +0000
+Subject: [PATCH] [Bug 550]Fix player hang on loop when no scatter pages remain
+
+---
+ player/manifestor/manifestor_audio_ksound.cpp | 55 ++++++++++++++++-----------
+ 1 file changed, 33 insertions(+), 22 deletions(-)
+
+diff --git a/player/manifestor/manifestor_audio_ksound.cpp b/player/manifestor/manifestor_audio_ksound.cpp
+index e69377e..bc313fb 100644
+--- a/player/manifestor/manifestor_audio_ksound.cpp
++++ b/player/manifestor/manifestor_audio_ksound.cpp
+@@ -197,7 +197,6 @@ ManifestorStatus_t Manifestor_AudioKsound_c::Reset (void)
+     
+     memset( &InputAudioParameters, 0, sizeof( InputAudioParameters ) );
+ 
+-    OutputSampleRateHz = 0;
+     OutputChannelCount = 2;
+     OutputSampleDepthInBytes = 4;
+     
+@@ -466,14 +465,18 @@ unsigned long long WallTime;
+     	    // running a 'broken' manifestor without silence injection on starvation making
+     	    // the use of this code inevitable.
+     	    MANIFESTOR_ERROR("DisplayTimeOfNextCommit has illegal (historic) value, deploying workaround\n");
+-    	    DisplayTimeOfNextCommit = WallTime +
+-    	                              ( (MIXER_NUM_PERIODS * 1000000ull * Mixer->GetMixerGranuleSize()) /
+-                                        OutputSampleRateHz );
+-    	}
+-
+-    	DisplayTime = DisplayTimeOfNextCommit +
++    	    DisplayTimeOfNextCommit = WallTime;
++	    if( InputAudioParameters.Source.SampleRateHz )
++		DisplayTimeOfNextCommit += ( (MIXER_NUM_PERIODS * 1000000ull * Mixer->GetMixerGranuleSize()) /
++                                        InputAudioParameters.Source.SampleRateHz );
++     	}
++	if(  InputAudioParameters.Source.SampleRateHz == 0 )
++	{
++	    DisplayTime = DisplayTimeOfNextCommit + Mixer->GetWorstCaseStartupDelayInMicroSeconds();
++	}else 
++    	    DisplayTime = DisplayTimeOfNextCommit +
+     	          ((((unsigned long long) SamplesQueuedForDisplayAfterDisplayTimeOfNextCommit) * 1000000ull) /
+-    	            ((unsigned long long) OutputSampleRateHz));
++    	            ((unsigned long long) InputAudioParameters.Source.SampleRateHz));
+     	            
+     	OS_UnLockMutex(&DisplayTimeOfNextCommitMutex);
+     	break;
+@@ -1020,7 +1023,11 @@ ManifestorStatus_t Manifestor_AudioKsound_c::UpdateInputBuffer( MME_DataBuffer_t
+     	}
+     }
+ 
+-    DataBuffer->TotalSize -= InputStatus->BytesUsed;
++    if (InputStatus->BytesUsed > DataBuffer->TotalSize) {
++        MANIFESTOR_ERROR("InputStatus->BytesUsed > DataBuffer->TotalSize (%d > %d), BUG!!!!\n", DataBuffer->TotalSize, InputStatus->BytesUsed);
++        DataBuffer->TotalSize = 0;
++    } else
++         DataBuffer->TotalSize -= InputStatus->BytesUsed;
+     
+     //
+     // Handle other bits of status (mostly the play state)
+@@ -1735,27 +1742,31 @@ ParsedAudioParameters_t *ParsedAudioParameters;
+ ///
+ void Manifestor_AudioKsound_c::DequeueFirstCodedDataBuffer( MME_DataBuffer_t *CodedMmeDataBuffer )
+ {
+-    CodedMmeDataBuffer->TotalSize -= CodedMmeDataBuffer->ScatterPages_p->Size;
+-    CodedMmeDataBuffer->NumberOfScatterPages--;
++    //Do atleast the basic check
++    if(CodedMmeDataBuffer->NumberOfScatterPages > 0)
++    {
++        CodedMmeDataBuffer->TotalSize -= CodedMmeDataBuffer->ScatterPages_p->Size;
++        CodedMmeDataBuffer->NumberOfScatterPages--;
+ 
+-    Buffer_c *CodedFrameBuffer = ((Buffer_c **) CodedMmeDataBuffer->UserData_p)[0];
++        Buffer_c *CodedFrameBuffer = ((Buffer_c **) CodedMmeDataBuffer->UserData_p)[0];
+ 
+-    if (IsTranscoded)
+-        ReleaseTranscodedDataBuffer( CodedFrameBuffer );
++        if (IsTranscoded)
++            ReleaseTranscodedDataBuffer( CodedFrameBuffer );
+ 
+-    BufferStatus_t Status = CodedFrameBuffer->DecrementReferenceCount( IdentifierManifestor );
+-    if( BufferNoError != Status  )
+-    {
+-        MANIFESTOR_ERROR( "Cannot decrement coded data buffer reference count (%d)\n", Status );
+-        // no error recovery possible
+-    }
++        BufferStatus_t Status = CodedFrameBuffer->DecrementReferenceCount( IdentifierManifestor );
++        if( BufferNoError != Status  )
++        {
++            MANIFESTOR_ERROR( "Cannot decrement coded data buffer reference count (%d)\n", Status );
++            // no error recovery possible
++        }
+                 
+-    memmove( CodedMmeDataBuffer->ScatterPages_p,
++        memmove( CodedMmeDataBuffer->ScatterPages_p,
+              CodedMmeDataBuffer->ScatterPages_p + 1,
+              CodedMmeDataBuffer->NumberOfScatterPages * sizeof(MME_ScatterPage_t) );
+-    memmove( CodedMmeDataBuffer->UserData_p,
++        memmove( CodedMmeDataBuffer->UserData_p,
+              ((unsigned int *) CodedMmeDataBuffer->UserData_p) + 1,
+              CodedMmeDataBuffer->NumberOfScatterPages * sizeof(unsigned int) );
++    }
+ }
+ 
+ ////////////////////////////////////////////////////////////////////////////
+-- 
+1.8.3.1

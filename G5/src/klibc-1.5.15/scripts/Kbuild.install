@@ -1,0 +1,121 @@
+#
+# Install klibc
+#
+# File is logically seperated in two pieces.
+# First piece is used when during a recursive descend of the klibc tree
+# and second piece is used to do the final steps in the install
+# If KLIBC_INSTALL is defined it tells us we are descending and we
+# use first piece of the file.
+
+# This indicates the location of the final version of the shared library.
+# THIS MUST BE AN ABSOLUTE PATH WITH NO FINAL SLASH.
+# Leave this empty to make it the root.
+#
+SHLIBDIR = /lib
+
+# First rule
+.PHONY: __install install-rule
+__install:
+
+# Install commands
+install-data := install -m 644
+install-lib  := install -m 755
+install-bin  := install -m 755
+
+# Install command
+quiet_cmd_install = INSTALL $(install-y)
+      cmd_install = $(install-bin) $(install-y) \
+                                   $(INSTALLROOT)$(INSTALLDIR)/$(KLIBCCROSS)bin
+
+ifeq ($(KLIBC_INSTALL),1)
+# First part - we are descending..
+
+# Reset variables (to get right type of assingment)
+subdir- :=
+
+# Include Kbuild file
+include $(srctree)/scripts/Kbuild.include
+include $(srctree)/$(obj)/Kbuild
+
+# Directories to visit
+# First find directories specified in lib-?, static-y and shared-y
+find-dir = $(patsubst %/,%,$(filter %/, $(1)))
+
+__subdir := $(call find-dir, $(lib-))
+__subdir += $(call find-dir, $(lib-y))
+
+__subdir += $(foreach e, $(static-y), $(call find-dir, $(e)))
+__subdir += $(foreach e, $(shared-y), $(call find-dir, $(e)))
+
+# Use subdir- in Kbuild file to tell kbuild to visit a specific dir
+subdir-  += $(__subdir)
+
+# Remove duplicates and add prefix
+subdir- := $(addprefix $(obj)/,$(sort $(subdir-)))
+
+# Files to install
+install-y := $(strip $(addprefix $(obj)/, $(install-y)))
+
+__install: $(subdir-) install-rule
+ifneq ($(install-y),)
+	$(call cmd,install)
+else
+	@:
+endif
+
+# Descending
+.PHONY: $(subdir-)
+$(subdir-):
+	$(Q)$(MAKE) KLIBC_INSTALL=1 \
+	            -f $(srctree)/scripts/Kbuild.install obj=$@
+
+# If quiet is set, only print short version of command
+cmd = @$(if $($(quiet)cmd_$(1)),echo '  $($(quiet)cmd_$(1))' &&) $(cmd_$(1))
+
+
+else
+##########################################################################
+# This is the first time this file is invoked, so kick off the
+# install process.
+# First we descend all sub-directories to let them do their install.
+# Second we do the final install steps.
+
+# Do actual install as a three steps approach
+# 1) Create directories, install headers and man pages
+# 2) Tell that we now install binaries
+# 3) Install binaries by descending
+.PHONY: header footer descend
+header:
+	$(Q)echo "  INSTALL headers + man pages to $(INSTALLROOT)$(INSTALLDIR)"
+	$(Q)mkdir -p $(INSTALLROOT)$(bindir)
+	$(Q)mkdir -p $(INSTALLROOT)$(mandir)/man1
+	$(Q)mkdir -p $(INSTALLROOT)$(SHLIBDIR)
+	$(Q)mkdir -p $(INSTALLROOT)$(INSTALLDIR)
+	$(Q)-rm -rf $(INSTALLROOT)$(INSTALLDIR)/$(KCROSS)include
+	$(Q)mkdir -p $(INSTALLROOT)$(INSTALLDIR)/$(KCROSS)include
+	$(Q)mkdir -p $(INSTALLROOT)$(INSTALLDIR)/$(KCROSS)lib
+	$(Q)mkdir -p $(INSTALLROOT)$(INSTALLDIR)/$(KCROSS)bin
+	$(Q)set -e ; for d in linux asm asm-$(KLIBCARCH) asm-generic $(ASMKLIBCARCH); do \
+	  for r in $(KLIBCKERNELSRC)/include $(KLIBCKERNELOBJ)/include \
+	           $(KLIBCKERNELOBJ)/include2 ; do \
+	    [ ! -d $$r/$$d ] && continue; \
+	    mkdir -p $(INSTALLROOT)$(INSTALLDIR)/$(KLIBCCROSS)include/$$d ; \
+	    cp -rfL $$r/$$d/. \
+	          $(INSTALLROOT)$(INSTALLDIR)/$(KCROSS)include/$$d/. ; \
+	  done ; \
+	done
+	$(Q)cd $(INSTALLROOT)$(INSTALLDIR)/$(KCROSS)include && ln -sf asm-$(KLIBCARCH) asm
+	$(Q)cp -rf usr/include/. $(INSTALLROOT)$(INSTALLDIR)/$(KCROSS)include/.
+	$(Q)$(install-data) $(srctree)/klcc/klcc.1 $(INSTALLROOT)$(mandir)/man1/$(KCROSS)klcc.1
+	$(Q)$(install-bin) $(objtree)/klcc/$(KCROSS)klcc $(INSTALLROOT)$(bindir)
+
+footer: header
+	$(Q)echo "  INSTALL binaries to $(INSTALLROOT)$(INSTALLDIR)/$(KLIBCCROSS)bin"
+
+descend: footer
+	$(Q)$(MAKE) KLIBC_INSTALL=1 \
+	            -f $(srctree)/scripts/Kbuild.install obj=$(obj)
+
+__install: descend
+	@:
+endif

@@ -1,0 +1,2 @@
+/sys/devices/soc.2/fd681000.mali
+/sys/devices/soc.2/fde26000.h264encoder

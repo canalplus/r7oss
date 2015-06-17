@@ -1,0 +1,41 @@
+* STMicroelectronics sdhci-st MMC/SD controller
+
+This file documents differences between the core properties in mmc.txt
+and the properties used by the sdhci-st driver
+
+Required properties:
+- compatible: Must be "st,sdhci" and it can be compatible to "st,sdhci-stih407"
+	      to set the internal glue logic used for configuring the MMC
+	      subsystem (mmcss) inside the FlashSS (available in STiH407 SoC).
+- clocks: card clock, must be "mmc".
+- reg: this must provide the host controller base address and it can also
+       contain the FlashSS Top register for TX/RX delay used by the driver
+       to configure DDL inside the flashSS.
+
+Optional properties:
+- reset: to provide a reset to the HC.
+- max-frequency: can be 200MHz, 100Mz or 50MHz (default) and used for
+		 configuring the CCONFIG3 in the mmcss.
+- mmc-cap-uhs-sdr50: to enable the SDR50 in the mmcss.
+- mmc-cap-uhs-sdr104: to enable the SDR104 in the mmcss.
+- mmc-cap-uhs-ddr50: to enable the DDR50 in the mmcss.
+- non-removable: non-removable slot (bindings/mmc/mmc.txt).
+  Also used for configuring mmcss in STiH407 SoC family.
+- st,no-hispd-bit: to disable HISPD bit field in HI-SPEED SD card.
+- mmc-cap-1p8: to enable 1.8V support in the mmcss.
+- mmc-cap-cnt-timer-max: to enable the returning timer count max flavour.
+
+Example:
+
+mmc1: sdhci@09080000 {
+	compatible	= "st,sdhci";
+	status		= "disabled";
+	reg = <0x09060000 0x7ff>, <0x9061008 0x20>;
+	reg-names = "mmc", "top-mmc-delay";
+	interrupts	=  <0 90 0>;
+	interrupt-names = "mmcirq";
+	clock-names	= "mmc";
+	clocks		= <&CLK_MMC_1>;
+	cd-gpios	= <&PIO19 0 0>;
+	resets		= <&softreset STIH407_MMC1_SOFTRESET>;
+};

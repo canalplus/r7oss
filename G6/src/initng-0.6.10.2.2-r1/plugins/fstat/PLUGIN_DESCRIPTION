@@ -1,0 +1,9 @@
+          name : fstat
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : 
+      commands : 
+       options : require_file, files_to_exist_after
+   description : This is a need dependency on a file, if require_file is set
+                 initng wont start the service until that file exits.
+                 if files_to_exist_after is set, it will start the service,
+                 but refuse to set the state to up before the file exists.

@@ -1,0 +1,107 @@
+BEGIN{ nocomment=1; output=1; comments=""; copyright=""; dcomment=0; foundcopy = 0; finished = 0; started = 0;} 
+/^\/\/\/\//{ 
+if (!finished) {
+	a=$0;
+	dcomment=1;
+	    started = 1;
+	if (nocomment==0 && !finished) {
+	    print "************************************************************************/";
+	}
+	if (nocomment==0) finished=1;
+	nocomment=0;
+	output=0; 
+	
+}
+}
+
+/^\/\/\/ \/\/\/\//{ 
+if (!finished) {
+	a=$0;
+	dcomment=1;
+	    started = 1;
+	if (nocomment==0 && !finished) {
+	    print "************************************************************************/"; 
+	}
+	if (nocomment==0) finished=1;
+	nocomment=0;
+	output=0; 
+	
+}
+}
+
+/^\/\*\*\*/ {
+    started = 1;
+    if (!finished && started) {
+    nocomment=0; output=0; 
+    }
+}
+
+/\*\*\*\*\//{
+    if (!finished)
+    {
+	    print "************************************************************************/"; 
+	    finished = 1;
+            nocomment=0; output=0;
+    }
+    
+}
+
+/^\/\/\/$/ { a=$0; if (!finished && started) { sub( /^\/\/\//, "",a);  output=2; } }
+/^\/\/\/ / { a=$0; if (!finished && started) { sub( /^\/\/\/ /, "",a);  output=2; }} 
+/\(C\)/{ if (!finished && started) { copyright=$0; output=0; } }
+/\(c\)/{ if (!finished && started) { copyright=$0; output=0; } }
+/^ \*$/{ if (!finished && started) { output = 0; }}
+{
+if (copyright!="") { 
+   foundcopy = 1;
+	year="";
+	extra = 0;
+	for (n=1997;n<=2010;n++) {
+	   y=sprintf("%d",n);
+	   if (index(copyright,y)) if (extra) year=year", "y; else { extra = 1; year=y; }
+        }
+
+	print "/************************************************************************";
+	print "Copyright (C) "year" STMicroelectronics. All Rights Reserved.";
+	print ""
+	print "This file is part of the Player2 Library.";
+	print ""
+	print "Player2 is free software; you can redistribute it and/or modify it under"
+	print "the terms of the GNU General Public License version 2 as published by the"
+	print "Free Software Foundation."
+	print ""
+	print "Player2 is distributed in the hope that it will be useful,"
+	print "but WITHOUT ANY WARRANTY; without even the implied warranty of"
+	print "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
+	print "See the GNU General Public License for more details."
+	print ""
+	print "You should have received a copy of the GNU General Public License along"
+	print "with player2; see the file COPYING.  If not, write to the Free Software"
+	print "Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA."
+	print ""
+	print "The Player2 Library may alternatively be licensed under a proprietary"
+	print "license from ST."
+
+	copyright=""
+}
+
+if (started && !finished && !foundcopy) output=0;
+
+out="";
+
+if (output==1) out=$0;
+if (output==2) out=a;
+
+if (started && !finished) {
+   if (index(out,"This file is subject")) output = 0;
+   if (index(out,"COPYING")) output = 0;
+   if (index(out,"more details")) output = 0;
+}
+
+
+if (output==1 || output==2) print out;
+output=1; 
+
+}
+
+

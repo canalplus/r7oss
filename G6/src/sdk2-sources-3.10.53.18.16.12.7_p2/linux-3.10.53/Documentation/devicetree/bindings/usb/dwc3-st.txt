@@ -1,0 +1,48 @@
+ST DWC3 glue logic
+
+This file documents the parameters for the dwc3-st driver
+This driver provides the glue logic to use the dwc3 on STiH407 platforms based.
+
+Required properties:
+ - compatible: must be "st,stih407-dwc3"
+ - reg		: glue logic base address and USB syscfg ctrl register offest
+ - reg-names	: register names.
+ - st,syscon    : should be phandle to system configuration node which
+		  encompases this glue registers.
+ - resets       : phandle pointing to the system reset controller
+ - #address-cells : must be <1>
+ - pinctrl-0	: Pin control group
+
+Optional properties:
+ - st,dwc3-drd-device: to program the HC as "device" (static setup)
+
+The DWC3 is a subnode to DWC3 core driver as shown below.
+Take a look at Documentation/devicetree/bindings/usb/dwc3.txt
+
+Example:
+
+st_dwc3: dwc3@8f94000 {
+	status		= "disabled";
+	compatible	= "st,stih407-dwc3";
+	reg		= <0x08f94000 0x1000>, <0x110 0x4>;
+	reg-names	= "reg-glue", "syscfg-reg";
+	st,syscfg	= <&syscfg_core>;
+	resets          = <&powerdown STIH407_USB3_POWERDOWN>;
+	#address-cells	= <1>;
+	#size-cells	= <1>;
+	pinctrl-names	= "default";
+	pinctrl-0	= <&pinctrl_usb3>;
+	ranges;
+
+	dwc3: dwc3@9900000 {
+		compatible	= "synopsys,dwc3";
+		reg		= <0x09900000 0x100000>;
+		interrupts	=  <GIC_SPI 155 IRQ_TYPE_NONE>;
+
+		/* usb2 picophy port2, MiPHY2 port for USB3 */
+		phys = <&usb3_picophy>;
+		phy-names = "usb2-phy";
+
+		usb3-phy = <&usb3_phy>;
+	};
+};

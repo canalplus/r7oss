@@ -1,0 +1,18 @@
+CFLAGS+=-DVIRTULISATION \
+-DCONFIG_CPU_SUBTYPE_STX7105 \
+-I$(TREE_ROOT)/virtualisation/targetinc/ \
+-I$(TREE_ROOT)/linux/components/inline/ \
+-I$(TREE_ROOT)/linux/drivers/stm/mmelog/ \
+-I$(TREE_ROOT)/linux/drivers/stm/st_relay/ \
+-I$(TREE_ROOT)/linux/include/linux/dvb/ \
+-I$(TREE_ROOT)/linux/drivers/media/dvb/stm/allocator/
+
+C++FLAGS+=-I$(TREE_ROOT)/linux/drivers/stm/st_relay/
+
+PREFIX?=/usr/local/
+
+all:
+
+install:
+	cp $(ODIR2)/player/player2.so $(ODIR2)/virtualisation/linux/linuxdvb/libstmdvb2.so $(PREFIX)/lib
+	cp $(ODIR2)/dvbtest/dvbtest /usr/local/bin/dvbtest

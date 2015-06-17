@@ -1,0 +1,27 @@
+--- ../alsa-kernel/drivers/mts64.c	2007-12-20 10:20:40.000000000 +0100
++++ mts64.c	2007-12-20 11:09:20.000000000 +0100
+@@ -1,3 +1,4 @@
++#include "adriver.h"
+ /*     
+  *   ALSA Driver for Ego Systems Inc. (ESI) Miditerminal 4140
+  *   Copyright (c) 2006 by Matthias König <mk@phasorlab.de>
+@@ -833,7 +834,13 @@
+ /*********************************************************************
+  * parport stuff
+  *********************************************************************/
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
+ static void snd_mts64_interrupt(void *private)
++#elif defined(CONFIG_SND_NEW_IRQ_HANDLER)
++static void snd_mts64_interrupt(int irq, void *private)
++#else
++static void snd_mts64_interrupt(int irq, void *private, struct pt_regs *reg)
++#endif
+ {
+ 	struct mts64 *mts = ((struct snd_card*)private)->private_data;
+ 	u16 ret;
+@@ -1086,3 +1093,5 @@
+ 
+ module_init(snd_mts64_module_init);
+ module_exit(snd_mts64_module_exit);
++
++EXPORT_NO_SYMBOLS;

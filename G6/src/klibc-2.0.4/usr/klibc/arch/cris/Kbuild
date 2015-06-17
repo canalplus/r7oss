@@ -1,0 +1,28 @@
+#
+# klibc files fora cris
+#
+
+always  := crt0.o
+targets := crt0.o
+
+klib-y += __negdi2.o setjmp.o syscall.o vfork.o
+
+klib-y += ../../libgcc/__divdi3.o     ../../libgcc/__moddi3.o
+klib-y += ../../libgcc/__udivdi3.o    ../../libgcc/__umoddi3.o
+klib-y += ../../libgcc/__udivmoddi4.o
+
+# Divide support
+klib-y := __Umod.o __Udiv.o __Mod.o __Div.o
+
+quiet_cmd_cc-div = DIV-CC  $@
+      cmd_cc-div = $(KLIBCC) $(klibccflags) -c -o $@ $<
+
+
+$(obj)/__Umod.o: $(src)/divide.c
+KLIBCCFLAGS___Umod.o := -DSIGNED=0 -DREM=1 -DBITS=32 -DNAME=__Umod
+$(obj)/__Udiv.o: $(src)/divide.c
+KLIBCCFLAGS___Udiv.o := -DSIGNED=0 -DREM=0 -DBITS=32 -DNAME=__Udiv
+$(obj)/__Mod.o: $(src)/divide.c
+KLIBCCFLAGS___Mod.o  := -DSIGNED=1 -DREM=1 -DBITS=32 -DNAME=__Mod
+$(obj)/__Div.o: $(src)/divide.c
+KLIBCCFLAGS___Div.o  := -DSIGNED=1 -DREM=0 -DBITS=32 -DNAME=__Div

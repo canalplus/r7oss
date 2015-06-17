@@ -1,0 +1,21 @@
+# Classes required for SoCs containing a FVDP display
+ifneq ($(CONFIG_FVDP),)
+
+ifeq ($(CONFIG_DISABLE_FVDP_DEINTERLACING),y)
+EXTRA_CFLAGS += -DDEINT_BYPASS_SEL=1
+else
+EXTRA_CFLAGS += -DDEINT_BYPASS_SEL=0
+endif
+
+ifneq ($(RUNTIME_PLATFORM),)
+EXTRA_CFLAGS += -DRUNTIME_PLATFORM=$(RUNTIME_PLATFORM)
+else
+EXTRA_CFLAGS += -DRUNTIME_PLATFORM=PLATFORM_ARM
+endif
+
+EXTRA_CFLAGS += -DFVDP_IOCTL=1
+
+include $(STG_TOPDIR)/fvdp/mpe42/fvdp.mak
+
+endif
+

@@ -1,0 +1,30 @@
+config MTT
+	bool "Multi-Target Trace (MTT) infrastructure support"
+	select MODULES
+	select KPROBES
+	select DEBUG_FS
+	select RELAY
+	select SYSFS
+	select KALLSYMS
+	select SYSVIPC
+	default n
+	help
+	  MTT provides a trace infrastructure with an API and binary
+	  data format common to ARM/ST40/ST2xx/XP70. It also provides
+	  support for kptraceV4. ST kernel code may use this API
+	  (mtt_trace, mtt_print) for critical trace data, or when
+	  postprocessing is wanted. See "Documentation/mtt.txt"
+	  MTT is also the interface for the System Trace Module IP.
+
+config STM_SYSTRACE
+	bool "System Trace Module"
+	depends on ARCH_STI
+	select MTT
+	default n
+	---help---
+	  The System Trace Module peripheral complies with MIPI-Alliance
+	  specifications for the System Trace Protocol(STP) v2.
+	  See http://www.mipi.org/specifications/debug and in Documentation
+	  systrace.txt and mtt.txt.
+	  The trace data is built and written through the MTT Trace facility
+	  (see mtt-systrace.txt), and output on the MIPI wires.

@@ -1,0 +1,71 @@
+--- ../alsa-kernel/ppc/beep.c	2007-12-20 11:47:37.000000000 +0100
++++ beep.c	2007-12-20 12:23:31.000000000 +0100
+@@ -1,3 +1,10 @@
++#define __NO_VERSION__
++#include "adriver.h"
++
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 0)
++#include "beep_old.c"
++#else /* 2.6 kernels */
++
+ /*
+  * Beep using pcm
+  *
+@@ -226,7 +233,11 @@
+ 		return -ENOMEM;
+ 	dmabuf = dma_alloc_coherent(&chip->pdev->dev, BEEP_BUFLEN * 4,
+ 				    &beep->addr, GFP_KERNEL);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 15)
+ 	input_dev = input_allocate_device();
++#else
++	input_dev = kzalloc(sizeof(*input_dev), GFP_KERNEL);
++#endif
+ 	if (! dmabuf || ! input_dev)
+ 		goto fail1;
+ 
+@@ -241,8 +252,15 @@
+ 	input_dev->evbit[0] = BIT_MASK(EV_SND);
+ 	input_dev->sndbit[0] = BIT_MASK(SND_BELL) | BIT_MASK(SND_TONE);
+ 	input_dev->event = snd_pmac_beep_event;
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 22)
+ 	input_dev->dev.parent = &chip->pdev->dev;
+ 	input_set_drvdata(input_dev, chip);
++#else
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 15)
++	input_dev->cdev.dev = &chip->pdev->dev;
++#endif
++ 	input_dev->private = chip;
++#endif /* 2.6.22 */
+ 
+ 	beep->dev = input_dev;
+ 	beep->buf = dmabuf;
+@@ -263,7 +281,12 @@
+  	return 0;
+  
+  fail2:	snd_ctl_remove(chip->card, beep_ctl);
+- fail1:	input_free_device(input_dev);
++ fail1:
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 15)
++	input_free_device(input_dev);
++#else
++	kfree(input_dev);
++#endif
+ 	if (dmabuf)
+ 		dma_free_coherent(&chip->pdev->dev, BEEP_BUFLEN * 4,
+ 				  dmabuf, beep->addr);
+@@ -275,9 +298,15 @@
+ {
+ 	if (chip->beep) {
+ 		input_unregister_device(chip->beep->dev);
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 15)
++		kfree(chip->beep->dev);
++#endif
++		input_free_device(chip->beep->dev);
+ 		dma_free_coherent(&chip->pdev->dev, BEEP_BUFLEN * 4,
+ 				  chip->beep->buf, chip->beep->addr);
+ 		kfree(chip->beep);
+ 		chip->beep = NULL;
+ 	}
+ }
++
++#endif

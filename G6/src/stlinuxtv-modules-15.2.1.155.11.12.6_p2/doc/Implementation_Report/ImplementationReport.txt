@@ -1,0 +1,2426 @@
+STLinuxTV Implementation Report
+===============================
+ST Microelectronics
+0.90, 15-Jan-2014: Updated the V4L2 Controls information for AV decoder, Planes, Encoder and TSMUX. Some generic changes have been incorporated.
+:toc:
+:lang: en
+:numbered:
+:Author Initials: ST
+
+Introduction
+------------
+Purpose and scope
+~~~~~~~~~~~~~~~~~
+The purpose of this document is to describe the STLinux TV implementation report relative to V4L2, ALSA and Media Controller (MC).
+This document does not include full reference to V4L2, ALSA and MC, but how STLinuxTV implements it. For a full description, including ST proprietary extensions, detailed IOCTL, and structure description, refer to Linux Media Infrastructure API.
+
+Intended audience
+~~~~~~~~~~~~~~~~~
+This document is targeted at the following audiences:
+
+* Developers responsible for the design and implementation of the middleware software on top of STLinuxTV.
+* Developers responsible for the design and implementation of the V4L2, ALSA and MC adaptation layer.
+* Quality assurance engineers responsible to testing the V4L2, ALSA, MC adaptation layer.
+* Program and project managers responsible for planning and tracking the V4L2, ALSA, MC adaptation layer.
+
+Required header file
+~~~~~~~~~~~~~~~~~~~~
+To use the V4L2 API, include the header files include/linux/dvb/dvb_v4l2_export.h and include/linux/.
+
+Acronyms and abbreviations
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+[horizontal]
+API:: Application Program Interface
+ED:: Extended Definition video signal (480p and 576p)
+ES:: Elementary Stream
+HD:: High Definition video signal (1080i, 720P and 1080p)
+MPEG:: The Moving Picture Experts Group - An ISO/IEC standard for compressing of video and audio.
+OS:: Operating System
+PCM:: Pulse Code Modulation
+PES:: Packetized Elementary Stream
+PIP:: Picture In Picture
+SD:: Standard Definition video signals – NTSC (480i) and PAL (576i)
+SPDIF:: Sony/Philips Digital Interface – A serial interface for transferring digital audio
+SPTS:: Single Program Transport Stream
+
+References
+~~~~~~~~~~
+Linux Media Infrastructure API
+
+
+V4L2 device model overview
+--------------------------
+image:images/device_model.png[width="500"]
+
+Device list
+~~~~~~~~~~~
+
+- AV Decoder: Uncompressed audio and video grab device
+    * Used for both grabbing of audio/video/user data out of the audio/video decoders and also for setting of IO Window of decoded streams displayed on a video plane.
+- Planes: GFX and video push device
+    * Used to inject uncompressed frames into either graphic or video planes.
+- Encoder: Audio and video encoder device
+    * Used as a memory-to-memory device handling the encoding between uncompressed audio/video data and compressed data.
+- Compo: Uncompressed compo grab device
+    * Grabbing of video data out of the main compositor
+- JPEG Decoder: JPEG decoder device
+    * Used as a memory-to-memory device handling the decoding between JPEG compressed data and uncompressed data.
+- TS Muxer: TS Mux device
+    * Used to inject ES/PES/DATA into the tsmux and retrieved ts muxed data.
+- Analog VBI Out
+    * Used to inject VBI encoded (teletext/closed caption) data to be rendered on the Analog Output.
+
+Device order and discovery
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+*Numbering of the video device cannot be guaranted due to the module loading order.*
+
+Applications are thus requested to enumerate V4L2 devices and use capabilities to discover the right device numbering dynamically. In order to ensure that the opened video device is the correct one, the application should call the ioctl VIDIOC_QUERYCAP on an opened V4L2 video device and verify the fields “driver” and “card” coming back from the driver.
+
+
+AV Decoder (Uncompressed data extraction)
+-----------------------------------------
+Device enumeration
+~~~~~~~~~~~~~~~~~~
+VIDIOC_QUERYCAP returned values:
+
+- driver:	AV Decoder
+- card:		STMicroelectronics
+
+Input and output
+~~~~~~~~~~~~~~~~
+Audio input
+^^^^^^^^^^^
+Audio input allow to capture uncompressed audio sample out of an audio decoder.
+
+There is a one-to-one association between dvb audio devices and v4l2 device audio input.
+
+- Example: /dev/adapter0/audio0 -> audio input “dvb0.audio0”
+
+
+[option="header"]
+|===
+|*Audio input*	|*LinuxDVB audio device*
+|“dvb0.audio0”	|/dev/dvb/adapter0/audio0
+|“dvb0.audio1”	|/dev/dvb/adapter0/audio1
+|...		|...
+|“dvb0.audio24”	|/dev/dvb/adapter0/audio24
+|===
+
+Video input
+^^^^^^^^^^^
+Decode grab: (“dvb0.video0..24”)
+++++++++++++++++++++++++++++++++
+Those inputs allow to capture uncompressed video frame out of a video decoder.
+
+There is a one-to-one association between dvb video devices and v4l2 device video decode input.
+
+    * Example: /dev/adapter0/video0 -> video input “dvb0.video0”
+
+Input capture: (“vxi0”, “hdmirx0”)
+++++++++++++++++++++++++++++++++++
+Those inputs allow to capture external video input.
+
+There is one video input for the VXI input (“vxi0”) and one for the HDMI-RX (“hdmirx0”).
+
+[option="header"]
+|===
+|*Video input*	|*LinuxDVB video device*
+|“dvb0.video0”	|/dev/dvb/adapter0/video0
+|“dvb0.video1”	|/dev/dvb/adapter0/video1
+|...		|...
+|“dvb0.video24”	|/dev/dvb/adapter0/video24
+|===
+
+[option="header"]
+|===
+|*Video input*	|*External video input*
+|“vxi0”		|VXI Input 0
+|“hdmirx0”	|HDMI RX 0
+|===
+IMPORTANT: vxi0 and hdmirx0 input are not yet available in SDK2.
+
+Customization of input/output number
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The number of audio/video decoders exposed at STLinuxTV LinuxDVB level is configurable via the stlinuxtv module parameters *audio_device_nb* and *video_device_nb*. Default value is 25.
+
+Audio grab: dvb0.audioX
+~~~~~~~~~~~~~~~~~~~~~~~
+Memory model
+^^^^^^^^^^^^
+The following V4L2 buffer memory type are allowed:
+
+- V4L2_MEMORY_USERPTR
+    * Buffer provided from the application, allocated from standard memory (contiguous memory not necessary)
+- V4L2_MEMORY_MMAP
+    * Buffer provided by the driver, from memory allocated using vmalloc within the driver
+
+Minimum number of buffers required for capture
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The audio capture require a minimum of *1* buffer to be queued before being able to dequeue captured data.
+
+Buffer type
+^^^^^^^^^^^
+The following V4L2 buffer type is used to capture audio frames:
+
+- V4L2_BUF_TYPE_AUDIO_CAPTURE
+
+Supported format (VIDIOC_S_FMT)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Capture format
+++++++++++++++
+Grabbed data have the following format.
+    * RAW
+    * Signed 32 bit
+    * Little endian
+    * 44.1 kHz
+    * 8 channels
+
+Controls
+^^^^^^^^
+None
+
+Video grab : dvb0.videoX
+~~~~~~~~~~~~~~~~~~~~~~~~
+Memory model
+^^^^^^^^^^^^
+The following V4L2 buffer memory type are allowed:
+
+- V4L2_MEMORY_USERPTR
+    * Buffer provided from the application. Buffer must be allocated from BPA2 memory and not cross 64MB boundary.
+- V4L2_MEMORY_MMAP
+    * Buffer provided by the driver using BPA2 memory.
+
+Minimum number of buffers required for capture
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The video capture require a minimum of *1* buffer to be queued before being able to dequeue captured data.
+
+Buffer type
+^^^^^^^^^^^
+The *V4L2_BUF_TYPE_VIDEO_CAPTURE* V4L2 buffer type is used to capture video uncompressed frames:
+
+The *V4L2_BUF_TYPE_USER_DATA_CAPTURE* V4L2 buffer type is used to capture user data extracted from video stream:
+
+The same V4L2 device allow also to control the positioning and rendering of decoded video stream when played tunneled into a display plane. The *V4L2_BUF_TYPE_VIDEO_OVERLAY* is used in that case.
+
+Supported format (VIDIOC_S_FMT)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Capture format
+++++++++++++++
+[option="header"]
+|===
+|*Name*				|*Type*		|*Description*
+|V4L2_PIX_FMT_RGB565		|V4L2		|RGB-16 (5-6-5)
+|V4L2_PIX_FMT_BGRA5551		|V4L2		|RGB-16 (5-5-5-1)
+|V4L2_PIX_FMT_BGRA4444		|V4L2		|RGB-16 (4-4-4-4)
+|V4L2_PIX_FMT_BGR24		|V4L2		|RGB-24 (B-G-R)
+|V4L2_PIX_FMT_BGR32		|V4L2		|ARGB-32 (8-8-8-8)
+|V4L2_PIX_FMT_RGB32		|V4L2		|BGRA-32 (8-8-8-8)
+|V4L2_PIX_FMT_UYVY		|V4L2		|YUV 4:2:2 (U-Y-V-Y)
+|V4L2_PIX_FMT_YUYV		|V4L2		|YUV 4:2:2 (Y-U-Y-V)
+|V4L2_PIX_FMT_YUV420		|V4L2		|YUV 4:2:0 YUV
+|V4L2_PIX_FMT_YVU420		|V4L2		|YUV 4:2:0 YVU
+|V4L2_PIX_FMT_YUV422P		|V4L2		|YUV 4:2:2 YUV
+|V4L2_PIX_FMT_NV12		|V4L2		|YCbCr 4:2:0
+|V4L2_PIX_FMT_STM422MB		|ST Proprietary	|YUV 4:2:2 MB
+|V4L2_PIX_FMT_STM420MB		|ST Proprietary	|YUV 4:2:0 MB
+|===
+
+- Grabbed frame metadata (ST Extension)
+    * Apart from the metadata which could be pushed out in *struct v4l2_format*, reserved field will contain the following information in **VIDIOC_DQBUF** if application provides a non-NULL reserved field.
+---------------------------------
+struct v4l2_video_uncompressed_metadata {
+	unsigned int framerate_num;
+	unsigned int framerate_den;
+	unsigned int reserved[8];
+};
+---------------------------------
+        ** framerate_num: Framerate numerator
+        ** framerate_den: Framerate denominator
+
+User_data
++++++++++
+For user data capturing, VIDIOC_S_FMT ioctl must be called to keep consistency in the V4L2 ioctl call sequence however no real initialization of the v4l2_format structure is needed.
+
+Controls
+^^^^^^^^
+The following controls are valid to video input when the video is tunneled into a display plane.
+
+- V4L2_CID_MPEG_STM_VIDEO_DECODER_BLANK:
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: Disable the video decode output (video still parsed and decoded but not pushed to display stage)
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_BOOLEAN
+    * *Default*: Disabled
+
+- V4L2_CID_STM_ASPECT_RATIO_CONV_MODE:
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: Specify how the video should be converted to match with the display aspect ratio
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+    * *Value*:
+        ** VCSASPECT_RATIO_CONV_LETTER_BOX
+        ** VCSASPECT_RATIO_CONV_PAN_AND_SCAN
+        ** VCSASPECT_RATIO_CONV_COMBINED
+        ** VCSASPECT_RATIO_CONV_IGNORE
+    * *Default*: VCSASPECT_RATIO_CONV_LETTER_BOX
+
+- V4L2_CID_DV_STM_TX_ASPECT_RATIO:
+    * *Class*: V4L2_CTRL_CLASS_DV
+    * *Description*: Specify the aspect ratio of the display (used to perform aspect ratio conversion)
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+    * *Value*:
+        ** VCSOUTPUT_DISPLAY_ASPECT_RATIO_16_9
+        ** VCSOUTPUT_DISPLAY_ASPECT_RATIO_4_3
+        ** VCSOUTPUT_DISPLAY_ASPECT_RATIO_14_9
+    * *Default*: VCSOUTPUT_DISPLAY_ASPECT_RATIO_16_9
+
+- V4L2_CID_STM_INPUT_WINDOW_MODE:
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: Specify the mode of the input window of the first plane connected to the video input
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+    * *Value*:
+        ** VCSPLANE_MANUAL_MODE
+        ** VCSPLANE_AUTO_MODE
+    * *Default*: VCSPLANE_AUTO_MODE
+
+- V4L2_CID_STM_OUTPUT_WINDOW_MODE:
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: Specify the mode of the output window of the first plane connected to the video input
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+    * *Value*:
+        ** VCSPLANE_MANUAL_MODE
+        ** VCSPLANE_AUTO_MODE
+    * *Default*: VCSPLANE_AUTO_MODE
+
+
+Planes (Injection of uncompressed data)
+---------------------------------------
+Device enumeration
+~~~~~~~~~~~~~~~~~~
+VIDIOC_QUERYCAP returned values:
+
+- driver:	Planes
+- card:		STMicroelectronics
+
+Video outputs
+~~~~~~~~~~~~~
+[option="header"]
+|===
+|*Input name*	|*Display Video Plane*
+|“Main-VID”	|Main-VID VDP plane.
+|“Main-PIP”	|Main-PIP VDP plane.
+|“Aux-VID”	|Aux-VID VDP plane.
+|“Main-GDP1”	|Main-GDP1 graphic plane.
+|“Main-GDP2”	|Main-GDP2 graphic plane.
+|“Aux-GDP1”	|Aux-GDP1 graphic plane.
+|“Aux-GDP2”	|Aux-GDP2 graphic plane.
+|===
+IMPORTANT: By default planes *Main-GDP1* and *Aux-GDP1* are reserved for the two framebuffers (fb0 and fb1) and thus cannot be accessed via V4L2.
+
+VDP: “Main-VID”, “Main-PIP”, “Aux-VID”
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Memory model
+^^^^^^^^^^^^
+The following V4L2 buffer memory type are allowed:
+
+- V4L2_MEMORY_USERPTR
+    * Buffer provided from the application. Buffer must be allocated from BPA2 memory and not cross 64MB boundary.
+- V4L2_MEMORY_MMAP
+    * Buffer provided by the driver using BPA2 memory.
+
+Minimum number of buffers required for rendering
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The VDP video rendering require a minimum of *2* buffer to be queued before being able to dequeue rendered data. At anytime, the driver must keep 1 buffer queued.
+
+Buffer type
+^^^^^^^^^^^
+The *V4L2_BUF_TYPE_VIDEO_OUTPUT* V4L2 buffer type is used to output video uncompressed frames to be rendered on the video plane.
+
+ST Proprietary IOCTL's
+^^^^^^^^^^^^^^^^^^^^^^
+- VIDIOC_G_OUTPUT_STD
+  * *Description*: Get the output standard
+
+- VIDIOC_ENUM_OUTPUT_STD
+  * *Description*: Enumerate the supported output standards
+
+- VIDIOC_S_OUTPUT_STD
+  * *Description*: Set the output standard
+
+- VIDIOC_S_OUTPUT_ALPHA
+  * *Description*: Set the output alpha (Only GDP)
+
+Supported format (VIDIOC_S_FMT)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[option="header"]
+|===
+|*Name*			|*Type*		|*Description*
+|V4L2_PIX_FMT_NV12	|V4L2		|YCbCr 4 :2 :0 (2 buffer)
+|V4L2_PIX_FMT_STM422MB	|ST Proprietary	|YUV 4:2:2 MB
+|V4L2_PIX_FMT_STM420MB	|ST Proprietary	|YUV 4:2:0 MB
+|V4L2_PIX_FMT_NV16	|V4L2		|YCbCr 4:2:2 (2 buffer)
+|===
+
+Controls
+^^^^^^^^
+- V4L2_CID_BRIGHTNESS
+    * *Class*: V4L2_CTRL_CLASS_USER
+    * *Description*: Brightness
+    * *Origin*: V4L2
+
+- V4L2_CID_CONTRAST
+    * *Class*: V4L2_CTRL_CLASS_USER
+    * *Description*: Contrast
+    * *Origin*: V4L2
+
+- V4L2_CID_SATURATION
+    * *Class*: V4L2_CTRL_CLASS_USER
+    * *Description*: Saturation
+    * *Origin*: V4L2
+
+- V4L2_CID_HUE
+    * *Class*: V4L2_CTRL_CLASS_USER
+    * *Description*: Hue
+    * *Origin*: V4L2
+
+- V4L2_CID_SHARPNESS
+    * *Class*: V4L2_CTRL_CLASS_USER
+    * *Description*: Sharpness
+    * *Origin*: V4L2
+
+- V4L2_CID_STM_PLANE_HIDE_MODE
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: Plane hide mode
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_BOOLEAN
+    * *Default*: Disabled (No hide)
+
+- V4L2_CID_STM_Z_ORDER
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: Plane Z order
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+    * *Value*: The Z order of the select plane
+
+IMPORTANT: The following ST Proprietary controls are subject to change.
+
+- V4L2_CID_STM_VQ_SHARPNESS
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: Configures state of Sharpness
+
+- V4L2_CID_STM_XVP_SET_CONFIG
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: xVP config
+
+- V4L2_CID_STM_XVP_SET_TNRNLE_OVERRIDE
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: NLE override
+
+- V4L2_CID_STM_XVP_SET_TNR_TOPBOTSWAP
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: TNR Top/Bottom swap
+
+- V4L2_CID_STM_DEI_SET_MODE
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: DEI enable
+
+- V4L2_CID_STM_DEI_SET_CTRLREG
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: DEI ctrl register
+
+- V4L2_CID_STM_DEI_SET_FMD_ENABLE
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: FMD enable
+
+- V4L2_CID_STM_CKEY_ENABLE
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: Color Key
+
+- V4L2_CID_STM_CKEY_FORMAT
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: ColorKey format
+
+- V4L2_CID_STM_CKEY_R_CR_MODE
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: ColorKey R/Cr mode
+
+- V4L2_CID_STM_CKEY_G_Y_MODE
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: ColorKey G/Y mode
+
+- V4L2_CID_STM_CKEY_B_CB_MODE
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: ColorKey B/CB mode
+
+- V4L2_CID_STM_CKEY_RCr_MINVAL
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: ColorKey minval
+
+- V4L2_CID_STM_CKEY_RCr_MAXVAL
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: ColorKey maxval
+
+- V4L2_CID_STM_CKEY_GY_MINVAL
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: ColorKey minval
+
+- V4L2_CID_STM_CKEY_GY_MAXVAL
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: ColorKey maxval
+
+- V4L2_CID_STM_CKEY_BCb_MINVAL
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: ColorKey minval
+
+- V4L2_CID_STM_CKEY_BCb_MAXVAL
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: ColorKey maxval
+
+- V4L2_CID_STM_FMD_T_MOV
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: Moving pixel threshold
+
+- V4L2_CID_STM_FMD_T_NUM_MOV_PIX
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: Moving block threshold
+
+- V4L2_CID_STM_FMD_T_REPEAT
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: Threshold on BBD for field repetition
+
+- V4L2_CID_STM_FMD_T_SCENE
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: Threshold on BBD for scene change
+
+- V4L2_CID_STM_FMD_COUNT_MISS
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: Delay for a film mode detection
+
+- V4L2_CID_STM_FMD_COUNT_STILL
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: xxx
+
+- V4L2_CID_STM_FMD_T_NOISE
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: Noise threshold
+
+- V4L2_CID_STM_FMD_K_CFD1
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: Consecutive field difference factor 1
+
+- V4L2_CID_STM_FMD_K_CFD2
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: Consecutive field difference factor 2
+
+- V4L2_CID_STM_FMD_K_CFD3
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: Consecutive field difference factor 3
+
+- V4L2_CID_STM_FMD_K_SCENE
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: Percentage of blocks with BBD > t_scene
+
+- V4L2_CID_STM_FMD_D_SCENE
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: Scene change detection delay (1,2,3 or 4)
+
+- V4L2_CID_STM_IQI_EXT_PEAKING_PRESET
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: Peaking Preset, possible values are Enable (default conf bein Soft), Soft, Medium, Strong, Disable
+
+- V4L2_CID_STM_IQI_EXT_PEAKING_UNDERSHOOT
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: peaking undershoot factor
+
+- V4L2_CID_STM_IQI_EXT_PEAKING_OVERSHOOT
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: peaking overshoot factor
+
+- V4L2_CID_STM_IQI_EXT_PEAKING_MANUAL_CORING
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*:  boolean to enable or disable manual coring
+
+- V4L2_CID_STM_IQI_EXT_PEAKING_CORING_LEVEL
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: Coring level from 0 to 63
+
+- V4L2_CID_STM_IQI_EXT_PEAKING_VERTICAL
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: boolean to enable or disable vertical peaking
+
+- V4L2_CID_STM_IQI_EXT_PEAKING_VGAIN
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: peaking gain from -60 ... 120cB in 5 steps
+
+- V4L2_CID_STM_IQI_EXT_PEAKING_CLIPPING_MODE
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: peaking clipping mode
+
+- V4L2_CID_STM_IQI_EXT_PEAKING_BANDPASSFREQ
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*:  peaking bandpass frequency
+
+- V4L2_CID_STM_IQI_EXT_PEAKING_HIGHPASSFREQ
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*:  peaking highpass frequency
+
+- V4L2_CID_STM_IQI_EXT_PEAKING_BANDPASSGAIN
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*:  peaking bandpass gain from -60 to 120cB in 5 steps
+
+- V4L2_CID_STM_IQI_EXT_PEAKING_HIGHPASSGAIN
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*:  peaking highpass gain from -60 to 120cB in 5 steps
+
+- V4L2_CID_STM_IQI_EXT_LE_PRESET
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: Preset, possible values are Enable (default conf being Soft), Soft, Medium, Strong, Disable
+
+- V4L2_CID_STM_IQI_EXT_LE_WEIGHT_GAIN
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: LE gain from 0 to 31
+
+- V4L2_CID_STM_IQI_EXT_LE_FIXCURVE_ENABLED
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: boolean to enable LE fixed curve usage
+
+- V4L2_CID_STM_IQI_EXT_LE_FIXCURVE_BLACKSTRETCHINFLEXIONPOINT
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: LE fixed curve Black Stretch Inflexion Point (10 bits: 0..1023)
+
+- V4L2_CID_STM_IQI_EXT_LE_FIXCURVE_BLACKSTRETCHLIMITPOINT
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: LE fixed curve Black Stretch Limit Point (10 bits: 0..1023)
+
+- V4L2_CID_STM_IQI_EXT_LE_FIXCURVE_WHITESTRETCHINFLEXIONPOINT
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: LE fixed curve White Stretch Inflexion Point (10 bits: 0..1023)
+
+- V4L2_CID_STM_IQI_EXT_LE_FIXCURVE_WHITESTRETCHLIMITPOINT
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: LE fixed curve White Stretch Limit Point (10 bits: 0..1023)
+
+- V4L2_CID_STM_IQI_EXT_LE_FIXCURVE_BLACKSTRETCHGAIN
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: LE fixed curve Black Stretch Gain (% : 0..100)
+
+- V4L2_CID_STM_IQI_EXT_LE_FIXCURVE_WHITESTRETCHGAIN
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: LE fixed curve White Stretch Gain (% : 0..100)
+
+- V4L2_CID_STM_IQI_EXT_CTI_PRESET
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: Preset, possible values are Enable (default conf bein Soft), Soft, Medium, Strong, Disable
+
+- V4L2_CID_STM_IQI_EXT_CTI_STRENGTH1
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: CTI strength1, possible value MIN, MEDIUM, STRONG
+
+- V4L2_CID_STM_IQI_EXT_CTI_STRENGTH2
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: CTI strength2, possible value MIN, MEDIUM, STRONG
+
+GPD: “Main_GPD1”, “Main_GPD2”, “Aux_GDP1”, “Aux_GDP2”
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Memory model
+^^^^^^^^^^^^
+The following V4L2 buffer memory type are allowed:
+
+- V4L2_MEMORY_USERPTR
+    * Buffer provided from the application. Buffer must be allocated from BPA2 memory and not cross 64MB boundary.
+- V4L2_MEMORY_MMAP
+    * Buffer provided by the driver using BPA2 memory.
+
+Minimum number of buffers required for rendering
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The GDP video rendering require a minimum of *2* buffer to be queued before being able to dequeue rendered data. At anytime, the driver must keep 1 buffer queued.
+
+Buffer type
+^^^^^^^^^^^
+The *V4L2_BUF_TYPE_VIDEO_OUTPUT* V4L2 buffer type is used to output video uncompressed frames to be rendered on the graphic plane.
+
+Supported format (VIDIOC_S_FMT)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[option="header"]
+|===
+|*Name*			|*Type*	|*Description*
+|V4L2_PIX_FMT_RGB565	|V4L2	|RGB-16 (5-6-5)
+|V4L2_PIX_FMT_BGRA5551	|V4L2	|RGBA-16 (5-5-5-1)
+|V4L2_PIX_FMT_BGRA4444	|V4L2	|RGBA-16 (4-4-4-4)
+|V4L2_PIX_FMT_BGR32	|V4L2	|ARGB-32 (8-8-8-8)
+|V4L2_PIX_FMT_RGB32	|V4L2	|BGRA-32 (8-8-8-8)
+|V4L2_PIX_FMT_BGR24	|V4L2	|RGB-24 (B-G-R)
+|V4L2_PIX_FMT_UYVY	|V4L2	|YUV 4:2:2 (U-Y-V-Y)
+|V4L2_PIX_FMT_CLUT8	|V4L2	|CLUT8 (RGB)
+|V4L2_PIX_FMT_CLUTA8	|V4L2	|CLUT8 with Alpha (RGB)
+|===
+
+Controls
+^^^^^^^^
+- V4L2_CID_STM_ANTI_FLICKER_FILTER_STATE
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: Filter is ON/OFF
+
+- V4L2_CID_STM_ANTI_FLICKER_FILTER_MODE
+    * *Class*: V4L2_CTRL_CLASS_IMAGE_PROC
+    * *Description*: Simple/Adaptive
+
+TBD
+
+Encoder (Audio and video encode)
+--------------------------------
+Device enumeration
+~~~~~~~~~~~~~~~~~~
+VIDIOC_QUERYCAP returned values:
+
+- driver:	Encoder
+- card:		STMicroelectronics
+
+Input and output
+~~~~~~~~~~~~~~~~
+The encoder V4L2 driver allow to encode *video or audio uncompressed frames* and produce compressed *video or audio ES stream*.
+Injection of uncompressed frames is performed via the video/audio output while capture of compressed ES stream is possible via the video/audio input.
+
+Video output
+^^^^^^^^^^^^
+[option="header"]
+|===
+|*Output name*		|*Encoder*
+|“vid-encoder-00”	|video encoder 0.
+|“vid-encoder-01”	|video encoder 1.
+|…			|…
+|“vid-encoder-07”	|video encoder 7.
+|===
+
+Audio output
+++++++++++++
+[option="header"]
+|===
+|*Output name*		|*Encoder*
+|“aud-encoder-00”	|audio encoder 0.
+|“aud-encoder-01”	|audio encoder 1.
+|…			|…
+|“aud-encoder-07”	|audio encoder 7.
+|===
+
+Video input
++++++++++++
+[option="header"]
+|===
+|*Input name*		|*Encoder*
+|“vid-encoder-00”	|video encoder 0.
+|“vid-encoder-01”	|video encoder 1.
+|…			|…
+|“vid-encoder-07”	|video encoder 7.
+|===
+
+Audio input
++++++++++++
+[option="header"]
+|===
+|*Input name*		|*Description*
+|“aud-encoder-00”	|audio encoder 0.
+|“aud-encoder-01”	|audio encoder 1.
+|…			|…
+|“aud-encoder-07”	|audio encoder 7.
+|===
+
+Customization of input/output number
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The number of audio encoder is configurable via module parameter encoder_audio_devices_nums.
+The number of video encoder is configurable via module parameter encoder_video_devices_nums.
+By default, 8 audio encoders and 8 video encoders are created.
+
+“vid-encoder-xx” output
+~~~~~~~~~~~~~~~~~~~~~~~
+Memory model
+^^^^^^^^^^^^
+The following V4L2 buffer memory type are allowed:
+
+- V4L2_MEMORY_USERPTR
+    * Buffer provided from the application. Buffer must be allocated from BPA2 memory and not cross 64MB boundary.
+- V4L2_MEMORY_MMAP
+    * Buffer provided by the driver using BPA2 memory.
+
+Minimum number of buffers required for starting to encode video data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The video encoder a minimum of *1* buffer to be queued before being able to encode data (and provide encoded data).
+
+Buffer type
+^^^^^^^^^^^
+The *V4L2_BUF_TYPE_VIDEO_OUTPUT* V4L2 buffer type is used to output video uncompressed frames to be encoded.
+
+Supported format (VIDIOC_S_FMT)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[option="header"]
+|===
+|*Name*			|*Type*		|*Description*
+|V4L2_PIX_FMT_NV12	|V4L2		|YCbCr 4:2:0
+|V4L2_PIX_FMT_UYVY	|V4L2		|YUV 4:2:2
+|V4L2_PIX_FMT_YUYV	|V4L2		|YUV 4:2:2
+|===
+
+Controls
+^^^^^^^^
+Controls valid per encoder object, applicable on either output or capture side.
+
+Setting affecting the encode
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- Uncompressed data size/format
+    * The format and size information of the uncompressed data is setted via the VIDIOC_S_FMT ioctl.
+
+- PTS timestamp
+    * Timestamp information is provided via the *timestamp* field of 'struct v4l2_buffer'.
+
+- Input framerate
+    * VIDIOC_S_PARM ioctl allow to set *timeperframe* information of uncompressed data to be used by the encoder preprocessor. This is the timeparframe, to be inverted to retrieve the framerate
+
+- Time discontinuity
+    * Inform the encoder about a break in the PTS from that frame. Information is provided to the encoder with the first frame after a time discontinuity by setting the V4L2_BUF_FLAG_STM_ENCODE_TIME_DISCONTINUITY *struct v4l2_buffer* flags.
+    * The information of time discontinuity will be propagated up to the output of the encoder where a dequeued buffer will have the flags V4L2_BUF_FLAG_STM_ENCODE_TIME_DISCONTINUITY set.
+
+- End of stream
+    * Inform the encoder of the end of stream. This information will be propagated up to the output of the decoder. Application set the EOF by queueing an empty buffer into the encoder. This is done by doing *VIDIOC_QBUF* of a *struct v4l2_buffer* with *bytesused* equal to 0.
+
+- Closed GOP request
+    * *struct v4l2_buffer* flag V4L2_BUF_FLAG_STM_ENCODE_CLOSED_GOP_REQUEST allow to request the start of a new GOP starting from the buffer. The encoder will create a new GOP starting from that buffer and that information will be pushed up to the output of the decoder where a buffer containing the flag V4L2_BUF_FLAG_STM_ENCODE_GOP_START will be produced.
+    * A change in the configuration of the encoder (VIDIOC_S_FMT or controls) will also trigger a new GOP.
+
+- Closed caption data
+    * Inserted in H264 stream as SEI (User data SEI)
+    * V4L2 proprietary data format: embedded in V4L2 buffer 2nd plane
+
+IMPORTANT: Closed caption is not yet supported in SDK2.
+
+- Field
+    * *struct v4l2_buffer* *field* allow to specify the kind of uncompressed data pushed. The following field are supported: V4L2_FIELD_NONE, V4L2_FIELD_INTERLACED_TB, V4L2_FIELD_INTERLACED_BT.
+
+- Colorspace
+    * *struct v4l2_buffer* *colorspace* allow to indicate the colorspace of uncompressed data. The following colorspace are supported:
+        ** V4L2_COLORSPACE_UNSPECIFIED
+        ** V4L2_COLORSPACE_SMPTE170M
+        ** V4L2_COLORSPACE_SMPTE240M
+        ** V4L2_COLORSPACE_REC709
+        ** V4L2_COLORSPACE_470_SYSTEM_M
+        ** V4L2_COLORSPACE_470_SYSTEM_BG
+        ** V4L2_COLORSPACE_SRGB
+
+“aud-encoder-xx” output
+~~~~~~~~~~~~~~~~~~~~~~~
+Memory model
+^^^^^^^^^^^^
+The following V4L2 buffer memory type are allowed:
+
+- V4L2_MEMORY_USERPTR
+    * Buffer provided from the application. Buffer must be allocated from BPA2 memory and not cross 64MB boundary.
+- V4L2_MEMORY_MMAP
+    * Buffer provided by the driver using BPA2 memory.
+
+Minimum number of buffers required for starting to encode audio data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The video encoder a minimum of *1* buffer to be queued before being able to encode data (and provide encoded data).
+
+Buffer type
+^^^^^^^^^^^
+The *V4L2_BUF_TYPE_VIDEO_OUTPUT* V4L2 buffer type is used to output audio uncompressed frames to be encoded.
+
+Supported format (VIDIOC_S_FMT)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[cols="2,1,1", option="header"]
+|===
+|*Name*					|*Type*		|*Description*
+|V4L2_MPEG_AUDIO_STM_ENCODING_PCM	|ST		|PCM
+|===
+
+Controls
+^^^^^^^^
+Controls valid per encoder object, applicable on either output or capture side.
+
+Setting affecting the encode
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- PTS timestamp
+    * Timestamp information is provided via the *timestamp* field of 'struct v4l2_buffer'.
+
+- Time discontinuity
+    * Inform the encoder about a break in the PTS from that frame. Information is provided to the encoder with the first frame after a time discontinuity by setting the V4L2_BUF_FLAG_STM_ENCODE_TIME_DISCONTINUITY *struct v4l2_buffer* flags.
+    * The information of time discontinuity will be propagated up to the output of the encoder where a dequeued buffer will have the flags V4L2_BUF_FLAG_STM_ENCODE_TIME_DISCONTINUITY set.
+
+- End of stream
+    * Inform the encoder of the end of stream. This information will be propagated up to the output of the decoder. Application set the EOF by queueing an empty buffer into the encoder. This is done by doing *VIDIOC_QBUF* of a *struct v4l2_buffer* with *bytesused* equal to 0.
+
+- Audio format setting
+    * The format of audio data is setted via the *raw* field of the *struct v4l2_format* with *VIDIOC_S_FMT*. The following structure should be used to cast the raw field of the *struct v4l2_format* structure.
+---------------------------
+struct v4l2_audenc_format {
+	int codec;
+	int max_channels;
+	int reserved;
+};
+---------------------------
+        ** codec: Set the codec of uncompressed audio data. (V4L2_MPEG_AUDIO_STM_ENCODING_*)
+        ** max_channels: The maximum number of channels that will be contained into the injected uncompressed data
+
+- Description of injected data via metadata
+    * Apart from the *struct v4l2_format* codec which is used, some more metadata must be given to the encoder for each pushed frame via *VIDIOC_QBUF*.
+---------------------------------
+struct v4l2_audenc_src_metadata name is going to be deprecated. The new struct is as under:
+struct v4l2_audio_uncompressed_metadata {
+	unsigned int sample_rate;
+	int channel_count;
+	unsigned char channel[V4L2_STM_AUDENC_MAX_CHANNELS];
+	unsigned int sample_format;
+	int program_level;
+	unsigned int emphasis;
+};
+---------------------------------
+        ** sample_rate: Sample rate of uncompressed data
+        ** channel_count: Number of channels
+        ** channel[]: Description of each channel assignment (STM_V4L2_AUDIO_CHAN_*)
+        ** sample_format: Sample format of uncompressed data (V4L2_MPEG_AUDIO_STM_PCM_FMT_*)
+        ** program_level: S32 Program level in millibel (typ. -2000, -2300, -3100).
+        ** emphasis: Program level emphasis (V4L2_MPEG_AUDIO_NO_EMPHASIS, V4L2_MPEG_AUDIO_EMPH_*)
+    * The metadata pointer should be given to the encoder via the *struct v4l2_buffer* *reserved* field.
+
+“vid-encoder-xx” input
+~~~~~~~~~~~~~~~~~~~~~~~
+Memory model
+^^^^^^^^^^^^
+The following V4L2 buffer memory type are allowed:
+
+- V4L2_MEMORY_USERPTR
+    * Buffer provided from the application. Buffer must be allocated from BPA2 memory and not cross 64MB boundary.
+- V4L2_MEMORY_MMAP
+    * Buffer provided by the driver using BPA2 memory.
+
+Minimum number of buffers required for retrieving encoded video data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The video encoder a minimum of *1* buffer to be queued before being able to retrieve encoded data.
+
+Buffer type
+^^^^^^^^^^^
+The *V4L2_BUF_TYPE_VIDEO_CAPTURE* V4L2 buffer type is used to capture video encoded frames.
+
+Supported format (VIDIOC_S_FMT)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[option="header"]
+|===
+|*Name*			|*Type*		|*Description*
+|V4L2_PIX_FMT_H264	|V4L2		|H264
+|===
+
+Controls affecting the encoded data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+For standard V4L2 control, unless expressed in the description of the control, the LinuxTV V4L2 specification is the reference.
+
+- V4L2_CID_MPEG_STM_VIDEO_H264_DEI_SET_MODE
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: This encoder video control enables / disables deinterlacing before encode stage. As all video encode controls, it would trigger a new 'Gop' to be generated.
+    * *Origin*: ST proprietary
+
+- V4L2_CID_MPEG_STM_VIDEO_H264_NOISE_FILTERING
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: This encoder video control enables / disables noise filtering before encode stage.  As all video encode controls, it would trigger a new 'Gop' to be generated.
+    * *Origin*: ST proprietary
+
+- V4L2_CID_MPEG_STM_VIDEO_H264_ASPECT_RATIO
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: This encoder video control sets the display aspect ratio management.
+    * *Origin*: ST proprietary
+
+- V4L2_CID_MPEG_STM_ENCODE_NRT_MODE
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: Moves the encoder compressed pts to be equal to encoded time. This is Non-Real Time (NRT) mode.
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_BOOLEAN
+
+- V4L2_CID_MPEG_VIDEO_BITRATE_MODE
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: Video bitrate mode
+    * *Origin*: V4L2
+
+- V4L2_CID_MPEG_VIDEO_GOP_SIZE
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: GOP Size = I frame period
+    * *Origin*: V4L2
+
+- V4L2_CID_MPEG_VIDEO_H264_LEVEL
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: The level information for the H264 video elementary stream
+    * *Origin*: V4L2
+
+- V4L2_CID_MPEG_VIDEO_H264_PROFILE
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: The profile information for H264
+    * *Origin*: V4L2
+
+- V4L2_CID_MPEG_VIDEO_BITRATE
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: Video bitrate in bits per second
+    * *Origin*: V4L2
+
+- V4L2_CID_MPEG_VIDEO_H264_CPB_SIZE
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: The Coded Picture Buffer size in kilobytes, it is used as a limitation of frame skip. The CPB is defined in the H264 standard as a mean to verify that the produced stream will be successfully decoded.
+    * *Origin*: V4L2
+
+- V4L2_CID_MPEG_VIDEO_MULTI_SLICE_MODE
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: Determines how the encoder should handle division of frame into slices
+    * *Origin*: V4L2
+
+- V4L2_CID_MPEG_VIDEO_MULTI_SLICE_MAX_MB
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: The maximum number of macroblocks in a slice.
+    * *Origin*: V4L2
+
+- V4L2_CID_MPEG_VIDEO_MULTI_SLICE_MAX_BYTES
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: The maximum size of a slice in bytes. Used when V4L2_CID_MPEG_VIDEO_MULTI_SLICE_MODE is set to V4L2_MPEG_VIDEO_MULTI_SLICE_MODE_MAX_BYTES.
+    * *Origin*: V4L2
+
+
+IMPORTANT: V4L2_CID_MPEG_VIDEO_MULTI_SLICE_MODE, V4L2_CID_MPEG_VIDEO_MULTI_SLICE_MAX_MB, V4L2_CID_MPEG_VIDEO_MULTI_SLICE_MAX_BYTES are not supported yet.
+
+Setting affecting the encode
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- Compressed data size / format
+    * The format and size information of the compressed data is setted via the VIDIOC_S_FMT ioctl.
+
+- PTS timestamp
+    * PTS timestamp is propagated from the encoder injected data.
+    * Timestamp information is retrieved via the *timestamp* field of 'struct v4l2_buffer'.
+
+- Output framerate
+    * VIDIOC_S_PARM ioctl allow to set *timeperframe* information of compressed data. If the requested timeperframe is different from the one of injected data, frame rate conversion will be applied. This is the timeparframe, to be inverted to retrieve the framerate
+
+- Time discontinuity
+    * Time discontinuity are propagated from the encoder injected data. It can be retrieved via the *struct v4l2_buffer* flags V4L2_BUF_FLAG_STM_ENCODE_TIME_DISCONTINUITY.
+
+- End of stream
+    * The EOS information is propagated from the encoder injection side. Upon calling the *VIDIOC_DQBUF* to get a new encoded frame, the application should check for the *bytesused* equal to 0 in the *struct v4l2_buffer* structure.
+
+- New GOP
+    * V4L2_BUF_FLAG_STM_ENCODE_GOP_START in *flags* of *struct v4l2_buffer* structure allow to indicate the beginning of a new GOP.
+    * A new GOP is generated periodically, it is impacted by various controls such as V4L2_CID_MPEG_VIDEO_GOP_SIZE.
+    * New GOP are also automatically create in various cases such as Scene change detection, Resolution/format change, discontinuity.
+
+- Type of GOP
+    * The encoder only support CLOSED GOP. V4L2_BUF_FLAG_STM_ENCODE_CLOSED_GOP flag is setted in *struct v4l2_buffer*.
+
+- Type of Frames
+    * On each frame generated by the encoder, the *flags* field of *struct v4l2_buffer* contains the type of frame generated by the encoder. (V4L2_BUF_FLAG_KEYFRAME, V4L2_BUF_FLAG_PFRAME, V4L2_BUF_FLAG_BFRAME)
+
+IMPORTANT: The encoder only generate KEYFRAME or PFRAME.
+
+“aud-encoder-xx” input
+~~~~~~~~~~~~~~~~~~~~~~~
+Memory model
+^^^^^^^^^^^^
+The following V4L2 buffer memory type are allowed:
+
+- V4L2_MEMORY_USERPTR
+    * Buffer provided from the application. Buffer must be allocated from BPA2 memory and not cross 64MB boundary.
+- V4L2_MEMORY_MMAP
+    * Buffer provided by the driver using BPA2 memory.
+
+Minimum number of buffers required for retrieving encoded audio data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The audio encoder a minimum of *1* buffer to be queued before being able to retrieve encoded data.
+
+Buffer type
+^^^^^^^^^^^
+The *V4L2_BUF_TYPE_VIDEO_CAPTURE* V4L2 buffer type is used to capture audio encoded frames.
+
+Supported format (VIDIOC_S_FMT)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[cols="2,1,1", option="header"]
+|===
+|*Name*					|*Type*		|*Description*
+|V4L2_MPEG_AUDIO_STM_ENCODING_LAYER_3	|V4L2		|MP3
+|V4L2_MPEG_AUDIO_STM_ENCODING_AC3	|V4L2		|AC3
+|V4L2_MPEG_AUDIO_STM_ENCODING_AAC	|V4L2		|AAC
+|V4L2_MPEG_AUDIO_STM_ENCODING_HEAAC	|V4L2		|HEAAC
+|===
+
+Controls affecting the encoded data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+For standard V4L2 control, unless expressed in the description of the control, the LinuxTV V4L2 specification is the reference.
+
+- V4L2_CID_MPEG_AUDIO_AAC_BITRATE
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: Target AAC bitrate in bits per second in case of non VBR mode.
+    * *Origin*: V4L2
+
+- V4L2_CID_MPEG_AUDIO_AC3_BITRATE
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: Target AC3 bitrate in bits per second in case of non VBR mode.
+    * *Origin*: V4L2
+
+- V4L2_CID_MPEG_AUDIO_L3_BITRATE
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: Target MPEG L3 bitrate in bits per second in case of non VBR mode.
+    * *Origin*: V4L2
+
+- V4L2_CID_MPEG_STM_AUDIO_BITRATE_MODE
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: Select audio encoding allocation mode. With VBR enabled, VBR_QUALITY_FACTOR is used.
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+    * *Value*:
+        ** V4L2_MPEG_AUDIO_BITRATE_MODE_CBR
+        ** V4L2_MPEG_AUDIO_BITRATE_MODE_VBR
+
+- V4L2_CID_MPEG_STM_AUDIO_VBR_QUALITY_FACTOR
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: Select audio VBR quality factor for MP3 and AAC encoding.
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+    * *Value*: Range between 0 (lowest quality) and 100 (highest quality)
+
+- V4L2_CID_MPEG_STM_AUDIO_BITRATE_CAP
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: Set the instant bitrate in bit per second that should not be exceeded.
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+
+- V4L2_CID_MPEG_STM_AUDIO_BITRATE_CONTROL
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: Apply all at once the above bitrate settings.
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+    * *Value*: 1
+
+IMPORTANT: ALL 4 kind of bitrate control should be set before calling V4L2_CID_MPEG_STM_AUDIO_BITRATE_CONTROL since there is currently no default value stored into the decoder.
+
+- V4L2_CID_MPEG_AUDIO_CRC
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: CRC method (Enable/Disable)
+    * *Origin*: V4L2
+    * *Value*:
+        ** V4L2_MPEG_AUDIO_CRC_NONE
+        ** V4L2_MPEG_AUDIO_CRC_CRC16
+
+- V4L2_CID_MPEG_STM_AUDIO_SERIAL_CONTROL
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: Serial Copyright Info to be encoded in the stream.
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+    * *Value*:
+        ** V4L2_MPEG_AUDIO_NO_COPYRIGHT
+        ** V4L2_MPEG_AUDIO_ONE_MORE_COPY_AUTHORISED
+        ** V4L2_MPEG_AUDIO_NO_FUTHER_COPY_AUTHORISED
+
+- V4L2_CID_MPEG_STM_AUDIO_PROGRAM_LEVEL
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: S32 Program level in millibel (typ. -2000, -2300, -3100). Value >= 0 is treated as a default value of -3100mb
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+
+- V4L2_CID_MPEG_STM_ENCODE_NRT_MODE
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: Moves the encoder compressed pts to be equal to encoded time. This is Non-Real Time (NRT) mode.
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_BOOLEAN
+
+- V4L2_CID_MPEG_AUDIO_SAMPLING_FREQ
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: Sample rate of the encoded stream.
+    * *Origin*: V4L2
+    * *Value*: Value in HZ.
+
+- V4L2_CID_MPEG_STM_AUDIO_CHANNEL_COUNT
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: Number of channel to be generated in the encoded stream.
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+    * *Value*: Nb of channels
+
+- V4L2_CID_MPEG_STM_AUDIO_CHANNEL_MAP
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: Describe the mapping of channel.
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+    * *Value*: Channel index: 0xff00, Channel id: 0x00ff. Channel index is the number of the channel. Channel id describe the kind of channel. See STM_V4L2_AUDIO_CHAN_*
+
+- V4L2_CID_MPEG_STM_AUDIO_CORE_FORMAT
+    * *Class*: V4L2_CTRL_CLASS_MPEG
+    * *Description*: Apply the above 3 controls all at once.
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+    * *Value*: 1.
+
+IMPORTANT: Channel assignment & bitrate setting control do not have a default value currently so it is VERY important to set ALL 3 controls before calling V4L2_CID_MPEG_STM_AUDIO_CORE_FORMAT.
+
+Setting affecting the encode
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- Audio format setting
+    * The format of audio data is setted via the *raw* field of the *struct v4l2_format* with *VIDIOC_S_FMT*. The following structure should be used to cast the raw field of the *struct v4l2_format* structure.
+---------------------------
+struct v4l2_audenc_format {
+	int codec;
+	int max_channels;
+	int reserved;
+};
+---------------------------
+        ** codec: Set the codec of uncompressed audio data. (V4L2_MPEG_AUDIO_STM_ENCODING_*)
+        ** max_channels: The maximum number of channels that will be contained into the injected uncompressed data
+
+- PTS timestamp
+    * PTS timestamp is propagated from the encoder injected data.
+    * Timestamp information is retrieved via the *timestamp* field of 'struct v4l2_buffer'.
+
+- Time discontinuity
+    * Time discontinuity are propagated from the encoder injected data. It can be retrieved via the *struct v4l2_buffer* flags V4L2_BUF_FLAG_STM_ENCODE_TIME_DISCONTINUITY.
+
+- End of stream
+    * The EOS information is propagated from the encoder injection side. Upon calling the *VIDIOC_DQBUF* to get a new encoded frame, the application should check for the *bytesused* equal to 0 in the *struct v4l2_buffer* structure.
+
+- Description of compressed data (metadata)
+    * Apart from the usual *struct v4l2_buffer* giving information about the retrieved frame, the pointer given via the *reserved* field is filled with information about the compressed frame. They are retrieved by the application when calling *VIDIOC_DQBUF*.
+---------------------------------
+struct v4l2_audenc_dst_metadata {
+	unsigned int sample_rate;
+	int channel_count;
+	unsigned char channel[V4L2_STM_AUDENC_MAX_CHANNELS];
+	int drc_factor;
+};
+---------------------------------
+        ** sample_rate: Sample rate of compressed data (same as the sample rate requested by the user).
+        ** channel_count: Number of channels (same as channel count requested by the user)
+        ** channel[]: Description of each channel assignment (STM_V4L2_AUDIO_CHAN_*) (same as channel assignment requested by user)
+        ** drc_factor:
+    * The metadata pointer should be given to the encoder via the *struct v4l2_buffer* *reserved* field.
+
+Compo (Compositor grab)
+-----------------------
+Device enumeration
+~~~~~~~~~~~~~~~~~~
+VIDIOC_QUERYCAP returned values:
+
+- driver:	Compo
+- card:		STMicroelectronics
+
+Video input
+~~~~~~~~~~~
+[option="header"]
+|===
+|*Input name*		|*Capture entry*
+|“stm_input_video1”	|Main video plane (Main-VID)
+|“stm_input_video2”	|Aux video plane (Aux-VID)
+|“stm_input_mix1”	|Output of main compo
+|“stm_input_mix2”	|Output of aux compo
+|===
+
+IMPORTANT: “stm_input_mix2” is not yet supported in SDK2
+
+“stm_input_xxxxxx” input
+~~~~~~~~~~~~~~~~~~~~~~~~
+Memory model
+^^^^^^^^^^^^
+The following V4L2 buffer memory type are allowed:
+
+- V4L2_MEMORY_USERPTR
+    * Buffer provided from the application. Buffer must be allocated from BPA2 memory and not cross 64MB boundary.
+- V4L2_MEMORY_MMAP
+    * Buffer provided by the driver using BPA2 memory.
+
+IMPORTANT: V4L2_MEMORY_MMAP isn't yet support in SDK2
+
+Minimum number of buffers required for capturing frames
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The capture device require a minimum of *1* buffer to be queued before being able to return data.
+
+Buffer type
+^^^^^^^^^^^
+The *V4L2_BUF_TYPE_VIDEO_CAPTURE* V4L2 buffer type is used to capture frames.
+
+Supported format (VIDIOC_S_FMT)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[option="header"]
+|===
+|*Name*			|*Type*		|*Description*
+|V4L2_PIX_FMT_RGB565	|V4L2		|RGB-16 (5-6-5)
+|V4L2_PIX_FMT_BGRA5551	|V4L2		|RGB-16 (5-5-5-1)
+|V4L2_PIX_FMT_BGRA4444	|V4L2		|RGB-16 (4-4-4-4)
+|V4L2_PIX_FMT_BGR24	|V4L2		|RGB-24 (B-G-R)
+|V4L2_PIX_FMT_BGR32	|V4L2		|ARGB-32 (8-8-8-8)
+|V4L2_PIX_FMT_RGB32	|V4L2		|BGRA-32 (8-8-8-8)
+|V4L2_PIX_FMT_YUV422P	|V4L2		|YUV 4:2:2 YUV
+|V4L2_PIX_FMT_STM422MB	|ST Proprietary	|YUV 4:2:2 MB
+|V4L2_PIX_FMT_STM420MB	|ST Proprietary	|YUV 4:2:0 MB
+|V4L2_PIX_FMT_UYVY	|V4L2		|YUV 4:2:2 (U-Y-V-Y)
+|===
+
+JPEG Decoder
+------------
+Device enumeration
+~~~~~~~~~~~~~~~~~~
+VIDIOC_QUERYCAP returned values:
+
+- driver:	JPEG Decoder
+- card:		STMicroelectronics
+
+Input and output
+~~~~~~~~~~~~~~~~
+This device is a single mem2mem device and thus doesn’t provide multiple input/output. It is thus not necessary to set input or output
+
+Output (JPEG data injection)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Memory model
+^^^^^^^^^^^^
+The following V4L2 buffer memory type are allowed:
+
+- V4L2_MEMORY_USERPTR
+    * Buffer provided from the application. Buffer must be allocated from BPA2 memory and not cross 64MB boundary.
+- V4L2_MEMORY_MMAP
+    * Buffer provided by the driver using BPA2 memory.
+
+Minimum number of buffers required for decoding JPEG data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The JPEG decoder require a minimum of *1* buffer to be queued in order to decode data.
+
+Buffer type
+^^^^^^^^^^^
+The *V4L2_BUF_TYPE_VIDEO_OUTPUT* V4L2 buffer type is used to push JPEG encoded data into the device.
+
+Supported format (VIDIOC_S_FMT)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[option="header"]
+|===
+|*Name*			|*Type*		|*Description*
+|V4L2_PIX_FMT_JPEG	|V4L2		|JPEG data
+|===
+
+Controls
+^^^^^^^^
+None
+
+Metadata
+^^^^^^^^
+None
+
+Input (uncompressed data)
+~~~~~~~~~~~~~~~~~~~~~~~~~
+Memory model
+^^^^^^^^^^^^
+The following V4L2 buffer memory type are allowed:
+
+- V4L2_MEMORY_USERPTR
+    * Buffer provided from the application. Buffer must be allocated from BPA2 memory and not cross 64MB boundary.
+- V4L2_MEMORY_MMAP
+    * Buffer provided by the driver using BPA2 memory.
+
+Minimum number of buffers required for retrieving uncompressed data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The JPEG decoder require a minimum of *1* buffer to be queued in order to decode data.
+
+Buffer type
+^^^^^^^^^^^
+The *V4L2_BUF_TYPE_VIDEO_CAPTURE* V4L2 buffer type is used to retrieve uncompressed data out of the device.
+
+The *V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE* V4L2 buffer type is used to retrieve uncompressed data (splited into several planes) out of the device.
+
+Supported format (VIDIOC_S_FMT)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[option="header"]
+|===
+|*Name*			|*Type*		|*Description*
+|V4L2_PIX_FMT_NV12	|V4L2		|NV12 single planar
+|V4L2_PIX_FMT_NV16	|V4L2		|NV16 single planar
+|V4L2_PIX_FMT_NV24	|V4L2		|NV24 single planar
+|V4L2_PIX_FMT_NV12M	|V4L2		|NV12 multi planar
+|V4L2_PIX_FMT_NV16M	|V4L2		|NV16 multi planar
+|V4L2_PIX_FMT_NV24M	|V4L2		|NV24 multi planar
+|===
+
+Controls
+^^^^^^^^
+None
+
+Metadata
+^^^^^^^^
+None
+
+Analog VBI Out
+--------------
+Device enumeration
+~~~~~~~~~~~~~~~~~~
+VIDIOC_QUERYCAP returned values:
+
+- driver:	Analog VBI Out
+- card:		STMicroelectronics
+
+Video output
+~~~~~~~~~~~~
+[option="header"]
+|===
+|*Output name*		|*Display Mixer*
+|“analog_hdout0”	|Main mixer
+|“analog_sdout0”	|Aux mixer
+|===
+
+Only one output selection is possible at a time. (if an application is already outputting VBI data to the analog_hdout0, another one CANNOT output on the other output)
+
+VBI Data Output
+~~~~~~~~~~~~~~~
+Memory model
+^^^^^^^^^^^^
+The following V4L2 buffer memory type are allowed:
+
+- V4L2_MEMORY_USERPTR
+    * Buffer provided from the application. No requirement of specific memory.
+
+Minimum number of buffers required to push VBI data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+A minimum of *1* buffer is necessary to push VBI data into the mixer.
+
+Buffer type
+^^^^^^^^^^^
+The *V4L2_BUF_TYPE_SLICED_VBI_OUT* V4L2 buffer type is used to push VBI data out.
+
+Supported format (VIDIOC_S_FMT)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- Service_set = V4L2_SLICED_TELETEXT_B with output 625line PAL/SECAM
+- Service_set = V4L2_SLICED_CAPTION_525 with output for 525 line systems
+
+Controls
+^^^^^^^^
+None
+
+Metadata
+^^^^^^^^
+None
+
+
+TS Multiplexing (/dev/tsmuxX)
+-----------------------------
+Overview
+~~~~~~~~
+The TSMux device is different from other V4L2 devices.
+It is possible (and necessary) to open several times the tsmux device and for each file handle set a format with proper buffer type. It is possible to set more than one an OUTPUT buffer type on different handles. Each “output buffer typed” file handler then become stream injection point to the tsmux. Tsmux V4L2 devices are accessible via the /dev/tsmux files rather than /dev/video files
+
+Device enumeration
+~~~~~~~~~~~~~~~~~~
+VIDIOC_QUERYCAP returned values:
+
+- driver:	TS Muxer #XX
+- card:		STMicroelectronics
+
+Input and output
+~~~~~~~~~~~~~~~~
+This device is a single mem2mem device and thus doesn’t provide multiple input/output. It is thus not necessary to set input or output
+
+Output side informations
+~~~~~~~~~~~~~~~~~~~~~~~~
+Memory model
+^^^^^^^^^^^^
+The following V4L2 buffer memory type are allowed:
+
+- V4L2_MEMORY_USERPTR
+    * Buffer provided from the application. No requirement of specific memory.
+- V4L2_MEMORY_MMAP
+    * Buffer provided by the driver using vmalloc memory.
+
+IMPORTANT: V4L2_MEMORY_MMAP is not supported in SDK2.
+
+Minimum number of buffers required for injecting data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The tsmux require a minimum of *1* buffer to be queued to start muxing.
+
+Buffer type
+^^^^^^^^^^^
+The *V4L2_BUF_TYPE_DVB_OUTPUT* V4L2 buffer type is used to push data into the tsmux.
+
+Supported format (VIDIOC_S_FMT)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[option="header"]
+|===
+|*Name*			|*Type*		|*Description*
+|V4L2_DVB_FMT_ES	|V4L2		|ES
+|V4L2_DVB_FMT_PES	|V4L2		|PES
+|V4L2_DVB_FMT_DATA	|V4L2		|Data
+|===
+
+Controls
+^^^^^^^^
+
+- V4L2_CID_STM_TSMUX_INCLUDE_PCR
+    * *Class*: V4L2_CTRL_CLASS_TSMUX
+    * *Description*: Include PCR values in the output of this stream
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_BOOLEAN
+
+- V4L2_CID_STM_TSMUX_STREAM_PID
+    * *Class*: V4L2_CTRL_CLASS_TSMUX
+    * *Description*: The PID value to use for the output of the data in this stream
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+
+- V4L2_CID_STM_TSMUX_PES_STREAM_ID
+    * *Class*: V4L2_CTRL_CLASS_TSMUX
+    * *Description*: The stream_id value to be used in the auto-generated PES headers for the stream
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+
+- V4L2_CID_STM_TSMUX_BIT_BUFFER_SIZE
+    * *Class*: V4L2_CTRL_CLASS_TSMUX
+    * *Description*: The size (in bits) of the elementary stream buffer.  NOTE: This is usually the vbv_buffer_size for MPEG1/2 video or Coded Picture Buffer size for H.264 video.
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+
+- V4L2_CID_STM_TSMUX_SECTION_PERIOD
+    * *Class*: V4L2_CTRL_CLASS_TSMUX
+    * *Description*: Section data insertion interval (for repeated sections), 0 = single insertion
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+
+Setting affecting the TS Muxer
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- Injected data format setting
+    * The information about data injected into the TSMux is provided to the TSMux via the *VIDIOC_S_FMT* ioctl. In case of the TSMux the *struct v4l2_dvb_format* within *struct v4l2_format* is used to describe the data format.
+--------------------------
+struct v4l2_dvb_format {
+	__u32 data_type;
+	__u32 buffer_size;
+	__u32 codec;
+	__u32 reserved[3];
+};
+--------------------------
+        ** data_type: Specify the kind of data push (V4L2_DVB_FMT_ES, V4L2_DVB_FMT_PES, V4L2_DVB_FMT_DATA)
+        ** buffer_size: Specify the size of buffer used for injecting data
+        ** codec: The codec of data pushed in case of ES or PES. This information is used in case of auto generation of table by the TSMux (V4L2_STM_TSMUX_STREAM_TYPE_*)
+
+- End of stream
+    * Inform the TSMUX of the end of stream. Application set the EOF by queueing an empty buffer into the TSMux. This is done by doing *VIDIOC_QBUF* of a *struct v4l2_buffer* with *bytesused* equal to 0.
+
+- Extra metadata
+    * Some extra optional metadata can be provided to the TSMux on each buffer by setting the *struct v4l2_buffer* *reserved* pointer with a *struct v4l2_tsmux_src_es_metadata*.
+-----------------------------------
+struct v4l2_tsmux_src_es_metadata {
+        unsigned long long DTS;
+        int dit_transition;
+};
+-----------------------------------
+
+Input side informations
+~~~~~~~~~~~~~~~~~~~~~~~
+Memory model
+^^^^^^^^^^^^
+The following V4L2 buffer memory type are allowed:
+
+- V4L2_MEMORY_USERPTR
+    * Buffer provided from the application. No requirement of specific memory.
+- V4L2_MEMORY_MMAP
+    * Buffer provided by the driver using vmalloc memory.
+
+IMPORTANT: V4L2_MEMORY_MMAP is not yet supported in SDK2.
+
+Minimum number of buffers required for retrieving data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The tsmux require a minimum of *1* buffer to be queue to start getting muxed data.
+
+Buffer type
+^^^^^^^^^^^
+The *V4L2_BUF_TYPE_DVB_CAPTURE* V4L2 buffer type is used to retrieve data from the tsmux.
+
+Supported format (VIDIOC_S_FMT)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[option="header"]
+|===
+|*Name*			|*Type*		|*Description*
+|V4L2_DVB_FMT_TS	|V4L2		|188 bytes TS
+|V4L2_DVB_FMT_DLNA_TS	|V4L2		|192 bytes TS
+|===
+
+Controls
+^^^^^^^^
+- V4L2_CID_STM_TSMUX_PCR_PERIOD
+    * *Class*: V4L2_CTRL_CLASS_TSMUX
+    * *Description*: Specify the PCR period in units of 90 kHz.
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+    * *Value*: Typically between 1500 and 9000. Note: Greater than 9000 is non-compliant in DVB.
+
+- V4L2_CID_STM_TSMUX_GEN_PCR_STREAM
+    * *Class*: V4L2_CTRL_CLASS_TSMUX
+    * *Description*: Create a separate PCR stream
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_BOOLEAN
+
+- V4L2_CID_STM_TSMUX_PCR_PID
+    * *Class*: V4L2_CTRL_CLASS_TSMUX
+    * *Description*: PID to be used if creating a separate PCR stream.
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+
+- V4L2_CID_STM_TSMUX_TABLE_GEN
+    * *Class*: V4L2_CTRL_CLASS_TSMUX
+    * *Description*: Specify the table generation settings.
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+    * *Value*: One or more of the following values
+        ** V4L2_STM_TSMUX_TABLE_GEN_NONE
+        ** V4L2_STM_TSMUX_TABLE_GEN_PAT_PMT
+        ** V4L2_STM_TSMUX_TABLE_GEN_SDT
+
+- V4L2_CID_STM_TSMUX_TABLE_PERIOD
+    * *Class*: V4L2_CTRL_CLASS_TSMUX
+    * *Description*: Specify the interval in units of 90 kHz
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+    * *Value*: Typically between 1500 and 9000. Note: Greater than 9000 is non-compliant in DVB.
+
+- V4L2_CID_STM_TSMUX_TS_ID
+    * *Class*: V4L2_CTRL_CLASS_TSMUX
+    * *Description*: Specify the transport_stream_id to be placed in the generated Program Association Table
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+
+- V4L2_CID_STM_TSMUX_BITRATE_IS_CONSTANT
+    * *Class*: V4L2_CTRL_CLASS_TSMUX
+    * *Description*: Force bit rate to fixed value
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_BOOLEAN
+
+- V4L2_CID_STM_TSMUX_BITRATE
+    * *Class*: V4L2_CTRL_CLASS_TSMUX
+    * *Description*: Peak bit rate if not fixed (bps) or the fixed bit rate if V4L2_CID_STM_TSMUX_BITRATE_IS_CONSTANT is True.
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+
+- V4L2_CID_STM_TSMUX_PROGRAM_NUMBER
+    * *Class*: V4L2_CTRL_CLASS_TSMUX
+    * *Description*: Specify the program_number reported in the Program Association Table generated for this TSMUX instance.
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+
+- V4L2_CID_STM_TSMUX_PMT_PID
+    * *Class*: V4L2_CTRL_CLASS_TSMUX
+    * *Description*: Specify the program_map_PID to be placed in the generated Program Association Table and used for the generated Program Map Table.
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+
+- V4L2_CID_STM_TSMUX_SDT_PROV_NAME
+    * *Class*: V4L2_CTRL_CLASS_TSMUX
+    * *Description*: Specify NULL terminated ASCII string for the generated SDT table. Maximum characters = 16 characters not including the NULL character. If the string exceeds 16 characters it will be truncated.
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_STRING
+
+- V4L2_CID_STM_TSMUX_SDT_SERV_NAME
+    * *Class*: V4L2_CTRL_CLASS_TSMUX
+    * *Description*: Specify NULL terminated ASCII string for the generated SDT tables service_descriptor:service_name.  Maximum characters = 16 characters not including the NULL character. If the string exceeds 16 characters it will be truncated.
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_STRING
+
+- V4L2_CID_STM_TSMUX_PMT_DESCRIPTOR
+    * *Class*: V4L2_CTRL_CLASS_TSMUX
+    * *Description*: Specify NULL terminated ASCII string for the optional PMT descriptor. Maximum characters = 16 characters not including the NULL character. If the string exceeds 16 characters it will be truncated.
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_STRING
+
+- V4L2_CID_STM_TSMUX_STREAM_DESCRIPTOR
+    * *Class*: V4L2_CTRL_CLASS_TSMUX
+    * *Description*: Specify NULL terminated list of bytes for the Program MAP Table ES info descriptor. Maximum characters = 16 bytes. If the descriptor exceeds 16 bytes it will be truncated.
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_STRING
+
+Setting affecting the TS Muxer
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- Extracted data format setting
+    * The information about data extracted from the TSMux is provided to the TSMux via the *VIDIOC_S_FMT* ioctl. In case of the TSMux the *struct v4l2_dvb_format* within *struct v4l2_format* is used to describe the data format.
+--------------------------
+struct v4l2_dvb_format {
+	__u32 data_type;
+	__u32 buffer_size;
+	__u32 codec;
+	__u32 reserved[3];
+};
+--------------------------
+        ** data_type: Specify the kind of data push (V4L2_DVB_FMT_TS, V4L2_FMT_DLNA_TS)
+        ** buffer_size: Unused.
+        ** codec: Unused.
+
+Events
+^^^^^^
+- V4L2_EVENT_EOS
+    * *Description*: Triggered when the stream has ended.
+    * *Origin*: V4L2
+
+- V4L2_EVENT_STM_DATA_UNDERFLOW
+    * *Description*: Unexpected input underflow
+    * *Origin*: ST proprietary
+
+- V4L2_EVENT_STM_FATAL_ERROR
+    * *Description*: Internal fatal error
+    * *Origin*: ST proprietary
+
+IMPORTANT: Currently events are not generated in TSMux SDK2
+
+TSMux indexing support
+~~~~~~~~~~~~~~~~~~~~~~
+The TSMux device allow to retrieve index information related to the produced TS data generated.
+
+Indexing is controlled by setting the controls *V4L2_CID_STM_TSMUX_INDEXING* and *V4L2_CID_STM_TSMUX_INDEXING_MASK* and rely on the standard *VIDIOC_G_ENC_INDEX* ioctl to retrieve index data.
+
+- V4L2_CID_STM_TSMUX_INDEXING
+    * *Description*: This control has to be applied on the file handle of a PES/ES/DATA injection point of the TSMux. Enable / Disable the data gathering process from that particular injection to generate index information.
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_BOOLEAN
+
+- V4L2_CID_STM_TSMUX_INDEXING_MASK
+    * *Description*: Specify the kind of index to receive via VIDIOC_G_ENC_INDEX
+    * *Origin*: ST proprietary
+    * *Type*: V4L2_CTRL_TYPE_INTEGER
+    * *Value*: One or more of the following value can be set together.
+        ** V4L2_CID_STM_TSMUX_INDEX_NONE
+        ** V4L2_CID_STM_TSMUX_INDEX_PUSI
+        ** V4L2_CID_STM_TSMUX_INDEX_PTS
+        ** V4L2_CID_STM_TSMUX_INDEX_I_FRAME
+        ** V4L2_CID_STM_TSMUX_INDEX_B_FRAME
+        ** V4L2_CID_STM_TSMUX_INDEX_P_FRAME
+        ** V4L2_CID_STM_TSMUX_INDEX_DIT
+        ** V4L2_CID_STM_TSMUX_INDEX_RAP
+
+The VIDIOC_G_ENC_INDEX ioctl return one or more index information via the *struct v4l2_enc_idx* which contains one or more entries. (Please see the STLinuxTV API document). The contents of a single entry is of is as below:
+
+--------------------
+struct v4l2_enc_idx_entry{
+	__u64 offset;
+	__u64 pts;
+	__u32 length;
+	__u32 flags;
+	__u32 reserved[2];
+};
+--------------------
+
+    * Index information: The *struct v4l2_enc_idx_entry* contains information about 1 unique index. It contains the following information:
+
+        ** *offset* The offset in byte from the beginning of the generated TS (or DLNA TS) data
+        ** *pts* Currently unused in SDK2
+        ** *length* Currently unused in SDK2
+        ** *flags* The type of index data received.
+            *** V4L2_ENC_IDX_FRAME_I
+            *** V4L2_ENC_IDX_FRAME_P
+            *** V4L2_ENC_IDX_FRAME_B
+            *** V4L2_ENC_IDX_FRAME_PUSI
+            *** V4L2_ENC_IDX_FRAME_PTS
+            *** V4L2_ENC_IDX_FRAME_DIT
+            *** V4L2_ENC_IDX_FRAME_RAP
+        ** *pid* This give the pid in which the index has been found. The application should retrieve the pid by using the helper function *unsigned int stm_tsmux_get_index_pid(struct v4l2_enc_idx_entry *index)*
+
+ALSA Device Model Overview
+--------------------------
+MIXER[0..3] Sound Cards
+~~~~~~~~~~~~~~~~~~~~~~~
+Overview
+^^^^^^^^
+There is one sound card for each mixer and a mixer for each of the players supported by the board configuration. For example, in Orly there will be four mixers to correspond with the Analog0, Analog1, HDMI, and SPDIF players. However, the mixers are not permanently attached to any one player and it is possible to attach a single mixer to multiple players. The reason for providing a mixer per player is to allow for a use case where each player is producing a different output.
+
+- The mixer sound cards are named “MIXER0”, “MIXER1”, etc.
+- Each mixer can support 8 PCM devices with up to 8 substreams.
+
+Input and output
+^^^^^^^^^^^^^^^^
+Audio input
++++++++++++
+Audio input allow to access uncompressed audio data.
+
+[option="header"]
+|===
+|*Name*		|*Origin*
+|Primary	|audio reader or an audio decoder. (tunneled)
+|Secondary	|audio reader or an audio decoder. (tunneled)
+|PCM[0..7]	|user space.
+|===
+
+Audio output
+++++++++++++
+Audio output allow to access post-mix uncompressed audio data.
+
+[option="header"]
+|===
+|*Name*		|*Target*
+|Output		|audio players. (tunneled)
+|PCM[0..7]	|user space.
+|===
+
+PCM Device
+^^^^^^^^^^
+Each mixer sound card offers a single PCM playback with 8 sub-channels. The PCM playback is intended primarily for interactive audio in BD settings but can also be used for beep generation and other similar matters.
+The sub-channels have the following properties:
+- 8 sub-channels may be played back simultaneously.
+- All sub-channels require 16-bit little endian samples.
+- All sub-channels must use the same sampling frequency.
+- The sampling frequency must be from the following list (in Hz): 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000.
+- A substream may be either mono or stereo. However the total number of channels must never be more than eight (i.e. 4 stereo, 1 stereo + 6 mono, 8 mono).
+
+HW0 Sound Card
+~~~~~~~~~~~~~~
+Overview
+^^^^^^^^
+- There is a single HW sound card which hosts all of the audio reader and player entities. The media controller can be used to attach these readers and players to a mixer entity.
+- The hardware proxy sound card is named “HW0”
+
+Input and output
+^^^^^^^^^^^^^^^^
+Audio input
++++++++++++
+[cols="1,3", option="header"]
+|===
+|*Name*		|*Description*
+|aud_reader0	|Uncompressed audio data to a mixer. (tunneled)
+|===
+
+Audio output
+++++++++++++
+[cols="1,3", option="header"]
+|===
+|*Name*			|*Description*
+|aud_player_Analog0	|Uncompressed audio data to Analog0. (tunneled)
+|aud_player_Analog1	|Uncompressed audio data to Analog1. (tunneled)
+|aud_player_HDMI	|Uncompressed audio data to HDMI. (tunneled)
+|aud_player_SPDIF	|Uncompressed audio data to SPDIF. (tunneled)
+|===
+
+Sound Card Names
+~~~~~~~~~~~~~~~~
+The STLinuxTV sound cards may not be the only sound cards in the system, so it would be best to refer to the STLinuxTV sound cards by name rather than by number. For example, "-Dhw :MIXER0” or “-Dhw:HW0”.
+
+Mixer Controls
+~~~~~~~~~~~~~~
+The following tables only give the names and a description of the purpose of each control. For a description about the type of control (pvolume, enum, switch etc), Limits and current value, please rely on the following command run on a running platform:
+
+---------
+amixer -Dhw:MIXER0
+---------
+NOTE: This command can be run on to retrieve controls from any of the mixers available on the platform. Replace the name MIXER0 by other mixers name.
+
+Common controls to all Mixers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[option="header"]
+|===
+|*Name*				|*Description*
+|Master				|Volume control, ranging from 0 to -96dB
+|Master Grain			|Number of samples per buffer
+|Master Output Frequency	|Set the sampling frequency at which the audio is rendered. If 'master' is set then frequency of the Primary is used
+|Master Playback Latency	|Range from -150ms to 150ms, adjust the master offset between audio and video. Default is “0”
+|PCM[0-7]			|Gain coefficient of input of the mixer, ranging from -78 to +18dB
+|Mixer Channel Pair0		|Channel assignment (channel 0, 1)
+|Mixer Channel Pair1		|Channel assignment (channel 2, 3)
+|Mixer Channel Pair2		|Channel assignment (channel 4, 5)
+|Mixer Channel Pair3		|Channel assignment (channel 6, 7)
+|Mixer Channel Pair4		|Channel assignment (channel 8, 9)
+|Mixer Downmix Promotion	|Enable promotion of the mixer channel assignment to the Primary input
+|All Speaker Stereo		|If set, allows a custom up-mix table to be inserted so that all five speakers run at near maximum levels with the following mapping: FrontL ← L; FrontR ← R; FrontC ← 0.5 * L + 0.5 * R; RearL ← L; RearR ← R. Default is “off”
+|DRC Boost			|Linear factor applied to low level audio dynamic range gain on main output of the mixer
+|DRC Boost AUX			|Linear factor applied to low level audio dynamic range gain on secondary output the mixer
+|DRC Cut			|Linear factor applied to loud audio dynamic range attenuation on main output of the mixer
+|DRC Cut AUX			|Linear factor applied to loud audio dynamic range attenuation on secondary output of the mixer
+|DRC Type			|Set the DRC mode on the main output of the mixer
+|DRC Type AUX			|Set the DRC mode on the secondary output of the mixer
+|Downmix Streamdriven Stereo	|Set if stereo downmix recommended in the encoded stream should be applied
+|DualMono Metadata Override	|Restrict or not the application of dual-mono user-setting to only dual-mono encoded streams
+|Interactive Audio Mode		|Channel arrangement of the Interactive Audio input
+|Metadata Update		|If set to "Primary and secondary only" the metadata found in the secondary stream can influence the primary gain and secondary pan values; it cannot influence the post mix gain. If set to "Always" the metadata found in the secondary stream is applied to all controls. If unset, default values from secondary stream meta-data will be used instead. Default is “never”
+|Post Mix			|Linear gain coefficient to be applied post mix to all channels
+|Primary			|7.1 linear gain coefficients for primary audio
+|Secondary			|7.1 linear gain coefficients for secondary audio
+|Secondary Pan			|7.1 linear pan coefficients for secondary audio
+|iPCM[0-7]			|Linear gain coefficient for all channels interactive audio
+|iPCM[0-7] Pan			|7.1 linear pan coefficients for interactive audio
+|IEC958 Playback Default	|Meta-data to be included in each transmitted SPDIF frame. This takes structured information using a single ALSA call. The structure of this data is proprietary and deliberately not defined within this document
+|IEC958 Playback Mask		|The mask that will be applied against "IEC958 Playback Default" before transmission. The mask is used to remove fields automatically set by the drivers (e.g. sample rate). Read-only
+|FatPipe Playback Default	|Meta-data to be included in each transmitted frame. This takes structured information using a single ALSA call. The structure of this data is proprietary and deliberately not defined within this document
+|FatPipe Playback Mask		|
+|===
+
+Dynamic Mixer Controls
+^^^^^^^^^^^^^^^^^^^^^^
+The following controls are added to a mixer when a player is attached. The “XXX” part of the control name is replaced by the name of the player. In the case of Orly, this would be “Analog0”, “Analog1”, “HDMI”, or “SPDIF”.
+[option="header"]
+|===
+|*Name*					|*Description*
+|XXX BTSC Dual Signal			|Enable/Disable dual signal BTSC encoding
+|XXX BTSC Input Gain			|Digital Gain in dB applied to input signal of BTSC processing
+|XXX BTSC Tx Gain			|Digital Gain in dB applied to output of BTSC processing (before RF modulation)
+|XXX DC Remove				|Enable/Disable the application of the DC-remove filter
+|XXX Delay				|Delay to be applied to audio signal rendered by this audio player
+|XXX DualMono Stream Driven		|Restrict or not the application of dual-mono user-setting to only dual-mono encoded streams
+|XXX DualMono channel selected		|Select which mono from a DualMono feed should be rendered
+|XXX Encoding				|Select which encoding should be applied to the PCM before rendering
+|XXX Gain				|Gain to be applied to all channels, ranging from -96 to +32 dB
+|XXX Limiter Hard Gain			|Select if the gain should be applied as gain or ramped up/down will achieved
+|XXX Limiter Lookahead Amount		|time window reserved to enable anti-clipping by looking ahead in the PCM signal
+|XXX Limiter Lookahead Enable		|Enable look-ahead for anti-clipping
+|XXX Maximum Frequency			|Maximum sampling frequency supported by the player
+|XXX Number of Channels			|Number of channels to be rendered by the player
+|XXX PAIR0				|Specify which channel pair should be rendered on PAIR0 of this player
+|XXX PAIR1				|Specify which channel pair should be rendered on PAIR1 of this player
+|XXX PAIR2				|Specify which channel pair should be rendered on PAIR2 of this player
+|XXX PAIR3				|Specify which channel pair should be rendered on PAIR3 of this player
+|XXX PAIR4				|Specify which channel pair should be rendered on PAIR4 of this player
+|XXX Per-Speaker Playback Gain		|Ranging from -96 to 0 dB
+|XXX Per-Speaker Playback Latency	|Ranging from 0 to 30 ms
+|XXX Sink Type				|Specify the type of Sink fed by this player
+|XXX Soft Mute				|Mute this player
+|XXX Target Level			|Specify the target playback level of this player, ranging from -31 to 0 dB
+|XXX Volume Bypass			|Bypass the volume control of this player
+|===
+
+Default Media Controller Links
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+See detailed description of entities in next section.
+
+By default, the following media controller links are enabled:
+
+["graphviz"]
+--------------------------------------
+digraph alsa_mc {
+  rankdir=LR;
+  node [shape = Mrecord];
+  audio0 [label="{dvb0.audio0 | {<port0> 0}}"];
+  audio1 [label="{dvb0.audio1 | {<port0> 0}}"];
+  mixer0 [label="{{<port0> 0} | mixer0 | {<port1> 1}}"];
+  aud_player_Analog0 [label="{{<port0> 0} | aud_player_Analog0}"];
+  aud_player_Analog1 [label="{{<port0> 0} | aud_player_Analog1}"];
+  aud_player_HDMI [label="{{<port0> 0} | aud_player_HDMI}"];
+  aud_player_SPDIF [label="{{<port0> 0} | aud_player_SPDIF}"];
+  audio0:port0 -> mixer0:port0;
+  audio1:port0 -> mixer0:port0;
+  mixer0:port1 -> aud_player_Analog0:port0;
+  mixer0:port1 -> aud_player_Analog1:port0;
+  mixer0:port1 -> aud_player_HDMI:port0;
+  mixer0:port1 -> aud_player_SPDIF:port0;
+}
+--------------------------------------
+
+Media Controller
+----------------
+Introduction
+~~~~~~~~~~~~
+The Media Controller (MC) exposes entity that can be connected together.
+
+For each entity there is some internal SW components that realize the function.
+Entities are always visible at MC level even if the underlying components ar not instantiated.
+
+This means entity connection done through the MC are logic connection that will be made real only when SW component are instantiated.
+
+Only IMMUTABLE link are created from the beginning because they apply to static component created at platform initialization.
+
+Last point is that even if all entity are visible, not all the connection are supported today.
+Means connection will occur only at MC graph level but witout any real impact on SW component connection below. These non-supported link are greyed in the following tables.
+
+Audio Mixer - Audio players - Audio readers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The following graph shows the possible link betwenn a single mixer and other entities. There are 4 mixers on the system which share the same properties.
+
+["graphviz"]
+--------------------------------------
+digraph audio_mc {
+  rankdir=LR;
+  node [shape = Mrecord];
+  mixer0 [label="{{<port0> 0} | {<port1> 1} | mixer0 | {<port2> 2}}"];
+  audiox [label="{dvb0.audioX | {<port0> 0}}"];
+  reader0 [label="{aud_reader0 | {<port0> 0}}"];
+  aud_player_Analog0 [label="{{<port0> 0} | aud_player_Analog0}"];
+  aud_player_Analog1 [label="{{<port0> 0} | aud_player_Analog1}"];
+  aud_player_HDMI [label="{{<port0> 0} | aud_player_HDMI}"];
+  aud_player_SPDIF [label="{{<port0> 0} | aud_player_SPDIF}"];
+
+  audiox:port0 -> mixer0:port0;
+  audiox:port0 -> mixer0:port1;
+
+  reader0:port0 -> mixer0:port0;
+  reader0:port0 -> mixer0:port1;
+
+  mixer0:port2 -> aud_player_Analog0:port0;
+  mixer0:port2 -> aud_player_Analog1:port0;
+  mixer0:port2 -> aud_player_HDMI:port0;
+  mixer0:port2 -> aud_player_SPDIF:port0;
+}
+--------------------------------------
+
+Display planes & outputs
+~~~~~~~~~~~~~~~~~~~~~~~~
+The following graph shows the possible links between display planes/output and other entities.
+
+["graphviz"]
+--------------------------------------
+digraph display_mc {
+  rankdir=LR;
+  node [shape = Mrecord];
+  videox [label="{dvb0.videoX | {<port0> 0}}"];
+
+  mgdp1 [label="{{<port0> 0} | Main-GDP1 | {<port1> 1}}"];
+  mgdp2 [label="{{<port0> 0} | Main-GDP2 | {<port1> 1}}"];
+  agdp1 [label="{{<port0> 0} | Aux-GDP1 | {<port1> 1}}"];
+  agdp2 [label="{{<port0> 0} | Aux-GDP2 | {<port1> 1}}"];
+  mvid [label="{{<port0> 0} | Main-VID | {<port1> 1}}"];
+  mpip [label="{{<port0> 0} | Main-PIP | {<port1> 1}}"];
+  avid [label="{{<port0> 0} | Aux-VID | {<port1> 1}}"];
+
+  hdout [label="{{<port0> 0} | analog_hdout0 | {<port1> 1}}"];
+  sdout [label="{{<port0> 0} | analog_sdout0}"];
+
+
+  planes [label="{Planes | {<port0> 0} | {<port1> 1} | {<port2> 2} | {<port3> 3} | {<port4> 4} | {<port5> 5} | {<port6> 6}}" constraint=false];
+
+  videox:port0 -> mvid:port0 [color="red"];
+  videox:port0 -> mpip:port0 [color="red"];
+  videox:port0 -> avid:port0 [color="red"];
+
+  mvid:port1 -> hdout:port0 [color="green"];
+  mpip:port1 -> hdout:port0 [color="green"];
+  mgdp1:port1 -> hdout:port0 [color="green"];
+  mgdp2:port1 -> hdout:port0 [color="green"];
+  avid:port1 -> sdout:port0 [color="green"];
+  agdp1:port1 -> sdout:port0 [color="green"];
+  agdp2:port1 -> sdout:port0 [color="green"];
+
+  hdout:port1 -> mgdp1:port0 [constraint=false color="blue"];
+  hdout:port1 -> mgdp2:port0 [constraint=false color="blue"];
+  hdout:port1 -> agdp1:port0 [constraint=false color="blue"];
+  hdout:port1 -> agdp2:port0 [constraint=false color="blue"];
+
+  planes:port0 -> mgdp1:port0;
+  planes:port1 -> mgdp2:port0;
+  planes:port2 -> agdp1:port0;
+  planes:port3 -> agdp2:port0;
+  planes:port4 -> mvid:port0;
+  planes:port5 -> mpip:port0;
+  planes:port6 -> avid:port0;
+}
+--------------------------------------
+
+
+Encoders
+~~~~~~~~
+The following graph shows the possible links between encoders and other entities.
+
+["graphviz"]
+--------------------------------------
+digraph encoder_mc {
+  rankdir=LR;
+  node [shape = Mrecord];
+  videox [label="{dvb0.videoX | {<port0> 0}}"];
+  audiox [label="{dvb0.audioX | {<port0> 0}}"];
+
+  videncoder0 [label="{{<port0> 0} | vid-encoder-00 | {<port1> 1}}"];
+  audencoder0 [label="{{<port0> 0} | aud-encoder-00 | {<port1> 1}}"];
+
+  Encoder [label="{{<port0> 0} | {<port8> 8} | Encoder | {<port16> 16} | {<port24> 24}}" constraint=false];
+
+  videox:port0 -> videncoder0:port0 [color="red"];
+  audiox:port0 -> audencoder0:port0 [color="red"];
+
+  videncoder0:port1 -> Encoder:port0 [color=gray constraint=false];
+  audencoder0:port1 -> Encoder:port8 [color=gray constraint=false];
+  Encoder:port16 -> videncoder0:port0 [constraint=false];
+  Encoder:port24 -> audencoder0:port0 [constraint=false];
+}
+--------------------------------------
+
+HDMIRx -> HDMITx
+----------------
+Introduction
+~~~~~~~~~~~~
+This solution aims to transmit the received content on HDMIRx port to HDMITx port. This allows the user to plug any HDMI source to the STMicroelectronics SoC based Set Top Box and enjoy the output on the connected Television set.
+
+Devices Supported
+~~~~~~~~~~~~~~~~~
+Cannes2 Cut2
+
+Device Model
+~~~~~~~~~~~~
+
+Data Path Overview
+^^^^^^^^^^^^^^^^^^
+
+["graphviz"]
+--------------------------------------
+digraph hdmirx_to_hdmitx_mc {
+  rankdir = LR;
+  node [shape = Mrecord];
+  hdmirx_port [label="{{<name> vidextin-hdmirx} | {<src> 0}}"];
+  hdmirx_route [label="{{<sink> 0} | {<name> hdmirx0} | {<src_video> 1} | {<src_audio> 2}}"];
+  dvp [label="{{<sink> 0} | {<name> dvp0} | {<src> 1}}"];
+  video_decoder [label="{{<sink> 0} | {<name> v4l2.video0} | {<src> 1}}"];
+  video_plane [label="{{<sink> 0} | {<name> Main-VID} | {<src> 1}}"];
+  video_hdout [label="{{<sink> 0} | {<name> analog_hdout0}}"];
+  mixer [label="{{<sink> 0} | {<name> mixer0} | {<src1> 1} | {<src2> 2} | {<src3> 3} | {<src4> 4}}"];
+  audio_hdout [label="{{<sink> 0} | {<name> aud_player_HDMI}}"];
+  audio_decoder [label="{{<sink> 0} | {<name> v4l2.audio0} | {<src> 1}}"];
+
+  hdmirx_port:src -> hdmirx_route:sink;
+  hdmirx_route:src_video -> dvp:sink;
+  dvp:src -> video_decoder:sink;
+  video_decoder:src -> video_plane:sink;
+  video_plane:src -> video_hdout:sink;
+  mixer:src4 -> audio_hdout:sink;
+  audio_decoder:src -> mixer:sink;
+  hdmirx_route:src_audio -> audio_decoder:sink;
+}
+--------------------------------------
+
+Video Data Path Setup
+^^^^^^^^^^^^^^^^^^^^^
+
+The below is the complete media-ctl connection setup required.
+
+--------------------------------------
+media-ctl -l '"vidextin-hdmirx":0->"hdmirx0":0[1]'
+media-ctl -l '"hdmirx0":1->"dvp0":0[1]'
+media-ctl -l '"dvp0":1->"v4l2.video0":0[1]'
+media-ctl -l '"v4l2.video0":1->"Main-VID":0 [1]'
+media-ctl -l '"Main-VID":1->"analog_hdout0":0[1]'
+--------------------------------------
+
+NOTE: Main-VID earlier connection with a different source needs to be disconnected. For the board boot up in default configuration, connection dvb0.video0 -> Main-VID is present, so, we disconnect.
+
+--------------------------------------
+media-ctl -l '"dvb0.video0":0->"Main-VID":0[0]'
+--------------------------------------
+
+Connections already available at boot time
+--------------------------------------
+media-ctl -l '"Main-VID":1->"analog_hdout0":0[1]'
+--------------------------------------
+
+Audio Data Path Setup
+^^^^^^^^^^^^^^^^^^^^^
+
+--------------------------------------
+media-ctl -l '"vidextin-hdmirx":0->"hdmirx0":0[1]'
+media-ctl -l '"mixer0":4->"aud_player_HDMI":0[1]'
+media-ctl -l '"v4l2.audio0":1->"mixer0":0[1]'
+media-ctl -l '"hdmirx0":2->"v4l2.audio0":0 [1]'
+--------------------------------------
+
+NOTE: mixer0 earlier connection with a different source needs to be disconnected. For the board boot up in default configuration, connection dvb0.audio0 -> mixer0 is present, so, we disconnect.
+
+--------------------------------------
+media-ctl -l '"dvb0.audio0":0->"mixer0":0[0]'
+--------------------------------------
+
+Connections already available at boot time
+--------------------------------------
+media-ctl -l '"mixer0":4->"aud_player_HDMI":0[1]'
+--------------------------------------
+
+V4L2 Subdevices
+~~~~~~~~~~~~~~~
+This contains the new v4l2 subdevices created for realizing this solution.
+
+hdmirx0
+^^^^^^^
+This subdevice exposes the following 3 pads to the user application:
+
+* Pad0: Input Pad
+* Pad1: Video Output Pad
+* Pad2: Audio Output Pad
+
+Events
+++++++
+The events are propagated to the subscribed application using the following structure. For detailed information on this structure, please visit http://linuxtv.org/downloads/v4l-dvb-apis/
+
+------------------------------
+struct v4l2_event {
+	__u32                           type;
+	union {
+		struct v4l2_event_vsync         vsync;
+		struct v4l2_event_ctrl          ctrl;
+		struct v4l2_event_frame_sync    frame_sync;
+		struct v4l2_event_src_change    src_change;
+		__u8                            data[64];
+	} u;
+	__u32                           pending;
+	__u32                           sequence;
+	struct timespec                 timestamp;
+	__u32                           id;
+	__u32                           reserved[8];
+};
+------------------------------
+
+* V4L2_EVENT_STI_HOTPLUG: This event is exposed on *Pad0* to signal to the subscribed application about the plug status of HDMIRx. The status is propagated in the union member *data*.
+  ** u.data[0] = 1 (HPD High, cable plugged in)
+  ** u.data[0] = 0 (HPD Low, cable plugged out)
+
+* V4L2_EVENT_SOURCE_CHANGE: This event is exposed on *Pad1* and *Pad2* to the subscribed application about the change in HDMIRx input. *Pad1* subscription and propagation is for video input change and *Pad2* subscription and propagation is for audio input change.
+  ** u.src_change.changes = V4L2_EVENT_SRC_CH_RESOLUTION
+
+* V4L2_EVENT_STI_HDMI_SIG: This event is exposed on *Pad0* to the subscribed application about the change in HDMIRx input signal status. The signal status is either stable or unstable.
+
+VIDIOC_SUBDEV_G_EDID/VIDIOC_SUBDEV_S_EDID
++++++++++++++++++++++++++++++++++++++++++
+These interfaces allow to get/set EDID on the HDMIRx port. This is useful functionality for repeater Set Top Box, where the application can read EDID from HDMITx of the sink, and program the same to the HDMIRx.
+
+--------------------------
+struct v4l2_subdev_edid {
+	__u32 pad;
+	__u32 start_block;
+	__u32 blocks;
+	__u32 reserved[5];
+	__u8 *edid;
+};
+--------------------------
+
+For detailed information on the usage of these interfaces, please see http://linuxtv.org/downloads/v4l-dvb-apis/
+
+NOTE: The EDID is meant to be read by the source of HDMIRx, so, *Pad0* is used. The implication is that setting/getting EDID is done on *Pad0*
+
+dvp0
+^^^^
+dvp subdevice is the video data capture sub-device. This is used for configuring the capture format. This exposes 2 pads:
+
+* Pad0: Input Pad
+* Pad1: Output Pad
+
+NOTE: Application is only allowed operations on *Pad1*. *Pad0* is the input pad, and the configuration of input is handled transparently.
+
+VIDIOC_SUBDEV_G_FMT/VIDIOC_SUBDEV_S_FMT
++++++++++++++++++++++++++++++++++++++++
+These 2 interfaces are exposed on *Pad1* of dvp subdevice. This represents the source pad for video decoder and presents the capture information to the application from dvp. Following table illustrates the mbus code meaning used for our purpose. Normally, mbus codes are used for signifying the codes flowing on the mbus, not the one stored in the memory. However, for our usage, we are using mbus codes here for memory representations of pixel.
+
+.v4l2_mbus_pixelcode vs Description
+[cols="<,<",options="header",]
+|=======================================================================
+|v4l2_mbus_pixelcode (subdev-dvp) | Description
+|V4L2_MBUS_FMT_RGB888_1X24 | 1 plane, 8 bits per pixel component
+
+|V4L2_MBUS_FMT_YUV8_1X24 | 1 plane, 8 bits per pixel component
+
+|V4L2_MBUS_FMT_RGB101010_1X30 | 1 plane, 10 bits per pixel component
+
+|V4L2_MBUS_FMT_YUV10_1X30 | 1 plane, 10 bits per pixel component
+
+|V4L2_MBUS_FMT_YUYV8_2X8 | 2 Planes, 8 bits per each pixel component, horizontal sub-sampling.
+
+|V4L2_MBUS_FMT_YUYV10_2X10 | 2 Planes, 10 bits per pixel component, horizontal sub-sampling.
+
+|V4L2_MBUS_FMT_YUYV8_1X16 | 1 Plane, 8 bits per pixel component, horizontal sub-sampling
+|=======================================================================
+
+v4l2.video0
+^^^^^^^^^^^
+This is the video decoder subdevice, which is providing an interface for injecting uncompressed data into the Streaming Engine. The data flow is tunneled, so, the user-space application is not required to inject any data nor does this provides any interface for user-space injection.
+
+Controls
+++++++++
+* V4L2_CID_MPEG_STI_HDMI_REPEATER_MODE :  This controls is used to control the low latency mode of Streaming Engine.
+** name = "Video Decoder Repeater Mode"
+** type = V4L2_CTRL_TYPE_INTEGER
+** min = V4L2_CID_MPEG_STI_HDMIRX_DISABLED
+** max = V4L2_CID_MPEG_STI_HDMIRX_NON_REPEATER
+** default = V4L2_CID_MPEG_STI_HDMIRX_DISABLED
+** ST Proprietary
+
+NOTE:  This control is given for both audio/video as the hdmirx input signal can be video only (DVI) or audio only too. For an HDMI input signal, this control be either set on v4l2.video or v4l2.audio as both are linked to a single playback and will be aligned automatically to same value of this control.
+
+IOCTL
++++++
+* VIDIOC_SUBDEV_STI_STREAMON: Start the decoder
+** ST Proprietary
+
+* VIDIOC_SUBDEV_STI_STREAMOFF: Stop the decoder
+** ST Proprietary
+
+v4l2.audio
+^^^^^^^^^^
+This is the audio decoder and capture subdevice, which is providing an interface for injecting audio (PCM/compressed) data into the Streaming Engine. The data flow is tunneled, so, the user-space application is not required to inject any data nor does this provides any interface for user-space injection.
+
+Controls
+++++++++
+* V4L2_CID_MPEG_STI_HDMI_REPEATER_MODE :  This controls is used to control the low latency mode of Streaming Engine.
+** name = "Audio Decoder Repeater Mode",
+** type = V4L2_CTRL_TYPE_INTEGER,
+** min = V4L2_CID_MPEG_STI_HDMIRX_DISABLED,
+** max = V4L2_CID_MPEG_STI_HDMIRX_NON_REPEATER,
+** def = V4L2_CID_MPEG_STI_HDMIRX_DISABLED,
+** ST Proprietary
+
+NOTE:  This control is given for both audio/video as the hdmirx input signal can be video only (DVI) or audio only too. For an HDMI input signal, this control be either set on v4l2.video or v4l2.audio as both are linked to a single playback and will be aligned automatically to same value of this control.
+
+IOCTL
++++++
+* VIDIOC_SUBDEV_STI_STREAMON: Start the decoder
+** ST Proprietary
+
+* VIDIOC_SUBDEV_STI_STREAMOFF: Stop the decoder
+** ST Proprietary
+
+Application notes
+-----------------
+TBD
+
+SDK2-12 additions over SDK2-10
+------------------------------
+
+LDVB Audio
+~~~~~~~~~~
+
+- Audio Channel Assignemt : This structure will provide the channel map information which are returned by the AUDIO_GET_EVENT call.
+
+-----------------------------
+typedef struct audio_channel_assignment {
+	unsigned int pair0:6;
+	unsigned int pair1:6;
+	unsigned int pair2:6;
+	unsigned int pair3:6;
+	unsigned int pair4:6;
+	unsigned int reserved0:1;
+	unsigned int malleable:1;
+} audio_channel_assignment_t;
+-----------------------------
+
+- Audio Events: Following are the newly added audio events
+
+  * AUDIO_EVENT_END_OF_STREAM: This event reports that an end-of-stream marker has reached the output of the decoder.
+  * AUDIO_EVENT_FRAME_STARVATION: This event reports that the audio decoder has not been fed with compressed data for an unexpected period of time and all the internal queues of the pipeline are empty.
+  * AUDIO_EVENT_FRAME_SUPPLIED: This event reports that the audio decoder has started playing out new decoded data. It is sent on startup, when exiting a pause or when data is being fed again after a starvation.
+
+- Audio Command: Audio command is now available for setting playback and playstream controls through following structures
+
+-------------------------
+struct audio_command {
+	unsigned int cmd;
+#define AUDIO_CMD_SET_OPTION 1
+	union {
+		audio_option_t option;
+	} u;
+}
+
+typedef struct audio_option_s {
+	unsigned int option;
+	unsigned int value;
+} audio_option_t;
+-------------------------
+
+- IOCTL's added
+
+  * AUDIO_STREAM_DOWNMIX: This ioctl allow to specify how the audio stream should be rendered to the speakers. It allows to set the varios downmix configuration.
+  * AUDIO_STREAMDRIVEN_STEREO: This ioctl allow to specify whether to apply the stereo downmix recommended in the decoded stream.
+  * AUDIO_COMMAND: This ioctl allows to set the various audio command to decoder
+
+LDVB Video
+~~~~~~~~~~
+
+- Video Events: Following are the newly added video events.
+
+  * VIDEO_EVENT_LOST: This event reports that the internal decoder event queue overflowed and the last event have been discarded and replaced with this event.
+  * VIDEO_EVENT_END_OF_STREAM: This event reports that an end-of-stream marker has reached the output of the decoder.
+  * VIDEO_EVENT_FRAME_STARVATION: This event reports that an end-of-stream marker has reached the output of the decoder.
+  * VIDEO_EVENT_FRAME_SUPPLIED: This event reports that the video decoder has started playing out new decoded data.
+
+- Playback control:  Newly added playback controls are as follows:
+
+  * DVB_OPTION_CTRL_VIDEO_MEMORY_PROFILE: This control allows to set the maximum usable memory size for video decoders (applies to codecs video h264/hevc)
+
+LDVB Demux
+~~~~~~~~~~
+- IOCTL's added
+
+  * DMX_FLUSH_CHANNEL: This ioctl call is used to flush the filtered data held by Transport Engine in an intermiediate buffer.
+
+V4L2: AV Decoder
+~~~~~~~~~~~~~~~~
+
+- Controls renaming: V4L2 controls name have changed after moving the control management to V4L2 control framework
+
+  * V4L2_CID_STM_BLANK renamed to V4L2_CID_MPEG_STM_VIDEO_DECODER_BLANK
+  * V4L2_CID_STM_PLANE_ASPECT_RATIO_CONV_MODE renamed to V4L2_CID_STM_ASPECT_RATIO_CONV_MODE
+  * V4L2_CID_STM_OUTPUT_DISPLAY_ASPECT_RATIO renamed to V4L2_CID_DV_STM_TX_ASPECT_RATIO
+  * V4L2_CID_STM_PLANE_INPUT_WINDOW_MODE renamed to V4L2_CID_STM_INPUT_WINDOW_MODE
+  * V4L2_CID_STM_PLANE_OUTPUT_WINDOW_MODE renamed to V4L2_CID_STM_OUTPUT_WINDOW_MODE
+
+- Control classes for all the controls have been updated
+
+- Metadata information about grabbed data is now available through reserved field of struct v4l2_buffer if required
+
+V4L2: Planes
+~~~~~~~~~~~~
+
+- Controls
+  * Deprecated controls are now appended with __deprecated_ keyword and are removed from this document.
+
+- Control classes for all the controls have been updated
+
+V4L2: Encoders
+~~~~~~~~~~~~~~
+
+- Controls renaming: V4L2 controls name have changed after moving the control management to V4L2 control framework
+
+  * V4L2_CID_STM_DEI_SET_MODE renamed to V4L2_CID_MPEG_STM_VIDEO_H264_DEI_SET_MODE
+  * V4L2_CID_STM_NOISE_FILTERING renamed to V4L2_CID_MPEG_STM_VIDEO_H264_NOISE_FILTERING
+  * V4L2_CID_MPEG_STM_AUDIO_AAC_BITRATE renamed to V4L2_CID_MPEG_AUDIO_AAC_BITRATE
+  * V4L2_CID_MPEG_STM_AUDIO_AC3_BITRATE renamed to V4L2_CID_MPEG_AUDIO_AC3_BITRATE
+  * V4L2_CID_MPEG_STM_AUDIO_L3_BITRATE renamed to V4L2_CID_MPEG_AUDIO_L3_BITRATE
+  * 4L2_CID_MPEG_STM_AUDIO_CRC renamed to V4L2_CID_MPEG_AUDIO_CRC
+  * V4L2_CID_MPEG_STM_AUDIO_SAMPLING_FREQ renamed to V4L2_CID_MPEG_AUDIO_SAMPLING_FREQ
+
+- Control classes for all the controls have been updated
+
+Revision history
+----------------
+[option="header"]
+|===
+|*Date*		|*Revision*	|*Changes*
+|02-Oct-2012	|0.8		|Initial release for SDK2-06.5.
+|26-Nov-2012	|0.85		|Adding MC, Alsa, Audio encode and output capture description for SDK2-07
+|11-Jan-2013	|0.86		|Merged TSMux chapter with latest version of this document.
+|02-Apr-2013	|0.87		|Update based on SDK2-09 delivery
+|01-Jul-2013	|0.88		|Update for the SDK2-10 delivery
+|05-Jul-2013	|0.89		|Add TSMux Indexing API
+|15-Jan-2014	|0.90		|Updated the V4L2 Controls information for AV decoder, Planes, Encoder and TSMUX. Some generic changes have been incorporated.
+|===
+
+Annexure
+--------
+CONFIDENTIALITY OBLIGATIONS:
+
+This document contains sensitive information.
+Its distribution is subject to the signature of a Non-Disclosure Agreement (NDA).
+It is classified “*CONFIDENTIAL*”.
+At all times you should comply with the following security rules
+(Refer to NDA for detailed obligations):
+Do not copy or reproduce all or part of this document
+Keep this document locked away
+Further copies can be provided on a “need to know basis”, please contact your local ST sales office.
+
+[grid="none", align="center", frame="none"]
+|===
+|Please Read Carefully:
+|===
+
+Information in this document is provided solely in connection with ST products. STMicroelectronics NV and its subsidiaries (“ST”) reserve the right to make changes, corrections, modifications or improvements, to this document, and the products and services described herein at any time, without notice.
+
+All ST products are sold pursuant to ST’s terms and conditions of sale.
+Purchasers are solely responsible for the choice, selection and use of the ST products and services described herein, and ST assumes no liability whatsoever relating to the choice, selection or use of the ST products and services described herein.
+
+No license, express or implied, by estoppel or otherwise, to any intellectual property rights is granted under this document. If any part of this document refers to any third party products or services it shall not be deemed a license grant by ST for the use of such third party products or services, or any intellectual property contained therein or considered as a warranty covering the use in any manner whatsoever of such third party products or services or any intellectual property contained therein.
+
+*UNLESS OTHERWISE SET FORTH IN ST’S TERMS AND CONDITIONS OF SALE ST DISCLAIMS ANY EXPRESS OR IMPLIED WARRANTY WITH RESPECT TO THE USE AND/OR SALE OF ST PRODUCTS INCLUDING WITHOUT LIMITATION IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE (AND THEIR EQUIVALENTS UNDER THE LAWS OF ANY JURISDICTION), OR INFRINGEMENT OF ANY PATENT, COPYRIGHT OR OTHER INTELLECTUAL PROPERTY RIGHT.*
+
+*UNLESS EXPRESSLY APPROVED IN WRITING BY TWO AUTHORIZED ST REPRESENTATIVES, ST PRODUCTS ARE NOT RECOMMENDED, AUTHORIZED OR WARRANTED FOR USE IN MILITARY, AIR CRAFT, SPACE, LIFE SAVING, OR LIFE SUSTAINING APPLICATIONS, NOR IN PRODUCTS OR SYSTEMS WHERE FAILURE OR MALFUNCTION MAY RESULT IN PERSONAL INJURY, DEATH, OR SEVERE PROPERTY OR ENVIRONMENTAL DAMAGE. ST PRODUCTS WHICH ARE NOT SPECIFIED AS "AUTOMOTIVE GRADE" MAY ONLY BE USED IN AUTOMOTIVE APPLICATIONS AT USER’S OWN RISK.*
+
+Resale of ST products with provisions different from the statements and/or technical features set forth in this document shall immediately void any warranty granted by ST for the ST product or service described herein and shall not create or extend in any manner whatsoever, any liability of ST.
+
+[grid="none", align="center", frame="none"]
+|===
+|ST and the ST logo are trademarks or registered trademarks of ST in various countries.
+
+Information in this document supersedes and replaces all information previously supplied.
+
+The ST logo is a registered trademark of STMicroelectronics. All other names are the property of their respective owners.
+
+(c) 2012 STMicroelectronics - All rights reserved
+
+STMicroelectronics group of companies
+
+Australia - Belgium - Brazil - Canada - China - Czech Republic - Finland - France - Germany - Hong Kong - India - Israel - Italy - Japan - Malaysia - Malta – Morocco - Philippines - Singapore - Spain - Sweden - Switzerland - United Kingdom - United States of America
+
+*www.st.com*
+|===

@@ -1,0 +1,59 @@
+ST HCD (Host Controller Driver) for USB 2.0 and 1.1
+
+The device node has following properties.
+
+Required properties:
+ - compatible: must be "st,usb-3000-065lp"
+ - st,amba-config: stbus to amba bridge settings to configure usb2 plug.
+ - reg: physical base addresses of the controller and length of memory mapped
+   region.
+ - reg-names: Names associated to the reg defines above.
+   Should be "ehci", "ohci" and "protocol".
+ - interrupts: interrupt numbers to the cpu.
+ - interrupt-names: should be "ehci" and "ohci".
+ - pinctrl-names, pinctrl-0: the pincontrol settings to configure muxing
+   properly for USB pins.
+ - clocks: from common clock binding: handle to usb clocks.
+ - clock-names: from common clock binding:
+   Must be "ic" for the interconnect clock and "ohci" for the 48MHz clock.
+ - resets, reset-names: the power-down and soft-reset lines of USB IP.
+   Associated names must be "powerdown" and "softreset".
+
+Example:
+
+st_usb_bus_config: st-usb-amba-config {
+			st,bridge_type2;
+			st,sd_config_missing;
+			st,complete_on_error;
+			st,read_ahead;
+			st,max_opcode_LD64_ST64;
+			st,chunks_in_msg = <0>;
+			st,packets_in_chunk = <2>;
+			st,threshold = <256>;
+		};
+
+usb0: usb@fe100000 {
+	compatible	= "st,usb-3000-065lp";
+	st,amba-config = <&st_usb_bus_config>;
+	reg		= <0xfe1ffc00 0x100>,
+			  <0xfe1ffe00 0x100>;
+			  <0xfe1fff00 0x100>;
+	reg-names	= "ohci", "ehci", "protocol";
+
+	interrupts	=  <0 148 0>, <0 149 0>;
+	interrupt-names	= "ehci","ohci";
+	pinctrl-names	= "default";
+	pinctrl-0	= <&pinctrl_usb0>;
+	clocks		= <&CLK_S_ICN_IF_2>,
+			  <&CLK_S_USB48>;
+	clock-names	= "ic", "ohci";
+
+	resets		= <&powerdown STIH416_USB0_POWERDOWN>,
+			  <&softreset STIH416_USB0_SOFTRESET>;
+	reset-names	= "power", "softreset";
+
+	phys = <&usb2_phy>;
+	phy-names = "usb2-phy";
+};
+
+

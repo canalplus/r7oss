@@ -1,0 +1,232 @@
+--- ../alsa-kernel/core/sound.c	2007-12-20 10:18:40.000000000 +0100
++++ sound.c	2007-12-20 10:49:54.000000000 +0100
+@@ -1,3 +1,4 @@
++#include "adriver.h"
+ /*
+  *  Advanced Linux Sound Architecture
+  *  Copyright (c) by Jaroslav Kysela <perex@perex.cz>
+@@ -40,6 +41,9 @@
+ EXPORT_SYMBOL(snd_major);
+ 
+ static int cards_limit = 1;
++#ifdef CONFIG_DEVFS_FS
++static int device_mode = S_IFCHR | S_IRUGO | S_IWUGO;
++#endif
+ 
+ MODULE_AUTHOR("Jaroslav Kysela <perex@perex.cz>");
+ MODULE_DESCRIPTION("Advanced Linux Sound Architecture driver for soundcards.");
+@@ -48,6 +52,10 @@
+ MODULE_PARM_DESC(major, "Major # for sound driver.");
+ module_param(cards_limit, int, 0444);
+ MODULE_PARM_DESC(cards_limit, "Count of auto-loadable soundcards.");
++#ifdef CONFIG_DEVFS_FS
++module_param(device_mode, int, 0444);
++MODULE_PARM_DESC(device_mode, "Device file permission mask for devfs.");
++#endif
+ MODULE_ALIAS_CHARDEV_MAJOR(CONFIG_SND_MAJOR);
+ 
+ /* this one holds the actual max. card number currently available.
+@@ -169,7 +177,9 @@
+ 
+ static const struct file_operations snd_fops =
+ {
++#ifndef LINUX_2_2
+ 	.owner =	THIS_MODULE,
++#endif
+ 	.open =		snd_open
+ };
+ 
+@@ -241,7 +251,11 @@
+ 	struct snd_minor *preg;
+ 
+ 	snd_assert(name, return -EINVAL);
++#ifdef CONFIG_DEVFS_FS
++	preg = kmalloc(sizeof(*preg) + strlen(name) + 1, GFP_KERNEL);
++#else
+ 	preg = kmalloc(sizeof *preg, GFP_KERNEL);
++#endif
+ 	if (preg == NULL)
+ 		return -ENOMEM;
+ 	preg->type = type;
+@@ -249,6 +263,9 @@
+ 	preg->device = dev;
+ 	preg->f_ops = f_ops;
+ 	preg->private_data = private_data;
++#ifdef CONFIG_DEVFS_FS
++	strcpy((char *)(preg + 1), name);
++#endif
+ 	mutex_lock(&sound_mutex);
+ #ifdef CONFIG_SND_DYNAMIC_MINORS
+ 	minor = snd_find_free_minor();
+@@ -263,6 +280,12 @@
+ 		return minor;
+ 	}
+ 	snd_minors[minor] = preg;
++#ifdef CONFIG_DEVFS_FS
++	if (type != SNDRV_DEVICE_TYPE_CONTROL || preg->card >= cards_limit)
++		devfs_mk_cdev(MKDEV(major, minor), S_IFCHR | device_mode,
++			      "snd/%s", name);
++#endif
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20)
+ 	preg->dev = device_create(sound_class, device, MKDEV(major, minor),
+ 				  "%s", name);
+ 	if (IS_ERR(preg->dev)) {
+@@ -275,6 +298,16 @@
+ 
+ 	if (preg->dev)
+ 		dev_set_drvdata(preg->dev, private_data);
++#elif defined(CONFIG_SND_HAVE_CLASS_SIMPLE)
++	class_simple_device_add((struct class_simple *)sound_class,
++				MKDEV(major, minor), device, name);
++#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 2)
++	preg->dev = (struct device *)class_device_create(sound_class, NULL,
++							 MKDEV(major, minor),
++						         device, "%s", name);
++	if (preg->dev)
++		class_set_devdata((struct class_device *)preg->dev, private_data);
++#endif
+ 
+ 	mutex_unlock(&sound_mutex);
+ 	return 0;
+@@ -314,6 +347,9 @@
+ int snd_unregister_device(int type, struct snd_card *card, int dev)
+ {
+ 	int minor;
++#ifdef CONFIG_DEVFS_FS
++	struct snd_minor *mptr;
++#endif
+ 
+ 	mutex_lock(&sound_mutex);
+ 	minor = find_snd_minor(type, card, dev);
+@@ -322,7 +358,20 @@
+ 		return -EINVAL;
+ 	}
+ 
++#ifdef CONFIG_DEVFS_FS
++	mptr = snd_minors[minor];
++	if (mptr->type != SNDRV_DEVICE_TYPE_CONTROL ||
++	    mptr->card >= cards_limit) /* created in sound.c */
++		devfs_remove("snd/%s", (char *)(mptr + 1));
++#endif
++
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20)
+ 	device_destroy(sound_class, MKDEV(major, minor));
++#elif defined(CONFIG_SND_HAVE_CLASS_SIMPLE)
++	class_simple_device_remove(MKDEV(major, minor));
++#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 2)
++	class_device_destroy(sound_class, MKDEV(major, minor));
++#endif
+ 
+ 	kfree(snd_minors[minor]);
+ 	snd_minors[minor] = NULL;
+@@ -335,16 +384,28 @@
+ int snd_add_device_sysfs_file(int type, struct snd_card *card, int dev,
+ 			      struct device_attribute *attr)
+ {
++#if defined(CONFIG_SND_HAVE_CLASS_SIMPLE) || LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 2)
++	return -EINVAL;
++#else
+ 	int minor, ret = -EINVAL;
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20)
+ 	struct device *d;
++#else
++	struct class_device *d;
++#endif
+ 
+ 	mutex_lock(&sound_mutex);
+ 	minor = find_snd_minor(type, card, dev);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20)
+ 	if (minor >= 0 && (d = snd_minors[minor]->dev) != NULL)
+ 		ret = device_create_file(d, attr);
++#else
++	if (minor >= 0 && (d = (struct class_device *)snd_minors[minor]->dev) != NULL)
++		ret = class_device_create_file(d, (const struct class_device_attribute *)attr);
++#endif
+ 	mutex_unlock(&sound_mutex);
+ 	return ret;
+-
++#endif
+ }
+ 
+ EXPORT_SYMBOL(snd_add_device_sysfs_file);
+@@ -430,31 +491,80 @@
+  *  INIT PART
+  */
+ 
++#ifdef CONFIG_SND_DEBUG_MEMORY
++extern void snd_memory_done(void);
++#else
++#define snd_memory_done()
++#endif
++#if defined(CONFIG_SND_DEBUG_MEMORY) && defined(CONFIG_PROC_FS)
++extern int snd_memory_info_init(void);
++extern void snd_memory_info_done(void);
++#else
++#define snd_memory_info_init()
++#define snd_memory_info_done()
++#endif
++
+ static int __init alsa_sound_init(void)
+ {
+ 	snd_major = major;
+ 	snd_ecards_limit = cards_limit;
++#ifdef CONFIG_DEVFS_FS
++	devfs_mk_dir("snd");
++#endif
+ 	if (register_chrdev(major, "alsa", &snd_fops)) {
+ 		snd_printk(KERN_ERR "unable to register native major device number %d\n", major);
++#ifdef CONFIG_DEVFS_FS
++		devfs_remove("snd");
++#endif
+ 		return -EIO;
+ 	}
+ 	if (snd_info_init() < 0) {
+ 		unregister_chrdev(major, "alsa");
++		snd_memory_done();
+ 		return -ENOMEM;
+ 	}
++	snd_memory_info_init();
+ 	snd_info_minor_register();
++#ifdef CONFIG_DEVFS_FS
++	{
++		short controlnum;
++		for (controlnum = 0; controlnum < cards_limit; controlnum++)
++			devfs_mk_cdev(MKDEV(major, controlnum<<5),
++				      S_IFCHR | device_mode ,
++				      "snd/controlC%d", controlnum);
++	}
++#endif
+ #ifndef MODULE
+ 	printk(KERN_INFO "Advanced Linux Sound Architecture Driver Version " CONFIG_SND_VERSION CONFIG_SND_DATE ".\n");
+ #endif
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,3,0) && defined(CONFIG_APM)
++	pm_init();
++#endif
+ 	return 0;
+ }
+ 
+ static void __exit alsa_sound_exit(void)
+ {
++#ifdef CONFIG_DEVFS_FS
++	short controlnum;
++	for (controlnum = 0; controlnum < cards_limit; controlnum++)
++		devfs_remove("snd/controlC%d", controlnum);
++#endif
++
+ 	snd_info_minor_unregister();
++	snd_memory_info_done();
+ 	snd_info_done();
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,3,0) && defined(CONFIG_APM)
++	pm_done();
++#endif
+ 	unregister_chrdev(major, "alsa");
++	snd_memory_done();
++#ifdef CONFIG_DEVFS_FS
++	devfs_remove("snd");
++#endif
+ }
+ 
+ module_init(alsa_sound_init)
+ module_exit(alsa_sound_exit)
++
++#include "sound.inc"

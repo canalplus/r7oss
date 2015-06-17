@@ -1,0 +1,653 @@
+#!/usr/bin/perl
+#
+# Copyright (c) 2011-2012 STMicroelectronics Limited
+#
+
+use strict;
+
+use Getopt::Long;
+use FindBin;
+use File::Copy;
+use File::Spec;
+use File::Temp;
+use English;
+use File::Spec::Functions;
+
+my $toolprefix=$ENV{STLINUX_ARM_BOOT_TOOL_PREFIX};
+$toolprefix="armv7-linux-" unless length($toolprefix);
+my $toolarch=$ENV{STLINUX_ARM_BOOT_ARCH};
+$toolarch="armv7" unless length($toolarch);
+
+my $scriptname=$FindBin::Script;
+my $objcopy="${toolprefix}objcopy";
+my $objdump="${toolprefix}objdump";
+my $readelf="${toolprefix}readelf";
+my $gdb="${toolprefix}gdb";
+my $fdtput="fdtput";
+
+my $temptemplate=File::Spec->catfile(File::Spec->tmpdir(), "${scriptname}_XXXXXXXX");
+
+if ($#ARGV == -1) {
+    usage();
+}
+
+our ($opt_a, $opt_A, $opt_b, $opt_h, $opt_K, $opt_m, $opt_M, $opt_n, $opt_L, $opt_P, $opt_r, $opt_s, $opt_S, $opt_t, $opt_u, $opt_z, $opt_dtb, $opt_dtaddr);
+our (@opt_x, @opt_ex, @opt_xpc, @opt_expc, @opt_xpk, @opt_expk, @opt_d);
+
+# Make options case sensitive
+use Getopt::Long qw(:config no_ignore_case);
+
+my @opts = (
+    "a=s",
+    "A|attach=s",
+    "b=s",
+    "h|help",
+    "dtb=s",
+    "dtaddr=s",
+    "K",
+    "m=s",
+    "M",
+    "n",
+    "L|no-linux-awareness",
+    "x|command=s@",
+    "ex|eval-command=s@",
+    "xpc|command-post-connect=s@",
+    "expc|eval-command-post-connect=s@",
+    "xpk|command-post-kernel=s@",
+    "expk|eval-command-post-kernel=s@",
+    "d|directory=s@",
+    "P",
+    "r",
+    "s=s",
+    "S|smp",
+    "t=s",
+    "u|non-smp",
+    "z=s"
+);
+
+$opt_b="vmlinux";
+
+GetOptions(@opts) or die "Illegal command line option\n";
+
+if ($opt_h) {
+	usage();
+}
+
+die "No target specified\n" unless $opt_t;
+
+if ($opt_u && $opt_S) {
+	print "Illegal option combination: -u/--non-smp and -s/--smp\n";
+	exit 1;
+}
+
+if (exists_on_path($objcopy) == 0) {
+	die "$scriptname: $objcopy must be on the \$PATH\n";
+}
+
+if (exists_on_path($objdump) == 0) {
+	die "$scriptname: $objdump must be on the \$PATH\n";
+}
+
+if (exists_on_path($readelf) == 0) {
+	die "$scriptname: $readelf must be on the \$PATH\n";
+}
+
+if (exists_on_path($gdb) == 0) {
+	die "$scriptname: $gdb must be on the \$PATH\n";
+}
+
+# Set so that SMP detection works
+if ($opt_A) {
+	$opt_b = $opt_A;
+}
+
+# STWorkbench might supply "-n", but it doesn't mean it.
+if ($opt_M) {
+	$opt_n = 0;
+}
+
+# Do not enable Linux Awareness with -r or -n, as we don't want the Linux
+# Awareness Layer trying to access virtual addresses before the kernel
+# turns the MMU on.
+if ((!$opt_A) && ($opt_r || $opt_n)) {
+	print "Warning: disabling Linux kernel awareness layer due to -r or -n options.\n";
+	$opt_L = 1;
+}
+
+# Get the name of the secondard startup func in this kernel
+my $secondary_startup_func = "";
+
+open(PIPE, "$objdump -x $opt_b|")
+	or die "$scriptname: unable to spawn $objdump ($!)";
+while (<PIPE>) {
+	if ( (/init.*\s+[[:xdigit:]]+\s+(\S+secondary_startup)$/) ||
+	     (/text.*\s+[[:xdigit:]]+\s+(\S+secondary_startup)$/) ) {
+		$secondary_startup_func = $1;
+		last;
+	}
+}
+close(PIPE);
+
+if ((!$opt_u) && (!$opt_S)) {
+	# Auto-detecting SMP
+	if ($secondary_startup_func eq "") {
+		print "Kernel auto-detected as non-SMP\n";
+	} else {
+		print "Kernel auto-detected as SMP\n";
+		$opt_S = 1;
+	}
+}
+
+if ($opt_S && $secondary_startup_func eq "") {
+	die "Cannot detect SMP secondary startup function in '$opt_b'.\nPlease confirm the kernel is configured for SMP, or remove -S flag to boot with a single core.\n";
+}
+
+if ($opt_u && $secondary_startup_func ne "") {
+	print "SMP kernel detected; non-SMP boot forced with -u/--non-smp.\n";
+}
+
+if ($opt_S) {
+	# Add the smp_mode targetpack parameter
+	$opt_t .= ",smp_mode=1";
+}
+
+my @extra_argv = ();
+if ($opt_u) {
+	# Add the maxcpus=1 boot argument
+	push @extra_argv, "maxcpus=1";
+}
+
+my $remove_temp = 1;
+if ($opt_K) {
+    $remove_temp = 0
+}
+
+my ($script, $script_file) = File::Temp::tempfile($temptemplate, UNLINK => $remove_temp, SUFFIX => ".$$");
+die "Unable to create gdb script file: $!\n" unless defined($script);
+
+if ($opt_K) {
+    print "Created temporary script file: $script_file\n";
+}
+
+my $dtb_file;
+if ($opt_dtb) {
+	(undef, $dtb_file) = File::Temp::tempfile($temptemplate, UNLINK => $remove_temp, SUFFIX => ".$$");
+	die "Unable to create device tree blob file: $!\n" unless defined($dtb_file);
+
+	if ($opt_K) {
+	    print "Created temporary device tree blob file: $dtb_file\n";
+	}
+
+	copy($opt_dtb, $dtb_file) or die "$scriptname: unable to copy '$opt_dtb' to '$dtb_file' ($!)";
+	print "Booting from device tree blob $dtb_file \n"
+}
+
+my @options = ();
+
+if ($opt_P) {
+  push @options, "--eval-command", "set pagination on";
+} else {
+  push @options, "--eval-command", "set pagination off";
+}
+
+push @options, map {("--directory", $_)} @opt_d;
+push @options, map {("--command", $_)} @opt_x;
+push @options, map {("--eval-command", $_)} @opt_ex;
+push @options, ("--interpreter", "mi") if ($opt_M);
+
+if ($opt_A) {
+#
+## ======  ATTACH use-case ======
+#
+    # Connect to the target
+    print $script "armtp $opt_t,no_pokes=1,no_reset=1\n";
+    print $script "printf \"Attaching kernel image:$opt_A\\n\"\n";
+    if ($opt_L) {
+        print $script "set linux-awareness auto_activate off\n";
+    }
+    print $script "symbol-file $opt_A\n";
+    if (!$opt_L) {
+        print $script "set linux-awareness loaded on\n";
+    }
+    # Evaluate the post connect commands
+    foreach my $c (@opt_xpc) {
+        print $script "source $c\n";
+    }
+    foreach my $c (@opt_expc) {
+        print $script "$c\n";
+    }
+    if (!$opt_n)  {
+        print $script "continue\n";
+    }
+}
+else {
+#
+## ======  LOAD use-case ======
+#
+
+# Remove the .note.gnu.build-id section from vmlinux if it exists
+my $gnu_build_id_present = 0;
+open(PIPE, "$objdump -x $opt_b|")
+	or die "$scriptname: unable to spawn $objdump ($!)";
+while (<PIPE>) {
+	if (/note.gnu.build-id/) {
+		$gnu_build_id_present = 1;
+		last;
+	}
+}
+close(PIPE);
+
+# This section will be moved to a sensible location and renamed in future kernels.
+# (when it's present, and claimed to be at 0x00000000, GDB gets very confused)
+if ($gnu_build_id_present == 1) {
+	print "Stripping .note.gnu.build-id section from $opt_b\n";
+	system($objcopy, "--remove-section=.note.gnu.build-id", $opt_b) == 0
+		or die "$scriptname: unable to spawn $objcopy ($?)";
+}
+
+# Grab the kernel entry point
+my $entry_point = "";
+open(PIPE, "$readelf -l $opt_b|")
+	or die "$scriptname: unable to spawn $readelf ($!)";
+while (<PIPE>) {
+	if (/^Entry point\s+(0x[[:xdigit:]]+)$/) {
+		$entry_point = $1;
+		last;
+	}
+}
+close(PIPE);
+
+my $param_addr=0x100;
+
+# Extract the targetpack name, to use for looking the board up
+# in the machtypes file.
+my @tokens = split(/:/, $opt_t);
+my $selected_tp = $tokens[1];
+
+# Find the machtypes file, taking in order of preference:
+#  - the current working directory
+#  - the user's home directory
+#  - the devkit/$toolarch/etc directory of the distribution containing this script
+#  - the devkit/$toolarch/etc of the distribution in it's default location in /opt
+my $machtypes = "stlinux_arm_machtypes";
+my @machfiles = (
+	$machtypes,
+	"$ENV{HOME}/$machtypes",
+	"$FindBin::Bin/../etc/$machtypes",
+	"/opt/STM/STLinux-2.4/devkit/$toolarch/etc/$machtypes"
+);
+my $machfile = "";
+foreach my $f (@machfiles) {
+	if (-e $f) {
+		$machfile = $f;
+		last;
+	}
+}
+
+if ($machfile eq "") {
+	print "Couldn't find a machfile!\n";
+	exit 1;
+}
+
+# Parse the machtypes file to get the machine type and base of physical memory
+# that correspond to this targetpack.
+my ($machtype, $baseaddr, $memsize);
+my $foundMachType = 0;
+open (MACHFILE, $machfile);
+foreach my $line (<MACHFILE>)
+{
+	# Lines starting with # are comments
+	if (!($line =~ /^\#/)) {
+		my @tokens = split(/,/, $line);
+		if ($tokens[0] eq $selected_tp) {
+			$foundMachType = 1;
+			$machtype = $tokens[1];
+			$baseaddr = $tokens[2];
+			chomp($baseaddr);
+			$memsize = $tokens[3];
+		}
+	}
+}
+close (MACHFILE);
+
+if ($foundMachType == 0) {
+	die "Error: no entry in $machtypes for targetpack $selected_tp.\n";
+}
+
+# Override the machtype, base and size of physical memory from machtypes file
+# if they're given on the command line
+if ($opt_a) {
+	$baseaddr = $opt_a;
+}
+
+if ($opt_m) {
+	$machtype = $opt_m;
+}
+
+if ($opt_s) {
+	$memsize = $opt_s;
+}
+
+# Create a copy of kernel linked at physical addresses
+my $linkaddr = hex($entry_point)-0x8000;
+
+my $addrincr;
+if ($linkaddr > hex($baseaddr)) {
+	$addrincr = sprintf("-0x%08x", $linkaddr-hex($baseaddr));
+} else {
+	$addrincr = sprintf("+0x%08x", hex($baseaddr)-$linkaddr);
+}
+
+my (undef, $vmlinuxtmp) = File::Temp::tempfile($temptemplate, UNLINK => $remove_temp, SUFFIX => ".$$");
+
+if ($opt_K) {
+    print "Created temporary vmlinux load file: $vmlinuxtmp\n";
+}
+
+system($objcopy, "--change-addresses=$addrincr", "--strip-debug", "--remove-section=.note.gnu.build-id", $opt_b, $vmlinuxtmp) == 0
+    or die "$scriptname: unable to spawn $objcopy ($?)";
+
+# Pull out the load address and the filename of the ramdisk
+my ($initrd_addr, $initrd_file);
+if ($opt_z) {
+    ($initrd_addr, $initrd_file) = split(/,/, $opt_z);
+    $initrd_addr=oct($initrd_addr);	# Force to a number
+}
+
+# TODO is this OK if the kernel is relocated above the base of physical memory?
+$opt_t .= ",stmc_core_param_init_regs=".sprintf("0x%08x", hex($baseaddr)+0x8000);
+
+print $script "armtp $opt_t\n";
+
+# Write out the parameters
+if (defined($param_addr)) {
+    my $data="";
+
+    # Create the "core" element tag, we have to have this.
+    $data=write_atag($data, (tag_size("core"), ATAG_MKTAG(1), 0x0, 0x0, 0x0));
+
+    if ($opt_z) {
+	my $size = -s $initrd_file;
+	$data=write_atag($data, (tag_size("initrd"), ATAG_MKTAG_NEW(5), $initrd_addr, $size));
+    }
+
+    # Create the "mem" element tag
+    $data=write_atag($data, (tag_size("mem"), ATAG_MKTAG(2), hex($memsize), hex($baseaddr)));
+
+    # Don't output the cmdline atag unless some params have been specified. This allows
+    # built-in cmdlines to be used (although params passed to this script have precedence).
+    if (scalar(@ARGV)) {
+        my $flatten=join(" ", @ARGV, @extra_argv)."\000"; # Include \0 teminator
+        if (length($flatten)%4) {
+          $flatten .= "\000"x(4-(length($flatten)%4)); # Pad with \0 to word align
+        }
+        $data=write_atag($data, (tag_size("cmdline")+(length($flatten)/4), ATAG_MKTAG(9)));
+        $data=write_block($data, $flatten);
+
+	if ($opt_dtb) {
+		system($fdtput, "-ts", $dtb_file, "/chosen", "bootargs", $flatten) == 0
+		or die "$0: unable to spawn $fdtput ($?)";
+	}
+    }
+
+    #Write out empty tag to terminate list
+    $data=write_atag($data, (tag_size("none"), 0));
+
+    unless ($opt_dtb) {
+        my $addr=$param_addr + hex($baseaddr);
+        printf $script "set *(unsigned int *)0x%08x@%u={".join(",", (map {sprintf("0x%08x", $_)} unpack("V*", $data)))."}\n", $addr, length($data)/4;
+    }
+}
+
+if ($opt_z) {
+    print $script "printf \"Loading ramdisk\\n\"\n";
+    printf $script "restore %s binary 0x%08x\n", $initrd_file, $initrd_addr;
+}
+
+print $script "printf \"Loading kernel image\\n\"\n";
+if ($opt_L) {
+    print $script "set linux-awareness auto_activate off\n";
+}
+print $script "load $vmlinuxtmp\n";
+print $script "exec-file $opt_b\n";
+print $script "symbol-file $opt_b\n";
+
+# We set the initial pc to the start of .text.head and ensure we are in ARM mode
+print $script "set \$pc=(&stext)$addrincr\n";
+print $script "set \$cpsr&=~(1<<5)\n";
+
+# Set the machine type
+print $script "set \$r1=$machtype\n";
+
+my $dtb_ld_addr;
+if ($opt_dtb) {
+	if ($opt_a && $opt_s) {
+		system($fdtput, "-tx", $dtb_file, "/memory", "reg", $opt_a, $opt_s) == 0
+		or die "$0: unable to spawn $fdtput ($?)";
+	}
+
+	if ($opt_dtaddr) {
+		$dtb_ld_addr = $opt_dtaddr;
+	} else {
+		open(PIPE, "$readelf -l $vmlinuxtmp|")
+			or die "unable to spawn $readelf ($!)";
+		while (<PIPE>) {
+			# Type           Offset   VirtAddr   PhysAddr   FileSiz  MemSiz   Flg Align
+			if (/^\s\sLOAD.*\s(0x[[:xdigit:]]+)\s(0x[[:xdigit:]]+)\s(0x[[:xdigit:]]+)\sRWE\s.*$/) {
+				my $physaddr = $1;
+				my $memsiz = $3;
+				my $addr = sprintf("0x%x", hex($physaddr) + hex($memsiz) + 0x100000);
+				if (hex($addr) > hex($dtb_ld_addr)) {
+					$dtb_ld_addr = $addr;
+				}
+			}
+		}
+		close(PIPE);
+	}
+
+	print $script "set \$r2=$dtb_ld_addr\n";
+	printf $script "restore %s binary %s\n",$dtb_file,$dtb_ld_addr;
+
+} else {
+	# We set the atags pointer to 0x100 above the start of the start of memory
+	my $atags_ptr = sprintf("0x%x",hex($baseaddr)+0x100);
+	print $script "set \$r2=$atags_ptr\n";
+}
+
+# Initialize the other registers to 0x0.
+print $script "set \$r0=0x0\n";
+print $script "set \$r3=0x0\n";
+print $script "set \$r4=0x0\n";
+print $script "set \$r5=0x0\n";
+print $script "set \$r6=0x0\n";
+print $script "set \$r7=0x0\n";
+print $script "set \$r8=0x0\n";
+print $script "set \$r9=0x0\n";
+print $script "set \$r10=0x0\n";
+print $script "set \$r11=0x0\n";
+print $script "set \$r12=0x0\n";
+
+# In SMP mode set the entrypoint for the second core and ensure we are in ARM mode
+if ($opt_S) {
+    print $script "set silent-commands on\n";
+    print $script "info threads nostackframe\n";
+    print $script "thread 2\n";
+    print $script "set \$pc=(&$secondary_startup_func)$addrincr\n";
+    print $script "set \$cpsr&=~(1<<5)\n";
+    print $script "thread 1\n";
+    print $script "set silent-commands off\n";
+}
+
+# Evaluate the post connect commands
+foreach my $c (@opt_xpc) {
+    print $script "source $c\n";
+}
+foreach my $c (@opt_expc) {
+    print $script "$c\n";
+}
+
+if ($opt_r) {
+    # Not sure why we need to do this, would be nice to remove it!
+    print $script "set silent-commands on\n";
+    print $script "stepi\n";
+    print $script "set silent-commands off\n";
+
+    print $script "printf \"\\nRunning kernel\\n\\n\"\n";
+    print $script "quit\n";
+} elsif (!$opt_n) {
+    # add the -ex options by the time the .S inits are done
+    # especially __mmu_turn_on
+    #
+    print $script "set silent-commands on\n";
+    print $script "thb *sched_init\n";
+    print $script "set silent-commands off\n";
+    print $script "commands\n";
+    print $script "silent\n";
+
+    # put a new canned command once sched_init is complete
+    # at which point we know enough about runqueues to fully
+    # use linux-awareness.
+    print $script "thb *\$lr\n";
+    print $script "commands\n";
+
+    # setting pending breakpoints is now feasible.
+    #
+    print $script "set silent-commands off\n";
+    foreach my $c (@opt_xpk) {
+        print $script "source $c\n";
+    }
+    foreach my $c (@opt_expk) {
+        print $script "$c\n";
+    }
+    print $script "set backtrace abi-sniffer on\n";
+    if (!$opt_M) {
+        print $script "continue\n";
+    }
+    print $script "end\n";
+    print $script "continue\n";
+    print $script "end\n";
+    print $script "printf \"\\nRunning kernel\\n\"\n";
+    print $script "set silent-commands on\n";
+    print $script "continue\n";
+}
+
+print "Booting ....\n";
+} # !opt_A
+
+close($script);
+
+my @gdbcmdline=($gdb, "--quiet", @options, "--command", $script_file);
+
+my $pid = fork();
+if ($pid == 0) {
+    exec(@gdbcmdline);
+    # No such file or directory
+    exit 2;
+}
+
+$SIG{INT} = 'IGNORE';
+
+# Ensure SIGTERM takes the child process with us
+$SIG{TERM} = sub {
+    # Kill the child process; this should complete the wait() and cause us to exit
+    kill 'TERM', $pid;
+    # Disable the signal handler in case something goes wrong
+    $SIG{TERM} = 'DEFAULT';
+};
+
+# Wait for the child to complete
+wait();
+
+# Disable the signal handler since we now have no children
+$SIG{TERM} = 'DEFAULT';
+
+if ($? == -1) {
+    die "Could not execute @gdbcmdline[0]: $!\n";
+} elsif ($? & 127) {
+    die "@gdbcmdline[0] died with signal ", ($? & 127), ", ", ($? & 128) ? "with" : "without", " coredump";
+} elsif ($? >> 8) {
+    die "@gdbcmdline[0] terminated with code ", ($? >> 8), "\n";
+}
+
+sub tag_size {
+  my(%tag_size_list) = ("header"=>4,
+			"core"=>5,
+			"mem"=>4,
+			"initrd"=>4,
+			"cmdline"=>2,
+			"none"=>0); # The end tag has zero length
+
+  return $tag_size_list{$_[0]};
+}
+
+sub write_int32 {
+    my($data)=$_[0];
+    my($value)=$_[1];
+    return ($data .= pack("V", $value));
+}
+
+sub write_block {
+    my($data)=$_[0];
+    my($block)=$_[1];
+    return ($data .= $block);
+}
+
+sub ATAG_MKTAG  {
+    my($param) = @_;
+    return ((0x5441<<16)|($param));
+}
+
+sub ATAG_MKTAG_NEW  {
+    my($param) = @_;
+    return ((0x5442<<16)|($param));
+}
+
+sub write_atag {
+    my($data, @param)=@_;
+    foreach (@param) {
+	$data=write_int32($data, $_);
+    }
+    return $data;
+}
+
+sub exists_on_path {
+	my $tool = shift;
+	foreach my $path (path()) {
+		return 1 if -x catfile($path, $tool);
+	}
+	return 0;
+}
+
+sub usage {
+    print STDERR "$scriptname version 1.3\n";
+    print STDERR "Download and boot an STLinux kernel using ".$gdb."\n\n";
+    print STDERR "usage: $scriptname {options}* -t target [--] [arguments]\n";
+    print STDERR "  -a=address                            address of the base of physical memory (read from stlinux_arm_machtypes by default)\n";
+    print STDERR "  -A|--attach=filename                  attach only, using filename as symbol-file\n";
+    print STDERR "  -b=filename                           boot filename to load (default vmlinux)\n";
+    print STDERR "  -d|--directory=dir                    add directory dir to gdb path\n";
+    print STDERR "  -dtb=filename                         ARM device tree blob filename\n";
+    print STDERR "  -dtaddr=address                       address to load device tree blob (1MB after kernel image by default)\n";
+    print STDERR "  -ex|--eval-command=cmd                execute gdb command 'cmd' on GDB startup\n";
+    print STDERR "  -expc|--eval-command-post-connect=cmd execute gdb command 'cmd' after connecting to target\n";
+    print STDERR "  -expk|--eval-command-post-kernel=cmd  execute gdb command 'cmd' after kernel has started and MMU is on\n";
+    print STDERR "                                        (useful for setting breakpoints etc, as the addresses will be valid)\n";
+    print STDERR "  -h|--help                             display this message\n";
+    print STDERR "  -K                                    keep temporary files and print their filenames\n";
+    print STDERR "  -m=type                               ARM machine type (read from stlinux_arm_machtypes by default)\n";
+    print STDERR "  -M                                    launch GDB in MI mode\n";
+    print STDERR "  -n                                    do not auto start; interactive mode\n";
+    print STDERR "  -L|--no-linux-awareness               no Linux Awareness debug features\n";
+    print STDERR "  -P                                    enable pagination in GDB\n";
+    print STDERR "  -r                                    release the target after booting it (cancels -n)\n";
+    print STDERR "  -s=size                               size of physical memory (read from stlinux_arm_machtypes by default)\n";
+    print STDERR "  -S|--smp                              make debug tools operate with SMP kernel; overrides autodetection\n";
+    print STDERR "  -t|--target=target                    target to connect\n";
+    print STDERR "  -u|--non-smp                          make debug tools operate with non-SMP kernel; overrides autodetection\n";
+    print STDERR "  -x|--command=script                   execute gdb command 'script' on GDB startup\n";
+    print STDERR "  -xpc|--command-post-connect=script    execute gdb command 'script' after connecting to target\n";
+    print STDERR "  -xpk|--command-post-kernel=script     execute gdb command 'script' after kernel has started and MMU is on\n";
+    print STDERR "                                        (useful for setting breakpoints etc, as the addresses will be valid)\n";
+    print STDERR "  -z=address,filename                   initrd image file to load\n";
+    exit 0;
+}

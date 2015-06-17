@@ -1,0 +1,272 @@
+* Fri Sep 26 2014 Patrice Chotard <patrice.chotard@st.com> - sdk2-linux-3.10.53_18.16
+- [Update: KERNEL_15.2_3.10.53_18.16]
+ 
+- [Bugzilla 54861] getting incorrect validity bit while switching from PCM to COMPRESSED or vice versa
+- [Bugzilla 59308] Initialize CLK_COMPO_DVP clock to ALWAYS_ON
+- [Bugzilla 55688] Addition PCIE SSC support for Cannes/Monaco
+ 
+* Wed Sep 24 2014 Patrice Chotard <patrice.chotard@st.com> - sdk2-linux-3.10.53_18.15
+- [Update: KERNEL_15.2_3.10.53_18.15]
+- [Bugzilla 51095] MiLK splashscreen not well displayed
+- [Bugzilla 58795] MiLK splashscreen not well displayed
+- [Bugzilla 58121] Audio Distortion on CVBS O/P
+- [Bugzilla 57890] No audio ouptut on HDMI after 5 tests. reboot required to get audio
+ 
+* Mon Sep 22 2014 Patrice Chotard <patrice.chotard@st.com> - sdk2-linux-3.10.53_18.14
+- [Update: KERNEL_15.2_3.10.53_18.14]
+- [Bugzilla 58036] Cannot trigger wake up via LAN from DCPS
+- [Bugzilla 57856] [PM] Power consumption higher after CPS exit (modules not loaded / bare board)
+- [Bugzilla 58140] [PM][CPS][WOL][H301] WoL trigger not working
+- [Bugzilla 58362] DCPS Support In IR driver
+- [Bugzilla 58365] [CPS] IR device Remain Disable after CPS
+- [Bugzilla 58366] [CPS] IR device Should not be enabled for wakeup by default
+- [Bugzilla 59033] [KitKat-SDK2-15.0] AVS (vcore, vcpu) and CA9_freq values are overrides by android
+- [Bugzilla 56357] DDR self-refresh is pulling address lines high.
+ 
+* Thu Sep 18 2014 Patrice Chotard <patrice.chotard@st.com> - sdk2-linux-3.10.53_18.13
+- [Update: KERNEL_15.2_3.10.53_18.13]
+ 
+ Kernel Config flag update:
+    CONFIG_CPU_THERMAL=y   
+ 
+- [Bugzilla 49874] [DD+  SystemKit v2.3] Listening test Failing: observing audio breaks
+- [Bugzilla 51050] Power Platform Customization (kernel)
+- [Bugzilla 55181] How to set dt to inform that a pio is active low for a button for example
+ 
+* Thu Sep 18 2014 Patrice Chotard <patrice.chotard@st.com> - sdk2-linux-3.10.53_18.12
+- [Update: KERNEL_15.2_3.10.53_18.12]
+ 
+ Kernel Config flag update:
+    CONFIG_CPU_THERMAL=y   
+ 
+- [Bugzilla 55181] How to set dt to inform that a pio is active low for a button for example
+ 
+* Thu Sep 11 2014 Patrice Chotard <patrice.chotard@st.com> - sdk2-linux-3.10.53_18.11
+- [Update: KERNEL_15.2_3.10.53_18.11]
+ 
+ Kernel Config flag update:
+    CONFIG_CC_STACKPROTECTOR=y   
+ 
+- [Bugzilla 55727] Clock framework should restore clock frequency after CPS exit
+- [Bugzilla 51050] Power Platform Customization (kernel)
+- [Bugzilla 45230] [PM] Implements SBC  holding pen release in kernel sti 3.10 as per new low power proposal
+- [Bugzilla 55414] [PM][K3.10-STI] API to return CPS wakeup reason with a rubbish character
+- [Bugzilla 51479] FE dummy changes not present in Kernel 3.10 for B2112
+- [Bugzilla 56618] Liege2: RMII clock issue
+- [Bugzilla 52911] [kernel3.10] stid127-b2147.dts: increase boot partition to 30M, enable pcie0,pcie1, enable gpio push button
+- [Bugzilla 56555] eCM for b2163 is not been able to enter TWO_WAY_OPERATIONAL_MODE
+- [Bugzilla 55809] B2163 RevB: Device Tree Changes
+- [Bugzilla 55803] Provide explicit reset signal on PIO lines mapped to PCIe0 & 1 slots (For Alicante B2147)
+- [Bugzilla 53031] [Cannes] Need SW emulation of EDID information LPM_FW
+- [Bugzilla 53578] LPM Firmware version sometimes not well displayed
+- [Bugzilla 55643] LPM driver always load SBC firmware
+- [Bugzilla 54197] Enable watchdog timer of stm in kernel 3.4 and modify settings for 3.10 for Alicante
+- [Bugzilla 52064] LPM error when kernel boots up
+- [Bugzilla 54145] mtd0 for cannes needs to be increased to fit 3 images.
+- [Bugzilla 51681] XFS filesystem causes kernel crash.
+- [Bugzilla 54540] i2cdetect doesnt detect any i2c bus on Alicante (d127) on b2163 board
+- [Bugzilla 51378] [Custom board] Kernel crash with linux 3.10 integration
+- [Bugzilla 53814] Modify SATA Init Table for Gen3 and enable SSC for SATA
+- [Bugzilla 53466] need to update Tx Impedance setting for PCIe/SATA/USB3 firmware/driver
+- [Bugzilla 21146] Issue in the ASC_driver when baudrate > 230400 Hz
+- [Bugzilla 54754] Remove section mismatch seen during build
+- [Bugzilla 52568] Getting chip version for H410 soc
+- [Bugzilla 56022] [RECORD]: HDD mounting issue during PAUSE/RECORD
+- [Bugzilla 57031] [Linux hardening] Some kernel configs could be common between default and hardened kernel
+ 
+* Thu Sep 04 2014 Patrice Chotard <patrice.chotard@st.com> - sdk2-linux-3.10.53_18.10
+- [Update: KERNEL_15.2_3.10.53_18.10]
+ 
+ Kernel Config flag update:
+    CONFIG_DWC3_HOST_USB3_LPM_ENABLE=y   
+ 
+- [Bugzilla 47948] [PM][SDK2][STEP1] Run Time power management functionality with Kernel subsystem
+ 
+* Wed Aug 20 2014 Patrice Chotard <patrice.chotard@st.com> - sdk2-linux-3.10.27_18.9
+- [Update: KERNEL_15.1_3.10.27_18.9]
+- [Bugzilla 53710] [PM][DPM] Audio clocks remains on after DVB-S live test
+ 
+* Thu Aug 14 2014 Patrice Chotard <patrice.chotard@st.com> - sdk2-linux-3.10.27_18.8
+- [Update: KERNEL_15.1_3.10.27_18.8]
+- [Bugzilla 56101] module insertion failing with KERNEL_ML_3.10.27_22.0
+ 
+* Tue Aug 12 2014 Patrice Chotard <patrice.chotard@st.com> - sdk2-linux-3.10.27_18.7
+- [Update: KERNEL_15.1_3.10.27_18.7]
+ 
+ Kernel Config flag update:
+    #CONFIG_NET_VENDOR_3COM is not set
+    #CONFIG_NET_VENDOR_ADAPTEC is not set
+    #CONFIG_NET_VENDOR_ALTEON is not set
+    #CONFIG_NET_VENDOR_AMD is not set
+    #CONFIG_NET_VENDOR_ATHEROS is not set
+    #CONFIG_NET_CADENCE is not set
+    #CONFIG_NET_VENDOR_BROADCOM is not set
+    #CONFIG_NET_VENDOR_BROCADE is not set
+    #CONFIG_NET_VENDOR_CHELSIO is not set
+    #CONFIG_NET_VENDOR_CIRRUS is not set
+    #CONFIG_NET_VENDOR_CISCO is not set
+    #CONFIG_NET_VENDOR_DEC is not set
+    #CONFIG_NET_VENDOR_DLINK is not set
+    #CONFIG_NET_VENDOR_EMULEX is not set
+    #CONFIG_NET_VENDOR_EXAR is not set
+    #CONFIG_NET_VENDOR_FARADAY is not set
+    #CONFIG_NET_VENDOR_HP is not set
+    #CONFIG_NET_VENDOR_INTEL is not set
+    #CONFIG_NET_VENDOR_MARVELL is not set
+    #CONFIG_NET_VENDOR_MELLANOX is not set
+    #CONFIG_NET_VENDOR_MICREL is not set
+    #CONFIG_NET_VENDOR_MICROCHIP is not set
+    #CONFIG_NET_VENDOR_MYRI is not set
+    #CONFIG_NET_VENDOR_NATSEMI is not set
+    #CONFIG_NET_VENDOR_NVIDIA is not set
+    #CONFIG_NET_VENDOR_OKI is not set
+    #CONFIG_NET_PACKET_ENGINE is not set
+    #CONFIG_NET_VENDOR_QLOGIC is not set
+    #CONFIG_NET_VENDOR_RDC is not set
+    #CONFIG_NET_VENDOR_SEEQ is not set
+    #CONFIG_NET_VENDOR_SILAN is not set
+    #CONFIG_NET_VENDOR_SIS is not set
+    #CONFIG_NET_VENDOR_SMSC is not set
+    #CONFIG_NET_VENDOR_SUN is not set
+    #CONFIG_NET_VENDOR_TEHUTI is not set
+    #CONFIG_NET_VENDOR_TI is not set
+    #CONFIG_NET_VENDOR_VIA is not set
+    #CONFIG_NET_VENDOR_WIZNET is not set
+    CONFIG_EXT2_FS_XATTR=y   
+    CONFIG_EXT2_FS_POSIX_ACL=y   
+    CONFIG_EXT2_FS_SECURITY=y   
+    CONFIG_EXT3_FS_POSIX_ACL=y   
+    CONFIG_EXT3_FS_SECURITY=y   
+    CONFIG_EXT4_FS_POSIX_ACL=y   
+    CONFIG_EXT4_FS_SECURITY=y   
+    CONFIG_TMPFS_POSIX_ACL=y   
+    CONFIG_JFFS2_FS_XATTR=y   
+ 
+- [Bugzilla 50376] Disable i2s ports in device tree by default.
+- [Bugzilla 56104] [Linux Hardening] kernel 3.10 default STI configuration - unused Netword devices
+- [Bugzilla 53372] fdma transfert must not be stopped when a fdma error occur
+- [Bugzilla 56406] fdma transfert must not be stopped when a fdma error occur
+- [Bugzilla 56130] drivers: clk: st: Initialize parent for static display clocks.
+- [Bugzilla 56184] [Hardening] XATTR should be activated for all supported filesystems
+ 
+* Wed Aug 06 2014 Patrice Chotard <patrice.chotard@st.com> - sdk2-linux-3.10.27_18.6
+- [Update: KERNEL_15.1_3.10.27_18.6]
+- [Bugzilla 53259] Disabling of USB at runtime
+- [Bugzilla 56128] [Hardening] NFS cannot work if CONFIG_PROC_FS disabled
+- Linux hardening, add patch "rcu: Select IRQ_WORK from TREE_PREEMPT_RCU"
+
+* Fri Aug 01 2014 Patrice Chotard <patrice.chotard@st.com> - sdk2-linux-3.10.27_18.5
+- [Update: KERNEL_15.1_3.10.27_18.5]
+- [Bugzilla 52717] [CANNES CAS] Add support for CPS in secure chips
+ 
+* Thu Jul 31 2014 Patrice Chotard <patrice.chotard@st.com> - sdk2-linux-3.10.27_18.4
+- [Update: KERNEL_15.1_3.10.27_18.4]
+- [Bugzilla 54869] [PM]wake up by EXTINT: wake up pin must be set as INPUT
+- [Bugzilla 55490] R4CE UART data lost in SDK-14.0/K3.10
+- [Bugzilla 55266] [PM][HPD wakeup trigger]: need to check HDMI as wakeup device
+ 
+* Mon Jul 28 2014 Patrice Chotard <patrice.chotard@st.com> - sdk2-linux-3.10.27_18.3
+- [Update: KERNEL_15.0_3.10.27_18.3]
+- [Bugzilla 54257] [b2120_STiH410-Cut2] MMC broken on KERNEL_14_3.10.27_10.8
+ 
+* Mon Jul 21 2014 Patrice Chotard <patrice.chotard@st.com> - sdk2-linux-3.10.27_18.2
+- [Update: KERNEL_15.0_3.10.27_18.2]
+- [Bugzilla 45953] USB Ko after CPS entry / exit
+- [Bugzilla 54257] [b2120_STiH410-Cut2] MMC broken on KERNEL_14_3.10.27_10.8
+- [Bugzilla 54344] Sometimes Customer board can't boot up due to MMC errors
+- [Bugzilla 53782] [PM][CPS] CPS exit fails on b2120-h310_cut1_a9
+- [Bugzilla 54494] [RPM] bad date in product_changelog file in KERNEL_ML_3.10.27_18.0
+
+* Wed Jul 16 2014 Patrice Chotard <patrice.chotard@st.com> - sdk2-linux-3.10.27_18.1
+- [Update: KERNEL_15.0_3.10.27_18.1]
+ 
+  new kernel Config flag :
+    CONFIG_REALTEK_PHY=y
+ 
+- [Bugzilla 48488] PIP MISR errors on Kernel 3.10 STI
+- [Bugzilla 53303] Wrong display on both graphic and video planes when zapping between Main and Aux
+- [Bugzilla 50607] Kernel GCOV support for gcc-4.7.x
+- [Bugzilla 52434] Mali r4p0: Without CLK_ICN_GPU set on in TP the driver hangs the system
+- [Bugzilla 53201] black screen on B2173 and B2196 when playback on STB network
+- [Bugzilla 54431] Kernel: Enable 1Gpns Ethernet on b2188
+- [Bugzilla 54494] [RPM] bad date in product_changelog file in KERNEL_ML_3.10.27_18.0
+
+* Thu Jul 10 2014 Patrice Chotard <patrice.chotard@st.com> - sdk2-linux-3.10.27_18.0
+- [Update: KERNEL_ML_3.10.27_18.0]
+ 
+  new kernel Config flag :
+    CONFIG_ISVE_ST=y
+    CONFIG_GPIO_ST_WAKEUP=y
+    CONFIG_ST_REMOTEPROC=y
+ 
+- [Bugzilla 51929] kernel BUG_ON() : scheduling while atomic in SE-Aud-Mixer thread from  PcmPlayer_Ksound_c::SetOutputRateAdjustment
+- [Bugzilla 53507] [Hardening] kernel: issues with stm sound
+- [Bugzilla 47783] [PM][CPS][K3.10-STI] Wake up with EXTINT
+- [Bugzilla 53486] [kernel3.10] KERNEL_ML_3.10.27_15.0 crash when running on stid127-b2147 board
+- [Bugzilla 50352] [H310][410][LPM] CPS NOK with targetpack v8: ST_DDR CNTRL driver should be activated
+- [Bugzilla 41785] System tests: audio level is low with component output
+- [Bugzilla 52060] Linux Hardening
+- [Bugzilla 53850] kernel crash due to  stmmac_release
+- [Bugzilla 53717] Please disable PCIE1 and enable PCIE0 by default for H410 cut 2 and H314 cut 0
+- [Bugzilla 52856] [PM][CPS] CLK_D3_FS1 turn on after CPS cycle
+- [Bugzilla 51920] [PM][CPS][H310][K3.10-STI] Ethernet not well restored after CPS
+ 
+* Thu Jul 03 2014 Patrice Chotard <patrice.chotard@st.com> - sdk2-linux-3.10.27_16.0
+- [Update: KERNEL_ML_3.10.27_16.0]
+- [Bugzilla 53085] Uniperif player/reader attached to PIOs not working (no data out/in)
+- [Bugzilla 52659] fdma croosbar node not aligned
+- [Bugzilla 52110] Issue with FMDA-1 usage in kernel3.10
+- [Bugzilla 52854] Qualcomm WLAN Driver Porting Issue for Kernel 3.10.27
+- [Bugzilla 44538] audio: uniperif_player: use clock-name from device tree
+- [Bugzilla 48082] Device Tree changes for B2196-H301c2
+- [Bugzilla 50607] Kernel GCOV support for gcc-4.7.x
+- [Bugzilla 52720] [SDK2-13.1/G6] PIO20 is not configured properly with new pinctrl driver
+- [Bugzilla 53043] [SDK2-13.1/G6] Wrong example of spi node in device tree in stih407-family.dtsi
+- [Bugzilla 53328] STiH301 B21XX : bad pinctrl for RGMII
+- [Bugzilla 53324] Remove Leds pin from stih407-pinctrl
+ 
+* Fri Jun 27 2014 Patrice Chotard <patrice.chotard@st.com> - sdk2-linux-3.10.27_15.0
+- [Update: KERNEL_ML_3.10.27_15.0]
+
+  new kernel Config flag :
+    CONFIG_REGULATOR_ST_PWM=y
+    CONFIG_SPI_SPIDEV=y
+    CONFIG_SPI_GPIO=y
+    CONFIG_PM_RUNTIME=y
+    CONFIG_CPU_FREQ_GOV_USERSPACE=y
+    CONFIG_CPU_FREQ_GOV_ONDEMAND=y
+    CONFIG_LOG_BUF_SHIFT=19
+
+- [Bugzilla 51941] Huge amount of traces lost in /var/log/kern.log
+- [Bugzilla 51924] Resume failed after suspend when using rootfs other than NFS (USB, SATA)
+- [Bugzilla 51807] TELSS FDMA: FDMA interrupt not raised
+- [Bugzilla 52919] [BPA2] add call stack to debugfs file
+- [Bugzilla 51776] stlpm: Driver aligned to LPM communication protocol v1.6.0
+- [Bugzilla 47960] [SDK2-12.0] FIFO error detected and random crashes observed +  kernel Oops kernel/sound/stm/uniperif_player.c
+- [Bugzilla 50231] [SDK1] Support Request for MX25L3255E in stm_spi_fsm driver with single lock unlock functionality.
+- [Bugzilla 50763] SPI Flash (MX25L3255E) Quad IO mode Query : Kernel Version: stm24_211_V6.1
+- [Bugzilla 50607] Kernel GCOV support for gcc-4.7.x
+- [Bugzilla 52866] [CANNES NDS] Need some clocks always on for secure low-power use-case
+- [Bugzilla 52133] DPM support in Graphics subsystem
+- [Bugzilla 52694] cannot boot kernel3.10 on b2120-Cannes2 cut1 and cut2
+- [Bugzilla 49169] BRM activation (3.10)
+- [Bugzilla 44440] USB3 disk detection
+- [Bugzilla 52532] [kernel 3.10]: MR Box M14 GPIO conflicts
+- [Bugzilla 52469] System hangs on Cannes 2 cut1 H410 B2120 board.
+
+* Fri Jun 20 2014 Patrice Chotard <patrice.chotard@st.com> - sdk2-linux-3.10.27_14.0
+- [Update: KERNEL_ML_3.10.27_14.0]
+- [Bugzilla  48495] Wrong uImage generated
+- [Bugzilla  51308] EXIT_CPS should be set with a default value
+- [Bugzilla  52152] Go bit management in kernel
+- [Bugzilla  51217] EXIT_CPS value to be changed
+- [Bugzilla  51218] EXIT_CPS value to be changed
+- [Bugzilla  44511] audio: use reset framework
+- [Bugzilla  41785] System tests: audio level is low with component output
+- [Bugzilla  48082] Device Tree changes for B2196-H301c2
+- [Bugzilla  50416] [PM][K3.10-STI] wake up from PIO: configure PIO3 3 as wake up source
+- [Bugzilla  52328] Miphy28lp: move io_remap call to the probe
+- [Bugzilla  51807] TELSS FDMA: FDMA interrupt not raised
+- [Bugzilla  48576] Kernel can't mound sdcard with u-boot
+- [Bugzilla  45250] Remove STIH415 support
+- [Bugzilla  48488] PIP MISR errors on Kernel 3.10 STI

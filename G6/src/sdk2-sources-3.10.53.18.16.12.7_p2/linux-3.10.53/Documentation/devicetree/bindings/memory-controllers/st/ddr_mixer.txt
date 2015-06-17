@@ -1,0 +1,30 @@
+DDR Mixer
+---------
+
+DDR mixer can be described as a parent node with instances of
+the IP as child nodes. The mandatory properties are:
+- #address-cells: number of cells required to define the base address
+		  that is memory mapped. Should be 1.
+- #size-cells: number of cells to describe the size of the memory mapped area.
+	       Should be 1.
+- compatible: should be "st,ddr-mixer" and "simple-bus"
+
+No other properties are required.
+
+The child nodes have the name format as "ddr-mixer@base-address",
+where base-address is the memoery mapped physical address of the IP.
+The mandatory properties are:
+- reg: should be a list property with first cell indicating the physical
+base address of the IP and the second cell indicating the size of the
+memory mapped region.
+No other properties are required.
+
+ddr-mixer {
+	#address-cells = <1>;
+	#size-cells = <1>;
+	ranges;
+	compatible = "st,ddr-mixer", "simple-bus";
+	ddr-mixer@09012000 {
+		reg = <0x09012000 0x2000>;
+	};
+};

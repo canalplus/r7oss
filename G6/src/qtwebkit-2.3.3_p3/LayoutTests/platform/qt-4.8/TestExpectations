@@ -1,0 +1,862 @@
+# These are the layout test expectations for the Qt port of WebKit.
+#
+# See http://trac.webkit.org/wiki/TestExpectations for more information on this file.
+
+#
+# TESTS MIGRATED FROM THE OLD SKIPPED FILE
+#
+
+http/tests/xmlhttprequest/cross-origin-authorization.html
+http/tests/xmlhttprequest/cross-origin-no-authorization.html
+
+#################################################
+# Moved from qt/Skipped after:
+# [Qt] Use ICU if available
+# https://bugs.webkit.org/show_bug.cgi?id=76821
+fast/encoding/GBK/EUC-CN.html [ Failure ]
+fast/encoding/GBK/chinese.html [ Failure ]
+fast/encoding/GBK/cn-gb.html [ Failure ]
+fast/encoding/GBK/csgb2312.html [ Failure ]
+fast/encoding/GBK/csgb231280.html [ Failure ]
+fast/encoding/GBK/gb2312.html [ Failure ]
+fast/encoding/GBK/gb_2312-80.html [ Failure ]
+fast/encoding/GBK/gbk.html [ Failure ]
+fast/encoding/GBK/iso-ir-58.html [ Failure ]
+fast/encoding/GBK/x-euc-cn.html [ Failure ]
+fast/encoding/GBK/x-gbk.html [ Failure ]
+fast/encoding/char-decoding-mac.html [ Failure ]
+fast/encoding/char-decoding.html [ Failure ]
+fast/encoding/char-encoding-mac.html [ Failure ]
+fast/encoding/char-encoding.html [ Failure ]
+fast/encoding/hebrew/8859-8-e.html [ Failure ]
+fast/encoding/hebrew/8859-8-i.html [ Failure ]
+fast/encoding/hebrew/csISO88598I.html [ Failure ]
+fast/encoding/hebrew/logical.html [ Failure ]
+sputnik/Unicode/Unicode_500/S7.6_A3.1.html [ Failure ]
+sputnik/Unicode/Unicode_500/S7.6_A3.2.html [ Failure ]
+sputnik/Unicode/Unicode_500/S7.6_A5.3_T1.html [ Failure ]
+sputnik/Unicode/Unicode_500/S7.6_A5.3_T2.html [ Failure ]
+sputnik/Unicode/Unicode_510/S15.5.4.16_A1.html [ Failure ]
+sputnik/Unicode/Unicode_510/S15.5.4.18_A1.html [ Failure ]
+sputnik/Unicode/Unicode_510/S7.6_A1.1_T1.html [ Failure ]
+sputnik/Unicode/Unicode_510/S7.6_A1.1_T2.html [ Failure ]
+sputnik/Unicode/Unicode_510/S7.6_A1.1_T4.html [ Failure ]
+sputnik/Unicode/Unicode_510/S7.6_A2.2_T1.html [ Failure ]
+sputnik/Unicode/Unicode_510/S7.6_A2.2_T2.html [ Failure ]
+sputnik/Unicode/Unicode_510/S7.6_A2.3.html [ Failure ]
+sputnik/Unicode/Unicode_510/S7.6_A5.2_T1.html [ Failure ]
+sputnik/Unicode/Unicode_510/S7.6_A5.2_T2.html [ Failure ]
+sputnik/Unicode/Unicode_510/S7.6_A5.2_T4.html [ Failure ]
+sputnik/Unicode/Unicode_510/S7.6_A5.2_T7.html [ Failure ]
+sputnik/Unicode/Unicode_510/S7.6_A5.2_T8.html [ Failure ]
+sputnik/Unicode/Unicode_510/S7.6_A5.2_T9.html [ Failure ]
+#################################################
+
+#################################################
+# Fails with Qt xmlpatterns, but pass with libxml2:
+
+# [Qt4] Five http/tests/xmlviewer/dumpAsText tests fails
+# https://bugs.webkit.org/show_bug.cgi?id=99014
+#webkit.org/b/99014 http/tests/xmlviewer/dumpAsText/svg.xml [ Failure ]
+#webkit.org/b/99014 http/tests/xmlviewer/dumpAsText/xmlviewer-charset-cp1251.xml [ Failure ]
+#webkit.org/b/99014 http/tests/xmlviewer/dumpAsText/xmlviewer-charset-utf8.xml [ Failure ]
+#webkit.org/b/99014 http/tests/xmlviewer/dumpAsText/xmlviewer.xml [ Failure ]
+#webkit.org/b/99014 http/tests/xmlviewer/dumpAsText/xsl-stylesheet.xml [ Failure ]
+
+# [Qt] REGRESSION(r114059): It made these tests fail
+#webkit.org/b/83432 fast/dom/dom-parse-serialize-display.html [ Failure ]
+#webkit.org/b/83432 fast/dom/dom-parse-serialize-xmldecl.html [ Failure ]
+#webkit.org/b/83432 fast/dom/dom-parse-serialize.html [ Failure ]
+#webkit.org/b/83432 fast/xmlhttprequest/xmlhttprequest-get.xhtml [ Failure ]
+
+#svg/custom/junk-data.svg [ Failure ]
+#svg/custom/missing-xlink.svg [ Failure ]
+#svg/custom/path-bad-data.svg [ Failure ]
+#svg/custom/use-invalid-pattern.svg [ Failure ]
+#svg/hixie/error/012.xml [ Failure ]
+#webkit.org/b/46093 svg/custom/use-font-face-crash.svg [ Failure ]
+#webkit.org/b/78128 svg/zoom/page/zoom-coords-viewattr-01-b.svg [ Failure ]
+#svg/W3C-SVG-1.1/coords-viewattr-01-b.svg [ Failure ]
+#svg/W3C-SVG-1.1/coords-viewattr-02-b.svg [ Failure ]
+#svg/custom/use-referencing-style-crash.svg [ Failure ]
+
+#fast/encoding/invalid-xml.html [ Failure ]
+#fast/parser/external-entities-in-xslt.xml [ Failure ]
+#fast/parser/innerhtml-with-prefixed-elements.xhtml [ Failure ]
+#fast/parser/xhtml-innerhtml-null-byte.xhtml [ Failure ]
+#fast/xsl/default-html.html [ Failure ]
+#fast/xsl/document-function.xml [ Failure ]
+#fast/xsl/dtd-in-source-document.xml [ Failure ]
+#fast/xsl/exslt-node-set.xml [ Failure ]
+#fast/xsl/import-after-comment.xml [ Failure ]
+#fast/xsl/import-non-document-node.xhtml [ Failure ]
+#fast/xsl/mozilla-tests.xml [ Failure ]
+#fast/xsl/sort-unicode.xml [ Failure ]
+#fast/xsl/xslt-doc-enc.xml [ Failure ]
+#fast/xsl/xslt-nested-stylesheets.xml [ Failure ]
+#fast/xsl/xslt-processor.html [ Failure ]
+#fast/xsl/xslt-second-level-import.xml [ Failure ]
+#fast/xsl/xslt-url.xml [ Failure ]
+#fast/xsl/xslt-entity.xml [ Failure ]
+
+# Tests with changed output after switching to libxml2:
+fast/xsl/sort-unicode.xml [ Failure ]
+http/tests/security/xss-DENIED-xsl-document-redirect.xml [ Failure ]
+http/tests/security/xss-DENIED-xsl-external-entity-redirect.xml [ Failure ]
+http/tests/xmlviewer/dumpAsText/mathml.xml [ Failure ]
+#################################################
+
+#################################################
+# Moved from qt/Skipped:
+# Failing since isWordTextBreak is not implemented. https://bugs.webkit.org/show_bug.cgi?id=81136
+editing/selection/move-by-word-visually-crash-test-1.html
+editing/selection/move-by-word-visually-crash-test-2.html
+editing/selection/move-by-word-visually-crash-test-3.html
+editing/selection/move-by-word-visually-crash-test-4.html
+editing/selection/move-by-word-visually-crash-test-5.html
+editing/selection/move-by-word-visually-crash-test-textarea.html
+editing/selection/move-by-word-visually-crash-test-css-generated-content.html
+editing/selection/move-by-word-visually-inline-block-positioned-element.html
+editing/selection/move-by-word-visually-multi-line.html
+editing/selection/move-by-word-visually-multi-space.html
+editing/selection/move-by-word-visually-null-box.html
+editing/selection/move-by-word-visually-single-space-inline-element.html
+editing/selection/move-by-word-visually-single-space-one-element.html
+editing/selection/move-by-word-visually-textarea.html
+editing/selection/move-by-word-visually-wrong-left-right.html
+editing/selection/move-by-word-visually-mac.html
+#################################################
+
+#################################################
+# Tests failing on WK1 only (working on WK2) - copied from the old qt-wk1/Skipped list
+
+# New test introduced in r102048 fails on Qt-WK1
+# https://bugs.webkit.org/show_bug.cgi?id=73366
+fast/events/dont-loose-last-event.html
+
+# This has been fixed only on qt-wk2
+# https://bugs.webkit.org/show_bug.cgi?id=45666
+fast/events/click-count.html
+
+# [Qt] http/tests/misc/drag-over-iframe-invalid-source-crash.html and fast/events/drag-selects-image.html fails with timeout
+# https://bugs.webkit.org/show_bug.cgi?id=73901
+http/tests/misc/drag-over-iframe-invalid-source-crash.html
+fast/events/drag-selects-image.html
+#################################################
+
+# eventSender missing touchCancel() and cancelTouchPoint()
+fast/events/touch/send-oncancel-event.html
+
+compositing
+
+# [Qt] soft hyphen does not break the line, instead causes content to overlap
+# https://bugs.webkit.org/show_bug.cgi?id=76932
+fast/text/soft-hyphen-5.html
+
+# Fullscreen API is not supported with WK1 therefore not supported with Qt 4.8
+fullscreen
+plugins/fullscreen-plugins-dont-reload.html
+
+# Fail until SUBPIXEL_LAYOUT is enabled
+# https://bugs.webkit.org/show_bug.cgi?id=85532
+fast/sub-pixel
+
+# SVG Fonts are only supported when using QRawFont, which is not
+# supported with Qt 4.
+
+svg/W3C-SVG-1.1/animate-elem-03-t.svg
+svg/W3C-SVG-1.1/animate-elem-24-t.svg
+svg/W3C-SVG-1.1/animate-elem-36-t.svg
+svg/W3C-SVG-1.1/animate-elem-40-t.svg
+svg/W3C-SVG-1.1/fonts-elem-01-t.svg
+svg/W3C-SVG-1.1/fonts-elem-02-t.svg
+svg/W3C-SVG-1.1/fonts-elem-03-b.svg
+svg/W3C-SVG-1.1/fonts-elem-04-b.svg
+svg/W3C-SVG-1.1/fonts-elem-05-t.svg
+svg/W3C-SVG-1.1/fonts-elem-06-t.svg
+svg/W3C-SVG-1.1/fonts-elem-07-b.svg
+svg/W3C-SVG-1.1/fonts-glyph-02-t.svg
+svg/W3C-SVG-1.1/fonts-glyph-03-t.svg
+svg/W3C-SVG-1.1/fonts-kern-01-t.svg
+svg/W3C-SVG-1.1/masking-mask-01-b.svg
+svg/W3C-SVG-1.1/pservers-grad-08-b.svg
+svg/W3C-SVG-1.1/struct-cond-03-t.svg
+svg/W3C-SVG-1.1/struct-image-02-b.svg
+svg/W3C-SVG-1.1/text-align-08-b.svg
+svg/W3C-SVG-1.1/text-altglyph-01-b.svg
+svg/W3C-SVG-1.1/text-fonts-03-t.svg
+svg/W3C-SVG-1.1/text-intro-01-t.svg
+svg/W3C-SVG-1.1/text-intro-02-b.svg
+svg/W3C-SVG-1.1/text-intro-03-b.svg
+svg/W3C-SVG-1.1/text-intro-04-t.svg
+svg/W3C-SVG-1.1/text-text-04-t.svg
+svg/W3C-SVG-1.1/text-text-05-t.svg
+svg/W3C-SVG-1.1/text-text-06-t.svg
+svg/custom/acid3-test-77.html
+svg/custom/altglyph.svg
+svg/custom/font-face-simple.svg
+svg/custom/global-constructors.html
+svg/custom/glyph-selection-lang-attribute.svg
+svg/custom/glyph-setting-d-attribute.svg
+svg/custom/insertItemBefore-from-non-list-origin.svg
+svg/custom/svg-fonts-in-text-controls.html
+svg/custom/svg-fonts-with-no-element-reference.html
+svg/custom/svg-fonts-without-missing-glyph.xhtml
+svg/custom/svg-fonts-word-spacing.html
+svg/dom/altGlyph-dom.xhtml
+svg/dom/baseVal-animVal-crash.html
+svg/dom/font-face-elements.html
+svg/text/kerning.svg
+svg/text/multichar-glyph.svg
+svg/text/text-altglyph-01-b.svg
+svg/text/text-fonts-01-t.svg
+svg/text/text-hkern-on-vertical-text.svg
+svg/text/text-hkern.svg
+svg/text/text-text-04-t.svg
+svg/text/text-text-05-t.svg
+svg/text/text-text-06-t.svg
+svg/text/text-vkern-on-horizontal-text.svg
+svg/text/text-vkern.svg
+http/tests/misc/SVGFont-delayed-load.html
+
+# [Qt] REGRESSION(r96779): It made svg/as-image/svg-nested.html timeout
+svg/as-image/svg-nested.html
+
+# [Qt] REGRESSION(r120624): It made fast/text/line-breaks-after-ideographic-comma-or-full-stop.html fail on non-ICU platforms
+# https://bugs.webkit.org/show_bug.cgi?id=89426
+fast/text/line-breaks-after-ideographic-comma-or-full-stop.html
+
+# [Qt][WK1] REGRESSION(r123988) It made fast/writing-mode/flipped-blocks-hit-test-line-edges.html fail
+# https://bugs.webkit.org/show_bug.cgi?id=92636
+fast/writing-mode/flipped-blocks-hit-test-line-edges.html
+
+# [Qt] The test fonts used for Qt tests changed to the Liberation font family,
+# due to this we are skipping tons of tests. They will be unskipped in batches ASAP.
+# https://bugs.webkit.org/show_bug.cgi?id=85203
+css1/font_properties/font.html [ Failure ]
+css1/font_properties/font_variant.html [ Failure ]
+css1/pseudo/firstline.html [ Failure ]
+css1/pseudo/multiple_pseudo_elements.html [ Failure ]
+css1/text_properties/letter_spacing.html [ Failure ]
+css1/text_properties/text_transform.html [ Failure ]
+css1/text_properties/word_spacing.html [ Failure ]
+css2.1/t051202-c26-psudo-nest-00-c.html [ Failure ]
+css2.1/t0805-c5518-brdr-t-01-e.html [ Failure ]
+css2.1/t0805-c5519-brdr-r-00-a.html [ Failure ]
+css2.1/t0805-c5519-brdr-r-01-e.html [ Failure ]
+css2.1/t0805-c5520-brdr-b-01-e.html [ Failure ]
+css2.1/t0805-c5521-brdr-l-00-a.html [ Failure ]
+css2.1/t0805-c5521-brdr-l-01-e.html [ Failure ]
+css2.1/t0805-c5521-ibrdr-l-00-a.html [ Failure ]
+css2.1/t0905-c414-flt-02-c.html [ Failure ]
+css2.1/t0905-c414-flt-03-c.html [ Failure ]
+css2.1/t0905-c414-flt-04-c.html [ Failure ]
+css2.1/t0905-c414-flt-fit-01-d-g.html [ Failure ]
+css2.1/t0905-c5525-fltblck-00-d-ag.html [ Failure ]
+css2.1/t0905-c5525-fltblck-01-d.html [ Failure ]
+css2.1/t0905-c5525-fltcont-00-d-g.html [ Failure ]
+css2.1/t0905-c5525-flthw-00-c-g.html [ Failure ]
+css2.1/t0905-c5525-fltwidth-00-c-g.html [ Failure ]
+css2.1/t0905-c5525-fltwidth-02-c-g.html [ Failure ]
+css2.1/t0905-c5525-fltwidth-03-c-g.html [ Failure ]
+css2.1/t0905-c5525-fltwrap-00-b.html [ Failure ]
+css2.1/t0905-c5526-flthw-00-c-g.html [ Failure ]
+css2.1/t090501-c414-flt-01-b.html [ Failure ]
+css2.1/t090501-c414-flt-03-b-g.html [ Failure ]
+css2.1/t090501-c414-flt-ln-01-d-g.html [ Failure ]
+css2.1/t090501-c5525-flt-l-00-b-g.html [ Failure ]
+css2.1/t090501-c5525-flt-r-00-b-g.html [ Failure ]
+css2.1/t100304-c43-rpl-bbx-01-d-g.html [ Failure ]
+css2.1/t1202-counter-04-b.html [ Failure ]
+css2.1/t1205-c566-list-stl-01-c-g.html [ Failure ]
+css2.1/t1508-c527-font-00-b.html [ Failure ]
+css2.1/t1508-c527-font-04-b.html [ Failure ]
+css2.1/t1508-c527-font-05-b.html [ Failure ]
+css2.1/t1508-c527-font-07-b.html [ Failure ]
+css2.1/t1508-c527-font-10-c.html [ Failure ]
+css3/selectors3/html/css3-modsel-23.html [ Failure ]
+css3/selectors3/html/css3-modsel-24.html [ Failure ]
+css3/selectors3/html/css3-modsel-68.html [ Failure ]
+css3/selectors3/html/css3-modsel-69.html [ Failure ]
+css3/selectors3/xml/css3-modsel-23.xml [ Failure ]
+css3/selectors3/xml/css3-modsel-24.xml [ Failure ]
+css3/selectors3/xml/css3-modsel-68.xml [ Failure ]
+css3/selectors3/xml/css3-modsel-69.xml [ Failure ]
+editing/deleting/5144139-2.html [ Failure ]
+editing/input/caret-at-the-edge-of-input.html [ Failure ]
+editing/input/reveal-caret-of-multiline-input.html [ Failure ]
+editing/inserting/4960120-1.html [ Failure ]
+editing/inserting/5549929-2.html [ Failure ]
+editing/inserting/5549929-3.html [ Failure ]
+editing/inserting/before-after-input-element.html [ Failure ]
+editing/inserting/insert-br-at-tabspan-001.html [ Failure ]
+editing/inserting/insert-br-at-tabspan-002.html [ Failure ]
+editing/inserting/insert-br-at-tabspan-003.html [ Failure ]
+editing/inserting/insert-tab-001.html [ Failure ]
+editing/inserting/insert-tab-002.html [ Failure ]
+editing/inserting/insert-tab-004.html [ Failure ]
+editing/inserting/insert-text-at-tabspan-001.html [ Failure ]
+editing/inserting/insert-text-at-tabspan-002.html [ Failure ]
+editing/inserting/insert-text-at-tabspan-003.html [ Failure ]
+editing/pasteboard/4806874.html [ Failure ]
+editing/pasteboard/input-field-1.html [ Failure ]
+editing/pasteboard/paste-text-at-tabspan-003.html [ Failure ]
+editing/selection/3690703-2.html [ Failure ]
+editing/selection/3690703.html [ Failure ]
+editing/selection/3690719.html [ Failure ]
+editing/selection/4895428-3.html [ Failure ]
+editing/selection/4975120.html [ Failure ]
+editing/selection/drag-select-1.html [ Failure ]
+editing/selection/editable-html-element.html [ Failure ]
+editing/selection/extend-by-word-001.html [ Failure ]
+editing/selection/select-box.html [ Failure ]
+editing/selection/vertical-lr-ltr-extend-line-backward-br.html [ Failure ]
+editing/selection/vertical-lr-ltr-extend-line-forward-br.html [ Failure ]
+editing/selection/vertical-rl-ltr-extend-line-backward-br.html [ Failure ]
+editing/selection/vertical-rl-ltr-extend-line-backward-p.html [ Failure ]
+editing/selection/vertical-rl-ltr-extend-line-backward-wrap.html [ Failure ]
+editing/selection/vertical-rl-ltr-extend-line-forward-br.html [ Failure ]
+editing/selection/vertical-rl-ltr-extend-line-forward-p.html [ Failure ]
+editing/selection/vertical-rl-ltr-extend-line-forward-wrap.html [ Failure ]
+editing/selection/vertical-rl-rtl-extend-line-backward-br.html [ Failure ]
+editing/selection/vertical-rl-rtl-extend-line-backward-p.html [ Failure ]
+editing/selection/vertical-rl-rtl-extend-line-forward-br.html [ Failure ]
+editing/selection/vertical-rl-rtl-extend-line-forward-p.html [ Failure ]
+fast/block/float/overhanging-tall-block.html [ Failure ]
+fast/block/positioning/002.html [ Failure ]
+fast/block/positioning/056.html [ Failure ]
+fast/css/beforeSelectorOnCodeElement.html [ Failure ]
+fast/css/font-face-default-font.html [ Failure ]
+fast/css/font-face-multiple-ranges-for-unicode-range.html [ Failure ]
+fast/css/input-search-padding.html [ Failure ]
+fast/css/line-height.html [ Failure ]
+fast/css/resize-corner-tracking.html [ Failure ]
+fast/css/text-overflow-input.html [ Failure ]
+fast/css/word-space-extra.html [ Failure ]
+fast/dom/52776.html [ Failure ]
+fast/dom/HTMLTextAreaElement/reset-textarea.html [ Failure ]
+fast/dom/isindex-001.html [ Failure ]
+fast/dynamic/008.html [ Failure ]
+fast/events/context-no-deselect.html [ Failure ]
+fast/events/onload-re-entry.html [ Failure ]
+fast/forms/HTMLOptionElement_label06.html [ Failure ]
+fast/forms/HTMLOptionElement_label07.html [ Failure ]
+fast/forms/basic-inputs.html [ Failure ]
+fast/forms/basic-textareas-quirks.html [ Failure ]
+fast/forms/box-shadow-override.html [ Failure ]
+fast/forms/control-restrict-line-height.html [ Failure ]
+fast/forms/encoding-test.html [ Failure ]
+fast/forms/fieldset-align.html [ Failure ]
+fast/forms/focus-selection-textarea.html [ Failure ]
+fast/forms/form-element-geometry.html [ Failure ]
+fast/forms/input-align.html [ Failure ]
+fast/forms/input-appearance-default-bkcolor.html [ Failure ]
+fast/forms/input-appearance-disabled.html [ Failure ]
+fast/forms/input-appearance-focus.html [ Failure ]
+fast/forms/input-appearance-preventDefault.html [ Failure ]
+fast/forms/input-appearance-readonly.html [ Failure ]
+fast/forms/input-appearance-selection.html [ Failure ]
+fast/forms/input-appearance-visibility.html [ Failure ]
+fast/forms/input-baseline.html [ Failure ]
+fast/forms/input-disabled-color.html [ Failure ]
+fast/forms/input-double-click-selection-gap-bug.html [ Failure ]
+fast/forms/input-placeholder-visibility-1.html [ Failure ]
+fast/forms/input-placeholder-visibility-3.html [ Failure ]
+fast/forms/input-readonly-dimmed.html [ Failure ]
+fast/forms/input-readonly-empty.html [ Failure ]
+fast/forms/input-spaces.html [ Failure ]
+fast/forms/input-text-click-inside.html [ Failure ]
+fast/forms/input-text-double-click.html [ Failure ]
+fast/forms/input-text-option-delete.html [ Failure ]
+fast/forms/input-text-self-emptying-click.html [ Failure ]
+fast/forms/input-text-word-wrap.html [ Failure ]
+fast/forms/input-width.html [ Failure ]
+fast/forms/listbox-bidi-align.html [ Failure ]
+fast/forms/menulist-separator-painting.html [ Failure ]
+fast/forms/number/number-appearance-rtl.html [ Failure ]
+fast/forms/number/number-appearance-spinbutton-disabled-readonly.html [ Failure ]
+fast/forms/number/number-appearance-spinbutton-layer.html [ Failure ]
+fast/forms/placeholder-position.html [ Failure ]
+fast/forms/placeholder-pseudo-style.html [ Failure ]
+fast/forms/search-cancel-button-style-sharing.html [ Failure ]
+fast/forms/search-display-none-cancel-button.html [ Failure ]
+fast/forms/search-rtl.html [ Failure ]
+fast/forms/search-vertical-alignment.html [ Failure ]
+fast/forms/select-background-none.html [ Failure ]
+fast/forms/select-baseline.html [ Failure ]
+fast/forms/selectlist-minsize.html [ Failure ]
+fast/forms/text-style-color.html [ Failure ]
+fast/forms/textarea-align.html [ Failure ]
+fast/forms/textarea-placeholder-pseudo-style.html [ Failure ]
+fast/forms/textarea-placeholder-visibility-1.html [ Failure ]
+fast/forms/textarea-placeholder-visibility-2.html [ Failure ]
+fast/forms/textarea-setinnerhtml.html [ Failure ]
+fast/forms/textfield-focus-ring.html [ Failure ]
+fast/forms/textfield-outline.html [ Failure ]
+fast/forms/textfield-overflow.html [ Failure ]
+fast/frames/take-focus-from-iframe.html [ Failure ]
+fast/html/details-no-summary4.html [ Failure ]
+fast/html/details-open-javascript.html [ Failure ]
+fast/html/details-open2.html [ Failure ]
+fast/html/details-open4.html [ Failure ]
+fast/inline/absolute-positioned-inline-in-centred-block.html [ Failure ]
+fast/inline/left-right-center-inline-alignment-in-ltr-and-rtl-blocks.html [ Failure ]
+fast/lists/dynamic-marker-crash.html [ Failure ]
+fast/parser/entity-comment-in-textarea.html [ Failure ]
+fast/parser/open-comment-in-textarea.html [ Failure ]
+fast/repaint/renderer-destruction-by-invalidateSelection-crash.html [ Failure ]
+fast/repaint/search-field-cancel.html [ Failure ]
+fast/repaint/subtree-root-skipped.html [ Failure ]
+fast/replaced/replaced-breaking-mixture.html [ Failure ]
+fast/replaced/replaced-breaking.html [ Failure ]
+fast/replaced/three-selects-break.html [ Failure ]
+fast/replaced/width100percent-searchfield.html [ Failure ]
+fast/replaced/width100percent-textfield.html [ Failure ]
+fast/table/003.html [ Failure ]
+fast/table/border-collapsing/004.html [ Failure ]
+fast/table/colspanMinWidth.html [ Failure ]
+fast/table/spanOverlapRepaint.html [ Failure ]
+fast/table/text-field-baseline.html [ Failure ]
+fast/text/atsui-small-caps-punctuation-size.html [ Failure ]
+fast/text/backslash-to-yen-sign-euc.html [ Failure ]
+fast/text/backslash-to-yen-sign.html [ Failure ]
+fast/text/basic/003.html [ Failure ]
+fast/text/basic/005.html [ Failure ]
+fast/text/complex-text-opacity.html [ Failure ]
+fast/text/fallback-traits-fixup.html [ Failure ]
+fast/text/international/arabic-justify.html [ Failure ]
+fast/text/international/hindi-whitespace.html [ Failure ]
+fast/text/international/text-spliced-font.html [ Failure ]
+fast/text/international/unicode-bidi-plaintext-in-textarea.html [ Failure ]
+fast/text/large-text-composed-char.html [ Failure ]
+fast/text/letter-spacing-negative-opacity.html [ Failure ]
+fast/text/midword-break-before-surrogate-pair-2.html [ Failure ]
+fast/text/textIteratorNilRenderer.html [ Failure ]
+fast/text/whitespace/028.html [ Failure ]
+fast/transforms/transformed-focused-text-input.html [ Failure ]
+fast/writing-mode/fallback-orientation.html [ Failure ]
+http/tests/misc/location-replace-crossdomain.html [ Failure ]
+http/tests/navigation/javascriptlink-frames.html [ Failure ]
+http/tests/navigation/postredirect-basic.html [ Failure ]
+http/tests/navigation/postredirect-goback1.html [ Failure ]
+ietestcenter/css3/bordersbackgrounds/border-radius-style-001.htm [ Failure ]
+ietestcenter/css3/bordersbackgrounds/border-radius-style-002.htm [ Failure ]
+ietestcenter/css3/text/textshadow-002.htm [ Failure ]
+plugins/iframe-plugin-bgcolor.html [ Failure ]
+plugins/mouse-click-plugin-clears-selection.html [ Failure ]
+plugins/netscape-dom-access.html [ Failure ]
+svg/W3C-SVG-1.1-SE/color-prop-05-t.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/coords-dom-01-f.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/coords-dom-02-f.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/coords-dom-03-f.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/coords-dom-04-f.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/coords-units-03-b.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/filters-felem-01-b.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/filters-image-03-f.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/interact-pointer-03-t.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/linking-uri-01-b.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/painting-marker-07-f.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/paths-dom-02-f.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/pservers-grad-17-b.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/pservers-grad-20-b.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/pservers-pattern-03-f.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/pservers-pattern-04-f.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/struct-use-14-f.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/styling-css-04-f.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/svgdom-over-01-f.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/text-tref-03-b.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/text-tspan-02-b.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/types-dom-01-b.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/types-dom-02-f.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/types-dom-03-b.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/types-dom-04-b.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/types-dom-05-b.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/types-dom-06-f.svg [ Failure ]
+svg/W3C-SVG-1.1-SE/types-dom-07-f.svg [ Failure ]
+svg/W3C-SVG-1.1/animate-elem-04-t.svg [ Failure ]
+svg/W3C-SVG-1.1/coords-trans-04-t.svg [ Failure ]
+svg/W3C-SVG-1.1/filters-light-04-f.svg [ Failure ]
+svg/W3C-SVG-1.1/filters-turb-02-f.svg [ Failure ]
+svg/W3C-SVG-1.1/render-elems-06-t.svg [ Failure ]
+svg/W3C-SVG-1.1/render-elems-07-t.svg [ Failure ]
+svg/W3C-SVG-1.1/render-elems-08-t.svg [ Failure ]
+svg/W3C-SVG-1.1/render-groups-01-b.svg [ Failure ]
+svg/W3C-SVG-1.1/render-groups-03-t.svg [ Failure ]
+svg/W3C-SVG-1.1/text-text-01-b.svg [ Failure ]
+svg/as-object/object-box-sizing-no-width-height.html [ Failure ]
+svg/batik/text/smallFonts.svg [ Failure ]
+svg/batik/text/textEffect.svg [ Failure ]
+svg/batik/text/textEffect3.svg [ Failure ]
+svg/batik/text/textPosition.svg [ Failure ]
+svg/batik/text/textPosition2.svg [ Failure ]
+svg/batik/text/verticalTextOnPath.svg [ Failure ]
+svg/css/text-gradient-shadow.svg [ Failure ]
+svg/custom/bug45331.svg [ Failure ]
+svg/custom/glyph-selection-arabic-forms.svg [ Failure ]
+svg/custom/glyph-selection-bidi-mirror.svg [ Failure ]
+svg/custom/glyph-selection-non-bmp.svg [ Failure ]
+svg/custom/glyph-transformation-with-hkern.svg [ Failure ]
+svg/custom/inline-svg-in-xhtml.xml [ Failure ]
+svg/custom/scrolling-embedded-svg-file-image-repaint-problem.html [ Failure ]
+svg/custom/svg-fonts-in-html.html [ Failure ]
+svg/custom/svg-fonts-segmented.xhtml [ Failure ]
+svg/custom/text-linking.svg [ Failure ]
+svg/custom/tref-update.svg [ Failure ]
+svg/foreignObject/text-tref-02-b.svg [ Failure ]
+svg/hixie/intrinsic/003.html [ Failure ]
+svg/hixie/mixed/003.xml [ Failure ]
+svg/text/foreignObject-text-clipping-bug.xml [ Failure ]
+svg/text/scaling-font-with-geometric-precision.html [ Failure ]
+svg/text/text-align-04-b.svg [ Failure ]
+svg/text/text-align-06-b.svg [ Failure ]
+svg/text/text-overflow-ellipsis-svgfont.html [ Failure ]
+svg/text/text-spacing-01-b.svg [ Failure ]
+svg/text/text-text-01-b.svg [ Failure ]
+svg/text/text-tspan-01-b.svg [ Failure ]
+svg/text/text-viewbox-rescale.html [ Failure ]
+svg/transforms/text-with-mask-with-svg-transform.svg [ Failure ]
+svg/transforms/text-with-pattern-inside-transformed-html.xhtml [ Failure ]
+svg/transforms/text-with-pattern-with-svg-transform.svg [ Failure ]
+svg/wicd/test-rightsizing-b.xhtml [ Failure ]
+tables/mozilla/bugs/bug1188.html [ Failure ]
+tables/mozilla/bugs/bug18359.html [ Failure ]
+tables/mozilla/bugs/bug24200.html [ Failure ]
+tables/mozilla/bugs/bug2479-3.html [ Failure ]
+tables/mozilla/bugs/bug28928.html [ Failure ]
+tables/mozilla/bugs/bug30559.html [ Failure ]
+tables/mozilla/bugs/bug4382.html [ Failure ]
+tables/mozilla/bugs/bug4527.html [ Failure ]
+tables/mozilla/bugs/bug46368-1.html [ Failure ]
+tables/mozilla/bugs/bug46368-2.html [ Failure ]
+tables/mozilla/bugs/bug51037.html [ Failure ]
+tables/mozilla/bugs/bug55545.html [ Failure ]
+tables/mozilla/bugs/bug59354.html [ Failure ]
+tables/mozilla/bugs/bug96334.html [ Failure ]
+tables/mozilla/dom/tableDom.html [ Failure ]
+tables/mozilla/other/move_row.html [ Failure ]
+tables/mozilla_expected_failures/bugs/bug92647-1.html [ Failure ]
+
+# [Qt] Re-skip failing tests for Qt 4.8 platform
+# https://bugs.webkit.org/show_bug.cgi?id=92119
+http/tests/misc/acid3.html
+fast/css/tab-size.html
+fast/text/international/bdi-dir-default-to-auto.html
+
+# [Qt] svg/custom/svg-features.html fails on Qt 4.8
+# https://bugs.webkit.org/show_bug.cgi?id=92645
+svg/custom/svg-features.html
+
+#
+# END OF TESTS MIGRATED FROM THE OLD SKIPPED FILE
+#
+
+webkit.org/b/64526 [ Debug ] svg/animations/svgtransform-animation-1.html [ Crash Pass ]
+
+# Slow tests
+# FIXME: File bugs.
+Bug(_qt_slow) [ Debug ] editing/selection/empty-cell-right-click.html [ Pass Slow ]
+Bug(_qt_slow) [ Debug ] editing/selection/dump-as-markup.html [ Pass Slow ]
+Bug(_qt_slow) [ Debug ] fast/js/array-sort-modifying-tostring.html [ Pass Timeout ]
+Bug(_qt_slow) [ Debug ] fast/overflow/lots-of-sibling-inline-boxes.html [ Pass Slow ]
+Bug(_qt_slow) [ Debug ] fast/js/dfg-inline-function-dot-caller.html [ Pass Slow ]
+Bug(_qt_slow) [ Debug ] fast/js/dfg-poison-fuzz.html [ Pass Slow ]
+
+webkit.org/b/62662 [ Debug ] inspector/cookie-parser.html [ Crash Pass ]
+
+webkit.org/b/73766 css3/unicode-bidi-isolate-aharon-failing.html [ ImageOnlyFailure ]
+
+# Web Inspector: Implement support for InspectorClient::overrideDeviceMetrics() in platforms other than Chromium
+# https://bugs.webkit.org/show_bug.cgi?id=82886
+webkit.org/b/82886 inspector/styles/override-screen-size.html [ Skip ]
+
+webkit.org/b/83906 ietestcenter/css3/grid/grid-column-001.htm [ ImageOnlyFailure ]
+webkit.org/b/83907 ietestcenter/css3/grid/grid-column-002.htm [ ImageOnlyFailure ]
+webkit.org/b/83909 ietestcenter/css3/grid/grid-column-003.htm [ ImageOnlyFailure ]
+webkit.org/b/83912 ietestcenter/css3/grid/grid-items-002.htm [ ImageOnlyFailure ]
+webkit.org/b/83913 ietestcenter/css3/grid/grid-items-003.htm [ ImageOnlyFailure ]
+
+webkit.org/b/84759 ietestcenter/css3/multicolumn/column-containing-block-001.htm [ ImageOnlyFailure ]
+webkit.org/b/84760 ietestcenter/css3/multicolumn/column-containing-block-002.htm [ ImageOnlyFailure ]
+webkit.org/b/84761 ietestcenter/css3/multicolumn/column-filling-001.htm [ ImageOnlyFailure ]
+webkit.org/b/84770 ietestcenter/css3/multicolumn/column-width-applies-to-007.htm [ ImageOnlyFailure ]
+webkit.org/b/84771 ietestcenter/css3/multicolumn/column-width-applies-to-009.htm [ ImageOnlyFailure ]
+webkit.org/b/84772 ietestcenter/css3/multicolumn/column-width-applies-to-010.htm [ ImageOnlyFailure ]
+webkit.org/b/84773 ietestcenter/css3/multicolumn/column-width-applies-to-012.htm [ ImageOnlyFailure ]
+webkit.org/b/84777 ietestcenter/css3/multicolumn/column-width-applies-to-015.htm [ ImageOnlyFailure ]
+webkit.org/b/84778 ietestcenter/css3/multicolumn/column-width-negative-001.htm [ ImageOnlyFailure ]
+
+# IETC flexbox failures
+webkit.org/b/85211 ietestcenter/css3/flexbox/flexbox-align-stretch-001.htm [ ImageOnlyFailure ]
+webkit.org/b/85212 ietestcenter/css3/flexbox/flexbox-layout-002.htm [ ImageOnlyFailure ]
+
+# Generate results for your platform(s)
+webkit.org/b/85567 fast/images/png-suite/test.html [ ImageOnlyFailure ]
+
+# Interferes with the tests that should pass
+webkit.org/b/85689 fast/animation/request-animation-frame-disabled.html [ Skip ]
+
+# ietestcenter/css3/valuesandunits/units-000.htm asserts
+# https://bugs.webkit.org/show_bug.cgi?id=86176
+webkit.org/b/85308 ietestcenter/css3/valuesandunits/units-000.htm [ Skip ]
+webkit.org/b/85310 ietestcenter/css3/valuesandunits/units-010.htm [ ImageOnlyFailure ]
+
+# IETC namespace failures
+webkit.org/b/86142 ietestcenter/css3/namespaces/syntax-021.xml [ ImageOnlyFailure ]
+
+# Need rebaseline after https://bugs.webkit.org/show_bug.cgi?id=6033
+webkit.org/b/6033 css3/filters/add-filter-rendering.html [ ImageOnlyFailure ]
+webkit.org/b/6033 css3/filters/crash-filter-change.html [ ImageOnlyFailure ]
+webkit.org/b/6033 css3/filters/crash-hw-sw-switch.html [ ImageOnlyFailure ]
+webkit.org/b/6033 css3/filters/effect-blur.html [ ImageOnlyFailure ]
+webkit.org/b/6033 css3/filters/effect-brightness-clamping.html [ ImageOnlyFailure ]
+webkit.org/b/6033 css3/filters/effect-brightness.html [ ImageOnlyFailure ]
+webkit.org/b/6033 css3/filters/effect-combined.html [ ImageOnlyFailure ]
+webkit.org/b/6033 css3/filters/effect-contrast.html [ ImageOnlyFailure ]
+webkit.org/b/6033 css3/filters/effect-drop-shadow.html [ ImageOnlyFailure ]
+webkit.org/b/6033 css3/filters/effect-grayscale.html [ ImageOnlyFailure ]
+webkit.org/b/6033 css3/filters/effect-hue-rotate.html [ ImageOnlyFailure ]
+webkit.org/b/6033 css3/filters/effect-invert.html [ ImageOnlyFailure ]
+webkit.org/b/6033 css3/filters/effect-opacity.html [ ImageOnlyFailure ]
+webkit.org/b/6033 css3/filters/effect-saturate.html [ ImageOnlyFailure ]
+webkit.org/b/6033 css3/filters/effect-sepia.html [ ImageOnlyFailure ]
+webkit.org/b/6033 css3/filters/filtered-inline.html [ ImageOnlyFailure ]
+webkit.org/b/6033 css3/filters/multiple-filters-invalidation.html [ ImageOnlyFailure ]
+webkit.org/b/6033 css3/filters/nested-filters.html [ ImageOnlyFailure ]
+webkit.org/b/6033 css3/filters/regions-expanding.html [ ImageOnlyFailure ]
+webkit.org/b/6033 css3/filters/simple-filter-rendering.html [ ImageOnlyFailure ]
+
+# CSS shaders only work in qt-wk2
+css3/filters/custom
+
+# UndoManager is not yet enabled.
+webkit.org/b/87908 editing/undomanager [ Skip ]
+
+# CSS image-resolution is not yet enabled.
+webkit.org/b/85262 fast/css/image-resolution [ Skip ]
+
+# CSS image-orientation is not yet enabled.
+webkit.org/b/89052 fast/css/image-orientation [ Skip ]
+
+# CSS3 Text support is not yet enabled (needs ENABLE_CSS3_TEXT).
+webkit.org/b/58491 fast/css3-text/css3-text-decoration
+webkit.org/b/76173 fast/css3-text/css3-text-align-last
+
+# Needs rebaseline after bug 86441
+# failing new tests
+webkit.org/b/86441 fast/borders/border-antialiasing.html [ Skip ]
+webkit.org/b/86441 fast/multicol/shadow-breaking.html [ ImageOnlyFailure ]
+
+# Requires rebaseline after https://bugs.webkit.org/show_bug.cgi?id=85405
+webkit.org/b/85405 tables/mozilla/bugs/bug10296-1.html [ Skip ]
+
+# Paletted PNG with ICC color profiles not working.
+webkit.org/b/86722 fast/images/paletted-png-with-color-profile.html
+
+# LayoutTestController::setAutomaticLinkDetectionEnabled isn't implemented
+webkit.org/b/85463 editing/inserting/typing-space-to-trigger-smart-link.html [ Skip ]
+
+# Disable webaudio codec tests, including proprietary codecs.
+webkit.org/b/88794 webaudio/codec-tests [ Skip ]
+
+webkit.org/b/90007 http/tests/security/mixedContent/insecure-audio-video-in-main-frame.html [ Skip ]
+
+# Text Autosizing is not enabled.
+webkit.org/b/84186 fast/text-autosizing [ Skip ]
+
+# Dialog element is not yet enabled.
+webkit.org/b/84635 fast/dom/HTMLDialogElement [ Skip ]
+
+# Skip tests in fast/text/shaping
+webkit.org/b/90951 fast/text/shaping [ Skip ]
+
+# Missing test infrastructure, no gamepads available.
+webkit.org/b/92873 gamepad/gamepad-polling-access.html [ Skip ]
+
+# Flaky tests
+webkit.org/b/91376 http/tests/security/sandboxed-iframe-modify-self.html [ Failure Pass ]
+webkit.org/b/91379 http/tests/security/contentSecurityPolicy/policy-does-not-affect-child.html [ Failure Pass ]
+webkit.org/b/91379 http/tests/security/contentSecurityPolicy/object-src-none-allowed.html [ Failure Pass ]
+http/tests/inspector/appcache/appcache-manifest-with-non-existing-file.html [ Failure Pass ]
+http/tests/misc/webtiming-origins.html [ Failure Pass ]
+http/tests/security/contentSecurityPolicy/object-src-url-allowed.html [ Failure Pass ]
+svg/custom/use-instanceRoot-event-listeners.xhtml [ Skip ]
+svg/dom/SVGScriptElement/script-change-externalResourcesRequired-while-loading.svg [ Skip ]
+fast/loader/javascript-url-in-embed.html [ Failure Pass ]
+editing/pasteboard/smart-paste-004.html [ Failure Pass ]
+http/tests/security/sandboxed-iframe-invalid.html [ Failure Pass ]
+
+webkit.org/b/93247 [ Debug ] fast/lists/list-marker-remove-crash.html [ Crash ]
+
+webkit.org/b/93654 [ Debug ] fast/events/keyevent-iframe-removed-crash.html [ Crash ]
+
+# This has always failed on Qt - exposed by bug 89826
+webkit.org/b/94004 css2.1/20110323/c541-word-sp-000.htm [ ImageOnlyFailure ]
+
+# Added by bug 89826
+webkit.org/b/94005 css2.1/20110323/word-spacing-remove-space-003.htm [ ImageOnlyFailure ]
+webkit.org/b/94005 css2.1/20110323/word-spacing-remove-space-006.htm [ ImageOnlyFailure ]
+webkit.org/b/94006 fast/css/word-spacing-characters-complex-text.html [ ImageOnlyFailure ]
+
+# Tests failing on QtWebKit 2.3 since merge of August 17th
+# Probably added by bug 89826 and related to bugs 94004-94006
+css2.1/20110323/word-spacing-characters-002.htm [ ImageOnlyFailure ]
+css2.1/20110323/word-spacing-remove-space-002.htm [ ImageOnlyFailure ]
+css2.1/20110323/word-spacing-remove-space-004.htm [ ImageOnlyFailure ]
+css2.1/20110323/word-spacing-remove-space-005.htm [ ImageOnlyFailure ]
+
+# New test introduced in https://bugs.webkit.org/show_bug.cgi?id=77772 fails
+webkit.org/b/96505 css3/flexbox/inline-flex-crash2.html [ Failure ]
+
+# New test introduced in https://bugs.webkit.org/show_bug.cgi?id=94449 fails
+webkit.org/b/94449 touchadjustment/context-menu-text-subtargets.html [ Failure ]
+
+# Test failing on QtWebKit 2.3 since merge of September 11th
+fast/encoding/frame-default-enc.html [ Failure ]
+
+# [Qt][WK1] New touchadjustment/focusout-on-touch.html fails
+# https://bugs.webkit.org/show_bug.cgi?id=95205
+touchadjustment/focusout-on-touch.html [ Failure ]
+
+# [Qt][WK1] xmlviewer/extensions-api.html times out
+# https://bugs.webkit.org/show_bug.cgi?id=97389
+xmlviewer/extensions-api.html [ Skip ]
+
+# Slow tests
+editing/selection/rtl-move-selection-right-left.html [ Slow ]
+fast/workers/storage/interrupt-database.html [ Slow ]
+fast/events/dispatch-message-string-data.html [ Slow ]
+editing/selection/hit-test-on-text-with-line-height.html [ Slow ]
+fast/forms/search-disabled-readonly.html [ Slow Pass ]
+editing/selection/select-line-break-with-opposite-directionality.html [ Slow Pass ]
+http/tests/navigation/slowtimerredirect-basic.html [ Slow Pass ]
+http/tests/navigation/slowmetaredirect-basic.html  [ Slow Pass ]
+http/tests/xmlhttprequest/small-chunks-response-text.html [ Slow Pass ]
+
+# Tests missing baselines, needs to be investigated
+svg/clip-path/deep-nested-clip-in-mask-panning.svg [ Missing ]
+svg/clip-path/deep-nested-clip-in-mask.svg [ Missing ]
+svg/custom/radialGradient-focal-radius.svg [ Missing ]
+fast/repaint/box-shadow-inset-repaint.html [ Missing ]
+fast/xsl/xslt-extra-content-at-end.xml [ Missing ]
+svg/filters/feImage-filterUnits-objectBoundingBox-primitiveUnits-userSpaceOnUse.svg [ Missing ]
+css2.1/t100801-c548-ln-ht-01-b-ag.html [ Missing ]
+css2.1/20110323/inline-non-replaced-height-003.htm [ Missing ]
+css2.1/20110323/inline-non-replaced-height-002.htm [ Missing ]
+fast/text/word-space.html [ Missing ]
+fast/events/touch/gesture/context-menu-on-long-press.html [ Missing ]
+fast/events/touch/gesture/right-click-gestures-set-cursor-at-correct-position.html [ Missing ]
+css3/filters/effect-reference-ordering-hw.html [ Missing ]
+
+# [Qt4] editing/selection/5354455-1.html fails
+# https://bugs.webkit.org/show_bug.cgi?id=99013
+webkit.org/b/99013 editing/selection/5354455-1.html [ Failure ]
+
+# New test failing added by https://bugs.webkit.org/show_bug.cgi?id=97639
+fast/js/string-localeCompare.html [ Failure ]
+
+# [Qt][WK1] ERROR: TestRunner::overridePreference() does not support the 'WebKitStorageBlockingPolicy' preference
+http/tests/security/cross-origin-local-storage-wk1.html
+
+# [Qt][WK1] ERROR:  TestRunner::overridePreference() does not support the 'WebKitPageCacheSupportsPluginsPreferenceKey' preference
+plugins/frameset-with-plugin-frame.html
+
+# Test passing on text since merge of October 8th
+fast/text/font-kerning.html [ ImageOnlyFailure ]
+
+# Re-skipping tests unskipped in Qt trunk, but still failing in QtWebKit2.3
+editing/selection/caret-rtl-2-left.html [ Failure ]
+editing/selection/caret-rtl-right.html [ Failure ]
+tables/mozilla/bugs/bug12384.html [ Failure ]
+tables/mozilla/bugs/bug99948.html [ Failure ]
+tables/mozilla_expected_failures/bugs/bug2479-5.html [ Failure ]
+
+# [Qt] new test http/tests/cookies/single-quoted-value.html is failing
+# https://bugs.webkit.org/show_bug.cgi?id=86066
+http/tests/cookies/single-quoted-value.html [ Failure ]
+
+#### Tests unskipped in trunk (10/10 -> 12/10), but still failing here:
+
+# Tests unskipped in trunk in r131079
+css3/unicode-bidi-isolate-basic.html [ Failure ]
+fast/borders/rtl-border-04.html [ Failure ]
+fast/borders/rtl-border-05.html [ Failure ]
+fast/css/text-overflow-ellipsis-text-align-left.html [ Failure ]
+fast/css/text-overflow-ellipsis-text-align-center.html [ Failure ]
+fast/dom/34176.html [ Failure ]
+fast/inline/inline-box-background-long-image.html [ Failure ]
+fast/inline/inline-box-background-repeat-x.html [ Failure ]
+fast/inline/inline-box-background-repeat-y.html [ Failure ]
+fast/inline/inline-box-background.html [ Failure ]
+webkit.org/b/65266 svg/W3C-SVG-1.1-SE/styling-pres-02-f.svg [ Failure ]
+svg/W3C-SVG-1.1/fonts-desc-02-t.svg [ Failure ]
+svg/W3C-SVG-1.1/fonts-glyph-04-t.svg [ Failure ]
+svg/batik/text/textLayout.svg [ Failure ]
+svg/batik/text/textOnPathSpaces.svg [ Failure ]
+svg/batik/text/verticalText.svg [ Failure ]
+svg/batik/text/xmlSpace.svg [ Failure ]
+svg/custom/feComponentTransfer-Discrete.svg [ Failure ]
+svg/custom/feComponentTransfer-Gamma.svg [ Failure ]
+svg/custom/feComponentTransfer-Linear.svg [ Failure ]
+svg/custom/feComponentTransfer-Table.svg [ Failure ]
+webkit.org/b/46093 svg/zoom/text/zoom-coords-viewattr-01-b.svg [ Failure ]
+svg/text/select-textLength-spacingAndGlyphs-squeeze-1.svg [ Failure ]
+svg/text/select-textLength-spacingAndGlyphs-squeeze-2.svg [ Failure ]
+svg/text/select-textLength-spacingAndGlyphs-squeeze-3.svg [ Failure ]
+svg/text/select-textLength-spacingAndGlyphs-squeeze-4.svg [ Failure ]
+svg/text/select-textLength-spacingAndGlyphs-stretch-1.svg [ Failure ]
+svg/text/select-textLength-spacingAndGlyphs-stretch-2.svg [ Failure ]
+svg/text/select-textLength-spacingAndGlyphs-stretch-3.svg [ Failure ]
+css3/filters/composited-during-animation-layertree.html [ Failure Pass ]
+
+# This test fails because Qt does not support conditionals in unicode special casing.
+# See also http://trolltech.com/developer/task-tracker/index_html?id=212870&method=entry
+fast/css/case-transform.html [ Failure ]
+
+# New fast/dom/Window/mozilla-focus-blur.html introduced in r118916 fails
+webkit.org/b/87956 fast/dom/Window/mozilla-focus-blur.html [ Failure ]
+
+
+webkit.org/b/35973 fast/multicol/hit-test-above-or-below.html [ Failure ]
+css2.1/t051201-c23-first-line-00-b.html [ Failure ]
+
+# [Qt] svg/custom/svg-fonts-no-latin-glyph.html fails
+webkit.org/b/74847 svg/custom/svg-fonts-no-latin-glyph.html [ Failure ]
+
+#### End reskipped tests
+
+# New crash test that doesn't crash but still fails (from https://bugs.webkit.org/show_bug.cgi?id=98755 )
+svg/text/alt-glpyh-on-fallback-font-crash.svg [ Failure ]
+
+# Needs rebaseline
+fast/text/basic/013.html [ Failure ]
+editing/selection/caret-rtl-2.html [ Failure ]
+editing/selection/caret-rtl.html [ Failure ]
+editing/selection/extend-selection-bidi.html [ Failure ]
+
+# New tests failing after merge of October 19th-23rd
+media/video-playing-and-pause.html [ Slow Failure ]
+
+# [Qt][WK1] ERROR: TestRunner::overridePreference() does not support the 'WebKitSupportsMultipleWindows' preference
+fast/dom/HTMLAnchorElement/anchor-no-multiple-windows.html [ Failure ]
+fast/dom/Window/window-open-no-multiple-windows.html [ Failure ]
+fast/forms/post-popup-no-multiple-windows.html [ Failure ]
+
+# Test has error output, so skip it.
+media/video-playing-and-pause.html
+
+# New test failing after merge of November 4th-6th
+fast/js/string-capitalization.html [ Failure ]
+fast/text/international/combining-marks-position.html [ Failure ]
+
+# Tests crashing after merge of November 15th-16th
+http/tests/security/video-poster-cross-origin-crash.html [ Skip ]
+fast/images/webgl-teximage2d.html [ Skip ]
+
+# With new features being enabled, fast/js/global-constructors will need a new baseline soon.
+fast/js/global-constructors.html [ Failure ]
+
+# Test failing after merge of November 22nd-23rd
+inspector/editor/text-editor-selection.html [ Failure ]
+
+# New test added that doesn't match metrics with trunk.
+fast/ruby/position-after.html [ Failure ]

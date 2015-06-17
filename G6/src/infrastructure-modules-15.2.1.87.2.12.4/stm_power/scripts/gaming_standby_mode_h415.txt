@@ -1,0 +1,12 @@
+/sys/devices/soc.2/stm-usb.0/stm-ehci.0
+/sys/devices/soc.2/stm-usb.0/stm-ohci.0
+/sys/devices/soc.2/stm-usb.1/stm-ehci.1
+/sys/devices/soc.2/stm-usb.1/stm-ohci.1
+/sys/devices/soc.2/stm-usb.2/stm-ehci.2
+/sys/devices/soc.2/stm-usb.2/stm-ohci.2
+/sys/devices/soc.2/fe818000.sata
+/sys/devices/soc.2/fdda0000.h264pp
+/sys/devices/soc.2/fd341000.bdispII
+/sys/devices/soc.2/fd342000.bdispII
+/sys/devices/platform/stm-fb.0
+/sys/devices/platform/stm-fb.1

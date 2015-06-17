@@ -1,0 +1,15 @@
+X1/T2 minimal memory configuration
+
+diff --git a/player/codec/codec_mme_video_h264.cpp b/player/codec/codec_mme_video_h264.cpp
+index 2e9eba6..22060da 100644
+--- a/player/codec/codec_mme_video_h264.cpp
++++ b/player/codec/codec_mme_video_h264.cpp
+@@ -408,7 +408,7 @@ h264pp_status_t		PPStatus;
+     // Obtain the memory for the macroblock structure pool
+     //
+ 
+-    AStatus = PartitionAllocatorOpen( &MacroBlockMemoryDevice, Configuration.AncillaryMemoryPartitionName, H264_MACROBLOCK_STRUCTURE_MEMORY, true );
++    AStatus = PartitionAllocatorOpen( &MacroBlockMemoryDevice, "BPA2_Region0", H264_MACROBLOCK_STRUCTURE_MEMORY, true );
+     if( AStatus != allocator_ok )
+     {
+ 	report( severity_error, "Codec_MmeVideoH264_c::RegisterOutputBufferRing - Failed to allocate memory for macroblock structure buffers\n" );

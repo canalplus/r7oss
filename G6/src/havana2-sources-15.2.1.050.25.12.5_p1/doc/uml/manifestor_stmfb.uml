@@ -1,0 +1,92 @@
+@startuml
+title Manifestor_Video_Stmfb_c::QueueDecodeBuffer
+
+hide footbox
+participant "Manifestor_Video_Stmfb_c" as manifestor_stmfb
+participant "VIBE" as vibe
+participant "DequeuedStreamBuffers" as dequeuedBuffers
+
+[-> manifestor_stmfb: QueueDecodeBuffer(Buffer)
+note left
+    Manifestation Coordinator calls QueueDecodeBuffer
+    on each manifestor attached to it
+end note
+activate manifestor_stmfb
+manifestor_stmfb -> manifestor_stmfb: QueueBuffer(Buffer)
+note left
+    The Manifestor base class calls QueueBuffer
+    which is virtual and implemented by manifestor_stmfb
+end note
+activate manifestor_stmfb
+manifestor_stmfb -> vibe:[DualClock] stm_display_source_set_control(ClockAdjustment)
+note left
+    On platforms that have an MDTP+FVDP like Orly2, 
+    The manifestor needs to apply the MDTP clock
+    adjustment computed by the output_timer
+end note
+activate vibe
+deactivate vibe
+manifestor_stmfb -> vibe: [DualClock && DualClockRegulationEnabled || !DualClock]\nstm_display_output_set_control(ClockAdjustment)
+note left
+    On platforms that have an MDTP+FVDP when dual clock
+    regulation is enabled, or on platforms that have a 
+    single output clock, the manifestor needs to apply the 
+    Output clock adjustment computed by the output_timer
+end note
+activate vibe
+deactivate vibe
+manifestor_stmfb -> manifestor_stmfb: FillVibeDisplayBufferStruct(Buffer)
+note left
+    the manifestor then fills in the DisplayBuffer structure, and
+    in particular the presentation time that vibe must honnor, 
+    and the number of times the frame/field must be repeated
+end note
+activate manifestor_stmfb
+deactivate manifestor_stmfb
+manifestor_stmfb -> vibe: stm_display_source_queue_buffer(Buffer)
+note left
+    The manifestor then queues the buffer to vibe
+end note
+activate vibe
+deactivate vibe
+deactivate manifestor_stmfb
+[<-- manifestor_stmfb
+deactivate manifestor_stmfb
+
+manifestor_stmfb <<- vibe: display_callback(Buffer, displayTime)
+note left
+    Once the buffer has been displayed, Vibe calls the display
+    callback which was registered in the DisplayBuffer struct.
+    The Vsync time and latency to reach output are passed as parameters 
+end note
+activate manifestor_stmfb
+manifestor_stmfb -> manifestor_stmfb: RecordActualTimings()
+note left
+    The manifestor records the actual timings in the Timing structure
+    attached as metadata to the buffer
+end note
+activate manifestor_stmfb
+deactivate manifestor_stmfb
+deactivate manifestor_stmfb
+
+manifestor_stmfb <<- vibe: completed_callback(Buffer, completedTime)
+note left
+    Once the buffer leaves display, Vibe calls the completed
+    callback that was registered in the DisplaBuffer struct.
+end note
+activate manifestor_stmfb
+manifestor_stmfb -> dequeuedBuffers: Insert(Buffer)
+note left
+    The manifestor puts the buffer in the internal Dequeued
+    Buffer Ring. The buffers will then be released by the 
+    ManifestorVideo BufferRelease Thread.
+end note
+activate dequeuedBuffers
+deactivate dequeuedBuffers
+deactivate manifestor_stmfb
+
+
+@enduml
+
+
+

@@ -1,0 +1,147 @@
+/*
+ * Copyright (C) 2013 STMicroelectronics Limited.
+ * Author: Alexandre Torgue <alexandre.torgue@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * publishhed by the Free Software Foundation.
+ */
+/dts-v1/;
+#include "stid127.dtsi"
+
+/ {
+	model = "STiD127 B2112 Board";
+	compatible = "st,stid127-b2112", "st,stid127";
+
+	memory{
+		device_type = "memory";
+		reg = <0x40000000 0x10000000>;
+	};
+
+	chosen {
+		bootargs = "console=ttyAS0,115200";
+		linux,stdout-path = &uart2;
+	};
+
+	aliases {
+		ttyAS0 = &uart2;
+		usb0 = &usb0;
+		if17 = &if17;
+		if18 = &if18;
+		if16 = &if16;
+		if1 = &if1;
+		if0 = &if0;
+		ethernet0 = &ethernet0;
+	};
+
+	soc {
+		uart2: serial@fe532000{
+			status = "okay";
+		};
+
+		ethernet0: dwmac@feb00000 {
+			status = "okay";
+			st,tx-retime-src = "clkgen";
+			max-speed = <100>;
+
+			phy-mode = "rgmii";
+			snps,phy-addr = <0x0>;
+			snps,reset-gpio = <&PIO21 2 0>;
+			snps,reset-active-low;
+			snps,reset-delays-us = <0 10000 10000>;
+		};
+
+		usb0: usb@fe800000{
+			status = "okay";
+		};
+
+		pcie0: pcie@fef20000 {
+			status = "okay";
+		};
+
+		pcie1: pcie@fef30000 {
+			status = "okay";
+		};
+
+		if17:queue_3 {
+			status = "okay";
+		};
+
+		if18:queue_4 {
+			status = "okay";
+		};
+
+		if6:queue_5 {
+			status = "okay";
+		};
+
+		if1:queue_7 {
+			status = "okay";
+		};
+
+		if0:queue_0 {
+			status = "okay";
+		};
+
+		fpethernet:stmfp@fee80000 {
+			status = "okay";
+			phy-mode = "rgmii";
+
+			fpdocsis{
+				st,phy-bus-name = "fixed";
+				fixed-link = <1 1000 0 0>;
+				st,phy-bus-id = <0>;
+				st,phy-addr = <2>;
+			};
+
+			fpgige0{
+				st,phy-bus-name = "fixed";
+				fixed-link = <1 1000 0 0>;
+				st,phy-bus-id = <0>;
+				st,phy-addr = <3>;
+			};
+
+			fpgige1{
+				st,phy-bus-name = "fixed";
+				fixed-link = <1 1000 0 0>;
+				st,phy-bus-id = <0>;
+				st,phy-addr = <1>;
+			};
+		};
+
+		spifsm:	spifsm@fe302000 {
+			status = "okay";
+			flash-name = "n25q256";
+			partitions = <&b2112_fsm_partitions>;
+
+			b2112_fsm_partitions: partitions-b2112 {
+				#address-cells = <1>;
+				#size-cells = <1>;
+				partition@0 {
+					label = "boot";
+					reg = <0x00000000 0x01a00000>;
+				};
+				partition@1a00000 {
+					label = "nvm";
+					reg = <0x01a00000 0x00100000>;
+				};
+				partition@1b00000 {
+					label = "rest";
+					reg = <0x01b00000 0x00500000>;
+				};
+			};
+		};
+
+		telss_spi0: telss-spi0{
+			status = "okay";
+		};
+
+		snd_tdm_player0: snd-uni-tdm@0xfeba4000 {
+			status = "okay";
+		};
+
+		snd_tdm_reader0: snd-uni-tdm@0xfeba5000 {
+			status = "okay";
+		};
+	};
+};

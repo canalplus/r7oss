@@ -1,0 +1,8 @@
+SPEC?=SPECS/stm-target-media-ctl.spec
+BUILDAREA?=$(PWD)/../
+
+-include $(BUILDAREA)/Makefile.rpm
+
+rpmpackage:
+	mkdir -p SOURCES &&\
+	git archive --format=tar --prefix=media-ctl/ HEAD | bzip2 --best > SOURCES/media-ctl.tar.bz2

@@ -1,0 +1,38 @@
+diff -urN linux-2.6.22/CREDITS linux-2.6.22-pcsp-kern/CREDITS
+--- linux-2.6.22/CREDITS	2007-09-11 13:23:03.000000000 +0400
++++ linux-2.6.22-pcsp-kern/CREDITS	2007-09-12 14:28:13.000000000 +0400
+@@ -403,6 +403,8 @@
+ N: Erik Inge Bolsø
+ E: knan@mo.himolde.no
+ D: Misc kernel hacks
++D: Updated PC speaker driver for 2.3
++S: Norway
+ 
+ N: Andreas E. Bombe
+ E: andreas.bombe@munich.netsurf.de
+@@ -3086,6 +3088,12 @@
+ S: Sunnyvale, California 94088-4132
+ S: USA
+ 
++N: Stas Sergeev
++E: stsp@users.sourceforge.net
++D: PCM PC-Speaker driver
++D: misc fixes
++S: Russia
++
+ N: Simon Shapiro
+ E: shimon@i-Connect.Net
+ W: http://www.-i-Connect.Net/~shimon
+diff -urN linux-2.6.22/drivers/input/misc/Kconfig linux-2.6.22-pcsp-kern/drivers/input/misc/Kconfig
+--- linux-2.6.22/drivers/input/misc/Kconfig	2007-09-11 13:23:26.000000000 +0400
++++ linux-2.6.22-pcsp-kern/drivers/input/misc/Kconfig	2007-09-12 14:35:06.000000000 +0400
+@@ -14,7 +14,8 @@
+ 
+ config INPUT_PCSPKR
+ 	tristate "PC Speaker support"
+-	depends on ALPHA || X86 || MIPS || PPC_PREP || PPC_CHRP || PPC_PSERIES
++	depends on (ALPHA || X86 || MIPS || PPC_PREP || PPC_CHRP || \
++		PPC_PSERIES) && SND_PCSP=n
+ 	help
+ 	  Say Y here if you want the standard PC Speaker to be used for
+ 	  bells and whistles.

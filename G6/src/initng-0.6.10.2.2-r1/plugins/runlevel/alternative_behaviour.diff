@@ -1,0 +1,76 @@
+This Patch makes a runlevel go up, even if services in it are failing,
+normally a rulevel will get a fail state if one of its deps are failing.
+
+Index: initng_runlevel.c
+===================================================================
+--- initng_runlevel.c	(revision 4061)
++++ initng_runlevel.c	(working copy)
+@@ -107,12 +107,6 @@
+ a_state_h RUNLEVEL_DOWN = { "DOWN", "Runlevel is not currently active.", IS_DOWN, NULL, NULL, NULL };
+ 
+ /*
+- * Generally FAILING states, if something goes wrong, some of these are set.
+- */
+-a_state_h RUNLEVEL_START_DEPS_FAILED = { "START_DEPS_FAILED", "Some services in this runlevel failed", IS_FAILED, NULL, NULL, NULL };
+-
+-
+-/*
+  * ############################################################################
+  * #                         STYPE HANDLERS FUNCTIONS                         #
+  * ############################################################################
+@@ -191,7 +185,6 @@
+ 	initng_active_state_register(&RUNLEVEL_WAITING_FOR_START_DEP);
+ 	initng_active_state_register(&RUNLEVEL_WAITING_FOR_STOP_DEP);
+ 	initng_active_state_register(&RUNLEVEL_DOWN);
+-	initng_active_state_register(&RUNLEVEL_START_DEPS_FAILED);
+ 
+ 	return (TRUE);
+ }
+@@ -210,7 +203,6 @@
+ 	initng_active_state_unregister(&RUNLEVEL_WAITING_FOR_START_DEP);
+ 	initng_active_state_unregister(&RUNLEVEL_WAITING_FOR_STOP_DEP);
+ 	initng_active_state_unregister(&RUNLEVEL_DOWN);
+-	initng_active_state_unregister(&RUNLEVEL_START_DEPS_FAILED);
+ }
+ 
+ /*
+@@ -326,21 +318,14 @@
+ 		case FALSE:
+ 			return;
+ 
+-
+-			/* set FAILURE */
++			/* if met, set runlevel up */
+ 		case FAIL:
+-			initng_common_mark_service(service, &RUNLEVEL_START_DEPS_FAILED);
+-			return;
+-
+-			/* if met, continue */
+ 		case TRUE:
+ 		default:
+-			break;
++			/* set status to START_DEP_MET */
++			initng_common_mark_service(service, &RUNLEVEL_UP);
++			return;
+ 	}
+-
+-	/* set status to START_DEP_MET */
+-	initng_common_mark_service(service, &RUNLEVEL_UP);
+-
+ }
+ 
+ static void handle_RUNLEVEL_WAITING_FOR_STOP_DEP(active_db_h * service)
+@@ -357,10 +342,8 @@
+ 			/* if met, youst continue */
+ 		case TRUE:
+ 		default:
+-			break;
+-
++			/* ok, stopping deps are met */
++			initng_common_mark_service(service, &RUNLEVEL_DOWN);
++			return;
+ 	}
+-
+-	/* ok, stopping deps are met */
+-	initng_common_mark_service(service, &RUNLEVEL_DOWN);
+ }

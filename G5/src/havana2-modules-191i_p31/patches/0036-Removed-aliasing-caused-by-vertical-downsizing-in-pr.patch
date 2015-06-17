@@ -1,0 +1,147 @@
+From f51fa8bee54016571c82bd689b31846f640cd308 Mon Sep 17 00:00:00 2001
+From: Andrew Watkins <andrew.watkins@mathembedded.com>
+Date: Mon, 20 May 2013 10:41:13 +0100
+Subject: [PATCH 36/36] Removed aliasing caused by vertical downsizing in
+ progressive modes
+
+---
+ linux/drivers/media/dvb/stm/dvb/dvb_capture_pipe.c |   35 ++++++++++----------
+ 1 file changed, 17 insertions(+), 18 deletions(-)
+
+diff --git a/linux/drivers/media/dvb/stm/dvb/dvb_capture_pipe.c b/linux/drivers/media/dvb/stm/dvb/dvb_capture_pipe.c
+index 112a71d..b4b06a1 100644
+--- a/linux/drivers/media/dvb/stm/dvb/dvb_capture_pipe.c
++++ b/linux/drivers/media/dvb/stm/dvb/dvb_capture_pipe.c
+@@ -216,7 +216,7 @@ static cap_v4l2_video_mode_line_t CapModeParamsTable[] =
+ 
+ typedef struct ResizingFilter_s
+ {
+-    unsigned int    ForScalingFactorLessThan; // 0x100 is x 1, 0x200 means down scaling, halving the dimension
++    unsigned int     ForScalingFactorLessThan; // 0x100 is x 1, 0x200 means down scaling, halving the dimension
+     unsigned char    Coefficients[40];        // 40 for horizontal, 24 for vertical
+ } ResizingFilter_t;
+ 
+@@ -226,8 +226,7 @@ typedef struct ResizingFilter_s
+ 
+ static ResizingFilter_t VerticalResizingFilters[] =
+ {
+-
+-    { ScalingFactor(850),
++    { ScalingFactor(850), /* Calculated with resize = x1.00 */
+         { 0x00, 0x40, 0x00,
+           0x09, 0x3d, 0xfa,
+           0x13, 0x37, 0xf6,
+@@ -247,7 +246,7 @@ static ResizingFilter_t VerticalResizingFilters[] =
+           0x35, 0x13, 0xf8,
+           0x3b, 0x0a, 0xfb } },       
+    
+-    { ScalingFactor(600),
++    { ScalingFactor(600), /* Calculated with resize = x0.70 */
+         { 0x09, 0x2e, 0x09,
+           0x0f, 0x2e, 0x03,
+           0x16, 0x2b, 0xff,
+@@ -257,7 +256,7 @@ static ResizingFilter_t VerticalResizingFilters[] =
+           0x33, 0x18, 0xf5,
+           0x39, 0x11, 0xf6 } },
+ 
+-    { ScalingFactor(375),
++    { ScalingFactor(375), /* Calculated with resize = x0.50 */
+         { 0x10, 0x20, 0x10,
+           0x13, 0x20, 0x0d,
+           0x17, 0x1f, 0x0a,
+@@ -267,7 +266,7 @@ static ResizingFilter_t VerticalResizingFilters[] =
+           0x26, 0x1b, 0xff,
+           0x2b, 0x19, 0xfc } },
+ 
+-    { ScalingFactor(175),
++    { ScalingFactor(175), /* Calculated with resize = x0.25 */
+         { 0x14, 0x18, 0x14,
+           0x15, 0x18, 0x13,
+           0x16, 0x17, 0x13,
+@@ -277,7 +276,7 @@ static ResizingFilter_t VerticalResizingFilters[] =
+           0x19, 0x18, 0x0f,
+           0x1a, 0x17, 0x0f } },
+ 
+-    { 0xffffffff,
++    { 0xffffffff, /* calculated with resize = x0.10 */
+         { 0x15, 0x16, 0x15,
+           0x15, 0x16, 0x15,
+           0x15, 0x16, 0x15,
+@@ -288,11 +287,9 @@ static ResizingFilter_t VerticalResizingFilters[] =
+           0x16, 0x16, 0x14 } }
+ };
+ 
+-
+ static ResizingFilter_t HorizontalResizingFilters[] =
+ {
+-
+-    { ScalingFactor(850),
++    { ScalingFactor(850), /* calculated with resize = x1.00 */
+         { 0x00, 0x00, 0x40, 0x00, 0x00,
+           0xfd, 0x09, 0x3c, 0xfa, 0x04,
+           0xf9, 0x13, 0x39, 0xf5, 0x06,
+@@ -302,7 +299,7 @@ static ResizingFilter_t HorizontalResizingFilters[] =
+           0xf5, 0x3b, 0x12, 0xf9, 0x05,
+           0xfa, 0x3f, 0x07, 0xfd, 0x03 } },
+ 
+-    { ScalingFactor(600),
++    { ScalingFactor(600), /* calculated with resize = x0.70 */
+         { 0xf7, 0x0b, 0x3c, 0x0b, 0xf7,
+           0xf5, 0x13, 0x3a, 0x04, 0xfa,
+           0xf4, 0x1c, 0x34, 0xfe, 0xfe,
+@@ -312,7 +309,7 @@ static ResizingFilter_t HorizontalResizingFilters[] =
+           0xff, 0x30, 0x15, 0xf6, 0x06,
+           0x03, 0x31, 0x0f, 0xf7, 0x06 } },
+ 
+-    { ScalingFactor(375),
++    { ScalingFactor(375), /* calculated with resize = x0.50 */
+         { 0xfb, 0x13, 0x24, 0x13, 0xfb,
+           0xfd, 0x17, 0x23, 0x0f, 0xfa,
+           0xff, 0x1a, 0x23, 0x0b, 0xf9,
+@@ -322,7 +319,7 @@ static ResizingFilter_t HorizontalResizingFilters[] =
+           0x0b, 0x23, 0x18, 0xff, 0xfb,
+           0x0f, 0x24, 0x14, 0xfd, 0xfc } },
+ 
+-    { ScalingFactor(175),
++    { ScalingFactor(175), /* calculated with resize = x0.25 */
+         { 0x09, 0x0f, 0x10, 0x0f, 0x09,
+           0x0a, 0x0f, 0x11, 0x0e, 0x08,
+           0x0a, 0x10, 0x11, 0x0e, 0x07,
+@@ -332,7 +329,7 @@ static ResizingFilter_t HorizontalResizingFilters[] =
+           0x0e, 0x12, 0x11, 0x0b, 0x04,
+           0x0f, 0x13, 0x11, 0x0a, 0x03 } },
+ 
+-    { 0xffffffff,
++    { 0xffffffff, /* calculated with resize = x0.10 */
+         { 0x0c, 0x0d, 0x0e, 0x0d, 0x0c,
+           0x0c, 0x0d, 0x0e, 0x0d, 0x0c,
+           0x0c, 0x0d, 0x0e, 0x0d, 0x0c,
+@@ -537,6 +534,8 @@ static void CapturePipeStart( struct capture_v4l2 *ldvb )
+      const unsigned long gam_cap_cwo = capture_height_offset << 16;
+      const unsigned long gam_cap_cws = ( ( ldvb->capture_width-1 ) << 0 ) |
+          ( ( ldvb->capture_height+capture_height_offset-1) << 16 );
++     
++     const unsigned long bot_field_enable = ldvb->capture_interlaced ? 1 : 0;
+ 
+      iowrite32( ldvb->physical_address & gdp_plane_base_address_mask,
+          &cap_regs_base[GAM_CAP_VTP] );
+@@ -564,12 +563,12 @@ static void CapturePipeStart( struct capture_v4l2 *ldvb )
+          ( 0 << 24 )                      |/* No colour space conversion */
+          ( 0 << 23 )                      |/* LE bitmap */
+          ( pixel_format << 16 )           |/* Pixel format */
+-         (( gam_cap_hsrc ? 1 : 0) << 10 ) |/* No horizontal resizing */
+-         (( gam_cap_vsrc ? 1 : 0) << 9 )  |/* No vertical downsizing */
++         (( gam_cap_hsrc ? 1 : 0) << 10 ) |/* Horizontal resizing */
++         (( gam_cap_vsrc ? 1 : 0) << 9 )  |/* Vertical downsizing */
+          ( 1 << 8 )                       |/* Capture mode enabled */
+-         ( 0 << 7 )                       |/* continuous  capture mode */
++         ( 0 << 7 )                       |/* Continuous capture mode */
+          ( 1 << 6 )                       |/* Top field captured */
+-         ( 1 << 5 )                       |/* bottom field captured */
++         ( bot_field_enable << 5 )        |/* Bottom field captured */
+          ( 0 << 4 )                       |/* VTG 0 */
+          capture_source;                   /* Source */  
+      wmb();
+-- 
+1.7.9.5
+

@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+
+<node name="/any" xmlns:tp="http://telepathy.freedesktop.org/wiki/DbusSpec#extensions-v0">
+	<interface name="org.freedesktop.DBus.ObjectManager">
+		<tp:docstring xmlns="http://www.w3.org/1999/xhtml">
+			<p>An API can optionally make use of this interface for one or more sub-trees of objects.
+			The root of each sub-tree implements this interface so other applications can get all objects,
+			interfaces and properties in a single method call.
+			It is appropriate to use this interface if users of the tree of objects are expected to be
+			interested in all interfaces of all objects in the tree; a more granular API should be used if
+			users of the objects are expected to be interested in a small subset of the objects,
+			a small subset of their interfaces, or both.</p>
+
+			<p>Applications SHOULD NOT export objects that are children of an object (directly or otherwise)
+			implementing this interface but which are not returned in the reply from the <tp:member-ref>GetManagedObjects</tp:member-ref> method of this interface on the given object.</p>
+
+			<p>The intent of the ObjectManager interface is to make it easy to write a robust client implementation. The trivial client implementation only needs to make two method calls:
+				<code>
+					org.freedesktop.DBus.AddMatch (bus_proxy, "type='signal',name='org.example.App',path_namespace='/org/example/App'");
+					objects = org.freedesktop.DBus.ObjectManager.GetManagedObjects (app_proxy);
+				</code>
+			on the message bus and the remote application's ObjectManager, respectively.</p>
+		
+			<p>Whenever a new remote object is created (or an existing object gains a new interface), the <tp:member-ref>InterfacesAdded</tp:member-ref> signal is emitted, and since this signal contains all properties for the interfaces, no calls to the org.freedesktop.Properties interface on the remote object are needed.</p>
+			
+			<p>Additionally, since the initial <code>AddMatch()</code> rule already includes signal messages from the newly created child object, no new <code>AddMatch()</code> call is needed.</p>
+
+			<p><em><code>org.freedesktop.DBus.ObjectManager</code> interface was added in version 0.17 of the D-Bus specification.</em></p>
+
+			<p>See also the <a href="http://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-objectmanager">official D-Bus specification</a>.</p>
+		</tp:docstring>
+
+		<method name="GetManagedObjects">
+			<tp:docstring>Get all managed objects and properties.</tp:docstring>
+
+			<arg name="objpath_interfaces_and_properties" type="a{oa{sa{sv}}}" direction="out">
+				<tp:docstring xmlns="http://www.w3.org/1999/xhtml">
+					<p>A dict whose keys are object paths. All returned object paths are children of the
+					object path implementing this interface, i.e. their object paths start with the
+					ObjectManager's object path plus '/'.</p>
+				
+					<p>Each value is a dict whose keys are interfaces names. Each value in this inner dict is
+					the same dict that would be returned by the <tp:dbus-ref namespace="org.freedesktop.DBus.Properties">GetAll</tp:dbus-ref> method for that combination of object path and interface. If an interface has no properties, the empty dict is returned.</p>
+				</tp:docstring>
+			</arg>
+
+		</method>
+
+		<signal name="InterfacesAdded">
+			<tp:docstring>This signal is emitted when either a new object is added or when an existing object gains one or more interfaces.</tp:docstring>
+
+			<arg name="object_path" type="o"/>
+			<arg name="interfaces_and_properties" type="a{sa{sv}}">
+				<tp:docstring>A dict with the interfaces and properties (if any) that have been added to the given object path</tp:docstring>
+			</arg>
+		</signal>
+
+		<signal name="InterfacesRemoved">
+			<tp:docstring>This signal is emitted whenever an object is removed or it loses one or more interfaces.</tp:docstring>
+
+			<arg name="object_path" type="o"/>
+
+			<arg name="interfaces" type="as">
+				<tp:docstring>An array of the interfaces that were removed. Note that changes on properties on existing interfaces are not reported using this interface - an application should also monitor the existing <tp:dbus-ref namespace="org.freedesktop.DBus.Properties">PropertiesChanged</tp:dbus-ref> signal on each object.</tp:docstring>
+			</arg>
+		</signal>
+	</interface>
+</node>
+

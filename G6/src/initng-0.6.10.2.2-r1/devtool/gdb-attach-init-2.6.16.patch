@@ -1,0 +1,27 @@
+diff -ur linux-2.6.16-org/kernel/ptrace.c linux-2.6.16-initng/kernel/ptrace.c
+--- linux-2.6.16-org/kernel/ptrace.c	2006-03-25 22:36:46.000000000 +0100
++++ linux-2.6.16-initng/kernel/ptrace.c	2006-03-25 22:39:54.000000000 +0100
+@@ -154,7 +154,8 @@
+ 	int retval;
+ 	task_lock(task);
+ 	retval = -EPERM;
+-	if (task->pid <= 1)
++	/* We do wanna be able to attach pid 1 */
++	if (task->pid <= 0)
+ 		goto bad;
+ 	if (task->tgid == current->tgid)
+ 		goto bad;
+@@ -453,10 +454,11 @@
+ 	struct task_struct *child;
+ 
+ 	/*
+-	 * Tracing init is not allowed.
++	 * Tracing init is now allowed.
+ 	 */
++	/*
+ 	if (pid == 1)
+-		return ERR_PTR(-EPERM);
++		return ERR_PTR(-EPERM);*/
+ 
+ 	read_lock(&tasklist_lock);
+ 	child = find_task_by_pid(pid);

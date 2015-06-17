@@ -1,0 +1,35 @@
+<!-- ##### SECTION Title ##### -->
+udev_util
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### SECTION Image ##### -->
+
+
+<!-- ##### FUNCTION udev_util_encode_string ##### -->
+<para>
+
+</para>
+
+@str: 
+@str_enc: 
+@len: 
+@Returns: 
+
+

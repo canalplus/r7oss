@@ -1,0 +1,73 @@
+--- ../alsa-kernel/usb/usbmidi.c	2006-10-10 15:35:36.000000000 +0200
++++ usbmidi.c	2006-10-10 15:56:11.000000000 +0200
+@@ -1,3 +1,5 @@
++#include "usbmidi.inc"
++
+ /*
+  * usbmidi.c - ALSA USB MIDI driver
+  *
+@@ -223,7 +225,11 @@
+ /*
+  * Processes the data read from the device.
+  */
++#if !defined(OLD_USB) && !defined(CONFIG_SND_NEW_IRQ_HANDLER)
++static void snd_usbmidi_in_urb_complete(struct urb* urb, struct pt_regs *regs)
++#else
+ static void snd_usbmidi_in_urb_complete(struct urb* urb)
++#endif
+ {
+ 	struct snd_usb_midi_in_endpoint* ep = urb->context;
+ 
+@@ -243,11 +249,20 @@
+ 		}
+ 	}
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 45)
++	if (!usb_pipeint(urb->pipe))
++#endif
++	{
+ 	urb->dev = ep->umidi->chip->dev;
+ 	snd_usbmidi_submit_urb(urb, GFP_ATOMIC);
++	}
+ }
+ 
++#if !defined(OLD_USB) && !defined(CONFIG_SND_NEW_IRQ_HANDLER)
++static void snd_usbmidi_out_urb_complete(struct urb* urb, struct pt_regs *regs)
++#else
+ static void snd_usbmidi_out_urb_complete(struct urb* urb)
++#endif
+ {
+ 	struct snd_usb_midi_out_endpoint* ep = urb->context;
+ 
+@@ -327,8 +342,13 @@
+ 	if (!buf)
+ 		return -ENOMEM;
+ 	dump_urb("sending", buf, len);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 12)
+ 	err = usb_bulk_msg(ep->umidi->chip->dev, ep->urb->pipe, buf, len,
+ 			   NULL, 250);
++#else
++	err = usb_bulk_msg(ep->umidi->chip->dev, ep->urb->pipe, buf, len,
++			   NULL, HZ);
++#endif
+ 	kfree(buf);
+ 	return err;
+ }
+@@ -1342,7 +1362,11 @@
+ 	intf = umidi->iface;
+ 	if (!intf || intf->num_altsetting < 1)
+ 		return -ENOENT;
++#ifndef OLD_USB
+ 	hostif = intf->cur_altsetting;
++#else
++	hostif = &intf->altsetting[intf->act_altsetting];
++#endif
+ 	intfd = get_iface_desc(hostif);
+ 
+ 	for (i = 0; i < intfd->bNumEndpoints; ++i) {
+@@ -1682,3 +1706,5 @@
+ EXPORT_SYMBOL(snd_usbmidi_input_stop);
+ EXPORT_SYMBOL(snd_usbmidi_input_start);
+ EXPORT_SYMBOL(snd_usbmidi_disconnect);
++
++#include "usbmidi.inc1"

@@ -1,0 +1,15 @@
+Binding for LPC Timer on STMicroelectronics STi series SoCs
+
+Required properties:
+- compatible: Should be "st,st_lpc_timer"
+- reg: Base address and length of the LPC Timers registers.
+- clock-names: Set to "lpc_clk".
+- clocks: phandle of the clock used by the LPC Timer
+
+Example:
+	lpc-timer@0x8788000 {
+		compatible = "st,st_lpc_timer";
+		reg = <0x8788000 0x1000>;
+		clock-names = "lpc_clk";
+		clocks = <&CLK_S_D3_FLEXGEN CLK_LPC_1>;
+	};

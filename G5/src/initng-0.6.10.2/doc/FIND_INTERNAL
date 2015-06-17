@@ -1,0 +1,14 @@
+Describes the difference when searching for a service in active_db o service_db.
+
+Using: find_by_exect_name(net/eth0)
+Will:  Return the exact hit "net/eth0" only.
+Equal: strcmp(pattern, string)==0
+
+Using: find_by_name(net/eth*)
+Will:  Return a hit like "net/eth0", BUT! The '/' must be right.
+Equal: service_match(string, pattern)
+
+Using: find_in_name(eth)
+Will:  Return a hit like "net/eth0", because eth contains in "net/eth0" string.
+	   The real difference is that the '/' chars dont have to be right.
+Equal: match_in_service(string, pattern)

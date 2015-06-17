@@ -1,0 +1,26 @@
+--- ../../alsa-kernel/pci/oxygen/virtuoso.c	2008-01-27 18:29:34.000000000 +0100
++++ virtuoso.c	2008-01-27 18:36:14.000000000 +0100
+@@ -1,3 +1,4 @@
++#include "adriver.h"
+ /*
+  * C-Media CMI8788 driver for Asus Xonar cards
+  *
+@@ -161,7 +162,13 @@
+ 	struct xonar_data *data = chip->model_data;
+ 	unsigned int i;
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 3, 0)
+ 	data->is_d2x = chip->pci->subsystem_device == 0x82b7;
++#else
++	u16 subsystem_device;
++	pci_read_config_word(chip->pci, PCI_SUBSYSTEM_ID, &subsystem_device);
++	data->is_d2x = subsystem_device == 0x82b7;
++#endif
+ 
+ 	for (i = 0; i < 4; ++i) {
+ 		pcm1796_write(chip, i, 18, PCM1796_FMT_24_LJUST | PCM1796_ATLD);
+@@ -447,3 +454,4 @@
+ 
+ module_init(alsa_card_xonar_init)
+ module_exit(alsa_card_xonar_exit)
++EXPORT_NO_SYMBOLS;

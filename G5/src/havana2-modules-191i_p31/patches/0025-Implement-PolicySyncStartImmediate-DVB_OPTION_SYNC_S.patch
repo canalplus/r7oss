@@ -1,0 +1,202 @@
+From fbffbc4d868684d22c2eeb70a84a1e4b03974de0 Mon Sep 17 00:00:00 2001
+From: Kieran Bingham <kieran.bingham@st.com>
+Date: Mon, 22 Nov 2010 11:56:23 +0000
+Subject: [PATCH 25/36] Implement PolicySyncStartImmediate /
+ DVB_OPTION_SYNC_START_IMMEDIATE
+
+This policy allows a faster time to audio playback to be achieved by
+reducing the wait time in the AV Sync State machine during startup only
+
+This flag should be set before data is fed into the player.
+Its state is not retained and must be set before each use.
+
+Usage:
+    /* Set Audio PolicySyncStartImmediate STLinux bug #10477 */
+    memset(&cmd, 0, sizeof(cmd));
+    cmd.cmd = VIDEO_CMD_SET_OPTION;
+    cmd.option.option = DVB_OPTION_SYNC_START_IMMEDIATE;
+    cmd.option.value = DVB_OPTION_VALUE_ENABLE;
+    if (ioctl(video, VIDEO_COMMAND, &cmd) < 0)
+        perror("DVB_OPTION_SYNC_START_IMMEDIATE");
+---
+ .../media/dvb/stm/backend/havana_playback.cpp      |    4 ++++
+ .../media/dvb/stm/backend/havana_stream.cpp        |    4 ++++
+ linux/drivers/media/dvb/stm/dvb/backend_ops.h      |    1 +
+ linux/drivers/media/dvb/stm/dvb/dvb_video.c        |    3 ++-
+ linux/include/linux/dvb/stm_ioctls.h               |    4 +++-
+ player/class_definitions/player_types.h            |    6 ++++++
+ .../output_coordinator/output_coordinator_base.cpp |   13 ++++++++++++-
+ player/player/player_construct.cpp                 |    2 ++
+ player/player/player_settings.cpp                  |    1 +
+ 9 files changed, 35 insertions(+), 3 deletions(-)
+
+diff --git a/linux/drivers/media/dvb/stm/backend/havana_playback.cpp b/linux/drivers/media/dvb/stm/backend/havana_playback.cpp
+index 9ed5727..0f2c4dd 100644
+--- a/linux/drivers/media/dvb/stm/backend/havana_playback.cpp
++++ b/linux/drivers/media/dvb/stm/backend/havana_playback.cpp
+@@ -463,6 +463,10 @@ HavanaStatus_t HavanaPlayback_c::SetOption     (play_option_t           Option,
+             PlayerPolicy        = PolicyOperateCollator2InReversibleMode;
+             PolicyValue         = Value;
+             break;
++        case PLAY_OPTION_SYNC_START_IMMEDIATE:
++            PlayerPolicy        = PolicySyncStartImmediate;
++            PolicyValue         = Value;
++            break;
+         default:
+             PLAYBACK_ERROR("Unknown option %d\n", Option);
+             return HavanaError;
+diff --git a/linux/drivers/media/dvb/stm/backend/havana_stream.cpp b/linux/drivers/media/dvb/stm/backend/havana_stream.cpp
+index 6681194..7570820 100644
+--- a/linux/drivers/media/dvb/stm/backend/havana_stream.cpp
++++ b/linux/drivers/media/dvb/stm/backend/havana_stream.cpp
+@@ -631,6 +631,7 @@ HavanaStatus_t HavanaStream_c::SetOption       (play_option_t           Option,
+             }
+             break;
+         case PLAY_OPTION_EXTERNAL_TIME_MAPPING:
++        case PLAY_OPTION_SYNC_START_IMMEDIATE:
+             PolicyValue         = (Value == PLAY_OPTION_VALUE_ENABLE) ? PolicyValueApply : PolicyValueDisapply;
+             Stream              = PlayerAllStreams;
+             break;
+@@ -922,6 +923,9 @@ HavanaStatus_t HavanaStream_c::MapOption       (play_option_t           Option,
+         case PLAY_OPTION_AV_SYNC:
+             *PlayerPolicy           = PolicyAVDSynchronization;
+             break;
++        case PLAY_OPTION_SYNC_START_IMMEDIATE:
++            *PlayerPolicy           = PolicySyncStartImmediate;
++            break;
+         case PLAY_OPTION_EXTERNAL_TIME_MAPPING:
+             *PlayerPolicy           = PolicyExternalTimeMapping;
+             break;
+diff --git a/linux/drivers/media/dvb/stm/dvb/backend_ops.h b/linux/drivers/media/dvb/stm/dvb/backend_ops.h
+index 1064185..f9679be 100644
+--- a/linux/drivers/media/dvb/stm/dvb/backend_ops.h
++++ b/linux/drivers/media/dvb/stm/dvb/backend_ops.h
+@@ -146,6 +146,7 @@ typedef enum play_option_e
+     PLAY_OPTION_EXTERNAL_TIME_MAPPING                           = DVB_OPTION_EXTERNAL_TIME_MAPPING,
+     PLAY_OPTION_EXTERNAL_TIME_MAPPING_VSYNC_LOCKED              = DVB_OPTION_EXTERNAL_TIME_MAPPING_VSYNC_LOCKED,
+     PLAY_OPTION_AV_SYNC                                         = DVB_OPTION_AV_SYNC,
++    PLAY_OPTION_SYNC_START_IMMEDIATE                            = DVB_OPTION_SYNC_START_IMMEDIATE,
+     PLAY_OPTION_DISPLAY_FIRST_FRAME_EARLY                       = DVB_OPTION_DISPLAY_FIRST_FRAME_EARLY,
+     PLAY_OPTION_VIDEO_BLANK                                     = DVB_OPTION_VIDEO_BLANK,
+     PLAY_OPTION_STREAM_ONLY_KEY_FRAMES                          = DVB_OPTION_STREAM_ONLY_KEY_FRAMES,
+diff --git a/linux/drivers/media/dvb/stm/dvb/dvb_video.c b/linux/drivers/media/dvb/stm/dvb/dvb_video.c
+index 25159c2..9082d12 100644
+--- a/linux/drivers/media/dvb/stm/dvb/dvb_video.c
++++ b/linux/drivers/media/dvb/stm/dvb/dvb_video.c
+@@ -1180,7 +1180,8 @@ static int VideoIoctlCommand (struct DeviceContext_s* Context, struct video_comm
+         if ((VideoCommand->option.option == PLAY_OPTION_DISCARD_LATE_FRAMES) ||
+             (VideoCommand->option.option == PLAY_OPTION_VIDEO_START_IMMEDIATE) ||
+             (VideoCommand->option.option == PLAY_OPTION_PTS_SYMMETRIC_JUMP_DETECTION) ||
+-            (VideoCommand->option.option == PLAY_OPTION_PTS_FORWARD_JUMP_DETECTION_THRESHOLD) )
++            (VideoCommand->option.option == PLAY_OPTION_PTS_FORWARD_JUMP_DETECTION_THRESHOLD) ||
++            (VideoCommand->option.option == PLAY_OPTION_SYNC_START_IMMEDIATE) )
+         {
+             if (Context->Playback != NULL)
+                 Result = DvbPlaybackSetOption (Context->Playback, (play_option_t)VideoCommand->option.option, (unsigned int)VideoCommand->option.value);
+diff --git a/linux/include/linux/dvb/stm_ioctls.h b/linux/include/linux/dvb/stm_ioctls.h
+index 1e4fe18..ae5a0ba 100644
+--- a/linux/include/linux/dvb/stm_ioctls.h
++++ b/linux/include/linux/dvb/stm_ioctls.h
+@@ -314,9 +314,11 @@ typedef enum {
+ 
+     DVB_OPTION_H264_TREAT_TOP_BOTTOM_PICTURE_STRUCT_AS_INTERLACED                       = 40,
+ 
++    DVB_OPTION_SYNC_START_IMMEDIATE                                                     = 42,
++
+     /* OPTION_MAX must always be one greater than largest option - currently DVB_OPTION_H264_TREAT_TOP_BOTTOM_PICTURE_STRUCT_AS_INTERLACED */
+ 
+-    DVB_OPTION_MAX                                                                      = 41
++    DVB_OPTION_MAX                                                                      = 43
+ } dvb_option_t;
+ 
+ // Legacy typo correction
+diff --git a/player/class_definitions/player_types.h b/player/class_definitions/player_types.h
+index f052f15..5b2c60f 100644
+--- a/player/class_definitions/player_types.h
++++ b/player/class_definitions/player_types.h
+@@ -219,6 +219,12 @@ typedef enum
+     PolicyAVDSynchronization,                           // Apply/Disapply
+ 
+     //
++    // Policy to set the value of the number of iterations to wait for synchronization.
++    //
++
++    PolicySyncStartImmediate,
++
++    //
+     // Policy to allow manifestation of the first frame decoded early.
+     //
+ 
+diff --git a/player/output_coordinator/output_coordinator_base.cpp b/player/output_coordinator/output_coordinator_base.cpp
+index 851f4bd..9358f67 100644
+--- a/player/output_coordinator/output_coordinator_base.cpp
++++ b/player/output_coordinator/output_coordinator_base.cpp
+@@ -908,6 +908,7 @@ unsigned int                    WaitCount;
+ unsigned char                   VideoStartImmediatePolicy;
+ long long                       StreamOffset;
+ PlayerEventRecord_t             Event;
++unsigned int                    MaxSynchronizeWaits;
+ 
+     //
+     // We do not perform the synchronization if we use an external time mapping
+@@ -1005,6 +1006,16 @@ report( severity_info, "Sync out0 - %d - %016llx %016llx (%6lld)\n", Context->St
+     if( StartupDelay != 0 )
+ 	OS_SleepMilliSeconds( (unsigned int)StartupDelay );
+ 
++    // Determine Policy for reducing Stream Start Time.
++    if (Player->PolicyValue( Playback, Context->Stream, PolicySyncStartImmediate ))
++    {
++	// Reduce the Wait Time Cycles for the first usage.
++	MaxSynchronizeWaits = 1;
++	// Disable policy until next startup
++	Player->SetPolicy( Playback, PlayerAllStreams, PolicySyncStartImmediate, PolicyValueDisapply);
++    } else
++	MaxSynchronizeWaits = MAX_SYNCHRONIZE_WAITS;
++
+     //
+     // Now we need to add ourselves to the list of synchronizing streams
+     //
+@@ -1072,7 +1083,7 @@ report( severity_info, "Sync out0 - %d - %016llx %016llx (%6lld)\n", Context->St
+ 	//
+ 
+ 	if( (StreamsInSynchronize == StreamCount) ||
+-	    (WaitCount            >= MAX_SYNCHRONIZE_WAITS) )
++	    (WaitCount            >= MaxSynchronizeWaits) )
+ 	{
+ 	    //
+ 	    // Scan through and find the earliest playback 
+diff --git a/player/player/player_construct.cpp b/player/player/player_construct.cpp
+index 654617a..ed8df34 100644
+--- a/player/player/player_construct.cpp
++++ b/player/player/player_construct.cpp
+@@ -102,6 +102,7 @@ unsigned int    i;
+     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyExternalTimeMapping,					PolicyValueDisapply );
+     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyExternalTimeMappingVsyncLocked,			PolicyValueDisapply );
+     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyAVDSynchronization,   				PolicyValueApply );
++
+     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyClampPlaybackIntervalOnPlaybackDirectionChange,	PolicyValueApply );
+     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyTrickModeDomain,	 				PolicyValueTrickModeAuto );
+ 
+@@ -110,6 +111,7 @@ unsigned int    i;
+ 
+     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyDiscardLateFrames,	 				PolicyValueDiscardLateFramesAfterSynchronize );
+     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyVideoStartImmediate,					PolicyValueApply );
++    SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicySyncStartImmediate,   				PolicyValueDisapply );
+ 
+     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyRebaseOnFailureToDeliverDataInTime,			PolicyValueApply );
+     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyRebaseOnFailureToDecodeInTime,			PolicyValueApply );
+diff --git a/player/player/player_settings.cpp b/player/player/player_settings.cpp
+index a4b96eb..777e687 100644
+--- a/player/player/player_settings.cpp
++++ b/player/player/player_settings.cpp
+@@ -52,6 +52,7 @@ static const char *LookupPlayerPolicy( PlayerPolicy_t Policy )
+     C(PolicyExternalTimeMapping);
+     C(PolicyExternalTimeMappingVsyncLocked);
+     C(PolicyAVDSynchronization);
++    C(PolicySyncStartImmediate);
+     C(PolicyManifestFirstFrameEarly);
+     C(PolicyVideoBlankOnShutdown);
+     C(PolicyStreamOnlyKeyFrames);
+-- 
+1.7.9.5
+

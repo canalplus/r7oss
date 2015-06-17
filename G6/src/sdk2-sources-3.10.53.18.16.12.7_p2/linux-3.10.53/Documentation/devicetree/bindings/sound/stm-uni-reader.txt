@@ -1,0 +1,44 @@
+===============================================================================
+			stm uniperipheral reader
+===============================================================================
+
+Required properties:
+- compatible		: Should be "st,snd_uni_reader"
+- reg, reg-names, interrupts, interrupt-names	: Standard way to define device
+			resources with names. look in
+			Documentation/devicetree/bindings/resource-names.txt
+- padcfg-names		: Pad configuration name
+- padcfg-0		: Pad configuration
+- version		: IP version
+- dmas			: phandle of FDMA serving this reader
+- dma-names		: Name of FDMA serving this reader
+- fdma-initiator	: Initiator type
+- fdma-direct-conn	: DREQ is connected directly to FDMA (i.e. no DREQ mux)
+- fdma-request-line	: Request line used by FDMA
+- description		: Reader description
+- card-device		: ALSA card sub-device identifier
+- channels		: Maximum number of output channels
+- pinctrl-names		: pin control name
+- pinctrl-0		: pin control configuration defiend in pinctrl dtsi
+
+
+Typical usage example:
+
+snd_uni_reader0: snd-uni-reader@0xfe288000 {
+	compatible	= "st,snd_uni_reader";
+	status		= "disabled";
+	reg		= <0xfe288000 0x150>;
+	interrupts	= <0 72 0>;
+	padcfg-names	= "default";
+	padcfg-0	= <&padcfg_b2011_spdif_in>;
+	version		= <0>;
+	dmas		= <&fdma0_sas>;
+	dma-names	= "stm-fdma.3";
+	fdma-initiator	= <0>;
+	fdma-request-line = <42>;
+	description	= "Uni Reader #0 (I2S)";
+	card-device	= <5>;
+	channels	= <8>;
+	pinctrl-names	= "default";
+	pinctrl-0	= <&pinctrl_snd_uni_reader0>;
+};

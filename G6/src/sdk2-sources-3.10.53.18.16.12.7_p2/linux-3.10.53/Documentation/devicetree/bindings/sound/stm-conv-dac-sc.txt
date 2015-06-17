@@ -1,0 +1,21 @@
+===============================================================================
+			stm dac sysconf converter
+===============================================================================
+
+Required properties:
+- compatible	: Should be "st,snd_conv_dac_sc_<soc>".
+- source-bus-id	: Player device is attached to.
+- channel-to	: Output channel (usually 1).
+- channel-from	: Input channel (usually 0).
+- st,syscfg    : phandle to Sysconf registers bank to access the DAC related registers:
+
+Typical usage example:
+
+snd_conv_dac_sc: snd-conv-dac-sc {
+			compatible	= "st,snd_conv_dac_sc_stih416";
+			status		= "disabled";
+			source-bus-id	= "snd_uni_player.2";
+			channel-to	= <1>;
+			channel-from	= <0>;
+			st,syscfg	= <&syscfg_rear>;
+		};

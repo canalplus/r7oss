@@ -1,0 +1,12 @@
+#!/usr/bin/perl -pi.bak
+s/^(\s*)start\s*{\s*/\1script start {\n/;
+s/^(\s*)stop\s*{\s*/\1script stop {\n/;
+s/^(\s*script\s*start)\s*{\s*$/\1 = {\n/;
+s/^(\s*script\s*stop)\s*{\s*$/\1 = {\n/;
+s/^(\s*need[^;\n]*)$/\1;/;
+s/^(\s*use[^;\n]*)$/\1;/;
+s/^(\s*require_network)\s*$/\1;\n/;
+s/^(\s*last)\s*$/\1;\n/;
+s/^(\s*critical)\s*$/\1;\n/;
+s/^(\s+)daemon/\1exec daemon/;
+s/^(\s+)daemon_args/\1exec_args daemon/;

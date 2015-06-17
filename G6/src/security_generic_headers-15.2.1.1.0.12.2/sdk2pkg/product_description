@@ -1,0 +1,4 @@
+ API header files of generic security firmware (for generic Crypto Engine firmware binaries)
+
+ Provides headers files for non-secure (GENERIC) profiles of ST devices.
+

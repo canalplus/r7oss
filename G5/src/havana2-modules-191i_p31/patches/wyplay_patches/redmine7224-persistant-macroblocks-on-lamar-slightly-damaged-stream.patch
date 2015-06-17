@@ -1,0 +1,26 @@
+Index: work/player/frame_parser/frame_parser_video_h264.cpp
+===================================================================
+--- work.orig/player/frame_parser/frame_parser_video_h264.cpp
++++ work/player/frame_parser/frame_parser_video_h264.cpp
+@@ -4443,7 +4443,12 @@ unsigned int		 LongTermIndexAssignedTo;
+     //
+ 
+     if( !SecondFieldEntry )
+-	for( i=0; i<(NumReferenceFrames+1); i++ )
++	for( i=0; i<(NumReferenceFrames+1); i++ ) {
++	    if (ReferenceFrames[i].Usage != NotUsedForReference &&
++		ReferenceFrames[i].FrameNum == FrameNum) {
++		report( severity_info, "deleting obsolete framenum %d\n", FrameNum );
++		ReleaseReference( true, i, AnyUsedForReference );
++	    }
+ 	    if( ReferenceFrames[i].Usage == NotUsedForReference )
+ 	    {
+ 	    	CurrentEntry                            = i;
+@@ -4476,6 +4481,7 @@ unsigned int		 LongTermIndexAssignedTo;
+ 
+ 	    	break;
+ 	    }
++	}
+ 
+     //
+     // Now apply the appropriate list management algorithms

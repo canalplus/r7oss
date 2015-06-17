@@ -1,0 +1,11 @@
+#! /bin/sh
+
+set +e
+
+if test -d /etc/ffserver.conf; then
+	rm -rf /etc/ffserver.conf || true
+fi
+
+#DEBHELPER#
+
+exit 0

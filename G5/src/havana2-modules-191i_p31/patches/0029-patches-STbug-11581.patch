@@ -1,0 +1,57 @@
+From 7cfa93141149ad3c4d054abb571348023bda3f5a Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:20:00 +0100
+Subject: [PATCH 29/36] patches/STbug-11581
+
+---
+ player/frame_parser/frame_parser_video_h264.cpp |   12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/player/frame_parser/frame_parser_video_h264.cpp b/player/frame_parser/frame_parser_video_h264.cpp
+index 18bff5f..b1f6bfe 100644
+--- a/player/frame_parser/frame_parser_video_h264.cpp
++++ b/player/frame_parser/frame_parser_video_h264.cpp
+@@ -4788,7 +4788,7 @@ report( severity_info, "MMCO(%d %d %d) - %d - %3d %3d %3d %3d\n", Field, Top, Fr
+ 		if( ReferenceFrames[i].DecodeFrameIndex > ReferenceFrames[j].DecodeFrameIndex )
+ 		    i = j;
+ 
+-	    ReleaseReference( true, i, ReferenceFrames[CurrentEntry].Usage );
++	    ReleaseReference( true, i, AnyUsedForReference );
+ #else
+ 	    report( severity_error, "FrameParser_VideoH264_c::MarkReferencePictures - After MMCO operations, \n\t\tthere are more than the allowed number of reference frames.\n\t\tAll but the current will be discarded.\n" );
+ 	    for( j=0; j<(NumReferenceFrames+1); j++ )
+@@ -5946,6 +5946,10 @@ unsigned int	InvalidPTSSequence;
+ 	MaxDeferals	= H264_CODED_FRAME_COUNT;
+ 
+ #if 0
++//
++// I really think I should deploy this, but I have now reduced 
++// the streams that might break without it so I am leaving it out.
++//
+ #define FRAMES_HELD_BY_MANIFESTOR	2
+     HeldReferenceFrames	 = 0;
+ 
+@@ -5959,7 +5963,7 @@ unsigned int	InvalidPTSSequence;
+     HeldReferenceFrames	 = 0;
+ #endif
+ 
+-//report( severity_info, "Defer - %4d, Max = %4d\n", DeferredListEntries, MaxDeferals );
++//report( severity_info, "Defer - %4d, Ref = %4d, Max = %4d\n", DeferredListEntries, HeldReferenceFrames, MaxDeferals ); 
+ 
+     if( (DeferredListEntries + FRAMES_HELD_BY_MANIFESTOR + HeldReferenceFrames) >= MaxDeferals )
+     {
+@@ -5967,9 +5971,9 @@ unsigned int	InvalidPTSSequence;
+ 		DeferredListEntries, FRAMES_HELD_BY_MANIFESTOR, HeldReferenceFrames, MaxDeferals );
+ 
+ 	if( PlaybackDirection == PlayForward )
+-	    ProcessDeferredDFIandPTSUpto( DeferredList[OrderedDeferredList[0]].ExtendedPicOrderCnt + 1 );
++	    ProcessDeferredDFIandPTSUpto( (DeferredList[OrderedDeferredList[0]].ExtendedPicOrderCnt>>1) + 1 );
+ 	else
+-	    ProcessDeferredDFIandPTSDownto( DeferredList[OrderedDeferredList[DeferredListEntries-1]].ExtendedPicOrderCnt + 1 ); 
++	    ProcessDeferredDFIandPTSDownto( (DeferredList[OrderedDeferredList[DeferredListEntries-1]].ExtendedPicOrderCnt>>1) + 1 ); 
+     }
+ }
+ 
+-- 
+1.7.9.5
+

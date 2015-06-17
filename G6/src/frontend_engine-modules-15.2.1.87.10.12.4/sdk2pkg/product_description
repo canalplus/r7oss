@@ -1,0 +1,10 @@
+
+ stm_fe component wraps all the functionalities performed by different digital,
+ analog tuner/demod sources and IP tuner sources. stm_fe is the top level component
+ and it exposes different objects.
+
+ Frontend engine covers the following ST Platforms:
+
+    hdk7108, adi7108, b2000_a9, b2020_a9, fli76xx, b2044, b2092, b2105, b2112, b2116
+ .
+ This package contains the source code.

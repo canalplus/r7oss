@@ -1,0 +1,51 @@
+From 009164f64d50641b8004e8ac613e031d1ca07210 Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:19:59 +0100
+Subject: [PATCH 06/36] patches/player2_int179_st6798
+
+---
+ player/frame_parser/frame_parser_video_divx.cpp |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/player/frame_parser/frame_parser_video_divx.cpp b/player/frame_parser/frame_parser_video_divx.cpp
+index b97fe87..60a552c 100644
+--- a/player/frame_parser/frame_parser_video_divx.cpp
++++ b/player/frame_parser/frame_parser_video_divx.cpp
+@@ -697,7 +697,7 @@ FrameParserStatus_t  FrameParser_VideoDivx_c::ReadVolHeader( Mpeg4VolHeader_t
+ 		if( Vol->shape != SHAPE_RECTANGULAR )
+ 		{
+ 				report( severity_error, "Frame_Mpeg4Video_c::ReadVolHeader - ERROR **** VolHeader shape other than RECTANGULAR not supported\n" );
+-				Player->MarkStreamUnPlayable( Stream );
++				//Player->MarkStreamUnPlayable( Stream );
+ 				return FrameParserError;
+ 		}
+ 
+@@ -850,7 +850,7 @@ FrameParserStatus_t  FrameParser_VideoDivx_c::ReadVolHeader( Mpeg4VolHeader_t
+ 		if( Vol->scalability )
+ 		{
+ 				report( severity_error, "Frame_Mpeg4Video_c::ReadVolHeader - ERROR **** VolHeader scalability not supported.\n" );
+-				Player->MarkStreamUnPlayable( Stream );
++				//Player->MarkStreamUnPlayable( Stream );
+ 				return FrameParserError;
+ 		}
+ 
+@@ -858,14 +858,14 @@ FrameParserStatus_t  FrameParser_VideoDivx_c::ReadVolHeader( Mpeg4VolHeader_t
+ 		if( !Vol->complexity_estimation_disable )
+ 		{
+ 				report( severity_error, "Frame_Mpeg4Video_c::ReadVolHeader - ERROR **** VolHeader complexity_estimation_disable not set\n" );
+-				Player->MarkStreamUnPlayable( Stream );
++				//Player->MarkStreamUnPlayable( Stream );
+ 				return FrameParserError;
+ 		}
+ 
+ 		if( Vol->data_partitioning )
+ 		{
+ 				report( severity_error, "Frame_Mpeg4Video_c::ReadVolHeader - ERROR **** VolHeader data_partitioning not supported.\n" );
+-				Player->MarkStreamUnPlayable( Stream );
++				//Player->MarkStreamUnPlayable( Stream );
+ 				return FrameParserError;
+ 		}
+ 
+-- 
+1.7.9.5
+

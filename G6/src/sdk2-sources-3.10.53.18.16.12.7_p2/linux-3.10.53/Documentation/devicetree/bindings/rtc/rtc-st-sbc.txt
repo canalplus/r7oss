@@ -1,0 +1,11 @@
+* ST SBC RTC
+
+Required properties:
+No special parameters except the compatible one
+- compatible : "st,rtc-sbc"
+
+Example:
+
+	rtc_sbc@0 {
+	        compatible = "st,rtc-sbc";
+	};

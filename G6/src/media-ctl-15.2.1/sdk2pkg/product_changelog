@@ -1,0 +1,38 @@
+* Wed Sep 03 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - 0.1.1-11
+- [Bugzilla: 57459]: Unable to re-locate "host" folder
+
+* Fri Aug 08 2014 Satish Kumar <satish-hpc.kumar@st.com> - 0.1.1-10
+- [Bugzilla: 55692]: Need to build with sysroot out of toolchain folder
+
+* Mon Jul 14 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - 0.1.1-9
+- [Bugzilla: 54487] New: RPM generation Issue
+
+* Wed Jun 18 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - 0.1.1-8
+- [Bugzilla: 52574] Build error in media_ctl with RPM delivered source
+
+* Tue Jun 03 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - 0.1.1-7
+- [Bugzilla: 48702] error in make clean for first time
+
+* Thu May 01 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - 0.1.1-6
+- [Bugzilla: 49124] Allow compilation against multiple target dirs
+
+* Wed Apr 09 2014 Pavan Goyal <pavan.goyal@st.com> - 0.1.1-4
+- [Bugzilla: 48050] mediactl: allow paralle build
+- [Bugzilla: 48046] mediactl: clean up clean up rule
+- [Bugzilla: 48052] mediactl: more efficient build: don't trigger unneeded build
+
+* Mon Mar 24 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - 0.1.1-3
+- [Bugzilla: 47126] Add APPS_Mediactl to user space build system
+
+* Fri Mar 21 2014 Gilles Carry <gilles.carry@st.com> - 0.1.1-2
+- [Bugzilla: 19513] media-ctl -p keep saying "v4l2_subdev_open: Failed to open subdev device node"
+
+* Thu Jun 07 2012 Alain Volmat <alain.volmat@st.com> - 0.1.1-1
+- [Bugzilla: 19513] media-ctl -p keep saying "v4l2_subdev_open: Failed to open subdev device node"
+
+* Wed May 28 2012 Andy Gardner <andrew.gardner@st.com> - 0.1.0-2
+- [Update] bump release version to force rebuild as new dev package has been added
+
+* Wed May 23 2012 André Draszik <andre.draszik@st.com> - 0.1.0-1
+- [New] create media-ctl package
+

@@ -1,0 +1,23 @@
+IF (ENABLE_WEBKIT2)
+    ADD_SUBDIRECTORY(WebKitTestRunner)
+ENDIF ()
+
+IF ("${PORT}" STREQUAL "Efl")
+    ADD_SUBDIRECTORY(EWebLauncher/ControlTheme)
+
+    IF (ENABLE_WEBKIT)
+        ADD_SUBDIRECTORY(DumpRenderTree/efl)
+        ADD_SUBDIRECTORY(EWebLauncher)
+    ENDIF ()
+
+    IF (ENABLE_WEBKIT2 AND ELEMENTARY_FOUND)
+        ADD_SUBDIRECTORY(MiniBrowser/efl)
+    ENDIF ()
+    ADD_SUBDIRECTORY(DumpRenderTree/TestNetscapePlugIn)
+ELSEIF ("${PORT}" STREQUAL "WinCE")
+    ADD_SUBDIRECTORY(WinCELauncher)
+ENDIF()
+
+IF (ENABLE_WEBKIT2 AND ENABLE_API_TESTS)
+    ADD_SUBDIRECTORY(TestWebKitAPI)
+ENDIF()

@@ -1,0 +1,34 @@
+From 4db421dacac945f42cc67fbc7df67ab35fe544f9 Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:19:59 +0100
+Subject: [PATCH 09/36] patches/h189_quickfix_decimationoff_bug9563
+
+---
+ .../media/dvb/stm/backend/havana_stream.cpp        |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/linux/drivers/media/dvb/stm/backend/havana_stream.cpp b/linux/drivers/media/dvb/stm/backend/havana_stream.cpp
+index 36ec04e..6681194 100644
+--- a/linux/drivers/media/dvb/stm/backend/havana_stream.cpp
++++ b/linux/drivers/media/dvb/stm/backend/havana_stream.cpp
+@@ -349,7 +349,7 @@ HavanaStatus_t HavanaStream_c::Init    (class HavanaPlayer_c*   HavanaPlayer,
+ 
+         VideoManifestor->GetOutputWindow (&X, &Y, &Width, &Height);
+         STREAM_TRACE ("Window is %dx%d at %d,%d\n", Width, Height, X, Y);
+-#if 0
++#if 1
+         if ((Width <= SCALING_THRESHOLD_WIDTH) || (Height < SCALING_THRESHOLD_HEIGHT))
+         {
+             STREAM_TRACE ("Enabling Decimation\n");
+@@ -1068,7 +1068,7 @@ HavanaStatus_t HavanaStream_c::SetOutputWindow (unsigned int            X,
+         }
+ 
+         VideoManifestor->GetOutputWindow (&X, &Y, &Width, &Height);
+-#if 0
++#if 1
+         if ((Width <= SCALING_THRESHOLD_WIDTH) || (Height < SCALING_THRESHOLD_HEIGHT))
+         {
+             STREAM_TRACE ("Enabling Decimation\n");
+-- 
+1.7.9.5
+

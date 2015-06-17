@@ -1,0 +1,32 @@
+OSS/Linux 3.9e (C) 4Front Technologies 1996-1998
+
+License serial number: E00000008
+Open Sound System is licensed for evaluation purposes only.
+License will expire after: 09/1998
+
+*** Activity time of this evaluation run is limited to 20 minutes ***
+Kernel: Linux perlin.px.jcu.cz 2.0.34 #1 Fri Apr 24 22:13:38 CEST 1998 i586
+Build: 2.0.34
+
+Card config: 
+Generic PnP support
+GUS PnP at 0x210 irq 5 drq 5,6
+
+Audio devices:
+0: UltraSound Plug & Play (IWave) (DUPLEX)
+1: Shadow of audio device #0 (DUPLEX)
+2: Ultrasound
+
+Synth devices:
+0: UltraSound Plug & Play (256k)
+
+Midi devices:
+0: Gravis UltraSound Midi
+
+Timers:
+0: System clock
+1: GUS
+
+Mixers:
+0: UltraSound Plug & Play (IWave)
+1: Gravis Ultrasound

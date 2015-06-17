@@ -1,0 +1,10 @@
+--- Makefile.old	Tue Jan 30 20:26:11 2001
++++ Makefile	Wed Jan 31 15:35:07 2001
+@@ -78,6 +78,7 @@
+   obj-y += dmasound/dmasound.o
+ endif
+ 
++subdir-$(CONFIG_SND) += alsa
+ 
+ # Declare multi-part drivers.
+ 

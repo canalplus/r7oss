@@ -1,0 +1,2935 @@
+* DISPLAY_15.2_5.32.14
+- [Bugzilla: 59407] HDCP Rx Certification failures
+
+* DISPLAY_15.2_5.32.13
+- [Bugzilla: 58705] Shaking display after awhile for SD modes in MAIN and PIP planes
+- [Bugzilla: 58187] [HEVCUHD] - TC_SYS_FUNC_ZAP_IP_HEVC_RTP_No_JITTER_HEVCUHD_TO_MPEG2SD_8 - display failure on MPEG2SD during ZAP
+- [Bugzilla: 54366] usage of vibe_os_clk_get_rate()->devm_clk_get() to be verified
+- [Bugzilla: 59161] HDMIRX adding KPI protection for standby mode
+- [Bugzilla: 59222] [DISPLAY_Tests] Fix PxielCaptureTest module for DVP testing
+- [Bugzilla: 57861] [HDCP repeater] Unable to load hdmirepeater.ko module in coredisplay.conf (board freeze or capture KO)
+- [Bugzilla: 59159] HDMI RX Management of Multiple open
+- [Bugzilla: 58259] Interlaced video displayed in PIP is very slow
+- [Bugzilla: 58551] No audio ouptut on HDMI after 5 tests. reboot required to get audio
+
+* DISPLAY_15.2_5.32.12
+- [Bugzilla: 59003] Fix pix clock when 1080p100 /UHD/4k Modes are configured on Aux output
+- [Bugzilla: 58652] pixelcapturetest KPI is not working
+- [Bugzilla: 57777] Enable Repeater mode when HDCP is enabled on HDMI Tx and Rx
+- [Bugzilla: 58853] OUTPUT_DISPLAY_MODE_CHANGE is not set
+- [Bugzilla: 58330] [hardening] - move vibe_trace_mask from procfs to debugfs
+- [Bugzilla: 56444] [hardening] - Display Engine - Moving files from sysfs to debugfs
+- [Bugzilla: 56956] Cannes 2: HDMI Rx: Wrong programming of Rterm value
+- [Bugzilla: 58648] HQVDP: STM_BUFFER_SRC_TEMPORAL_DISCONTINUITY is not handled
+- [Bugzilla: 58020] HDMIRX plug status not detected when setting Internal EDID config in DT
+- [Bugzilla: 57965] Crash when disable hdmi-tx DT node
+
+* DISPLAY_15.2_5.32.11
+- [Bugzilla: 57845] Implement new get_timing_identifier() STKPI functions on sources and planes
+- [Bugzilla: 58114] [stmfb] Do not set analog caps when video dacs are powered down
+- [Bugzilla: 58113] [coredisplay] Power down video dacs when video-dacs-power-down parameter is set in DT
+- [Bugzilla: 58103] Implement the new control OUTPUT_CTRL_DAC_POWER_DOWN
+- [Bugzilla: 55563] HDMIRx: [Display]: pixel capture does not stop/start
+- [Bugzilla: 56297] [Linux hardening] Display-engine doesn't protect DEBUG_FS related code
+- [Bugzilla: 57926] set_trace tool works incorrectly
+
+* DISPLAY_15.2_5.32.10
+- [Bugzilla: 57710] FRC tests on Aux video plane are failing
+- [Bugzilla: 57770] Fix random Compilation issue
+
+* DISPLAY_15.2_5.32.9
+- [Bugzilla: 57682] Do not trigger HDMI Rx thread when port is not connected to route
+- [Bugzilla: 50368] Add hdmirepeater.ko managing HDCP repeater functionality based on HDMI Tx and Rx kernel modules
+- [Bugzilla: 57394] Update CoreDisplay to fetch the new hdmi node from DT
+- [Bugzilla: 57605] HDMIRx DPM trigger based on Cable connectivity
+- [Bugzilla: 50255] [HDMI RX] HDCP repeater support
+- [Bugzilla: 57667] GDP plane not disabled
+- [Bugzilla: 39589] Support of HD mode on VTG Aux
+- [Bugzilla: 39587] DVO outputs on Aux pipeline
+- [Bugzilla: 54162] Add a new test for additional address allocation and clean up some test
+- [Bugzilla: 57087] New protection of source and plane shared variables
+- [Bugzilla: 56693] Add debug code to monitor the VSync IRQ duration
+- [Bugzilla: 53599] Move display queue and picture selection to pure SW source
+- [Bugzilla: 54090] Process Plane Control at next VSYNC
+- [Bugzilla: 53597] Change PresentDisplayNode() API
+- [Bugzilla: 53341] CGammaQueueBufferInterface should be renamed CPureSwQueueBufferInterface
+- [Bugzilla: 56640] Clean-up of old code in CDisplayPlane class and derived classes
+- [Bugzilla: 53159] Correct for loop inside CDisplaySource::GetConnectedPlaneCaps() method
+- [Bugzilla: 54433] Teletext driver cannot be removed from SDK2 (unresolved symbols)
+- [Bugzilla: 57433] Fix DPM issue with pixel capture driver
+- [Bugzilla: 56934] manage correctly memory allocation failure in coredisplaytest circularbuffer
+- [Bugzilla: 48587] [Cannes][RDK] Support of HDMI TX EDID at STlinuxTV
+
+* DISPLAY_15.1_5.32.8
+- [Bugzilla: 57156] [PM][CPS] Set wake up capability to hdmi to disabled by default
+- Revert [Bugzilla: 56934] manage correctly memory allocation failure in coredisplaytest circularbuffer
+- Revert [Bugzilla: 48587] [Cannes][RDK] Support of HDMI TX EDID at STlinuxTV
+
+* DISPLAY_15.1_5.32.7
+- [Bugzilla: 56806] No video displayed after boot
+
+* DISPLAY_15.1_5.32.6
+- [Bugzilla: 56663] Blue screen after PAUSE/RESUME or CHANNEL ZAP with gst-apps
+- [Bugzilla: 35228] Update of color conversion matrices
+- [Bugzilla: 55168] FOSH: Devices/Back End/HDMI/Set VSI InfoFrame - 3D fails
+
+* DISPLAY_15.1_5.32.5
+- [Bugzilla: 42797] [STiH407] Update HQVDPLite Deinterlacer to manage skipped fields
+- [Bugzilla: 55109] [Display Engine] Power platform Customization - HQVDP
+- [Bugzilla: 55047] Multiburst issue in the SDK2.15
+- [Bugzilla: 56064] [CSTmClockLLA] Get default clock rate if not already defined by user
+- [Bugzilla: 55950] [HDMI-RX] video (DVP) does not start if cable is plugged after application starts
+- [Bugzilla: 55263] [PM][HPD wakeup trigger]: Add wakeup capability to HDMI device
+- [Bugzilla: 53379] [Hardening] Compilation error if CONFIG_RELAY is not set
+
+* DISPLAY_15.1_5.32.4
+- [Bugzilla: 55548] Restore error traces of HQVDP firmware
+- [Bugzilla: 54311] [Hardening] vibe_os.ko cannot load if PROC_FS deactivated
+- [Bugzilla: 55603] Klocwork defects
+- [Bugzilla: 52025] DPM support in Display HDMI Rx
+
+* DISPLAY_15.0_5.32.3
+- [Bugzilla: 48496] PLANE_FEAT_COLOR_FILL not supported for CHqvdpLitePlane
+- [Bugzilla: 52269] HDMIRx: [Display]: Long time between hdmi signal invalid/valid after input change
+- [Bugzilla: 51668] Samples are missing in the Audio capture
+- [Bugzilla: 53432] [DVP] Add YCbCr101010 (10 bits) format in DVP output supported formats
+- [Bugzilla: 46416] GDP disable sequence from Main Mixer must be changed due to HW bug
+- [Bugzilla: 54846] [HDMI-RX] hdmi-rx drivers send hotplug/video and audio property events before signal is stable
+
+* DISPLAY_15.0_5.32.2
+- [Bugzilla: 54574] system hang if connecting cvbs to main pipeline set to hd timings
+- [Bugzilla: 54134] The color is not correct if the HDMI input format is RGB
+- [Bugzilla: 54192] HDMITx: [Display]: Crash observed while loading module
+
+* DISPLAY_ML_5.32.1
+- [Bugzilla: 53787] Unloading the module is causing an extra calls to clk_unprepare
+- [Bugzilla: 53792] [CMetaDataQueue] Flush should not be done when the queue is already stopped
+- [Bugzilla: 53989] Hdmi output is not enabled when cvbs output is enabled
+
+* DISPLAY_ML_5.32.0
+- [Bugzilla: 47918] [STiH407]: Top and Bottom 3D mode Issue
+- [Bugzilla: 53381] [H407] SDK2-13: Memory leak suspects during module load/unload
+- [Bugzilla: 53810] Verification of supported formats on Video planes
+- [Bugzilla: 54009] [SDK2-13.1/G6] stmfb build error of some host machines due to wrong usage of date
+- [Bugzilla: 53664] [HDMI-RX] Freeze of DVP capture after DVP 2 buffers implementation
+- [Bugzilla: 52883] change tracing level of circular buffer empty/full from error to warning
+- [Bugzilla: 53502] [PixelCaptureTest] the capture doesn't start using video planes
+- [Bugzilla: 53733] Unload/Reload modules error using PM_CONFIG_RUNTIME=y
+- [Bugzilla: 51935] unable to dequeue a compo capture buffer
+- [Bugzilla: 42044]  New Coverity errors
+- [Bugzilla: 46025]  DVO pins can not be claimed with kernel 3.10
+
+* DISPLAY_ML_5.31.0
+- [Bugzilla: 53393] Remove the dynamic clock disable and enable for the display planes
+
+* DISPLAY_ML_5.30.0
+- [Bugzilla: 52874] misuse TRC() in coredisplaytest module 
+- [Bugzilla: 53237] [HDMI-Tx][DPM][STEP2] Disable CLK_TMDS_HDMI when HDMI-Tx is disabled
+- [Bugzilla: 53326] Fix traces in clock-lla modules
+- [Bugzilla: 53327] [clock-lla] Allow enabling clock without resetting its parent and rate
+
+* DISPLAY_ML_5.29.0
+- [Bugzilla: 52664] remove Orly2 code from display
+- [Bugzilla: 50164] [DPM] [hdmi] Update HDMI manager to support DPM
+- [Bugzilla: 45920] Hdmi-Rx rework (Remove duplicated code between socs)
+- [Bugzilla: 52513] [Cannes][Vibe][Tunneled Capture] Support for flush signaling in Pixel_Capture
+- [Bugzilla: 51059] [Cannes2] Add support of YCbCr 4:2:2 on DVP
+- [Bugzilla: 52445] [DPM] [Displaylink] No need to open/close coredisplay device in PM stage.
+- [Bugzilla: 52273] HDMIRx: [Display]: Multiple STM_HDMIRX_ROUTE_SIGNAL_STATUS_CHANGE_EVT after plug out
+- [Bugzilla: 52507] Fix SDP support for Tunneled Capture (Non Tunneled Capture OK)
+- [Bugzilla: 52055] [DVP] Capture should only own two buffers for tunneling
+- [Bugzilla: 51447] Compo-capture: Sometimes colors are lost on analog output
+- [Bugzilla: 50340] Clean up of code prior to Device Tree
+- [Bugzilla: 51540] Calibration on analog video output
+- [Bugzilla: 35592] CEC msg send state machine is disrupted once receiving any msg from TV
+- [Bugzilla: 51548] 64 bits support in VIBE: Change type of 'handle' member in 'stm_display_source_queue_s' struct
+- [Bugzilla: 51541] 64 bits support in VIBE: Change type of 'handle' member in 'stm_display_source_pixelstream_s' struct
+- [Bugzilla: 50431] 64 bits support in VIBE: Change type of 'handle' member in 'stm_display_source_s' struct
+- [Bugzilla: 50373] 64 bits support in VIBE: Change type of 'handle' member in 'stm_display_plane_s' struct
+- [Bugzilla: 50237] 64 bits support in VIBE: Change type of 'handle' member in 'stm_display_output_s' struct
+- [Bugzilla: 50151] 64 bits support in VIBE: Change type of 'handle' member in 'stm_display_device_s' struct
+- [Bugzilla: 51515] 64 bits support in VIBE: Change signature of "resource" related function in vibe_os
+- [Bugzilla: 49803] 64 bits support in VIBE: Change signature of semaphore related function in vibe_os
+- [Bugzilla: 49765] [PM] Change required in CEC configuration while freezing on Cannes
+- [Bugzilla: 50636] HDMI Rx: Cannes 2 cut 2: New registers programming for HDMI Rx phy
+- [Bugzilla: 51430] Remove compilation FLAGS from HDMIRX code
+- [Bugzilla: 52689] stmcore vsync_intterup_thread_fn t trace is polluting kern.log (and possibly system perfs?)
+- [Bugzilla: 52233] [HDMI-TX] YUV 4:2:2 or YUV 4:4:4 output format are not working (RGB is provided instead)
+- [Bugzilla: 51767] missing 4K2K modes from stmfb_get_outputstandards
+- [Bugzilla: 48464] don't use BUG() and BUG_ON()
+- [Bugzilla: 52524] SMP improvement in circular buffer read/write in coredisplaytest module
+
+* VIBE_ML_5.28.0
+- [Bugzilla: 43761] [HDMI 2.0] Add support of 64:27 aspect ratio
+- [Bugzilla: 42724] Add support of SDP for Pixel_Capture module (COMPO and DVP Capture)
+- [Bugzilla: 44988] [STiH410][DVP] Issue when creating test pattern
+- [Bugzilla: 51679] [PixelCaptureTest] Failed to allocate buffers in 'bigphysarea' partition
+- [Bugzilla: 50946] Rework Pixel Capture and simplify the implementation
+- [Bugzilla: 50947] Get/Push of initial buffers should be done within Start()/Stop not in Attach()/Detach().
+- [Bugzilla: 50412] SDP - coredisplay - secure HQVDP internal motion buffers
+- [Bugzilla: 42609] Add support of SDP infrastructure in coredisplay
+- [Bugzilla: 48529] SDP - buffer grant/revoke for HQVDP and VDP
+- [Bugzilla: 51838] RPM generation error in display_engine
+- [Bugzilla: 49014] CUC 10.1 PIP Not stable - Several thin black lines
+
+* VIBE_ML_5.27.0
+- [Bugzilla: 51443] HDMI-RX: video aspect ratio is bad or video has artefact when using interlaced HDMI-RX source
+- [Bugzilla: 51226] New coverity warnings in Display (new patch)
+- [Bugzilla: 41993] allow vtg syncs to be updated when vtg is already started
+- [Bugzilla: 51353] HDMI display is shifted when using a certain scenario
+- [Bugzilla: 51226] New coverity warnings in Display
+- [Bugzilla: 50785] Very important leak in live zap usecase on H264 channels
+
+* VIBE_ML_5.26.0
+- [Bugzilla: 50773] 720x480-60 mode crashes the board if run after one of the modes : 576-50i , 480-59i, PAL
+- [Bugzilla: 49082] CLOCK_MONOTONIC vs CLOCK_MONOTONIC_RAW for video clock [a/v jerky upon ntp adjtime]
+- [Bugzilla: 51193] Wrong presentation_time with "Big Bug Bunni.avi" stream
+- [Bugzilla: 51401] [HDMI-RX] [H416] fix compilation issue.
+- [Bugzilla: 50870] update set_trace.pl to new sources directories
+- [Bugzilla: 50902] HDMI-RX fix section mismatch warning
+- [Bugzilla: 51057] [GDP-Planes] Allow AUTO Mode for IOWindows
+- [Bugzilla: 50622] crash in stmcore_display_exit while doing module Load/Unload on B2173
+- [Bugzilla: 50686] Use product_version file instead of removed VERSION one
+- [Bugzilla: 50868] Send always video property for both HDMI or DVI sources.
+- [Bugzilla: 41167] [STiH407] : Synchronization issue between DVP and HDMI-Rx
+
+* VIBE_ML_5.25.0
+- [Bugzilla: 47935] CPS for display on Cannes - second step
+- [Bugzilla: 46234] regression in merge of Bug 36774 in maintenance branch
+- [Bugzilla: 50770] Fix stm_pixel_capture_enum_formats implementation
+- [Bugzilla: 50188] DVP Tunneling implementation isn't working using latest VIBE release
+- [Bugzilla: 50006] Implement Pixel Capture Statistics.
+- [Bugzilla: 50005] Fix Tunneled DVP capture nodes releasing (Flush and ReleaseNodes)
+- [Bugzilla: 49990] Update header file using official template for stmfb.h file
+- [Bugzilla: 49468] Coverity warnings in hdmirxtest/audio_enable_test.c
+- [Bugzilla: 49145] solve ioremap issue in capturetest
+- [Bugzilla: 26503] stmfb_probe doing bad ioremap on bigphysarea bpa2 region
+- [Bugzilla: 46239] Disable coredisplay test module after the end of the automatic tests
+
+* VIBE_ML_5.24.0
+- [Bugzilla: 50227] [Sanity]Crashes seen on h310 with VIBE_ML_5.22.0 (new fix)
+- Revert [Bugzilla: 50227] [Sanity]Crashes seen on h310 with VIBE_ML_5.22.0
+- [Bugzilla: 50227] [Sanity]Crashes seen on h310 with VIBE_ML_5.22.0
+- [Bugzilla: 32142] Disabling and enabling rgb output in scart_sd scenario fails
+- [Bugzilla: 32140] Disabling and enabling of yuv output fails
+- [Bugzilla: 50057] Error loading STLinuxTV module on sdk2-build.b2173-h301_a9
+- [Bugzilla: 50163] Module loading failing on 3.4 kernel (h310 and h416)
+- [Bugzilla: 50148] Use non threaded IRQ for GDP plane
+- [Bugzilla: 49890] crash in stmcore_display_exit while removing STlinuxTV modules
+
+* VIBE_ML_5.23.0
+- [Bugzilla: 49003] PreviousNode should only be used for planes with DEI
+- [Bugzilla: 48981] No output on HDMI with VIBE version VIBE_13.1_5.14.6
+- [Bugzilla: 44182] Remove all references to CLK_M_HVA_FS clock from vibe core display on orly 2
+- [Bugzilla: 49192] Update the list of files under "stmfb/sdk2pkg/"
+- [Bugzilla: 49784] Remove HDMI phy configuration from HDMI device
+- [Bugzilla: 49486] Problem GPL License with hdmi.h and hdcp.h
+- [Bugzilla: 49851] [CEC] Change logical address typo from uint8_t to uint16_t
+- [Bugzilla: 49886] Change from stmfb/VIBE to display_engine name - Update meta data for rpm creation
+- [Bugzilla: 48172] Add possibility to override the lock of a source
+- [Bugzilla: 49727] Preliminary work for SWAP: Create a function selecting the picture to display at next VSync
+- [Bugzilla: 49721] Incorrect trace in CDisplayPlane::ReleaseDisplayNode()
+- [Bugzilla: 49716] Preliminary work for SWAP: Move lock mechanism to the plane
+- [Bugzilla: 45301] [B2020-H416] File playback issue after CPS wakeup with module loaded
+- [Bugzilla: 49121] CSTmHDMI::SetCompoundControl Attempt to modify unexpected control 16
+- [Bugzilla: 49108] HDMI TX - INFOFRAME : picture aspect ratio can be set to 4/3 with 4k2k (i.e. HDMI_VIC) video format
+- [Bugzilla: 48270] Adding sysfs files for hdmi-rx driver
+- [Bugzilla: 45522] HQVDP: DEI should be reset to Spatial when Input Window has changed
+- [Bugzilla: 48267] HQVDP: STBus DateRate scaling constraint
+- [Bugzilla: 38684] [Cannes] [HDMI-RX] 4K2K mode clock not correctly detected
+- [Bugzilla: 43161] Cannes2: HDMIRx is not working correctly at vcore = 1 V
+- [Bugzilla: 44224] SDP - coredisplay threaded IRQ
+- [Bugzilla: 49159] Retrieve handle when it is already opened.
+- [Bugzilla: 49862] [CEC] Close opened handles in CEC driver termination
+- [Bugzilla: 48937] CEC is not working on HDMI Tx and HDMI Rx with kernel 3.10-sti
+- [Bugzilla: 40860] Cannes: HDMI Rx: Equalization algorithm should be modified to adress correctly several sources ( mainly in SD mode)
+- [Bugzilla: 49339] Hdmi-Rx driver alignment to kernel-3.10-sti and kernel-3.4 DT
+- [Bugzilla: 49467] HQVDPLITE:m_MotionState isn't rotated properly
+- Revert [Bugzilla: 47060] Upgrade HQVDPLITE Firmware to version 4.4
+- Revert [Bugzilla: 47073] HqvdpLite: Collect the command status by using new API provided hqvdplite lld ver4.4
+- [Bugzilla: 43400] Random Black screen during tests on STiH407B2120
+- [Bugzilla: 36627] [STiH407] Support of Tunneled DVP Capture through SE play_stream interface
+- [Bugzilla: 47574] [DVP] Fix SYNCHRO Fields Polarity programming with respect to the HDMI input signal proprieties
+- [Bugzilla: 48704] Implement new stm_pixel_capture_enum_image_formats() STKPI
+- [Bugzilla: 49651] [DPM] [stmfb] add support for DPM
+- [Bugzilla: 49652] [DPM] [pixel_capture] add support for DPM
+
+* VIBE_ML_5.22.0
+- [Bugzilla: 49654] [DPM] [hdmi] add support for DPM
+- [Bugzilla: 49653] [DPM] [displaylink] add support for DPM
+- [Bugzilla: 49650] [DPM] [coredisplay] add support for DPM
+- [Bugzilla: 49648] [DPM] Update clock framework to allow disabling unsed clocks
+- [Bugzilla: 49647] [DPM] Fix reported issues while testing DPM
+- [Bugzilla: 26556] GDP: Programming should be done in the VSync interrupt
+- [Bugzilla: 46615] Add support of PLANE_CTRL_TRANSPARENCY_STATE in stmfb
+- [Bugzilla: 46033] IQI LE support
+- [Bugzilla: 48338] Redundant flush of Cache in HQVDP driver
+- [Bugzilla: 45253] [STiH416] Add latency statistics
+- [Bugzilla: 44376] VDP: Add the possibility to choose the Filter set used for luma/chroma scaling
+- [Bugzilla: 49428] VIBE header file package (VIBE_stmfb-headers_pkg_ext) has to be removed from SDK2 [STEP 1]
+- [Bugzilla: 43762] Add support of aspect ratio 64:27
+- [Bugzilla: 48125] STKPI change: new argument to stm_display_source_queue_lock()
+- [Bugzilla: 43764] [HDMI 2.0] Add support of HF-VSDB
+- [Bugzilla: 47698] set_trace.pl should indicate the missing environment variables
+- [Bugzilla: 31016] Removed SoCs no more supported
+- [Bugzilla: 49222] HDMI Tx is failing to recompute N/CTS audio clock when the sampling frequency changes
+- Revert [Bugzilla: 26556] GDP: Programming should be done in the VSync interrupt
+- [Bugzilla: 26556] GDP: Programming should be done in the VSync interrupt
+- Revert [Bugzilla: 48704] Implement new stm_pixel_capture_enum_image_formats() STKPI
+- Revert [Bugzilla: 47574] [DVP] Fix SYNCHRO Fields Polarity programming with respect to the HDMI input signal proprieties
+- [Bugzilla: 47574] [DVP] Fix SYNCHRO Fields Polarity programming with respect to the HDMI input signal proprieties
+- [Bugzilla: 48704] Implement new stm_pixel_capture_enum_image_formats() STKPI
+- [Bugzilla: 46425] Pixel Capture internal definitions to support new tunneling implementation
+- [Bugzilla: 42365] Add new 10 bits pixel formats support for DVP capture
+- [Bugzilla: 26501] vibe_os_allocate_bpa2_dma_area doing bad ioremap call
+- [Bugzilla: 21177] VIBE tools: yuvplayer can be completely removed
+
+* VIBE_ML_5.21.0
+- [Bugzilla: 41438] [STiH407][DVP] Fix programmable matrix setup in case of RGB to YCbCr888 format conversion
+- [Bugzilla: 49098] SetControl(PLANE_CTRL_COLOR_FILL_MODE) returns STM_PLANE_INVALID_VALUE
+- [Bugzilla: 36282] Random Crash seen in vibe_os_get_chip_version() on cut 1.1
+- [Bugzilla: 48496] PLANE_FEAT_COLOR_FILL not supported for CHqvdpLitePlane
+- [Bugzilla: 47612] Kernel oops when loading SDK2 firmwares
+- [Bugzilla: 47588] Fix GDP klocwork null pointer issue
+- [Bugzilla: 46797] [Polsat] memory leakage: kmemleak reports to be analyzed
+- [Bugzilla: 46963] SDK2_13 TC Analog Testing : Image Shift detected 
+- [Bugzilla: 32763] [STiH416] FVDP 8tap filters coefficients
+- [Bugzilla: 37622] Regression in ED modes' analog measurements
+
+* VIBE_ML_5.20.0
+- Revert [Bugzilla: 46742] Build error message in /stmfb/stmfb/hdmirx/include/stm_hdmirx_os
+- [Bugzilla: 35413] [STiH416] Glitch when changing the Input Window
+- [Bugzilla: 44554] HQVDPLite: Overshoot and Antiringing Settings Fixes (Zoom Out Quality)
+- [Bugzilla: 48099] Fix Coverity warnings SDK2-13.1 RC3
+- Revert [Bugzilla: 47588] Fix GDP klocwork null pointer issue
+- [Bugzilla: 47588] Fix GDP klocwork null pointer issue
+- [Bugzilla: 47515] [H416] Klocwork error BufferOverflow - ABV.GENERAL
+- [Bugzilla: 46807] Update HDMI sequence initialization to be in line with HDMI specification Frame formatter
+- [Bugzilla: 48106] module loading fails with Vibe delivery VIBE_13.1_5.14.5
+- [Bugzilla: 48122] [scaler] remove useless truncate of picture area in blitter scaler
+- [Bugzilla: 16756] Anti-Flicker Filtering Support
+- [Bugzilla: 47688] Trigger HDCP only when link is enabled
+- [Bugzilla: 46988] Disable HDMI/DVI interface in interrupt handler when HPD=0
+- [Bugzilla: 46806] Program Audio with Four sub packets per transfer
+- [Bugzilla: 46617] [B2120-H407] File playback issue after CPS wakeup with module loaded
+- [Bugzilla: 46167] Make thread priorities for all sub-systems tuneable using module parameters
+- [Bugzilla: 46742] Build error message in /stmfb/stmfb/hdmirx/include/stm_hdmirx_os
+- [Bugzilla: 45827] HDMI-TX Rx-Sense random issue
+
+* VIBE_ML_5.19.0
+- [Bugzilla: 44271] SDK2 port on Kernel STI 3.10 : adapt to PM
+- [Bugzilla: 46161] SDK2 port on Kernel STI 3.10: Use DT to determine firmware file name
+- [Bugzilla: 46162] SDK2 port on Kernel STI 3.10: rework fdma_filter_fn to check for fmda DT node instead of name
+- [Bugzilla: 46795] Retrieve Bstatus before starting HDMI/DVI Display
+
+* VIBE_ML_5.18.0
+- [Bugzilla: 47481] correct printf format warnings for traces in coredisplay with DEBUG activated
+- [Bugzilla: 47380] [H416] Klocwork errors on linux module (security violation)
+- [Bugzilla: 44002] DOS line ends in Vibe code
+- [Bugzilla: 42798] correct printf format warnings for traces in coredisplay
+- [Bugzilla: 47073] HqvdpLite: Collect the command status by using new API provided hqvdplite lld ver4.4
+- [Bugzilla: 47060] Upgrade HQVDPLITE Firmware to version 4.4
+- [Bugzilla: 45427] avoid authentication issue on ssh command in set_trace.pl tool
+- [Bugzilla: 41676] [STiH416] VXI module is building H415 code instead of H416.
+- [Bugzilla: 41565] Move programmation of MDTP T3IFormat throught SourceVSync interrupt instead of QueueBuffer
+- [Bugzilla: 39613] Cannes: HDMI-Rx: Wrong programming of the video/audio clocks
+- [Bugzilla: 38690] Clean up needed in hdmirxtest module when exiting
+- [Bugzilla: 45412] Compilation issue on H416: MatrixBaseAddress may be used uninitialized
+- [Bugzilla: 38461] stfbset : help menu is not completed
+- [Bugzilla: 47077] STiH410 Cannes2/Monaco2 UHD (4K) decode+display fails - scaling not possible
+- [Bugzilla: 43434] correct printf formats in scaler
+- [Bugzilla: 43663] correct printf format in hdmirx
+- [Bugzilla: 43595] correct printf format in fvdp
+- [Bugzilla: 43556] correct printf formats in vxi
+- [Bugzilla: 43531] correct printf formats in pixelcapture
+
+* VIBE_ML_5.17.0
+- [Bugzilla: 45672] video playback frozen during transcode test
+- [Bugzilla: 46029] HQVDP: Update formula used to check if Scaling possible
+- [Bugzilla: 46434] [kernel 3.10-sti] kernel oops during Sat Live
+- [Bugzilla: 40856] Cannes: HDMI-Rx : B2089: I2C slave/master and EDPD inside the CSM have been moved vs Orly2
+- [Bugzilla: 44522] Problem with hdmi when we switch video mode with 3D enabled
+- [Bugzilla: 45521] HQVDP: Motion State should not be changed when picture repeated
+- [Bugzilla: 45115] [Compo Capture] Fix capture input window programming
+- [Bugzilla: 46175] Compo Capture : Don't write compo capture CTL register if its value is not updated
+- [Bugzilla: 46176] [COMPO Capture] Disable filtering for big downsize use case
+- [Bugzilla: 46177] [Compo Capture] Fix initial phase calculation
+- [Bugzilla: 46178] [Compo Capture] Fix capturing to interlaced buffers.
+- [Bugzilla: 44559] remove RegisterStatistics() implementation in VDP as it has been done in generic class
+- [Bugzilla: 46818] HDMI Wrong N value for audio format
+- [Bugzilla: 45231] stm_display_plane_hide not working for auxiliary video plane
+- [Bugzilla: 46951] using bad variable in scaling capabilities setting
+- [Bugzilla: 42741] Crash in WritePlugSetup when changing windowing param while playing 4k
+
+* VIBE_ML_5.16.0
+- [Bugzilla: 42589] Add sysfs entrypoints for LINK management
+
+* VIBE_ML_5.15.0
+- [Bugzilla: 33586] [STiH415] VIBE reports output latency outside of the reported range
+- [Bugzilla: 44267] SDK2 port on Kernel STI 3.10 : adapt to clock framework
+- [Bugzilla: 44266] SDK2 port on Kernel STI 3.10 : adapt to i2c
+- [Bugzilla: 45026] SDK2 port on Kernel STI 3.10 : adapt to st-fdma
+- [Bugzilla: 45243] SDK2 port on Kernel STI 3.10 : cut revision apis are missing in kernel
+- [Bugzilla: 44264] SDK2 port on Kernel STI 3.10 : adapt to pinctrl
+- [Bugzilla: 45029] SDK2 port on Kernel STI 3.10 : correct Section mismatch
+- [Bugzilla: 42615] [STiH407] - Main-VID plane should be listed before Main-PIP plane
+- [Bugzilla: 44406] hdcp-control test doesn't support DVI interface
+- [Bugzilla: 45379] If video is paused, PIP window is frozen where it should keep moving
+- [Bugzilla: 45807] Fbset is not working properly for video timing resolution switch
+- [Bugzilla: 45545] No display on HDMI after "fbset PAL" or "fbset NTSC" is executed
+- [Bugzilla: 44991] Error with get EDID
+- [Bugzilla: 45629] Add Error Daemon protection using proxy mutex lock
+- [Bugzilla: 45581] TC_VIBE_FUNC_DISP_VID_ZOOM_OUT_420R2B_SD_MAIN_1920x1080-50 is now failing
+- [Bugzilla: 45202] IQI on Cannes : PEAKING Support at STKPI level
+- [Bugzilla: 45962] Last horizontal line of picture is bad on AUX for specific coordinate
+- [Bugzilla: 45386] Add control for setting/getting latency mode
+- [Bugzilla: 36774] Text from PC is blurry when PC is connected to HDMI Rx.
+- [Bugzilla: 42533] Coverity-6.6.2: new defects on VIBE
+- [Bugzilla: 45948] Build: build system updated to handle build of utils from sdk2 build component
+- [Bugzilla: 45099] add new function in coredisplaytest, partial default setting for non reg tests
+
+* VIBE_ML_5.14.0
+- [Bugzilla: 42906] Refactoring traces
+- [Bugzilla: 42547] [STiH407]: Recommended DEIPixelBuffer Sizes
+- [Bugzilla: 42710] [HQVDP_Lite] Fix YCbCr422 RSB support
+- [Bugzilla: 37803] [ORLY] NULL pointer checking is missing in UpdateMisrCtrl()
+- [Bugzilla: 40566] Only turn on MDTP pixel clocks when queuing buffers to the display driver.
+- [Bugzilla: 41807] [STiH416] Support of SURF_YCBCR422R (Raster Single Buffer) formats for video planes
+- [Bugzilla: 40496] Remove fli7610 soc (project fired)
+- [Bugzilla: 34733] [DT] Removal of runtime switch to non-DT
+- [Bugzilla: 38642] [HDMI-Rx] Pad Config bug kernel crash during full CTS run
+- [Bugzilla: 36974] Cannes: B2089: HDMI Rx : We need to configure a pio to write on EDID
+- [Bugzilla: 42325] Fix Compo Capture using YCbCr888 and YCbCr422R Single Buffer
+- [Bugzilla: 42174] Unable to get capability of misr and crc
+- [Bugzilla: 33662] Pixel repeated 2880 video format are not correctly displayed when EDID content is bypassed
+- [Bugzilla: 40555] [STiH407] Add support of YCbCr888 buffer format using DVP
+- [Bugzilla: 42307] [DEV Test] Fix test for DVP and COMPO capture using YCbCr888/YCbCr422 RSB buffer format
+- [Bugzilla: 44355] Add CEC linux module driver inside VIBE
+- [Bugzilla: 44356] Add CEC test linux module inside VIBE
+- [Bugzilla: 45214] [stiH416] DEBUGF2 compilation issue in MdtpQueueBuffer.cpp
+- [Bugzilla: 44949] [sti310] [VIBE:CEC] CEC porting for Kernel STI-3.10
+- [Bugzilla: 43853] Remove code about HQVideoPipe (used by 7108 platform)
+- [Bugzilla: 39844] VXI doesn't work after resume in case of CPS mode
+- [Bugzilla: 44181] HVSRC Lookup table should only be set when the display context is changing
+- [Bugzilla: 42458] Get BCaps and BStatus KPI's not returning TIMEOUT when display/TV does not support HDCP
+- [Bugzilla: 42931] display link coding errors causing error with gcc-4.8
+- [Bugzilla: 26160] stm_pixel_capture_get_input doesn't return proper input value
+- [Bugzilla: 45348] Missing a "break" for SURF_YCBCR422R2B case
+- [Bugzilla: 44147] Create new PLANE_CTRL_TRANSPARENCY_STATE Plane Control
+- [Bugzilla: 44883] implement new control PLANE_CTRL_TRANSPARENCY_STATE in CDisplayPlane and video planes
+- [Bugzilla: 44475] Add register traces for MISR IP
+- [Bugzilla: 38333] [coredisplaytest] : MISR capture : bad MAINPictureID on h416
+- [Bugzilla: 36859] copy/paste error in stiH416device.cpp
+- [Bugzilla: 44552] HQVDP: Cleanup of CHqvdpLiteDisplayInfo
+- [Bugzilla: 44484] HQVDP: Pixel FIFO underflow when doing downscaling
+
+* VIBE_ML_5.13.0
+- [Bugzilla: 41462] implement statistics functions as global in CDisplayPlane class for FVDP, VDP and HQVDPLITE planes
+- [Bugzilla: 43665] [H407] SDK2-12: Memory leak suspects during module load/unload
+- [Bugzilla: 26555] VDP: Programming should be done in the VSync interrupt
+- [Bugzilla: 44175] STiH410: HQVDPLite bad scaling calculation
+- [Bugzilla: 39108] HQVDP: YCbCr422 Raster 2 Buffer failed
+- [Bugzilla: 35211] H407: 3D SideBySide and TopAndBottom
+- [Bugzilla: 41317] SDK2 port on kernel 3.10 step1 (forecast SDK2-13) - VIBE
+
+* VIBE_ML_5.12.0
+- [Bugzilla: 40199] [POLSAT][ORLY][SC #116231] Video glitchs observed
+- [Bugzilla: 40726] SDK2-10.1.012 - For some tests MAT - Video not displayed correctly for HDMI and component (PB aspect ratio)
+- [Bugzilla: 38649] STiH407: HD Formatter upsampler filter coefficients values update
+- [Bugzilla: 42938] stm_display_output_get_connection_status KPI change request for low power management
+- [Bugzilla: 42945] Keep HDMI interrupts enabled while system is suspended
+- [Bugzilla: 42845] [DCR] Master output should not stop slaved outputs when doing DCR
+- [Bugzilla: 42937] Synchronize HDMI status update with vsync event
+- [Bugzilla: 42940] HDMI module update for low power management
+- [Bugzilla: 43217] [stmfb] remove useless hdmi ioctl calls
+- [Bugzilla: 42534] STiH407-Get correct PCM0 audio clock
+- [Bugzilla: 42941] Notify sysfs update for tmds_status attribute
+- [Bugzilla: 31530] DVO output shifted in embedded sync mode
+- [Bugzilla: 42943] Add new sysfs attribute for hdmi rxsense
+- [Bugzilla: 42232] DENC settings and calibration function's parameters to be integrated
+- [Bugzilla: 34231] Chroma and Luma denc filers need to be updated
+- [Bugzilla: 40847] Transcode performance issue with scaler preproc implementation
+- [Bugzilla: 43294] Change stop HDMI output instance in the context of video resolution change
+- [Bugzilla: 44151] [HDCP] Export link connectivity to HDCP daemon
+- [Bugzilla: 44177] Disable HDMI display before removing stmfb
+- [Bugzilla: 42944] Update the hdmi-info tool with latest sysfs update inside the driver
+- [Bugzilla: 42620] [STiH407] Teletext is not working
+- [Bugzilla: 44156] Trigger Edid reading only after HPD
+- [Bugzilla: 43840] memory leak issue on SDK2_10.1.010 version
+- [Bugzilla: 43235] [STiH416] m_pPictureMetadata[] can be overwritten
+- [Bugzilla: 43542] [DENC] Missing TTX line data
+
+* VIBE_ML_5.11.0
+- [Bugzilla: 41463] Zap Live Fail on H407 with corrupted video
+- [Bugzilla: 42123] Monaco 1&2: Coredisplay should not use the clocklla for HDMI_Rx
+- [Bugzilla: 42605] System hang when hdcp is activated and we get several hpd signal
+- [Bugzilla: 42015] Implement of SetPending Sync offset methods classes
+- [Bugzilla: 33761] In YCbCr 422, display is shifted
+- [Bugzilla: 41627] [fvdp] output window change on main sometimes causes green glitches
+- [Bugzilla: 41099] [HDMI-Tx] implement SetVTGSyncs method for HDMI classes
+- [Bugzilla: 40317] Dynamic change resolution does not work on Cannes
+- [Bugzilla: 38164] [STiH407] DVO ouput clock is not properly configured
+- [Bugzilla: 42498] Failed in loading vibe module due to division problem
+- [Bugzilla: 42621] HDCP is enabled when video mode change, although it was initially disabled
+- [Bugzilla: 39095] CANNES: Display start fails for Aux Display Pipeline
+
+* VIBE_ML_5.10.0
+- [Bugzilla: 39171] Fix HDMI manager printk level and use DPRINTK
+- [Bugzilla: 39910] [PixelCaptureTest] Module unloading is failing with framebuffer tests
+- [Bugzilla: 41348] null device pointer returned by of_find_device_by_node
+- [Bugzilla: 41473] HDMI not started after Frame buffer suspend/resume
+- [Bugzilla: 41086] [STiH407] YCbCr422 configuration not coherent
+- [Bugzilla: 41347] DVO output not started when changing video mode using stmfb
+- [Bugzilla: 32798] Remove hdcp-control application
+- [Bugzilla: 41471] Force restart HDMI while doing changing resolution or configuration output through Frame Buffer
+- [Bugzilla: 41623] [VIBE] output window change on main sometimes causes green glitches
+- [Bugzilla: 41625] Change stm target stmfb header spec
+- [Bugzilla: 40311] [STiH407] Not able to re-connect the SAME source on SAME plane
+- [Bugzilla: 35423] [STiH415] video noise seen at the right board after resize in case of 480p
+- [Bugzilla: 30450] [STiH416] [SDK2-09.1] PIP Tearing
+- [Bugzilla: 35766] [STiH416] No display on HDMI in STEP use case
+- [Bugzilla: 16664] PLANE_FEAT_COLOR_FILL support in CoreDisplay
+
+* vibe_ml_5.9.0
+- [Bugzilla: 39310] Loss of Audio Infoframe after AS suspend/resume of core display
+- [Bugzilla: 38497] Green scratch screen displayed between some channel changes
+- [Bugzilla: 39975] [STiH407] Fix interlaced input support for DVP capture
+- [Bugzilla: 40330] [STiH415] Fix compilation issue due to test dependency on hdmirx which is not available at all in this SoC
+- [Bugzilla: 40745] [vibe_debug] Enable traces when loading kernel modules
+- [Bugzilla: 40843] Fix RPM build failure with latest VIBE_ML_5.7.0 release
+- [Bugzilla: 41093] [FlexDVO] implement SetVTGSyncs method for DVO classes
+- [Bugzilla: 41095] [Outputs] Master Output shall program VTG Syncs for Slaved Outputs before starting
+- [Bugzilla: 39249] STiH407: 6 pixel shift detected on main display
+- [Bugzilla: 41387] [AS] HDMI not enabled when we resume the core display in case of HDMI cable unplugged
+- [Bugzilla: 41012] [HQVDPLITE] Adjust the output window size base on HQVDPLITE hardware limitation
+- [Bugzilla: 39805] [HDMI] HDMI 7-27 CTS test item is not OK on agilent
+- [Bugzilla: 41023] [HDMI] "COLO" defined in HDMI_AVI_INFOFRAME_COLO_ contants are not very significative.
+
+* vibe_ml_5.8.0
+- [Bugzilla: 37093] Add new device called /dev/hdcp for HDCP daemon interface
+- [Bugzilla: 40846] [STiH416] remove frame-larger-than errors when compiling with optimization deactivated
+- [Bugzilla: 40551] Input Raster Info wrongly configured
+- [Bugzilla: 36142] [STiH416] Seamless transitions with Dynpict stream
+- [Bugzilla: 40762] [CSTmFDVO][PM][ASB] Fix issue with Suspend and Resume methods
+- [Bugzilla: 40882] MISR check fail for ARC_43_TO_169_422R2B_SD_MAIN and ZOOM_OUT_420R2B_SD_MAIN_1920x1080-50
+- [Bugzilla: 38878] Update stmfb for HDMI interface configuration
+- [Bugzilla: 40052] [PixelCaptureTest] Disconnect plane from output before exiting the test
+- [Bugzilla: 40108] [HQVDP] Use clock_lla to get hqvdp_clk clock rate
+- [Bugzilla: 40116] [HQVDP] Fix crash when IOWindows does not satisfy FW constraints
+- [Bugzilla: 40110] [vibe_os] update clock_lla to directly access the clock by its name
+- [Bugzilla: 39821] HDMIRx hangs after resume in case of CPS mode
+- [Bugzilla: 40438] [PM][HPS][H407]- Display quality is NOK (black taint) after resuming from HPS
+- [Bugzilla: 40486] [STiH407][PM][ASB] HDMI Output is NOK after Resume from ASB Mode
+
+* vibe_ml_5.7.0
+- [Bugzilla: 38331] [PM] [Cannes/monaco PD release] Module unload crashing in stm_pixel_capture
+- [Bugzilla: 39636] Add new stm_pixel_capture_handle_interrupts() KPI
+- [Bugzilla: 39638] Update stm_pixel_capture_device_update() KPI to pass timing event information to the capture object.
+- [Bugzilla: 36525] [PixelCaptureTest] Update PixelCaptureTest for DVP tests
+- [Bugzilla: 39319] [STiH407]Bad STBus Plugs Configuration
+- [Bugzilla: 37039] [STiH416] video skip occurs for digital terrestrial television streams
+- [Bugzilla: 35995] coredisplaytest: LastCmdResult reset at wrong place
+- [Bugzilla: 36522] [STiH407] Fix interrupt enable/clear for DVP capture
+- [Bugzilla: 39493] [coredisplaytest]The CRC/MISR test capability of STiH416 isn't reported properly
+- [Bugzilla: 37873] [coredisplaytest] : CRC_SOURCE0_YUV one time in two
+- Revert [Bugzilla: 37873] [coredisplaytest] : CRC_SOURCE0_YUV one time in two
+- [Bugzilla: 18772] Management of video planes transparency
+- [Bugzilla: 39509] [STiH416] Flush old images in FVDP after temporal discontinuity
+- [Bugzilla: 39150] Vibe OS abstraction : hdf.fw loading Failed
+- [Bugzilla: 39660] [SDK2][POLSAT] Crash when zapping to AnixeHD Channel
+- [Bugzilla: 39153] Vibe OS abstraction : Add kernel tests
+- [Bugzilla: 35449] [STiH416] Display corrruption when switching channel between HD and SD streams
+- [Bugzilla: 30678] [STiH416] DVO output support
+- [Bugzilla: 38965] support DVO on H407
+- [Bugzilla: 40185] [STiH407] Use GDP Full Main-GDP2 plane
+- [Bugzilla: 38964] [H407] HDMI-TX multichannel PCM audio is not working
+- [Bugzilla: 34085] [DT] add device tree support for DVO
+- [Bugzilla: 40369] [HQVDP] Register Pictures Owned statistics
+- [Bugzilla: 39435] DisplayLatency param of display callback is null for PiP plane
+
+* vibe_ml_5.6.0
+- [Bugzilla: 37494] Cannes: HDMI Rx : no audio is outputted and detected by the uniperipheral reader
+- [Bugzilla: 35539] Display - coverity warnings to be removed
+- [Bugzilla: 35912] Compilation error in pixel_capture driver when kernel is not compiled in -Os mode
+- [Bugzilla: 37503] Orly2: HDMI Rx: HDCP is not working fine, access to HDCP register is denied
+- [Bugzilla: 38246] bad EDID parsing, missed support of extend vic for recognition of 4k2k modes
+- [Bugzilla: 39141] [STiH407]Handle hardware Constraint in HQVDPLITE
+- [Bugzilla: 37635] Change of trace management
+- [Bugzilla: 37897] Change VIBE API traces according to new trace management
+- [Bugzilla: 39156] Cannot set full range color on output
+- [Bugzilla: 37054] [STiH415 Orly 1] video disturbance of composite when Orly decodes SD stream after HD
+- [Bugzilla: 37120] Remove HPD and RX sense export to HDCP daemon
+- [Bugzilla: 37897] Change VIBE API traces according to new trace management (new fix)
+- [Bugzilla: 39414] Failed to load Pixel_Capture Module
+- [Bugzilla: 39315] [STiH407] Update HQVDP-Lite FW to version 4.3
+- [Bugzilla: 38653] Deadlock in FVDP vsync interrupt
+
+* vibe_ml_5.5.0
+- [Bugzilla: 36957] [SDK2.10] Get HDCP Status
+- [Bugzilla: 37993] [FVDP] Query regarding minimum output windows
+- [Bugzilla: 37328] Assert if queued buffer has invalid TOP-BOTTOM flags
+- [Bugzilla: 38470] Board h407 freeze (last freeze around DisplayPlane.cpp:1558)
+- [Bugzilla: 32071] Wrong color for SCART mode
+- [Bugzilla: 38762] [GDP Planes] Adjust IOWindows For HW Constraints
+- [Bugzilla: 38722] Dump of edid using hdmi node is wrong
+- [Bugzilla: 36267] [DT] Add DT support for the FVDP module
+- [Bugzilla: 36186] HDMI o/p is stopped when changing resolution dynamically
+- [Bugzilla: 36703] PixelCapture - coverity warnings to be removed
+- [Bugzilla: 36906] PixelCaptureTest - coverity warnings to be removed
+- [Bugzilla: 37411] [Power] pm_suspend is Nok for stm-display device
+- [Bugzilla: 38014] [STiH407] Check STBus bandwidth in HQVDPLITE
+- [Bugzilla: 38820] [STiH407] Initial PM support for HDMI-RX module
+
+* vibe_ml_5.4.0
+- [Bugzilla: 37413] [STiH407] Failded in compiling in DisplayLink due to warning being treated as errors
+- [Bugzilla: 35840] Memory leak suspects in vibe code - HDMI Rx
+- [Bugzilla: 35841] Memory leak suspects in vibe code - Display Link
+- [Bugzilla: 38079] Removing CONFIG_MODULE_UNLOAD makes some modules to fail during their insertion because of relocation
+
+* vibe_ml_5.3.0
+- [Bugzilla: 36750] [STiH407] Add HQVDPLITE CRC collection
+- [Bugzilla: 37662] [STiH407] Disable dual scart mode when disabling plane's HW
+- [Bugzilla: 37341] [STiH407] Minimal clocks to be enabled on boot
+- [Bugzilla: 37313] [STiH407] audio HDMI modifications
+- [Bugzilla: 37698] [GDP Planes] Add new capability PLANE_CAPS_GRAPHICS_BEST_QUALITY for Full version
+- [Bugzilla: 37995] [StiH407] Change the way to select the source picture and Add new decimation_factor in HQVDPLite
+- [Bugzilla: 36456] [STiH416] Minimize Number of Input Y,UV Buffers
+- [Bugzilla: 34765] [STiH416] Video display freeze in channel change
+- [Bugzilla: 38013] [STiH407] Check Firmware Constraint in HQVDPLITE
+- [Bugzilla: 37666] [stmfb] Use Full GDP's version for frame buffer plane
+- [Bugzilla: 37927] [STiH407] Use same plane names as Orly2
+
+* vibe_ml_5.2.0
+- [Bugzilla: 33844] [SDK2-10] Compositor Capture - Scheduling while atomic
+- [Bugzilla: 28647] compo capture with interlaced resolution doesn't work
+- [Bugzilla: 37028] [CANNES] CSTmC8VTG_V8_4::GetInterruptStatus(void) Assertion Crash
+- [Bugzilla: 36752] [DT] Fix pipeline-id field
+- [Bugzilla: 36762] [DisplayPlane] increase debug level for vsync status traces
+- [Bugzilla: 37233] hdmiphy_config should be used only by one kernel module
+- [Bugzilla: 36749] [STiH407] Add MISR collection
+- [Bugzilla: 36849] Select the source picture, primary picture or secondary picture
+- [Bugzilla: 16739] Management of GDP planes transparency
+
+* vibe_ml_5.1.0
+- [Bugzilla: 29833] Orly2: HDMIRx: 3D input resolution is not supported
+- [Bugzilla: 36094] Add support of HDMI 4k2k protocol
+- [Bugzilla: 36413] build: use $(MAKE) instead of 'make'
+- [Bugzilla: 35224] stmfb: expose the auxmem2 allocations to kernel drivers
+- [Bugzilla: 37380] [STiH407] HDMI - SD Modes are not working
+- [Bugzilla: 36499] [STiH407] Fix HDMI TMDS/PHY clocks
+
+* vibe_ml_5.0.0
+- [Bugzilla: 16739] Management of GDP planes transparency
+- [Bugzilla: 35556] Display not restarted after dynamic switch mode
+- [Bugzilla: 34386] HDMI pre-emphasis optimization for Orly2
+- [Bugzilla: 36623] HDMI disabled when we start with HDMI cable unplugged
+- [Bugzilla: 31804] Remove ambiguous RGB flags in the pixelstream header file
+- [Bugzilla: 36705] VXI - coverity warnings to be removed (only 1 remaining in VXI)
+- Revert [Bugzilla: 16739] Management of GDP planes transparency
+
+* stmfb-4.0_stm24_0291
+- [Bugzilla: 35331] [STiH407] Pre-Formatter inverted output
+- [Bugzilla: 35762] [STiH407] Fix pixel clock and FS divider for main output
+- [Bugzilla: 36219] [STiH407] Configure dual scart mode for PIP plane
+- [Bugzilla: 36149] [STiH407] Fix HDMI Tx PHY settings
+- [Bugzilla: 36222] [STiH407] Aux TVOUT input is signed: input video format register need to be set
+- [Bugzilla: 36263] [STiH407] VIBE compilation error when debug mode enabled
+- [Bugzilla: 36354] [STiH407] IMEM and DMEM buffers are not freed after FW Data and instructions are uploaded
+- [Bugzilla: 36375] [STiH407]Loading Hqvdplite firmware through Streamer on SOC
+- [Bugzilla: 36404]  [SDK2.10][ORLY] EDID Color Format
+
+* stmfb-4.0_stm24_0290
+- [Bugzilla: 34143] VIBE should provide a way to get MDTP CRC relevant for test purpose
+- [Bugzilla: 34231] Chroma and Luma denc filers need to be updated
+- Revert [Bugzilla: 34231] Chroma and Luma denc filers need to be updated
+- [Bugzilla: 33908] [STiH415] Video noise occurs in trickplay of HD contents for 1080i HDMI
+- [Bugzilla: 36296] [HDMI-RX] sync lost when switch of video input mode
+- [Bugzilla: 35905] [STiH416] New argument for FVDP_QueueFlush()
+
+* stmfb-4.0_stm24_0289
+- [Bugzilla: 34015] [STiH415] video skip occurs for digital terrestrial television streams
+- [Bugzilla: 35923] [DT] Display Link doesn't compile successfully when CONFIG_OF is unset
+- [Bugzilla: 26212] please put printf format specifiers back into vibe_debug.h
+- [Bugzilla: 34277] On Cannes, hdmirxtest is not compiled 
+- [Bugzilla: 35689] [H407] Fill the stm_display_latency_params_t 
+- [Bugzilla: 34541] Misrs should be reconfigured when display mode changes
+- [Bugzilla: 36002] [Device tree] Enable DT for HDMI Tx
+- [Bugzilla: 36120] Memory bad guard error seen when activating HQVDP-Lite on H407
+- [Bugzilla: 36090] [STiH407] Fix unknown relocation issue and change bad preformatter values
+- [Bugzilla: 35919] [STiH416] Implementation issue in SYSTEM_PSI_CCS function
+
+* stmfb-4.0_stm24_0288
+- [Bugzilla: 35804] [stiH416] Problem when unloading fvdp driver (mistake on interrupt)
+- [Bugzilla: 35816] [STiH416] Defect during sanity. AUX video is not full screen
+- [Bugzilla: 35826] Fix "Unbalanced pm_runtime_enable" message when re-loading pixel_capture driver
+- [Bugzilla: 35838] Fix "Unbalanced pm_runtime_enable" message when re-loading VXI driver
+- [Bugzilla: 35839] Fix "Unbalanced pm_runtime_enable" message when re-loading hdmi-rx driver 
+- [Bugzilla: 35815] "Unbalanced pm_runtime_enable" message when loading scaler driver (after unloading it)
+- [Bugzilla: 35827] Fix "Unbalanced pm_runtime_enable" message when re-loading displaylink driver
+- [Bugzilla: 35813] Problem when loading displaylink driver (after unloading it)
+
+* stmfb-4.0_stm24_0287
+- [Bugzilla: 26554] MDTP/FVDP: Programming should be done in the VSync interrupt
+- [Bugzilla: 27898] not able to resize the video window when pause the playback
+- [Bugzilla: 35464] Add protection of data used in VSync interrupt
+- [Bugzilla: 35572] DCR: wrong color in video for some IO windows
+- [Bugzilla: 35576] Video loss when launching sanity tests on h415 h416 using dynamic_change_of_resolution_int04
+- [Bugzilla: 35696] [STiH416] Defect during sanity. Video is not full screen
+- [Bugzilla: 33091] [CPS] HDMI-TX output status is not restored when suspending then resuming CD
+- [Bugzilla: 35688] [DT] Add hdmi-tx stih407 device tree support
+
+* stmfb-4.0_stm24_0286
+- [Bugzilla: 22569] Remove CGMS-A over XDS support inside denc class
+- [Bugzilla: 22570] DENC: Default settings - Disable WSS on denc
+- [Bugzilla: 31704] [stmfb] Update stfbset to support auto mode for IO window
+- [Bugzilla: 32187] [DT] Add device tree support for HDMI Rx 
+- [Bugzilla: 17757] Check 3D EDID support before starting the HDMI output in the HDMI device manager
+- [Bugzilla: 33825] [Core Display ] Low power Active Standby: Kernel Clock Management [Minimal clocks to be enabled on boot] 
+- Revert [Bugzilla: 33825] [Core Display ] Low power Active Standby: Kernel Clock Management [Minimal clocks to be enabled on boot]
+- [Bugzilla: 32896] [Device Tree] Add device tree support for Display link
+- [Bugzilla: 35568] [STiH407] Fix build issues for HVK platform
+- [Bugzilla: 32184] [Device tree] Add device tree support for VXI
+- [Bugzilla: 32896] [Device Tree] Add device tree support for Display link
+- [Bugzilla: 32186] [Device tree] Add device tree support for HDMI Tx
+- [Bugzilla: 31737] [STiH416] Video corruption is observed while playing special ts stream
+- [Bugzilla: 34597] [STiH416] FVDP_CommitUpdate is not implemented on Orly2
+- [Bugzilla: 32920] [STiH416] Support Orly2 Cut 1.0 & Cut 1.1
+- [Bugzilla: 35691] modify 4k2k display mode values according to apps/STLinuxTV
+- [Bugzilla: 35617] [STiH407] Update clock management for CPS PM support
+- [Bugzilla: 33825] [Core Display ] Low power Active Standby: Kernel Clock Management [Minimal clocks to be enabled on boot]
+
+* stmfb-4.0_stm24_0285
+- [Bugzilla: 27247] Investigate results of Coverity analysis in VIBE code
+- [Bugzilla: 25087] [stmfb] mixer background color should be configurable when loading the module
+- [Bugzilla: 34757] integrate validation team modifications (Veloce)
+- [Bugzilla: 34756] Support of new 4K2K display mode in the Framebuffer 
+- Revert [Bugzilla 34541] Misrs should be reconfigured when display mode changes
+- [Bugzilla: 35322] closed caption insertion control lost when starting denc
+- [Bugzilla: 32265] [DT] Add device tree support for pixel_capture
+- [Bugzilla: 35329] [DT] remove board-dependent code in display driver
+- [Bugzilla: 35414] STiH416: Aspect ratio is not changing
+- [Bugzilla: 31703] [stmfb] Support Auto MODE for Graphical Planes
+- [Bugzilla: 35369] [Coverity] Investigate results of Coverity analysis in HDMI code
+- [Bugzilla: 30478] [CPS] Support of CPS for Pixel Capture module
+- [Bugzilla: 35334] Fix coverity issues GDP & stmfb
+- [Bugzilla: 35335] Fix coverity issue for pixel capture 
+- [Bugzilla: 35548] [STiH407] Use CONFIG_MACH_STM_STIHXXX instead of CONFIG_CPU_SUBTYPE_STIHXXX
+- [Bugzilla: 35368] [Coverity] Investigate results of Coverity analysis in Output code
+- [Bugzilla: 34748] Support of new 4K2K display mode through 'fbset' command 
+
+
+* stmfb-4.0_stm24_0284
+- [Bugzilla: 35106] [GDP Planes] Allow setting AUTO_MODE for output window
+- [Bugzilla: 35102] Change needed for Dynamic Change of Resolution
+- [Bugzilla: 34753] vibe_os - Add new apis for clock-LLA management
+- [Bugzilla: 34752] [STiH407] Use clock LLA to set FSynth frequency
+- [Bugzilla: 34751] [STiH407] Use clock LLA for Video Clock Dividers
+- [Bugzilla: 35182] Adding vibe_os_get_chip_version() to wrapper code
+- [Bugzilla: 31320] [STiH407] ResetGen setup for HDTVOUT
+- [Bugzilla: 35243] [GDP Planes] Re-queue the last valid picture buffer when switching the display mode
+- [Bugzilla: 33840] [STiH407] VIBE to use clock LLA
+
+* stmfb-4.0_stm24_0283
+- [Bugzilla: 32805] [DT] add device tree support in scaler
+- [Bugzilla: 34550] [STiH415] Provide dummy implementation of new PM FVDP APIs for MPE41
+- [Bugzilla: 32765] [CPS] Add freeze() and restore() PM hooks for fvdp_module
+- [Bugzilla: 32775] [DT] add device tree support for display driver
+- [Bugzilla: 35132] [stmfb] stmfb_sync_fb_with_output is not working properly
+- [Bugzilla: 34743] integrate validation team modifications (New input formats)
+
+* stmfb-4.0_stm24_0282
+- [Bugzilla: 34855] [STiH407] Fix unknow symbols issue due to missing vtac funtions
+- [Bugzilla: 29429] [STiH416] FVDP - Implement CCS (Cross Color Supression)
+- [Bugzilla: 34688] update the initial value of MISR control register
+- [Bugzilla: 34541] Misrs should be reconfigured when display mode changes
+
+* stmfb-4.0_stm24_0281
+- [Bugzilla: 34382] support of BRIGHTHESS, SATURATION, CONTRAST at STKPI level
+- [Bugzilla: 33983] Bad references on encode files by debugfs with surface_format SP
+- [Bugzilla: 32141] [CPS] HDMI-TX low power Rxsense not detected correctly after wake-up
+- [Bugzilla: 29081] [STiH416] FVDP remove bringup test cases
+- [Bugzilla: 34339] video isn't able to be displayed on Main-VID
+
+* stmfb-4.0_stm24_0280
+- [Bugzilla: 30830] [STiH416] Add mailbox reentrancy protection
+- [Bugzilla: 32489] [STiH416] [CPS] FVDP_BE clock and scaling coefficient table didn’t update after RESUME 
+
+* stmfb-4.0_stm24_0279
+- [Bugzilla: 33758] After boot video encode preproc through F-VDP scaler gives incorrect output frames
+- [Bugzilla: 33628] Memory leak suspect in display code
+- [Bugzilla: 31825] Wrong HD DAC clock for ED modes
+- [Bugzilla: 33180] Improve HPD reactivity : send new HPD state to the HDCP daemon after HPD activity
+- [Bugzilla: 32313] modprobe pixelcapturetest not working
+- [Bugzilla: 32676] coredisplaytest: send command implementation must follow specification (chapter 5.1.2)
+- [Bugzilla: 32822] H407_HQVDP_Lite_support_Decimation_and_DEI_3D_MODE
+- [Bugzilla: 34027] Add 4k2k support on Hqvdplite plane
+- [Bugzilla: 34061] upgrade hqvdplite low level driver to v4.2(c8fvp3_FW_hqvdplite_lib fw_package v4.2)
+- [Bugzilla: 30371] Clean up: Remove double casting of platform data pointer with 2 different structures
+
+* stmfb-4.0_stm24_0278
+- [Bugzilla: 33248] Vibe Headers Package Conflicts On Fedora 18 Host (new fix)
+- [Bugzilla: 32191] need to update stm-target-stmfb-utils.spec.template to reflect changges done for stfbset
+- [Bugzilla: 32286] First frame received by FVDP after mode change is invalid
+- [Bugzilla: 31586] [STiH416] Naming problem in the FVDP?
+- [Bugzilla: 29460] Output-Mixer : Allow dynamic display switch mode
+- [Bugzilla: 33017] [CPS] Implement Freeze() method for Sources and Interfaces objects.
+- [Bugzilla: 30539] Allow Changing timing mode directly by calling Start method without stopping the output
+- [Bugzilla: 31707] [stmfb] update stmfb_open to retrieve the actual display mode
+- [Bugzilla: 31707] [stmfb] update stmfb_open to retrieve the actual display mode (new branch)
+- [Bugzilla: 33348] Random kernel crash when using coredisplaytest module to capture data
+- [Bugzilla: 31703] Support Auto MODE for Graphical Planes
+- Revert [Bugzilla: 31703] Support Auto MODE for Graphical Planes
+
+* stmfb-4.0_stm24_0277
+- [Bugzilla: 31341] H407: HQVDP Lite support
+- [Bugzilla: 32794] stm_display_source_get_status KPI doesn't check for NULL pointer
+- [Bugzilla: 32796] Preliminary work for dynamic change of resolution: Renaming of some classes and structures
+- [Bugzilla: 31263] hdk7108v2: stmfb 0271-1 compilation failure:
+- [Bugzilla: 33248] Vibe Headers Package Conflicts On Fedora 18 Host
+- [Bugzilla: 30837] Unable to display HDMI-RX source when disconnect/connect the plane using media-ctl cmd
+
+* stmfb-4.0_stm24_0276
+- [Bugzilla: 31493] [STiH416] Wrong chroma output buffers when processing second field in scaler
+- [Bugzilla: 32429] Erroneous error print with source KPI stm_display_source_get_interface()
+- [Bugzilla: 32523] Raise the level of the Debug Prints about video pipe latency
+- [Bugzilla: 24650] DENC: Fine tune the subcarrier to Horizontal sync phase
+- [Bugzilla: 32136] Bad display and artifacts when displaying macroblock content
+- [Bugzilla: 32281] DolbyCert: reported number of output periods isn't correct for Orly2
+- [Bugzilla: 32282] DolbyCert: The latency reported by VIBE on Orly2 is above the calculated maximum
+- [Bugzilla: 32566] Raise the level of the Debug Prints about Output Clock is adjust control
+- [Bugzilla: 32498] [Power] Display KPIs should return -EAGAIN error if driver is suspended
+- [Bugzilla: 26175] Display link and HDMI module have various section mismatches
+- [Bugzilla: 31327] Reset MISR ip between two test cases
+- [Bugzilla: 31511] GDP : Add support for 4k2k
+
+* stmfb-4.0_stm24_0275
+- [Bugzilla: 29747] [STiH416] Small size Main/PIP image broken with aspect ratio change
+- [Bugzilla: 28741] [STiH416] Corruption on MAIN video display when shrinking/cropping
+- [Bugzilla: 30259] Problem with Rx sense behavior while doing some activities on Hot plug.
+- [Bugzilla: 31506] Problem when zapping : display freeze with garbage from VIBE version 271
+- [Bugzilla: 31506] Problem when zapping : display freeze with garbage from VIBE version 271 (new fix for a new regression)
+- [Bugzilla: 29522] KSV fifo not fill correctly
+- [Bugzilla: 27156] [STiH415] Video noise is occured when changing video size
+- [Bugzilla: 31858] [FVDP] RGB/YCC color types from HDMI-RX input are wrong displayed
+- [Bugzilla: 31719] [VIBE] Incorrect check on resolution preventing ERC stream from recovering
+- [Bugzilla: 31532] AUTO mode of PLANE_CTRL_OUTPUT_WINDOW_MODE should return an error in case of GDP
+- [Bugzilla: 32118] CGMS-HD not working
+- [Bugzilla: 30368] lack of VESA format support in Orly2 platform
+- [Bugzilla: 32258] [HDCP] Update Bstatus and Bcaps Kpi behaviors in order to interact with HDCP daemon
+- [Bugzilla: 30259] Problem with Rx sense behavior while doing some activities on Hot plug.(new fix for a new regression)
+
+* stmfb-4.0_stm24_0274
+- [Bugzilla: 29879] [STiH416] Green screen issue, Only green color outputed.
+- [Bugzilla: 23571] handle raster format from VP8 decoder
+- [Bugzilla: 25310] [STiH416] scaler: adding support of buffer format NV16 and RGB888
+- [Bugzilla: 29731] [STiH416] PIP and AUX green image with Aspect Ratio change
+- [Bugzilla: 30577] [CPS] Reject any coming output or source updates while device is suspended
+- [Bugzilla: 30644] [CPS] CoreDisplay should configure ALL its clocks after resuming
+- [Bugzilla: 29080] [STiH416] FVDP - Update driver version number
+- [Bugzilla: 29663] HDMI-RX reworks SOC specific code reorganization
+- [Bugzilla: 27777] ORLY2: HDMI Rx: Issue to activate the I2C master of the CSM
+- [Bugzilla: 23463] HDCP on the HDMI Rx signals reception is not working
+- [Bugzilla: 29437] [CPS][HDMI Rx] add support of low power management: Active standby
+- [Bugzilla: 27544] [STiH416] FVDP_GetOutputVideoInfo is not returning the correct time reference
+- [Bugzilla: 17682] Support for line 21/284 closed caption in stmfb(core display)
+- [Bugzilla: 23459] 2880x480i/p, 2880x5756i/p HDMI Rx signals are not correctly displayed on the monitor
+- [Bugzilla: 28681] Android - not able to build VIBE in Android environment
+- [Bugzilla: 30660] MDTP re-programmed causing a glitch when adding a plane to a source already in use
+- [Bugzilla: 29525] Porting HDMI Rx driver on stiH407
+- [Bugzilla: 29026] Update display link to drop HDCP confidentiality features
+- [Bugzilla: 30658] [CPS] Implement Suspend()/Resume() methods for PixelStreamInterfaces
+- [Bugzilla: 29426] [STiH416] FVDP - Implement sharpness control
+- [Bugzilla: 29175] [STiH407] Support of DVP capture IP for pixel_capture
+- [Bugzilla: 29424] [CPS] [VXI] Add low power support
+- [Bugzilla: 29401] [STiH416] Analyze Source Input IRQ execution time in FVDP
+- [Bugzilla: 31462] Support of Tunneled Capture Mode for COMPO device
+- [Bugzilla: 30597] [CPS] Implement Freeze() method for Planes
+- [Bugzilla: 28965] [EEDID] Too much data returned when reading hdmi device
+- [Bugzilla: 27856] [STiH416] [CPS] POWER FVDP Suspend/Resume
+
+* stmfb-4.0_stm24_0273
+- [Bugzilla: 30557] [CPS] [STiH416] FVDP PM callback is crashing when suspending the system
+
+* stmfb-4.0_stm24_0272
+- [Bugzilla: 28805] [STiH416] FVDP ENC channel add output window border
+- [Bugzilla: 28747] [STiH416] Add TNR support in FVDP ENC channel
+- [Bugzilla: 29122] [STiH415] FVDP: division by zero in kernel in DEINT_Update() / crashed
+- [Bugzilla: 29436] [SCALER] Check task description in stm_scaler_dispatch() function
+- [Bugzilla: 27993] [STiH415] Interlaced stream with only TOP field does not play
+- [Bugzilla: 28873] Scaler driver implement output active area feature
+- [Bugzilla: 28578] [STiH416] No video during TS file playback on ORLY2
+- [Bugzilla: 29538] Scaler driver implement input crop area feature
+- [Bugzilla: 28944] Scaling duration is sometimes longer
+- [Bugzilla: 30405] FVDP_MAIN/FVDP_PIP/FVDP_ENC maximum output window size becomes 1920x1088
+- [Bugzilla: 30372] [SCALER] Apply scaler flag so TNR if requested
+- [Bugzilla: 30555] [SCALER] wrong blitter scaler y coordinate for input cropping area
+- [Bugzilla: 30336] [STiH416] [SCALER] TNR should not be activated by default
+- [Bugzilla: 29539] [STiH416] FVDP ENC channel add input crop area feature
+- [Bugzilla: 30865] [stiH415][SCALER] missing FVDP_SetOutputWindow() implementation
+- [Bugzilla: 30338] [STiH416] [SCALER] No gpio interrupt generated with interlaced input video stream
+- [Bugzilla: 27031] [STiH416] Bottom half display on Aux does not refresh during channel zap b/w MPEG2 SD - ( MPEG2 HD/ H264 HD) with "720x576-50" mode
+- [Bugzilla: 29942] [STiH416] Field inversion for HDMI Rx inputs with PAL & NTSC video in
+- [Bugzilla: 29901] VXI/CCIR 656 doesn't work on GBT board(STih415)
+- [Bugzilla: 31266] [STiH416] FVDP - Disable Film Mode Detection by Default
+- [Bugzilla: 31270] [STiH416] FVDP - Separate PIP and AUX number of buffers from MAIN_PRO number of buffers
+
+* stmfb-4.0_stm24_0271
+- [Bugzilla: 29475] [STiH416] Use HW input field ID for HDMI input in FVDP driver
+- [Bugzilla: 28745] [STiH416] PIP Frame Tear for 1080p@24 -> 576p@50
+- [Bugzilla: 29527] [STiH416] Fix FVDP VCPU issue causing regression
+- [Bugzilla: 29637] HDMI-Rx: Add VTAC reset when input characteristic change
+- [Bugzilla: 27427] ORLY2_HDMI-Rx_Interlaced mode from pixel source interface does not work
+- [Bugzilla: 29078] [STiH416] Regression seen on Multiburst signal
+- [Bugzilla: 29031] [STiH416] FVDP locks not required for ENC channel
+- [Bugzilla: 29750] Update vxi input params for PAL mode
+- [Bugzilla: 29219] AV-Sync: Collect display timing and provide them to StreamingEngine
+- [Bugzilla: 29221] AV-Sync: Add flag OUTPUT_CONNECTION_CHANGE
+- [Bugzilla: 26364] Stih416: use an interrupt for detecting end of FVDP scaling
+- [Bugzilla: 30214] ORLY1: Display issue with VXI driver
+- [Bugzilla: 30284] [STiH416] FVDP Regression for reverse playback case
+
+* stmfb-4.0_stm24_0270
+- [Bugzilla: 28735] SCALER: releasing of missed resources in fvdp scaler closing function
+- [Bugzilla: 29115] Turning the TV on crashes the board ...
+- [Bugzilla: 29547] [STiH407] COMPO capture support for H407 device
+
+* stmfb-4.0_stm24_0269
+- [Bugzilla: 27519] STiH416 - FVDP blocks should be reduced to operate at below 330 MHz
+- [Bugzilla: 29158] [SCALER] Add enable/disable irq and get gpio value in vibe_os
+- [Bugzilla: 27224] Add an asynchronous print function used in case of interrupt context
+- [Bugzilla: 28463] [STiH416] Cropped one bottom line when input is 1080i
+- [Bugzilla: 28932] [STiH407] Update HDMI class constructor and fix compilation issues for H407
+- [Bugzilla: 29072] STiH416 - FVDP HandleContext memory is used after being freed
+- [Bugzilla: 28398] [STiH415] Maintain constant video frame latency across all input modes
+- [Bugzilla: 26156] stm_pixel_capture_dequeue_buffer doesn't return a valid captured_time
+- [Bugzilla: 29247] Porting VXI driver on stiH416
+- [Bugzilla: 29079] STiH416 - Enable MCDi in FVDP
+- [Bugzilla: 29110] [STiH407] Provide blitter scaler
+- [Bugzilla: 29413] Remove HDMI Rx's spec file
+- [Bugzilla: 26850] STiH416 - Support multiple handles to FVDP ENC in FVDP_QueueFlush
+
+* stmfb-4.0_stm24_0268
+- [Bugzilla: 28131] [STiH415] video corrupted when setting some certain size
+- [Bugzilla: 28801] [STiH416] FVDP H-Scaler prefilter requires horizontal input divisible by 4
+- [Bugzilla: 28688] Apply HPD and RX sense IRQ filter
+- [Bugzilla: 27505] Adding support of different color types for HDMI-RX pixel stream source
+- [Bugzilla: 27125] New playback first display last picture of previous playback
+- [Bugzilla: 27385] Adding flush method for pixel stream interface
+- [Bugzilla: 28147] Implementation of the KPI stm_display_source_pixelstream_set_signal_status
+- [Bugzilla: 28525] No HDCP status change event is received if HDCP authentication is started and sink is not HDCP capable
+- [Bugzilla: 26624] FVDP: display buffer returns FVDP_NOTHING_TO_RELEASE when HDMI Rx source is running
+- [Bugzilla: 28618] STiH315 - Fix dma request line
+- [Bugzilla: 28458] STiH315: Remove stiH315 folder and use stiH416 instead of it
+- [branch] REMOVE_commit_In_FBM_IF_SetInputFrameData_restore_use_of_FPR_OPTION3
+
+* stmfb-4.0_stm24_0267
+- [Bugzilla: 27059] Regression : Unable to capture CRC on STiH415
+- [Bugzilla: 26797] ORLY2: HDMIRx: Issues in the HPD of the HDMIRx
+- [Bugzilla: 27415] Fix SetInputParams code.
+- [Bugzilla: 28338] No display when playback hdmi-rx source on int266
+- [Bugzilla: 27671] Source Product Description(SPD) InfoFrame clarification needed
+- [Bugzilla: 27362] [STiH407] Fix compilation issues for H407
+- [Bugzilla: 28207] pixel_capture event is not properly forwarded due to bad event id value
+- [Bugzilla: 28337] Add KPTRACE tracing function in vibe_os wrapper
+- [Bugzilla: 28345] Add vibe_os_memcpy to ensure bytes copy in memory
+- [Bugzilla: 28663] Correct hdmi display status connection upon HPD + RX sense activities
+- [Bugzilla: 28531] MDTP CRC don't have the same value as before
+
+* stmfb-4.0_stm24_0266
+- [Bugzilla: 27147] STiH416 - Divide by zero error in FVDP HQ Scaler
+- [Bugzilla: 26485] [Dual-Zap] STiH416: FVDP: crash in SYSTEM_BE_ProcessOutput() while checking CurrentOutputFrame ScanType
+- [Bugzilla: 21714] Move FVDP initialization out of the display
+- [Bugzilla: 26812] [PM][HPS][H416] No video after system recovers from HPS
+- [Bugzilla: 27572] STiH315: coredisplay: fixed H315 support
+- [Bugzilla: 27748] STiH416 - FVDP ENC: Configure Scaler ODD signal using FW
+- [Bugzilla: 27231] HDMI blanking when TTX is enabled.
+- [Bugzilla: 27182] VSync duration is sometimes abnormally long
+- [Bugzilla: 27569] Remove tabulation character from HDMI Rx driver
+- [Bugzilla: 26799] ORLY2: HDMIRx: Wrong values of equalizer for1080p
+- [Bugzilla: 28078] Build of stmfb test apps failed causing also RPM generation fails
+- [Bugzilla: 27613] HDMI Rx : Clock Selection for Audio on Orly2
+- [Bugzilla: 26530] status argument datatype should be uint16_t * for KPI stm_display_link_hdcp_get_sink_status_info
+- [Bugzilla: 23458] 720x480i, 720x5756i HDMI Rx signals are not correctly displayed on the monitor
+- [Bugzilla: 27146] Orly 2-HDMI RX-missing to verify link health before transmit to stable state
+- [Bugzilla: 26744] [Displaylink] Cleanup: platform device registration and Rx sense management change
+- [Bugzilla: 27345] Add support of RGB444 input color mode
+- [Bugzilla: 27401] stm_display_link_hdcp_get_last_transaction() KPI not exported
+- [Bugzilla: 26012] aspect ratio is not working as expected?
+- [Bugzilla: 27867] Variable declared but not initialized
+
+* stmfb-4.0_stm24_0265
+- [Bugzilla: 25965] STiH416: Field inversion on PIP plane
+- [Bugzilla: 25931] SCALER_FVDP: Half of interlaced clip displayed
+- [Bugzilla: 26027] STiH416: Too strong aliasing when displaying a HD source on a SD output
+- [Bugzilla: 26862] STiH416 - Improve VQ of FVDP_ENC spatial de-interlacing
+- [Bugzilla: 27036] stfbset does not set vps data correctly
+- [Bugzilla: 26895] [STi7108] PixelCapture Test doesn't compile for SH4 platform
+- [Bugzilla: 26821] HDCP Regression on astro analyzer: 1A-04 test item is failing
+- [Bugzilla: 26681] HDMI-CTS 7-27 Picture Aspect ratio doesn't match
+- [Bugzilla: 26702] ORLY2: HDMIRx: Wrong programming of the video clocks
+- [Bugzilla: 26285] HDMIRx ko crashes while exiting
+- [Bugzilla: 24576] STiH416: Corrupted display in case of Macroblock source
+- [Bugzilla: 26984] [STiH416] Live 3D OU/SBS playback display dual views on the AUX and MAIN display
+- [Bugzilla: 26042] Disable MADI for 1080i to 1080i with no FRC use case
+- [Bugzilla: 27496] STiH415 - FVDP_GetOutputVideoInfo should return P1 field ID for interlaced inputs
+- [Bugzilla: 24124] STiH407-Add_preformatter_support
+- Disable external coefficient table introduced with Bug26027
+- [Bugzilla: 26286] Remove CONFIG_MAKE_WARNINGS_INTO_ERRORS and always treat warnings as errors
+- [Bugzilla: 27330] SCALER: error trace displayed when module removed
+- [Bugzilla: 25872] Remove legacy V4L2 implementation
+
+* stmfb-4.0_stm24_0264
+- [Bugzilla: 26295] No display on HDMI on b2105 (i2c-stm: arbitration error)
+- [Bugzilla: 26103] STIH416: Crash when removing coredisplay module more than one time
+- [Bugzilla: 24219] Hot plugging HDMI on B2020 causes system crash
+- [Bugzilla: 25820] Removal of v4l2 test apps from VIBE tree (move into STLinuxTV)
+- [Bugzilla: 26420] FVDP driver to be updated to support production fuse profile 
+- [Bugzilla: 26081] vibe code has various has section mismatches
+- [Bugzilla: 26363] STiH416: FVDP: crash while VCD_ValueChange() with VCD_EVENT_OUTPUT_FRAME_RATE=0
+- [Bugzilla: 25933] Align callback API between SCALER driver and FVDP driver
+- [Bugzilla: 25929] Crash when closing FVDP ENC channel or calling FVDP_QueueFlush
+- [Bugzilla: 26475] pixel capture instable
+- [Bugzilla: 26478] HDMI Driver not initialized on B2105
+- [Bugzilla: 26084] Rework inpterrupts management for pixel_stream and queue_buffer interfaces
+- [Bugzilla: 25665] Add Video eXpansion Input support
+- [Bugzilla: 24545] Create new CSTmVTACPhy sub-class for STiH415 and STiH416 
+
+* stmfb-4.0_stm24_0263
+- [Bugzilla: 26014] STIH416: Crash when removing coredisplay module due to fvdp
+- [Bugzilla: 26085] Warning in the Linux FB
+- [Bugzilla: 26262] Avoid Warning from pixel capture test module
+- [Bugzilla: 26189] too much audio noise while doing live playback on orly2
+
+* stmfb-4.0_stm24_0262
+- [Bugzilla: 25067] [SDK2-6.5.1] Wrong STM_EDID_FEATURE_SRGB #define in stmfb
+- [Bugzilla: 24876] Update PixelCaptureTest to automatically setup capture params
+- [Bugzilla: 25747] STiH416 - Add FVDP support for interlaced output on MAIN channel
+- [Bugzilla: 25888] STiH416 - Add Support for FVDP PIP and AUX channels
+- [Bugzilla: 25291] Align scaler with new blitter API for de-interlacing (phase shift)
+- [Bugzilla: 25651] Pixel_Capture : fix color space wrong setting with "stm_input_video1" input
+- [Bugzilla: 25927] SCALER_BLITTER use input_crop_area and output_image_area
+- [Bugzilla: 25856] Rework Pixel Stream Interface implementation
+- [Bugzilla: 25359] Add reset feature in VIBE statistics
+- [Bugzilla: 25356] Porting MISR impelmentation to Orly2(STiH416)
+- [Bugzilla: 24722] [STiH416] Re-ordering of 1080p@100/120Hz video timing entries in ModeParamsTable
+- [Bugzilla: 24723] [STiH416] Update HDMI phy to support new video resolution for HDMI o/p
+- [Bugzilla: 25222] Allow FVDP C files to be compiled with option level zero for doing step by step with GDB
+- [Bugzilla: 25577] HDCP compliance Improvement
+- [Bugzilla: 25578] HDCP authentication not triggered in case of switch off/on HDCP on receiver side
+- [Bugzilla: 25977] [STiH415] Wrong source count value
+- [Bugzilla: 25306] Remove exports of display API entrypoints used exclusively by the Linux display module
+- [Bugzilla: 25956] Allow SCALER FVDP and SCALER BLITTER usage on Stih416 platform
+- [Bugzilla: 26017] Compile only scaler blitter for h415
+- [Bugzilla: 25164] modprobe -r stmfb hangs due to unhandled event unsubscription in hdmi.ko
+- [Bugzilla: 24720] [STiH416] Update clocks and dividers to support pixel frequency 297MHz
+- [Bugzilla: 22119] hdmirx support on Orly2
+- [Bugzilla: 25916] Change of display STKPI for AVSync
+- [Bugzilla: 25748] DE mode has to be enabled for HDMI Rx and VXI sources on Orly1/2
+- [Bugzilla: 24078] Enable Rx sense feature for STiH416
+- [Bugzilla: 25069] [VIBE_Display] B2105 Board Support in SDK2
+
+* stmfb-4.0_stm24_0261
+- [Bugzilla: 24763] Fix STKPI compliancy issue for Pixel Capture module
+- [Bugzilla: 25324] Add STM_VIDEO_OUT_NONE as an alias for zero to the output format definitions
+- [Bugzilla: 25278] STiH416: Disable MCDi blender until the video quality is tuned 
+- [Bugzilla: 24871] STiH416: Display going forward and backward
+- [Bugzilla: 25319] Orly2 hdmi audio clock scheme
+- [Bugzilla: 25450] STiH416: Analog video colorbar levels incorrect due to bad default FVDP PSI settings
+- [Bugzilla: 25486] Add display statistics for counting real framerate of a video
+- [Bugzilla: 25384] STiH315: coredisplay - Add a placeholder for STiH315 linux platform
+- [Bugzilla: 25654] STiH416 - Disable dithering in FVDP scalers
+- [Bugzilla: 25598] StiH416 scaler: FVDP support for ENC channel memory to memory
+- [Bugzilla: 23938] Remove obsolete stm_display_output_suspend/resume KPI
+- [Bugzilla: 25633] a few minor cleanups
+- [Bugzilla: 25275] STiH416: Frame Tear at the bottom of image for 1080i input
+
+* stmfb-4.0_stm24_0260
+- [Bugzilla: 24387] Link manager cleanup
+- [Bugzilla: 24156] [STiH416] Corrupted display: The picture is duplicated 3 times in the top half
+- [Bugzilla: 24368] Scaler: Remove flag CONFIG_ENABLE_SCALER
+- [Bugzilla: 24149] Scaler: Correct scaler statistic name: "Stat_ScalerOutputBufReleased"
+- [Bugzilla: 24406] Scaler: Rework after code review
+- [Bugzilla: 24472] Scaler: Align code with STKPI document
+- [Bugzilla: 24499] Scaler: Use blitter identifier 0
+- [Bugzilla: 24583] Scaler: API are blocked when scaler is processing a scaling task
+- [Bugzilla: 24705] Scaler: Blitter badly configured by scaler for Interlaced to Progressive conversion
+- [Bugzilla: 24787] Scaler: Missing export symbol of stm_scaler_get_capabilities function
+- [Bugzilla: 24870] STiH416: input cropping window is not working
+- [Bugzilla: 24875] STiH416: Plane is not disabled when input/output windows are invalid
+- [Bugzilla: 24920] Prevent master output time discontinuity messages during display mode changes
+- [Bugzilla: 24985] vibe os: wait_queue event is not working as expected during capture buffer release
+- [Bugzilla: 24866] STiH416: Strong field inversion when playing interlaced content
+- [Bugzilla: 23315] MISR instability because FVDP plane programs the mixer enable before the video plug
+- [Bugzilla: 24010] Preliminary SoC implementation for STiH407
+- [Bugzilla: 24962] Scaler: release blitter surfaces when problem detected.
+- [Bugzilla: 25290] First group of MISR is missing
+- [Bugzilla: 25095] TNR should be enable/disable at scaling tasks level
+- [Bugzilla: 24765] Add initial support for STiH416 and STi7108 SoC for Pixel_Capture module
+
+* stmfb-4.0_stm24_0259
+- [Bugzilla: 23916] STiH415: Support new board type in the Linux platform code
+- [Bugzilla: 18759] Pointer dereferenced before the null verification
+- [Bugzilla: 24059] STiH416 - Enable MDTP clocks for MPE42
+- [Bugzilla: 24060] STiH416 - Export CONFIG_MPE4x flags for MDTP staff
+- [Bugzilla: 24061] STiH41x - Remove FVDP_HW_VERSION flag definition from coredisplay linux device 
+- [Bugzilla: 24049] [stmcore_display_h415] Division by zero in kernel 
+- [Bugzilla: 24004] HPS NOK on 3.4.7_stm24_0302-b2000_a9+ with framework loaded. 
+- [Bugzilla: 22705] Incorrect YUV422 colour output on HDMI in pixel repeated modes
+- [Bugzilla: 24490] Restrict uses of ASSERTF macro to check only for wrong initialization parameters
+- [Bugzilla: 24407] Removing scaler handle instance from registry is missing
+- [Bugzilla: 24366] Capture is crashing with no resize configuration (vertical or horizontal)
+- [Bugzilla: 23347] Rework read_gam_buffer() in v4l2gam.c
+- [Bugzilla: 24103] vibe os: Add wait_queue event management
+- [Bugzilla: 24369] DeQueue captured buffers is not synchronized
+- [Bugzilla: 24579] STiH416: New FVDP version with Deinterlacer enabled
+- [Bugzilla: 24852] STiH416: Incorrect FrameId returned by the FVDP
+- [Bugzilla: 24810] STiH416: Back screen when using the new FVDP driver
+
+* stmfb-4.0_stm24_0258
+- [Bugzilla: 24104] VIBE OS: Add Workqueue management
+- [Bugzilla: 21645] Creation of scaler component
+- [Bugzilla: 24111] Creation of pixel capture component
+
+* stmfb-4.0_stm24_0257
+- [Bugzilla: 23733] STiH416 - Fix VTAC Phy register offsets
+- [Bugzilla: 23663] Add video clock divider source names for all FlexClockgen
+                    crossbar inputs
+- [Bugzilla: 23732] Add FlexClockgen definitions and FS660 integration
+- [Bugzilla: 23735] Add generic implementation for the new 3.4GHz HDMI PHY
+- [Bugzilla: 23426] Refactor MISR implementation out of STiH415 main/aux
+                    output classes
+- [Bugzilla: 22345] Display header files should be renamed "stm_display_xxx.h"
+                    instead of "stmdisplayxxx.h"
+- [Bugzilla: 23771] STiH416-Update coredisplay clocks
+- [Bugzilla: 23818] STiH416: New FVDP version with support for MPE42
+- [Bugzilla: 23864] STiH416 - HDMI-VIP - Remove swap between Green and Blue
+- [Bugzilla: 23830] STiH416 - Use HD0 and SD0 as clock input sources for MPE VCC
+- [Bugzilla: 23866] STiH416 - Fix PIX_MAIN and PIX_AUX Clock sources for MPE
+                    FSynth
+- [Bugzilla: 22224] Unable to enable/disable frame encryption while HDCP is
+                    running
+- [Bugzilla: 22513] Add set/clear avmute while HDCP is running
+- [Bugzilla: 23903] STiH416 - Add VTAC PHY clocks
+- [Bugzilla: 23736] Allow STmVIP class to be configured for different system
+                    integrations
+- [Bugzilla: 23914] Add Support for RGB to YUV conversions in TVOut
+                    Preformatter class
+- [Bugzilla: 23308] CGMSHD signal behavior is not correct
+- [Bugzilla: 23918] Add standard timing definitions for 297MHz CEA 1080p and
+                    HDMI 4Kx2K modes
+- [Bugzilla: 23829] Generalize the CSTmC65_4FS216 class so it can be
+                    sub-classed to support the FS432 in STiH416
+- [Bugzilla: 23867] STiH416 - Update for HDMI clocks
+- [Bugzilla: 23979] STiH416 - Initial HDMI audio configuration to prevent
+                    crashes when audio starts
+
+* stmfb-4.0_stm24_0256
+- [Bugzilla: 23299] SDK2-6.1.3 HDMI 7-1 CTS test related to EDID 4block fail
+- [Bugzilla: 23060] STiH416: Add preliminary versions of SoC specific classes
+                    to be distinct from STiH415
+- [Bugzilla: 18671] stmfb-tests: Fix CROSS_COMPILE variable to select between
+                    sh and arm arch
+- [Bugzilla: 20245] HDMI1.4b Add control for extended colorimtery data
+                    consistency between AVI and gamut metadata packets
+- [Bugzilla: 21471] v4l2gam: Reading some 4:2:0 Raster double buffer files
+                    results in corrupted images
+- [Bugzilla: 22776] STiH415: Improvements to get reliable MISR values during
+                    playing a video stream
+- [Bugzilla: 23248] Flush last MdtpCRC and FvdpGeneralInfo values stored during
+                    a previous playback
+- [Bugzilla: 22975] Add interactive mode in v4l2gam
+- [Bugzilla: 23523] DisplayTest: Rename thread names 
+- [Bugzilla: 23527] Modify video clock divider output names for STiH416
+                    and STiH407
+- [Bugzilla: 23531] Remove now unused HDMI PHY state from CSTmHDMI
+- [Bugzilla: 23536] Remove unnecessary VTG reference in CSTmHDMI
+- [Bugzilla: 22957] Capture MISR by setting start line/pixel and stop
+                    line/pixel (MaxViewPort and MinViewPort)
+- [Bugzilla: 22676] displaytest: set the viewport for MISR collection using x,y
+                    coordinates instead of direct register values
+- [Bugzilla: 23613] Remove m_uSYSCFGCpuOffset member from CSTmVTAC class
+- [Bugzilla: 23609] STiH416: set fsynth channel div3 dividers to be bypassed
+- [Bugzilla: 23665] STiH416 MisrControl_t has no member named VportMax VportMin
+- [Bugzilla: 23728] STiH416 - Use CONFIG_MACH_STM_STIH416 instead of
+                    CONFIG_CPU_SUBTYPE_STIH416
+- [Bugzilla: 23729] STiH416 - Fix unknown symbols CSTmHDMITx2G25_33_C65_PhyXXX
+- [Bugzilla: 23466] Update syscfg STiH416 registers
+
+* stmfb-4.0_stm24_0255
+- [Bugzilla: 23074] FLi7610: Fix MDTP register address initialization in
+                    device creation
+- [Bugzilla: 15959] Refactor HDMI PHY functionality into new classes
+- [Bugzilla: 23041] MISR: Add a valid flag to allow the test framework to
+                    filter invalid MISR values
+- [Bugzilla: 18443] displaytest: Add error reporting in CRC/MISR log file
+- [Bugzilla: 23193] No Aux output with STMFB_4_0_STM24_0254 release
+
+* stmfb-4.0_stm24_0254
+- [Bugzilla: 21716] FLi7610: No image data shown on the bottom 10 lines of
+                    display panel
+- [Bugzilla: 14635] Re-factor 4 byte register access abstractions to remove
+                    address calculation from the point of use
+- [Bugzilla: 22958] STiH416: Update for new vibe_os and vibe_debug header files
+- [Bugzilla: 22738] Cleanup build warnings in hdmi and displaylink modules
+
+* stmfb-4.0_stm24_0253
+- [Bugzilla: 21346] v4l2gam fails to correctly load ntsccomp test pattern file
+- [Bugzilla: 22225] Add forced restart and get status HDCP controls
+- [Bugzilla: 22394] Aux framebuffer not getting loaded on b2020/b2000 boards
+- [Bugzilla: 22413] FVDP: Dither block should be disabled to get consistent
+                    MISR result
+- [Bugzilla: 22479] update for linux 3.4
+- [Bugzilla: 18467] FLi7610: Panel Backlight Support
+- [Bugzilla: 22527] Remove PANEL_IO conditional compilation from framebuffer
+                    driver
+- [Bugzilla: 22264] Pixel stream implementation for Source Connect/Disconnect
+- [Bugzilla: 21260] FVDP: Slight aliasing in case of downscaling
+- [Bugzilla: 21750] FVDP: Add VQ features
+- [Bugzilla: 21898] Remove boot errors messages when booting the platform
+- [Bugzilla: 22678] Unable to set IO window mode on cursor plane
+- [Bugzilla: 22551] [PM] HDMI output is not enabled after resuming CD device
+
+* stmfb-4.0_stm24_0252
+- [Bugzilla: 21887] Update fvdp file paths in fvdp header files
+- [Bugzilla: 21865] Copy-paste error in CFvdpPlane::Create()
+- [Bugzilla: 21780] stm_display_source_get_interface() prototype is incorrect
+- [Bugzilla: 21901] The semaphore isn't released in certain cases in STKPI of DisplayDevice
+- [Bugzilla: 21914] Disconnect Plane does not clear connection status for pixel stream source interface
+- [Bugzilla: 21151] Improve events management within HDMI module client
+- [Bugzilla: 21760] Add "CONFIG_MAKE_WARNINGS_INTO_ERRORS" flag for HDMI module
+- [Bugzilla: 21620] Display artefact when stream's resolution changes on the fly
+
+* stmfb-4.0_stm24_0251
+- [Bugzilla: 21343] Vibe OS abstraction should be put in an independent kernel
+                    module
+- [Bugzilla: 21393] Vibe OS abstraction: Create thread functions
+- [Bugzilla: 20643] Reorganization of VIBE repo
+- [Bugzilla: 21442] FVDP driver moved to an independent kernel module
+- [Bugzilla: 21117] STiH415: Teletext is no longer available due to kernel DMA
+                    API rewrite
+- [Bugzilla: 21739] Compilation issues on OS21
+- [Bugzilla: 21755] Vibe OS abstaction: Replace calls to "g_pIOS" by straight
+                    function calls
+- [Bugzilla: 21757] Vibe debug: Replace calls to "g_pIDebug" by straight
+                    function calls
+- [Bugzilla: 21787] Vibe OS: Use "signed long long" for time64
+- [Bugzilla: 21870] Fli7610: Compilation issue
+
+* stmfb-4.0_stm24_0250
+- [Bugzilla: 21532] m_ComputedInputWindowValue.x/y must be in pixel unit
+- [Bugzilla: 21533] Getting computed input/output window values when one at
+                    least is in auto mode
+- [Bugzilla: 21570] FVDP: Incorrect downscale filter selection for interlaced
+                    input to interlaced output
+- [Bugzilla: 20438] Add Pixel Stream functionality in Coredisplay to support
+                    TV inputs
+- [Bugzilla: 21578] Queue buffer specific functions should not belong to
+                    CSourceInterface
+- [Bugzilla: 20495] FVDP add RGB support
+
+* stmfb-4.0_stm24_0249
+- [Bugzilla: 21404] No YPbPr output for 1920x1080-23 display mode
+- [Bugzilla: 21401] Compilation problem on OS21 due to recent use of
+                    stm_registry_add_attribute
+- [Bugzilla: 20263] STKPI: Correct TV panel output lookup table control
+                    definitions
+- [Bugzilla: 21370] Unable to switch dynamically the 3D mode in case of
+                    PAL/NTSC video format
+- [Bugzilla: 20262] STKPI: Plane compliancy
+- [Bugzilla: 21431] Update IO window values returned to client (MANUAL/AUTO
+                    mode)
+- [Bugzilla: 20264] STKPI: Source compliancy
+
+* stmfb-4.0_stm24_0248
+- [Bugzilla: 20195] Starting B2000 Board with HDMI TV disconnected outputs
+                    continuous queue full messages with debug enabled
+- [Bugzilla: 21123] Output memory guard values in hex in Linux OS abstraction
+- [Bugzilla: 21124] Reduce metadata queue debug message severity
+- [Bugzilla: 21099] HDCP certification test with Simplay are failling
+- [Bugzilla: 20923] Collected VTGEvent info in the displaytest module
+- [Bugzilla: 19827] Add preliminary support for STiH416
+- [Bugzilla: 18503] SMP Kernel oops in CMdtpQueueBufferInterface::SourceVSyncUpdateHW
+- [Bugzilla: 19830] FVDP: Update Color Conversion Matrix with new recommended
+                    values from Validation
+- [Bugzilla: 20966] No video with fixed 3D mode output and vendor specific are
+                    often not sent
+- [Bugzilla: 21187] Add CONFIG_MPE41 for Fli7610 build
+- [Bugzilla: 21064] STKPI: -ERANGE error incorrectly returned from
+                    stm_display_plane_get_connected_output_id
+- [Bugzilla: 18901] [PM Support] Possible to Disable VTG/MDTP interrupt using
+                    start/stop?
+- [Bugzilla: 20059] Bad picture quality when playing HD video on PIP plane
+- [Bugzilla: 20906] Problem with VID-4J.mp4 in 1920x1080-59i
+- [Bugzilla: 21302] Add files needed for OS21 execution
+- [Bugzilla: 16174] Implement Statistics in CoreDisplay
+- [Bugzilla: 21283] Wrong values of MISR_AUX_xxx on 7108 AUX
+- [Bugzilla: 21263] The fields VportMax and VportMin of MisrControl_t should
+                    be 32bit wide
+- [Bugzilla: 21286] Wrong bit (interlace) is defined in MISR control register
+- [Bugzilla: 20362] FVDP: Collect information about the picture displayed at
+                    next VSync
+- [Bugzilla: 21165] Add comments for VTG event collection in the test module
+- [Bugzilla: 21166] coredisplaytest: cosmetic logic change for code readability
+
+* stmfb-4.0_stm24_0247
+- [Bugzilla: 20851] stmfb module crashes when removed and then reloaded with
+                    only one framebuffer configured
+- [Bugzilla: 19868] SD Aux video corrupted when Dual Display activated via FVDP
+- [Bugzilla: 20902] Displaylink: HDCP Ri check not frame accurate
+- [Bugzilla: 16374] MDTP: Reduce the number of supported source modes to just keep
+                    only modes with 1920x1080 resolution
+- [Bugzilla: 19508] Display module makefile use of dirname fails on RPM installed
+                    source tree
+- [Bugzilla: 20889] DisplayLink and HDMI platform devices require a dummy device
+                    release function to avoid a kernel warning
+- [Bugzilla: 19983] Tests 1A02 and 1A09 of the HDCP certification are failing
+- [Bugzilla: 20908] STiH415: Rework code to manage SoC initialization and resets
+                    for power management
+
+* stmfb-4.0_stm24_0246
+- [Bugzilla: 20649] HDMI: Support resume from a hard reset or lost power state
+- [Bugzilla: 20817] Restart DENC when resuming to bring it back from a hard
+                    reset or loss of power
+- [Bugzilla: 20702] When AUTO mode set for IO windows, they should be force to 0
+- [Bugzilla: 20738] Renaming by adding suffix Value to
+                    m_InputWindow/m_OutputWindow
+- [Bugzilla: 20856] Mixer: Support resuming from hard reset or power loss
+- [Bugzilla: 20650] Displaylink : Authentication thread needs to be cleaned up
+- [Bugzilla: 20656] STKPI: Device compliancy
+- [Bugzilla: 20897] HDF: Add Resume to put back initial state after hard reset
+                    or power loss
+
+* stmfb-4.0_stm24_0245
+- [Bugzilla: 14403] Parametrize the number of sync outputs for specific VTGs
+                    in STiH415 and FLi7610
+- [Bugzilla: 18434] STi7108: Management of decimation in the display
+- [Bugzilla: 20393] Spurious errors displayed during module init
+- [Bugzilla: 20396] Timeout errors displayed when HDMI cell is reset by SW at
+                    startup
+- [Bugzilla: 20417] Reuse STiH415 SoC specific classes for Other equivalent SoCs
+- [Bugzilla: 20421] Increase maximum number of supported sources to support
+                    STiH416 Linux platform
+- [Bugzilla: 19847] Display_link compliance issues with KPI document
+- [Bugzilla: 20051] HDCP Check every 128 frames
+- [Bugzilla: 20437] Displaylink : HDCP, Add the support for Advanced Cipher
+                    Mode
+- [Bugzilla: 19217] Fill FVDP InputVideoInfo with 3D information
+- [Bugzilla: 20201] Fill FVDP OutputVideoInfo with 3D information
+- [Bugzilla: 20487] Add a debug print in display API functions
+- [Bugzilla: 19179] [STKPI] Update Plane's IO Windows controls
+- [Bugzilla: 19894] IO window support for a Graphics Plane
+- [Bugzilla: 20227] Use safe mem to load the key for HDCP Authentication
+- [Bugzilla: 18926] Removal of QueueBuffer interface status
+- [Bugzilla: 20493] Add Display link platform changes for 7105 device
+- [Bugzilla: 18454] Plane: Rework of Show/Hide/EnableHw/DisableHW
+- [Bugzilla: 19218] Re-organize coredisplaytest module
+- [Bugzilla: 20540] MISR control value is set wronly
+- [Bugzilla: 19355] FLi7610: System hanged after modprobe stlinuxtv
+- [Bugzilla: 16579] Add support of Active Standby PM profile in CoreDisplay
+- [Bugzilla: 19216] FVDP: 3D->2D support
+- [Bugzilla: 19297] Add support for power management in the displaylink
+                    component
+
+* stmfb-4.0_stm24_0244
+- [Bugzilla: 19900] Make rpm is no more working for stmfb-utils and
+                    stmfb-headers packages
+- [Bugzilla: 18119] FVDP: Display temporary corrupted when we change the
+                    output window
+- [Bugzilla: 19645] FVDP: Spatial image artifact on Aux video plane
+- [Bugzilla: 19479] MDTP input width should be programmed with width instead
+                    of pitch
+
+* stmfb-4.0_stm24_0243
+- [Bugzilla: 15988] [STih415] No display on AUX path without framebuffer support
+- [Bugzilla: 19126] plane remains displayed even if there is no source attached
+                    to it (but plane connected to output)
+- [Bugzilla: 19336] Renaming of m_isActive into m_hasBuffersToDisplay
+- [Bugzilla: 18166] Remove mode 720x480-60i from code and STKPI documentation
+- [Bugzilla: 19315] displaylink: display device handle not released on module
+                    unload
+- [Bugzilla: 19435] B2020/STiH415: Add board support in stiH415.c to display
+                    driver
+- [Bugzilla: 19204] FVDP: Corrupted display on Aux video plane
+- [Bugzilla: 19300] FVDP_INFO_NOT_AVAILABLE behavior inconsistent after Queue
+                    Flush
+- [Bugzilla: 19441] STKPI: Handle validity verification is done too late!
+- [Bugzilla: 18925] Remove PixelStream control functions
+- [Bugzilla: 19606] [SDK2-04.95] stfbset should exit with error when failed
+- [Bugzilla: 19392] V4L2 programs prior to SDK2.05 are not compatible with new stlinuxtv device on SDK2-04.94
+- [Bugzilla: 19619] Initialize source CRC when MdtpQueueBufferInterface class is created
+- [Bugzilla: 19603] [SDK2-04.95] Main To Denc path is no more working
+- [Bugzilla: 19730] Allow VBIPlane to be connected to the analog_hdout0 output even for not supported modes
+- [Bugzilla: 19429] HDMI output instability after Hotplug when HDCP is ON
+- [Bugzilla: 19701] HDCP events are skipped and masked with HPD events during HDCP CTS
+- [Bugzilla: 19705] FVDP output frame rate computation overflows for 120Hz
+- [Bugzilla: 19348] Garbled Video is displayed at bottom of the Screen
+- [Bugzilla: 17130] 720x480-59 and 720x576-50 are not correctly displayed on HDMI output
+- [Bugzilla: 18473] Capture Loss in reading MISR data in time on 7108/Orly
+- [Bugzilla: 19734] [STih415] Incorrect viewport setting for MISR collection
+- [Bugzilla: 19804] Remove main_source_id from stmcore_display_pipeline_data struct
+- [Bugzilla: 19754] Mismatch in plane names across ORLY and Newman platforms
+- [Bugzilla: 19431] Watchdog timer is hardcoded - remove it.
+- [Bugzilla: 19833] B2000: Update HDF upsampler coefficients with new recommended values from Design
+- [Bugzilla: 19328] Renaming of hide public APIs 
+
+* stmfb-4.0_stm24_0242
+- [Bugzilla: 17719] Removal of every ops tables
+- [Bugzilla: 19059] Error message displayed when the source decode is frozen
+- [Bugzilla: 16662] VBI Plane: Add support for CGMS A and B
+- [Bugzilla: 19100] PIP Scaler MCC doesn't program correctly
+- [Bugzilla: 16190] Add connections between CoreDisplay objects to STKPI
+                    registry
+- [Bugzilla: 19164] Infinite loop when calling fbset 1920x1080-50i
+- [Bugzilla: 19222] HDF AWG: Change 480p60 firmware to be compatible with the
+                    current hardware setup
+- [Bugzilla: 19251] fli7610: update clock names as per latest clock LLA
+- [Bugzilla: 17505] Add support of display_link and KPI implementation
+- [Bugzilla: 18721] STiH415 Cut1: Init the Main pipe only
+- [Bugzilla: 19219] STiH415: Force output colors to something visible when the
+                    driver is configured to just test output stages
+	
+* stmfb-4.0_stm24_0241
+- [Bugzilla: 16460] Remove preferred_video_plane from the Linux platform code
+- [Bugzilla: 18780] Some device configurations can cause Null pointer
+                    dereferences in the base device class
+- [Bugzilla: 18859] FVDP 1.9 Release
+- [Bugzilla: 18182] Code clean-up in stm_buffer_presentation_stats_t
+- [Bugzilla: 16010] Debug prints in color in STMFB
+- [Bugzilla: 18784] VTG: Regroup sync parameters in a single structure and use
+                    operator new[] instead of OS allocator
+- [Bugzilla: 18450] Internal rework: Use Frame coordinates in
+                    PlaneQueueBufferInfo
+- [Bugzilla: 18581] MTDP: Incorrect framerate with 1080i50 content
+- [Bugzilla: 18985] STiH415: Move VTG interrupt usage warning
+- [Bugzilla: 19001] FLi7610: Update AUX VTG creation parameters
+- [Bugzilla: 17370] The last frame of a stream is displayed before the start
+                    of the next stream
+- [Bugzilla: 16059] lip sync correction : Video and audio latencies computation
+                    from EDID parsing is not aligned with HDMI spec
+
+* stmfb-4.0_stm24_0240
+- [Bugzilla: 18491] STKPI: Update 3D configuration in Buffer descriptor
+- [Bugzilla: 18446] STKPI: Renaming of status functions
+- [Bugzilla: 18237] STi71XX: Queue locking verification can be done fully on
+                    the source
+- [Bugzilla: 17240] CONFIG_STG_OPTLEVEL requires changes to work correctly with
+                    kernel 3.x
+- [Bugzilla: 18114] HQVDP: CoreDisplay driver is corrupted after using IO
+                    windows fully outside visible area
+- [Bugzilla: 18666] stiH415: update clock names as per latest clock LLA
+- [Bugzilla: 17563] Update of stm_display_source_queue_buffer() and
+                    stm_display_source_queue_lock() return values
+- [Bugzilla: 18301] VDP: Division by 0 are done when using IO windows fully
+                    outside visible area
+- [Bugzilla: 18356] GDP: Division by 0 are done when using IO windows fully
+                    outside visible area
+- [Bugzilla: 18703] Coredisplay: Report module version information
+- [Bugzilla: 18263] STMFBIO_GET_OUTPUTINFO returns error
+- [Bugzilla: 18664] VTG: Use slaved VTG interrupts instead of master VTG
+
+* stmfb-4.0_stm24_0239
+- [Bugzilla: 18046] build failure of stmfbplatform.c when CONFIG_PM enabled
+- [Bugzilla: 18048] STi7105: HDMI HPD PIO alt input configuration causing
+                    kernel to throw a BUG
+- [Bugzilla: 18063] Switch the older SoCs to use the same TVOut implementation
+                    as STi7108
+- [Bugzilla: 18086] STi7108: MB837 build failure
+- [Bugzilla: 18064] coredisplaytest: missing __init section mismatch warning
+                    for stmcore_sourcecrc_create
+- [Bugzilla: 18139] STiH415: Re-organize code in main and aux output classes
+- [Bugzilla: 18058] Remove debug print flooding the UART
+- [Bugzilla: 17700] Add FLI7610 support in stmfb
+- [Bugzilla: 17901] Crash when queuing pictures on V4L2
+- [Bugzilla: 18117] Output blinking when we set an invalid rectangle
+- [Bugzilla: 18293] Error in trace displayed about aspect ratio
+- [Bugzilla: 18110] Only half top part of source picture is displayed
+- [Bugzilla: 17975] Add version number of the coredisplay test module
+- [Bugzilla: 17860] Remove the text output format of CRC/MISR collection
+- [Bugzilla: 18109] HQVDP: On interlaced output, green picture is displayed
+                    sometimes
+- [Bugzilla: 18323] STKPI: Use handles instead of pointers for QueueBuffer and
+                    PixelStream interfaces
+- [Bugzilla: 12758] Rework of display object's status
+- [Bugzilla: 18377] Move CDisplayPlane::GetAvailableSourceID outside of
+                    extern "C" block
+- [Bugzilla: 18268] The displayed image is broken when 576i input to 176x120
+                    windows size on 1080p
+- [Bugzilla: 18123] Field inversion in case of I to I without deinterlacer
+                    (ex: PIP plane)
+- [Bugzilla: 18416] FVDP: Output window width should always be even
+- [Bugzilla: 16691] HDMI 7.1 support: Add audio channel and speaker mapping
+                    to hdmi-control
+- [Bugzilla: 18430] "Rect" can be removed from stm_buffer_dst_t
+
+* stmfb-4.0_stm24_0238
+- [Bugzilla: 17770] Frame tear is observed in fvdp pip plane
+- [Bugzilla: 17771] Even/odd fields are inverted in pip channel
+- [Bugzilla: 17801] Image is corrupt at some of 1080i/p input to 1080i/p
+                    output combination
+- [Bugzilla: 17420] Clean up in CoreDisplayTest module
+- [Bugzilla: 16375] STih415: Collect the MDTP's CRC
+- [Bugzilla: 17763] Collect MDTP CRCs by CoreDisplayTest module
+- [Bugzilla: 17821] Remove the last "," in strings of CRC/MISR capabilities
+                    which are returned by CoreDisplay Module
+- [Bugzilla: 17795] OS21: change tests to use plane window controls
+- [Bugzilla: 17796] Planes: New Input/Output window management based on
+                    plane controls
+- [Bugzilla: 17797] Planes: Add aspect ratio conversion management
+- [Bugzilla: 17868] LinuxFB/DirectFB: New Input/Output window management
+                    based on plane controls
+- [Bugzilla: 17308] STM_BUFFER_DST_USE_SCREEN_XY can be removed
+- [Bugzilla: 17309] V4L2: New Input/Output window management based on
+                    plane controls
+- [Bugzilla: 17883] STKPI: Remove obsolete src and dst fields in buffer
+                    descriptor
+- [Bugzilla: 17740] Disable STMFB V4L2 driver compilation by default
+- [Bugzilla: 17914] STiH415: Update HDMI support for new SoC variant
+- [Bugzilla: 17977] STi7108: Only upper half of interlaced video is displayed
+                    on PIP
+
+* stmfb-4.0_stm24_0237
+- [Bugzilla: 15979] STKPI: Add implementation of OUTPUT_CTRL_FORCE_COLOR for
+                    HDMI outputs
+- [Bugzilla: 15956] Add HDMI Vendor block 3D parsing to HDMI device EDID code
+- [Bugzilla: 17710] Forward source control calls to the source interface
+- [Bugzilla: 17491] STih415: Implement STM_SRC_CTRL_CLOCK_ADJUSTMENT for MDTP
+                    sources
+- [Bugzilla: 17373] FVDP: Corrupted display when switching between MAIN and
+                    PIP planes
+- [Bugzilla: 17762] Add user data buffer type definition in V4L2 code
+
+* stmfb-4.0_stm24_0236
+- [Bugzilla: 16942] FVDP: Display not smooth with 576I50 sent to 1080I50 or
+                    1080P50
+- [Bugzilla: 16468] Add output display aspect ratio control 
+- [Bugzilla: 17501] STKPI: Add STM_OUTPUT_STD_HDMI_LLC_EXT
+- [Bugzilla: 15977] Split Linux HDMI device implementation into its own
+                    platform driver module
+- [Bugzilla: 16703] FVDP: Changing input window size is not working
+- [Bugzilla: 16586] STKPI: Rename mode parameters frame_rate field to
+                    vertical_refresh_rate
+- [Bugzilla: 13253] STi7108: Detect cut1.x silicon during the probe of the
+                    coredisplay module and refuse to initialize
+- [Bugzilla: 14506] CoreDisplay handles should be passed to STKPI registry
+- [Bugzilla: 17463] coredisplaytest: rework code to remove large stack frame
+                    compiler warning
+
+* stmfb-4.0_stm24_0235
+- [Bugzilla: 16786] STiH415: MISR-TestModule Compatibility changes
+- [Bugzilla: 16809] FVDP M1.8.0 release
+- [Bugzilla: 16943] Infinite loop in the FVDP driver
+- [Bugzilla: 17004] STiH415: Allow MDTP sources to connect to multiple video
+                    planes simultaneously
+- [Bugzilla: 16846] Add PLANE_CAPS_VBI capability for VBI planes
+- [Bugzilla: 16469] Add plane aspect ratio conversion control
+- [Bugzilla: 17065] STih415 : Hung-up while re-loading stmfb module
+- [Bugzilla: 16875] Increase maximum length of the strings
+                    MAX_RELAYFS_STRING_LENGTH and TEST_CTRL_CMD_SIZE
+- [Bugzilla: 17058] register/unregister source vsync call back
+- [Bugzilla: 17084] STMFB syncs DMA memory outside allocated range
+- [Bugzilla: 16931] Class attribute operations have changed prototype in
+                    Linux3.x kernel
+- [Bugzilla: 17151] STih415: Crash when trying to display a GAM file on
+                    Main-GDP1
+- [Bugzilla: 17276] display does not compile against linux-3.2 headers
+- [Bugzilla: 16426] IO Windows info should be transmitted to CoreDisplay
+- [Bugzilla: 17036] Remove more compilation warnings
+- [Bugzilla: 17035] Add an option to make warning into errors
+- [Bugzilla: 17365] FVDP M1.8.3: Array use out of bounds in debug message
+- [Bugzilla: 16900] FVDP: Deinterlacing problem with 576I50 output
+- [Bugzilla: 17008] Hang in the FVDP
+- [Bugzilla: 17367] remove compiling warning under debug printk in coredisplay
+                    test module
+
+* stmfb-4.0_stm24_0234
+- [Bugzilla: 16843] OUTPUT: Add IsStarted method
+- [Bugzilla: 16719] OS21: gam_display tool still using an obsolete plane control
+- [Bugzilla: 16685] Lower priority of debug trace generated from MISR code
+- [Bugzilla: 16761] Flushed last CRC value stored during the previous playback
+- [Bugzilla: 16681] one of CRC parameter strings is missing
+- [Bugzilla: 16683] Truncate the useless data at the end of CRC/MISR data
+                    output file
+- [Bugzilla: 16458] Remove preferred_graphics_plane from Linux platform device
+                    structure
+- [Bugzilla: 16244] Build warnings are to be removed targeting SDK2-04: Display
+- [Bugzilla: 16813] Board stalled when executing modprobe
+
+* stmfb-4.0_stm24_0233
+- [Bugzilla: 16764] print correct value of AUX MISR
+- [Bugzilla: 16612] add new buffer type for audio capture
+
+* stmfb-4.0_stm24_0232
+- [Bugzilla: 16194] Use uniform CoreDisplay object names for all platforms
+- [Bugzilla: 15113] Remove the Fli7510 prototype code
+- [Bugzilla: 16316] STiH415: FVDP M1.7.0 delivery
+- [Bugzilla: 16550] Test module: Remove DENTRY and DEXIT from
+                    CDisplayDevice::SetTuning()
+- [Bugzilla: 16070] DENC: Add VPS support
+- [Bugzilla: 16585] FDVO: Start() mode checking is treating valid modes as
+                    invalid modes
+- [Bugzilla: 16557] OutputVideoInfo.FrameRate not halved for interlaced output
+- [Bugzilla: 16432] Rework of MDTP Queue Buffer Info into a generic structure
+- [Bugzilla: 16447] Rework of GAMMA_QUEUE_BUFFER_INFO
+- [Bugzilla: 16603] Potentially incorrect presentation info structure used in
+                    display callback
+- [Bugzilla: 16457] STih415: Adding FVDP_Context_t parameter for
+                    FVDP_GetRequiredVideoMemorySize() and FVDP_OpenChannel()
+- [Bugzilla: 16615] Fix two potential race conditions with legacy plane
+                    flushing on SMP systems
+- [Bugzilla: 16470] STKPI porting: new plane control implementation
+- [Bugzilla: 16619] Remove STi7200 support from the display subsystem
+- [Bugzilla: 16413] STih415: Implement FVDP_GetRequiredVideoMemorySize()
+- [Bugzilla: 16610] Enhancements to the coredisplay test module
+- [Bugzilla: 16639] Modifications for MISR - Test module compatibility
+
+
+* stmfb-4.0_stm24_0231
+- [Bugzilla: 14453] Change usage of queue interface handle in STMFB linux
+                    drivers
+- [Bugzilla: 15877] STih415: MDTP VSync Frequency looks unreliable
+- [Bugzilla: 16368] STih415: The FVDP driver should be informed in case of
+                    repeated picture
+- [Bugzilla: 15962] Add 3D control to the framebuffer device and stfbset
+- [Bugzilla: 16340] STKPI: Implement stm_display_device_find_outputs_with_capabilities() 
+- [Bugzilla: 16404] STKPI: Modify stm_display_device_find_planes_with_capabilities()
+                    to add a mask parameter to test against
+- [Bugzilla: 15958] Move HDMI infoframe controls to IFrameManager class 
+- [Bugzilla: 16270] MDTP_OP_FLAGLINE sometimes not set correctly
+- [Bugzilla: 16227] Modify collection of CRC/MISR in order to handle general
+                    cases(7108, Orly,...)
+- [Bugzilla: 16130] Rework coredisplay test module
+
+* stmfb-4.0_stm24_0230
+- [Bugzilla: 15288] Update to original bug to support runtime DAC calibration
+- [Bugzilla: 16262] STiH415: Aux MISR code causes bus error if aux display is
+                    enabled
+- [Bugzilla: 15960] Add transmission of the HDMI VSIF 3D content information
+- [Bugzilla: 16168] Add 3D mode flag checking in HDMI output Start()
+- [Bugzilla: 16176] STKPI: Implement stm_display_device_find_planes_with_capabilities() 
+- [Bugzilla: 16343] Change debug level of the print "No picture currently
+                    displayed"
+
+* stmfb-4.0_stm24_0229
+- [Bugzilla: 15851] MDTP: MDTP_REG_T3I_VIEWPORT_SIZE should be equal to
+                    InputFrameHeight/2 in case of Interlaced Input
+- [Bugzilla: 15876] STiH415: FVDP M1.6.0 updates for SDK2-3 release
+- [Bugzilla: 15892] STiH415: Change MDTP and FVDP FRAME_RESET to line 1
+- [Bugzilla: 15577] FVDP: Black lines at the bottom of the screen
+- [Bugzilla: 15290] Add support for Analogue Syncs calibration
+- [Bugzilla: 15288] Rework HDFormatter classes to better support G3
+                    and G4 SoCs 
+- [Bugzilla: 15294] Update the TVOUT denc sub-class to support the
+                    AnalogSync calibration
+- [Bugzilla: 15849] STi7108: Switch analog outputs to use new TVOut
+                    and HDFormatter classes
+- [Bugzilla: 15156] Fine positioning in 1/32nd of pixel is not needed
+                    anymore
+- [Bugzilla: 15932] FVDP API for CRC
+- [Bugzilla: 16009] Propagate mode changes to slaved outputs
+- [Bugzilla: 15816] STKPI Porting: stm_picture_format_info_t bar_data_present
+                    field requires updating
+- [Bugzilla: 15924] Internal renaming of a queue buffer interface subclass
+- [Bugzilla: 15981] FVDP: Need an API function to Flush the internal buffer
+- [Bugzilla: 16076] PTS and HQVDP CRC value are not matched
+- [Bugzilla: 16128] Reset PictureId for CRC/MISR collection
+- [Bugzilla: 16156] Null pointer bug (minor only if DEBUG_LEVEL >=4)
+- [Bugzilla: 16057] DENC: Add GetOwner method
+- [Bugzilla: 16140] Improve robustness when plane not connected to any output
+- [Bugzilla: 16161] MDTP FVDP are not using the same default frame rate
+- [Bugzilla: 16165] Unused member variable m_mdtpBaseAddress of
+                    CMdtpQueueBufferInterface class
+- [Bugzilla: 16137] Adding MISR capture for STiH415
+
+* stmfb-4.0_stm24_0228
+- [Bugzilla: 15688] HDMI interface is enabled in case of DVI device connected
+                    to STB
+- [Bugzilla: 15683] Parsing an EDID with multiple CEA extension blocks can
+                    incorrectly identify a HDMI display as DVI
+- [Bugzilla: 15536] STi7108: PIP video plane is incorrectly rejecting
+                    interlaced buffers on a progressive display
+- [Bugzilla: 14276] REMERGE: This bug was listed as merged in 0221 but the
+                    change did not actually get pushed.
+- [Bugzilla: 15705] [SDK2-95.0] reported Picture type contains non ascii
+                    characters
+- [Bugzilla: 15771] Potential MDTP DTG wrong frequency selection for streams
+                    above 60Hz
+- [Bugzilla: 15616] MDTP DTG: Some 1080P modes are not working
+- [Bugzilla: 15468] STi7108: HQVDP CRC values are randomly incorrectly read
+                    as being zero
+- [Bugzilla: 15800] STiH415: Incorrect HD Formatter clock speed set when DENC
+                    output is active
+- [Bugzilla: 15801] STiH415: DENC VIP is being configured too late or not at all
+- [Bugzilla: 15804] TVOut DENC class does not check the validity of the
+                    output format
+- [Bugzilla: 15805] STiH415: Aux output DisableDACs is not correctly powering
+                    down the DACs
+- [Bugzilla: 15806] STiH415: Aux output clock settings can break an active
+                    main output DENC configuration
+- [Bugzilla: 15803] TVOut: Aux pipeline startup sequence is not correct
+
+* stmfb-4.0_stm24_0227
+- [Bugzilla: 15399] FVDP: InputVideoInfo should be filled with the size of
+                    the FULL picture
+- [Bugzilla: 15395] V4L2gam is broken because visible_area is not yet filled
+                    in the stmvout driver
+- [Bugzilla: 15451] MDTP DTG mode selection improvement
+- [Bugzilla: 15473] MDTP DTG clock is not reprogrammed when the active area
+                    changes
+- [Bugzilla: 15472] MDTP: Division by 0 in a debug print
+- [Bugzilla: 15471] Picture display using gst-apps doesn't not work in
+                    SDK2-2.94
+- [Bugzilla: 15405] Linux: display driver updates for Linux kernel v3.1
+- [Bugzilla: 15509] FVDP: Freeing the video plug setup is incorrect causing
+                    errors on module removal
+- [Bugzilla: 15511] OS21 test apps do not exit cleanly
+- [Bugzilla: 15439] Wrong STKPI function name: stm_display_output_release
+                    should be stm_display_output_close
+- [Bugzilla: 15545] Add MemcpyFromDMAArea to IOS abstraction
+- [Bugzilla: 15581] STKPI porting: renaming of
+                    stm_display_output_setup_clock_reference
+- [Bugzilla: 15479] Display sync is lost when exiting from DirectFB
+- [Bugzilla: 14832] [V4L2] Use of .ioctl in V4L2 framework must be replaced
+                    by .ioctl_unlocked
+
+* stmfb-4.0_stm24_0226
+- [Bugzilla: 15307] STKPI Porting: HDMI Output control and AVI infoframe fixes
+- [Bugzilla: 15272] Add support of SURF_YCBCR422MB and SURF_YCBCR422R2B
+                    format in MDTP and FVDP modules.
+- [Bugzilla: 15329] STKPI Porting: Add OUTPUT_CAPS_LEDBLU
+- [Bugzilla: 15324] Add memcmp to CoreDisplay OS Abstraction
+- [Bugzilla: 15328] MDTP/FVDP: Monitor the changes of source picture
+                    characteristics
+- [Bugzilla: 14789] STiH415: Video display is corrupted after output window
+                    resizing
+- [Bugzilla: 14997] VTG Mode configuration should include TFO,BFO, TFS and
+                    BFS configuration
+- [Bugzilla: 15342] STi7105: HD display modes fail to display on HDMI
+- [Bugzilla: 15358] Temporarily change default VTG video output window to
+                    active area for MISR
+- [Bugzilla: 15362] STKPI Porting: stm_wss_aspect_ratio_t enumeration
+- [Bugzilla: 15304] Pass PTS (native) to CoreDisplay Test module
+- [Bugzilla: 15369] STi7200 build broken in 0225
+
+* stmfb-4.0_stm24_0225
+- [Bugzilla: 14945] STKPI Porting: Output display mode handling changes
+- [Bugzilla: 15193] STKPI porting: Update DENC control implementation
+- [Bugzilla: 15096] Picture Type is collected by the coredisplay test module
+- [Bugzilla: 15210] Add CRC/MISR test capability tuning services
+- [Bugzilla: 15180] STKPI Porting: Plane interfaces Part II
+- [Bugzilla: 15196] MISR changes for HDK7108
+- [Bugzilla: 14671] Update CoreDisplay clocks with latest settings from design
+                    and validation
+- [Bugzilla: 15266] Fix MDTPdriver to use cropped source dimension to setup DTG
+- [Bugzilla: 15293] Add ADI7108 board support
+- [Bugzilla: 15303] MDTP: Add support of modes 1080P50, 1080P59940 and 1080P60
+- [Bugzilla: 15304] Pass PTS (native) to CoreDisplay Test module
+
+* stmfb-4.0_stm24_0224
+- [Bugzilla: 14752] STiH415: Artifacts in the bottom half of the screen oni
+                    main FVDP plane
+- [Bugzilla: 14365] Add MISR collection in CoreDisplay
+- [Bugzilla: 14785] Added PTS and PictureID collection in CoreDisplay
+- [Bugzilla: 14841] STi7108: Add a PictureId to facilitate the tracking of
+                    each picture queued on a plane
+- [Bugzilla: 14843] Add some debug code to see what pictures are Queued,
+                    Presented and Released
+- [Bugzilla: 14885] Switch all SoCs to use the same versions of the DENC and
+                    Teletext TVOut classes
+- [Bugzilla: 14787] Added SDK2 test framework requirements for CRC/MISR in
+                    CoreDisplayTestModule
+- [Bugzilla: 14891] Create a single DVO TVOut output class for 7xxx series SoCs
+- [Bugzilla: 14904] Remove use of HDTVOutFormatter copy of the clock divider
+                    class
+- [Bugzilla: 14907] Update 7xxx SoC TVOut register definition file in ip/tvout
+- [Bugzilla: 14908] Add MISR implementation to ip/tvout class for 7xxx series
+                    SoCs
+- [Bugzilla: 14900] STih415: Reduce memory allocated for FVDP planes
+- [Bugzilla: 14834] STMFB STKPI Porting of plane interfaces
+- [Bugzilla: 14902] STiH415: FVDP deinterlacer should be re-enabled by default
+- [Bugzilla: 14966] Hide debug prints that harm real-time video playback
+- [Bugzilla: 14968] Change the format of CRC/MISR output data file
+- [Bugzilla: 15054] STKPI porting: Update source buffer descriptor
+- [Bugzilla: 14963] MDTP and FVDP Frame Reset line number should be consistent
+- [Bugzilla: 15099] FVDP: New version M1.6.0
+- [Bugzilla: 15093] The source Buffer descriptor should be filled with the
+                    full picture width
+- [Bugzilla: 14993] Add tuning service control of the hardware MISR type on
+                    7xxx series SoCs
+- [Bugzilla: 15095] Add two new selectable output file formats for CRC/MISR
+                    data collection
+- [Bugzilla: 15148] MDTP/FVDP: Input Window selection should be managed by
+                    the FVDP
+- [Bugzilla: 15149] MDTP: Add verification of register values constraints
+- [Bugzilla: 15150] The Linux framebuffer source Buffer descriptor should be
+                    filled with the full picture width and height
+- [Bugzilla: 15157] FVDP: StartOffset passed to FVDP Cropping info is incorrect
+
+* stmfb-4.0_stm24_0223
+- [Bugzilla: 14574] RGB format on FDVO not working
+- [Bugzilla: 14666] New FVDP driver version M1-5-5
+- [Bugzilla: 14723] New FVDP driver version M1-5-6
+- [Bugzilla: 14542] STMFB STKPI Porting
+
+* stmfb-4.0_stm24_0222
+- [Bugzilla: 14463] 7200 FlexVP class broken by Bug #14076
+- [Bugzilla: 14422] STiH415: Move all dual die VTG sync configuration to output
+                    classes
+- [Bugzilla: 14449] Allow master output to handle unexpected VTG interrupts
+- [Bugzilla: 14459] Use correct enum when configuring reference syncs in CSTmC8VTG
+- [Bugzilla: 14461] Remove use of DFV regsiter in CSTmC8VTG_V8_4
+- [Bugzilla: 14466] Clear interrupt status before enabling interrupts on
+                    CSTm8VTG_V8_4
+- [Bugzilla: 14472] Rework use of DisableSyncs and VTG_MOD_DISABLE for all VTGs
+- [Bugzilla: 14482] STiH415 Hard reset SAS TVOut and MPE VTGs on device creation
+- [Bugzilla: 14488] Add full slave mode input sync configuration to CSTmC8VTG_V8_4
+                    class
+- [Bugzilla: 14491] VTG Change management of m_IsSlaveVTG
+- [Bugzilla: 14515] VTG Refactor sync and reset management
+- [Bugzilla: 14519] Support VTG configuration that never disables syncs once started
+- [Bugzilla: 14537] VTG Refactor Start and ProgramVTGTimings usage
+- [Bugzilla: 14545] VTG Changes to RequestModeUpdate state management
+- [Bugzilla: 14548] Add a mechanism to re-program a running VTG in the bottom
+                    interrupt using existing code functionality
+- [Bugzilla: 14582] STMFB module parameter parsing does not clean up its parameter
+                    string copy correctly
+
+* stmfb-4.0_stm24_0221
+- [Bugzilla: 14338] Move HDMI IP classes to their own sub-directory
+- [Bugzilla: 14345] Change which HDMI TVOut class 7xxx series SoCs use
+- [Bugzilla: 14244] VTG: Add new methods for VTG class to handle BNOTTOP
+                    inversion and Slaved VTG sync type
+- [Bugzilla: 14363] Export CRC from CoreDisplay Test module to User Space by
+                    st_relay module
+- [Bugzilla: 14076] Update Pause STKPI function on a plane and Flush STKPI 
+                    function on a source
+- [Bugzilla: 14276] FVDP: Support connection of both STiH415 MDTP sources to
+                    FVDP channels
+- [Bugzilla: 14398] DTG_MDTP: Cleanup interrupt handler and add improved debug trace
+
+* stmfb-4.0_stm24_0220
+- [Bugzilla: 14241] STiH415: Fix VTAC Aux mode to match recommended scenario
+- [Bugzilla: 14243] TVOUT: changes to aux output handling of stop, format
+                    disable and restart conditions
+- [Bugzilla: 14322] FVDP: temporary update to disable de-interlacer and related
+                    features in release tree
+
+* stmfb-4.0_stm24_0219
+- [Bugzilla: 14129] Remove GDP Plug settings for STi7108 and STiH415
+- [Bugzilla: 14157] Tidyup after STiH415 initial bringup
+- [Bugzilla: 14151] MDTP: Add some debug code to track the picture under MDTP
+                    control
+- [Bugzilla: 12851] Add initial version of a CoreDisplay CRC/MISR test module
+- [Bugzilla: 14202] Delivery of FVDP M1.5.2 driver
+- [Bugzilla: 14199] FVDP debug: Add an option to disable the calls to the FVDP
+                    driver
+
+* stmfb-4.0_stm24_0218
+- [Bugzilla: 13994] FVDP M1.5 driver delivery
+- [Bugzilla: 13757] all of the blitter handling code must be removed from
+                    CoreDisplay
+- [Bugzilla: 13955] Fix MDTP flush queue function to avoid crash on exit
+- [Bugzilla: 12285] coredisplay should not override target pack's BDisp
+                    plug settings
+- [Bugzilla: 14022] stmfb can't easily be monitored / built in ACI
+- [Bugzilla: 14061] FVDP: Rename PreparePlaneSetup() parameter
+- [Bugzilla: 14062] Plane's Queue, Lock, Unlock STKPI functions can be removed
+- [Bugzilla: 14063] Change management of Interlaced pictures
+- [Bugzilla: 14064] FVDP: Change FrameRate and FieldType passed to the FVDP Driver
+- [Bugzilla: 14065] MDTP: Cleanup in QueueBufferInfo_t
+- [Bugzilla: 14066] FVDP: MADI mode should be enabled by default
+- [Bugzilla: 14072] V4L2: Change management of Interlaced picture
+- [Bugzilla: 14075] Change STiH415 to use a software calculated HDMI Audio CTS value
+- [Bugzilla: 14096] STMFB: Stability problems when the Deinterlacer is enabled
+
+* stmfb-4.0_stm24_0217
+- [Bugzilla: 13872] Orly: Video playback (of RomansGoHome.flv) stalls after a
+                    few seconds
+- [Bugzilla: 13119] Player_set_input_window fails with invalid argument
+
+* stmfb-4.0_stm24_0216
+- [Bugzilla: 13879] Fix of the MDTP flush function
+- [Bugzilla: 13882] FVDP M1.4 delivery
+
+* stmfb-4.0_stm24_0215
+- [Bugzilla: 13761] Reorganise aux TV output class to make configuring STiH415
+                    VTG syncs easier
+- [Bugzilla: 13797] STiH415: Incorrect HDFormatter clock in ED modes
+- [Bugzilla: 13807] Support configurable VIP rounding for HDMI deepcolor
+- [Bugzilla: 13823] Support configurable VIP signal clipping
+- [Bugzilla: 13840] STiH415 HDMI audio player configuration detection
+- [Bugzilla: 13848] Temporary disable of FVDP de-interlacer
+
+* stmfb-4.0_stm24_0214
+- [Bugzilla: 13688] Fix register bitfield value manipulation in CSTmVIP class
+- [Bugzilla: 13687] Add support for fully programmable mixer color conversion
+                    matrix
+- [Bugzilla: 13692] STiH415: Remove dynamic VTAC configuration from Mixer
+                    settings.
+- [Bugzilla: 13690] Fix Video Clock dividers for STiH415
+- [Bugzilla: 13693] VIP: Change settings to force Bypass Mode
+- [Bugzilla: 13694] STiH415: VTG - Update Soft Reset sequence for Slaved VTG
+- [Bugzilla: 13679] Fix HDFormatter configuration for STiH415
+- [Bugzilla: 13712] HDMI integration for STiH415
+- [Bugzilla: 13714] Reorganise main TV output class to make configuring STiH415
+                    VTG syncs easier
+- [Bugzilla: 13716] More STiH415 clock fixes
+- [Bugzilla: 13735] Green and Blue swapped on STiH415 HDMI output
+- [Bugzilla: 13733] FVDP Videoplug viewport incorrectly calculated
+- [Bugzilla: 13740] Using hdmi-control -a spdif on STiH415 crashes with a 
+                    spinlock recursion
+- [Bugzilla: 13742] Allow HDF VIP to take DENC inputs and setup STiH415 outputs 
+                    to use this
+- [Bugzilla: 13762] Set MDTP data enable register
+- [Bugzilla: 13775] FVDP M1.3 release
+- [Bugzilla: 13780] Workaround for FVDP color swap to main compositor on STiH415
+
+* stmfb-4.0_stm24_0213
+- [Bugzilla: 13429] Reorganise VTG support and add new implementation for
+                    G4 devices
+- [Bugzilla: 13442] Add new HDF and TVOUT classes
+- [Bugzilla: 13443] Add Preliminary Support for STiH415 and B2000
+- [Bugzilla: 13420] New FVDP driver with registers mapped for MPE41
+- [Bugzilla: 13480] Add SAS FDMA channel support for STiH415 Teletext
+- [Bugzilla: 13579] Change SAS to MPE video clock configuration
+- [Bugzilla: 13503] Add FVDP plane creation to STiH415 device
+- [Bugzilla: 13614] Add correct support for new 4FS660 frequency synthesizer
+- [Bugzilla: 13634] Create MDTP and related DTG objects in STiH415 device
+- [Bugzilla: 13636] STiH415 MPE FSynth class puts the clocks in standby
+- [Bugzilla: 13639] Videoplug class can incorrectly attempt to write to the
+                    programmable matrix registers
+- [Bugzilla: 13645] Change MDTP interrupts to IRQF_DISABLED
+- [Bugzilla: 13526] Fix VTAC managment for Orly
+- [Bugzilla: 13664] Integrate FVDP M1.2 driver release
+
+* stmfb-4.0_stm24_0212
+- [Bugzilla: 13197] Use a two stage destruction for output objects
+- [Bugzilla: 13200] Change Linux DMAArea implementation so it will work on ARM
+- [Bugzilla: 13221] FVDP real time traces cleanup
+- [Bugzilla: 13163] MDTP incorrect handling of interlaced buffers
+- [Bugzilla: 13301] Add additional locking for SMP systems. 
+- [Bugzilla: 13256] MDTP/FVDP driver doesn't display 704 pixels wide picture correctly
+- [Bugzilla: 13343] V4L2 driver missing includes for ARM build
+- [Bugzilla: 13347] New analog video output specification for framebuffer
+                    module params
+- [Bugzilla: 13362] Replace operator based 64bit divisions with IOS function
+                    call
+- [Bugzilla: 13374] Add virtual colorspace update method to mixer class
+- [Bugzilla: 13391] Add slaved VTG capability to VTG class
+- [Bugzilla: 13395] Update CMasterOutput class so it can be reused for all
+                    TVOut analog outputs
+- [Bugzilla: 13397] Add VTAC support class
+
+* stmfb-4.0_stm24_0211
+- [Bugzilla: 13039] MDTP_RASTER_INPUT_REG should be programmed for Orly
+- [Bugzilla: 13044] MDTP: Check picture PresentationTime
+- [Bugzilla: 13079] Missing main display pipeline SD clock configuration on
+                    7111,7105 and 7106
+- [Bugzilla: 13104] Integrate delivery of FVDP driver M0.2
+- [Bugzilla: 13103] Add and use new compound output control APIs
+- [Bugzilla: 13106] MDTP/FVDP: Fix interlaced Height and remove useless
+                    structure fields
+- [Bugzilla: 13061] Plane to source connection should be reworked
+- [Bugzilla: 13138] FVDP_OutputUpdate() should be called in
+                    CFvdpPlane::OutputVSyncUpdateHW()
+- [Bugzilla: 13134] Remove use of static variables in hardware update methods
+
+* stmfb-4.0_stm24_0210
+- [Bugzilla: 12985] Improve analog DAC configuration maths
+- [Bugzilla: 12990] Freeman: pDisplayCallback is not called on the 1st picture
+- [Bugzilla: 12995] Remove debug in V4L2 mmap fault handler
+- [Bugzilla: 13008] Horizontal shift on analog 1080p YPbPr output
+- [Bugzilla: 13013] Remove obsolete output controls
+
+* stmfb-4.0_stm24_0209
+- rename linux test app v4lgam to v4l2gam
+- [Bugzilla: 12856] Some minor fixes in the FVDP Driver
+- [Bugzilla: 12695] STMFB crashes when an unsupported buffer format is
+                    queued to the HQVDP
+- [Bugzilla: 12604] Decode CRC values not working with 7108 HQVDP
+- [Bugzilla: 12879] MDTP QueueBuffer should be flushed when the source is
+                    disconnected from the last plane
+- [Bugzilla: 12910] CQueue::SearchDataBuffer() is not working
+- [Bugzilla: 12911] Update Picture presentation processing in MDTP code
+- [Bugzilla: 12912] CQueue head pointer is not updated after releasing a node
+- [Bugzilla: 12906] Change video buffer allocation to LMI_VID only for HQVDP
+- [Bugzilla: 12943] Some DataBuffers are never released from the CQueue class
+- [Bugzilla: 12944] Change MDTP Stack programming for 4:2:0 R2B format
+- [Bugzilla: 12964] MDTP/FVDP is not properly shut down
+
+* stmfb-4.0_stm24_0208
+- [Bugzilla: 12521] Import all outstanding output types from CoreDisplay
+                    STKPI document
+- [Bugzilla: 12117] make CoreDisplay ignore the blitter IP if another driver for it
+                    is already loaded
+- [Bugzilla: 12671] HDMI Electrical signal is bad for 1080p video format
+- [Bugzilla: 12593] HQVDP initialization re-map virtual addresses
+- [Bugzilla: 12645] Image quality is degraded when video is paused with 3D DEI on
+- [Bugzilla: 12646] Use MDTP register description imported from SPIRIT file
+- [Bugzilla: 12658] Update CSTmDTGMdtp to match TVM programming
+- [Bugzilla: 12659] MDTP implementation for Freeman
+- [Bugzilla: 12661] FVDP implementation for Freeman
+- [Bugzilla: 12677] Add Support for Interlaced Modes for DTG-ODP
+- [Bugzilla: 12678] Fix issue with interlaced modes for MDTP-DTG
+- [Bugzilla: 12701] Bug in STACK programming for Freeman MDTP
+- [Bugzilla: 12746] [ASV] stmfb (STMFB_4_0_STM24_207) build issue
+- [Bugzilla: 12755] Integration housekeeping
+- [Bugzilla: 12747] [ASV] [PM] stmfb (STMFB_4_0_STM24_207) build issue
+- [Bugzilla: 12777] Improvement to CQueue class: Add the possibility to search
+                    a specific DataBuffer
+- [Bugzilla: 12729] Video management in the MDTP
+- [Bugzilla: 12802] Temporary set a LOW_LATENCY mode in the FVDP
+- [Bugzilla: 12804] Add a flush function to MDTP queue interface
+- [Bugzilla: 12805] MDTP Chroma Base Address is incorrect
+- [Bugzilla: 12584] Porting CoreDisplay for ARM and VIRTUAL PLATFORM
+- [Bugzilla: 12782] Remove FlushCache from the code and the IOS interface
+- [Bugzilla: 12753] Add all supported Source Mode defined by TV and use variables
+                    pix clocks
+- [Bugzilla: 12822] Tool to display gam file on linux through V4L
+- [Bugzilla: 12827] Change V4L2 driver config check from VIDEO_DEV to VIDEO_V4L2
+
+* stmfb-4.0_stm24_0207
+- [Bugzilla: 12240] Rewrite output get/set control to return errors
+- [Bugzilla: 12278] MDTP/FVDP implementation STEP4 
+- [Bugzilla: 12305] Not able to display anything on HDMI output with
+                    SONY Philips TVs
+- [Bugzilla: 12334] MDTP/FVDP implementation STEP5
+- [Bugzilla: 12296] HQVDP support for 7108 Step 1
+                    ***WARNING*** This  enables the HQVDP as the preferred
+                    video plane and will therefore now be used for main playback
+                    with i.e. LinuxDVB device 0.
+- [Bugzilla: 12317] Rewrite output capabilities handling
+- [Bugzilla: 12374] Add 3D DEI support to HQVDP
+- [Bugzilla: 12357] CSTmDTGMdtp::GetTimingModeParams() should check for ranges
+                    of Resolution instead of exact values
+- [Bugzilla: 12455] MDTP/FVDP implementation STEP6
+- [Bugzilla: 12451] Update coredisplay output control names to V4 API
+- [Bugzilla: 12482] Split OUTPUT_CTRL_AV_SOURCE_SELECT into separate video and
+                    audio select controls
+
+* stmfb-4.0_stm24_0206
+- [Bugzilla: 12157] DENC RGB output is always clipped to video range values
+- [Bugzilla: 12082] Add checking for validity of handles in CoreDisplay APIs
+- [Bugzilla: 12188] Bring stm_display_output_get_name in line with V4 API
+- [Bugzilla: 12190] Update various coredisplay output object API return
+                    values to match V4 API
+- [Bugzilla: 12224] Update stm_display_output_queue_metadata return status handling
+- [Bugzilla: 12086] MDTP/FVDP implementation STEP2
+- [Bugzilla: 12206] MDTP/FVDP implementation STEP3
+- [Bugzilla: 12175] Add support for MDTP-DTG InterruptHandler inside CD
+- [Bugzilla: 12186] Remove ReadVTGReg and WriteVTGReg methods from the generic
+                    Timing Class CSTmVTG
+
+* stmfb-4.0_stm24_0205
+- [Bugzilla: 11965] Framebuffer creation error paths leave sources locked and
+                    connected to a plane
+- [Bugzilla: 11974] 7108 PIP video plane does not display correctly on the
+                    aux display pipeline
+- [Bugzilla: 11950] Change plane identifiers from mixer register enable bits
+                    to simple integers
+- [Bugzilla: 11980] 7200 aux output clock setup is now incorrect
+- [Bugzilla: 11348] Update source interfaces to match the V4 API doc
+- [Bugzilla: 11987] Change mode params FullVBIHeight to ActiveAreaStartLine
+- [Bugzilla: 11999] Improve screen_alignment centering cross-hair
+- [Bugzilla: 12001] Allow the DENC main component chroma delay to be set as
+                    well as the CVBS delay
+- [Bugzilla: 12004] Improve horizontal position of 525line interlaced analog
+                    output
+- [Bugzilla: 12005] Add support for the 4tap AWG sync filter on 7105 and later
+                    devices
+- fix various error paths
+- add OS21 build infrastructure for FLi75108 / FLDB build
+- build: support CONFIG_STG_OPTLEVEL for setting gcc optimisation level
+- cleanups wrt compiler warnings, constnesses, comments and coding style
+- [Bugzilla: 11739] MDTP QueueBuffer Interface implementation
+
+* stmfb-4.0_stm24_0204
+- [Bugzilla: 11821] A GenericDevice should be able to use GenericPlanes
+- [Bugzilla: 11780] Update V4L2 module to use new Source QueueBuffer function
+                    instead of the plane one.
+- [Bugzilla: 11868] Update to output standard handling across all SoCs
+- [Bugzilla: 11907] Rename "STMCommon" directory to "ip"
+
+* stmfb-4.0_stm24_0203
+- [Bugzilla: 11789] Global rename of some output type definitions
+- [Bugzilla: 11733] Add QueueBuffer Interface Objects in CoreDisplay
+- [Bugzilla: 11817] Update Source Interface Creation on FLi7510 and STi7200
+- [Bugzilla: 11745] Update Framebuffer module to use new Source QueueBuffer
+                    function instead of the plane one
+- [Bugzilla: 11787] Update OS21 tests to use new Source QueueBuffer function
+                    instead of the plane one
+
+* stmfb-4.0_stm24_0202
+- [Bugzilla: 11466] Creation of Source object with QueueBuffer interface
+- [Bugzilla: 11670] Re-factor device output object creation and slaved output
+                    registration.
+- [Bugzilla: 11732] A lot of debug traces are printed when pluging the HDMI
+                    output in monitor
+- [Bugzilla: 11584] Add support for Freeman FLi7510 / fldb-gpd202-7510 for 
+                    CoreDisplay. NOTE: this is a deliberately limited 
+                    implementation to enable internal ST development only.
+- [Bugzilla: 11746] Move and rename node types
+- [Bugzilla: 11750] V4L2 based tests need to be updated not to have hardwired
+                    output names
+- [Bugzilla: 11744] Extend the VTG classes to support a variable number of
+                    sync outputs
+
+* stmfb-4.0_stm24_0201
+- [Bugzilla: 11528] Refactor DEI video pipeline memory configuration code
+- [Bugzilla: 11530] Remove support for 7100/7109 and derivatives from stmfb v4
+- [Bugzilla: 11541] Remove virtual plane and blit composed output support from
+                    stmfb v4
+- [Bugzilla: 11547] Remove NULL plane implementation from stmfb v4
+- [Bugzilla: 11556] Remove 5206 support from stmfb v4
+
+* stmfb-4.0_stm24_0200
+- [Bugzilla: 11075] STMFB V4 API Pre-development groundwork
+- [Bugzilla: 11116] Internal C API type changes
+- [Bugzilla: 11129] STMFB V4 API Display Device Updates
+- [Bugzilla: 11037] update coredisplay for SURF_YCbCr42xR2B support
+- [Bugzilla: 11314] Update all CoreDisplay source code to match new types definitions
+
+* stmfb-3.1_stm24_0103
+- [Bugzilla: 10460] Rename of 7200c2 and 7141 coredisplay board support files
+- [Bugzilla: 10486] Restructuring of stmfb Linux module builds
+- [Bugzilla: 10608] STVTG_TIMING_MODE_540P29970_18000 and 540P25000_18000 are incorrect
+- [Bugzilla: 10564] BUG() hit if mode in stmfb module options is invalid
+- [Bugzilla: 10248] BDisp: don't use YCbCr422R on S1
+- [Bugzilla: 11230] initial support for linux clock framework
+- [Bugzilla: 11258] update STi7108 audio clock initialisation (for HDMI)
+
+* stmfb-3.1_stm24_0102
+- [Bugzilla: 9947] Use pad management for 7108 hotplug
+- [Bugzilla: 9983] STMFB module fails to load on 7109 platform (HDMI fails to
+  come out of reset
+- [Bugzilla: 9993] Allow SPD InfoFrame transmission to be disabled
+- [Bugzilla: 10234] component levels incorrect on HDK7105
+- [Bugzilla: 10231] sysfs modes attribute is not reporting correctly for DVI devices
+- [Bugzilla: 10233] Remove ClockgenC source select from HDMI class creation
+- [Bugzilla: 10250] Add preliminary support for NTG5 automotive display modes
+- [Bugzilla: 10302] better integration of AWG firmware loading into STLinux environment
+- [Bugzilla: 10445] Add_preliminary_Linux_board_support_for_5206_5289_devices
+
+* stmfb-3.1_stm24_0101
+- [Bugzilla: 9728] port stmfb to STLinux 2.4 (Linux 2.6.32)
+
+* stmfb-3.1_stm23_0033
+- [Bugzilla: 9389] Certain video buffer strides cause video pipeline underflows
+- [Bugzilla: 9551] CVBS Chroma voltage levels are too low
+- [Bugzilla: 9723] update some of coredisplay's external API documentation
+- [Bugzilla: 9722] update v4l2 controls for colour keying
+
+* stmfb-3.1_stm23_0032
+- [Bugzilla: 9051] More aggressive audio clock initial setup for HDMI compatibility
+- [Bugzilla: 9064] VGA is sometimes not in HDMI valid mode list
+- [Bugzilla: 9068] artefacts when using video plug's plane saturation
+- [Bugzilla: 9144] v4l2: update return codes for ioctl commands
+- [Bugzilla: 9271] Changes to video plane code in 0030 and 0027_p4 has broken 
+  de-interlacing
+- [Bugzilla: 9331] BDisp update for sti7106 and sti5206
+
+* stmfb-3.1_stm23_0031
+- [Bugzilla: 8740] Panning broken when using DirectFB's stmfbdev system
+- [Bugzilla: 8326] YCbCr to RGB conversion is totally broken
+- [Bugzilla: 8767] faster (stretch-) blits on newer SoCs
+- [Bugzilla: 8824] Display driver does not correctly resume from suspend-to-ram on 7105
+- [Bugzilla: 8141] stmfb 028 fix on iptv7105
+- [Bugzilla: 8847] Non-linear video zoom can fail to select filter coefficients
+- [Bugzilla: 8762] restore support for interlaced sources on GDPs
+- [Bugzilla: 8849] HMP7100 derived board designs not supported by coredisplay
+- [Bugzilla: 8888] Update to video vertical re-scale filter coefficients
+- [Bugzilla: 8910] add support for subpixel source origins for YCbCr blits
+- [Bugzilla: 8764] several YCbCr formats not implement in bdisp driver (YUV420 YVU420 YUV422P)
+- [Bugzilla: 8929] build failure on sti7200
+
+* stmfb-3.1_stm23_0030
+- [Bugzilla: 8259] XOR does not work as expected
+- [Bugzilla: 7863] more IQI controls in v4l2
+- add a GTK+ app to control V4L2 controls
+- v4l2: remove V4L2_CID_STM_MIXER_BACKGROUND_ARGB again
+- v4l2: only expose FMD controls if FMD is actually available
+- v4l2: always link FMD params to correct plane
+- v4l2: completely remove the (long deprecated) _VID0 controls
+- v4l2: fix typo V4L2_CID_STM_PLANE_BRIGTHNESS -> V4L2_CID_STM_PLANE_BRIGHTNESS
+- v4l2: do parameter checking when an extended control is being set using old V4L2 API
+- [Bugzilla: 8298] build again with CONFIG_PM set
+- [Bugzilla: 8130] iqi: implement PSI plane controls (but don't use them)
+- [Bugzilla: 8352]  memleak when unloading stmfb on stb7100
+- [Bugzilla: 8340] implement a 'kernel blitter'
+- [Bugzilla: 8464] failure setting SD standard after having been in an ED mode
+- [Bugzilla: 8476] Allow 7105/11/41 users to provide custom HDMI PHY
+  configurations in their board support
+- [Bugzilla: 8481] Artifacts when stopping playback
+- [Bugzilla: 8406] problems w/ YCbCr422r fast blits
+- [Bugzilla: 8517] BDisp downscale limitation is 1/63.99 not 1/31.99
+- [Bugzilla: 8532] hdmi-info wait for hotplug option is incorrectly setting the
+  sysfs attribute path
+- v4l2stream: new parameters h1 and h2 - for aligning two planes next to each other
+- [Bugzilla: 8593] iqi: more enhacements needed
+- [Bugzilla: 8594] various GDP rescale improvements
+- [Bugzilla: 8638] 1080p59 does not work on STi5206 and STi7108
+- [Bugzilla: 8640] framebuffer plane can get hidden when switching between
+                   modes that do not change the resolution (using fbdev API)
+- [Bugzilla: 8602] YCbCr to full range RGB conversion support in BDispII driver
+- [Bugzilla: 8639] switching between certain 1080p modes unreliable
+- [Bugzilla: 8680] Add control to select FDVO output data clock polarity
+- [Bugzilla: 8681] optimised component output support for hdk7108 board
+- [Bugzilla: 8682] new device ID for 7108's BDisp
+
+* stmfb-3.1_stm23_0029
+- [Bugzilla: 7993] API required to disable video plane in the mixer
+- [Bugzilla: 7995] APIs needed for changing screen & plane config using DirectFB
+- [Bugzilla: 8065] allow more pixelformats on framebuffer plane
+- a crash could occur in var_ext handling on framebuffer devices without HDMI
+- remove all internal references to any 'aux' output
+- [Bugzilla: 8193] Framebuffer panning and GDP immediate buffer address updates
+   NOTE: This changes the semantics of the DirectFB1.0 flip flags hence will
+   effect the behaviour of existing applications.
+- [Bugzilla: 8213] replace FBIO_GETVSYNC_ELAPSED with standard FBIOGET_VBLANK
+  framebuffer ioctl
+
+* stmfb-3.1_stm23_0028
+- [Bugzilla: 7098] Add 7106 Linux support. NOTE: Requires kernel
+  linux-sh4-2.6.23.17_stm23_0123 with 7106 support.
+- [Bugzilla: 7123] Improve 64/64bit division handling in stmfb
+- [Bugzilla: 7308] Compatibility of HDMI output
+- [Bugzilla: 7325] Complete 7108 Linux support
+- [Bugzilla: 7469] Add support for a NULL display plane
+- [Bugzilla: 7514] A race condition exists in the mixer class
+- [Bugzilla: 7834] FMD hardware processing can be disabled when not needed
+- [Bugzilla: 7835] allow to set HD DEI configuration using Plane Control
+- [Bugzilla: 7836] implement various V4L2 controls for modifying FMD thresholds
+- [Bugzilla: 7332] stgfx2 DirectFB driver should be default when possible
+
+* stmfb-3.1_stm23_0027
+- [Bugzilla: 6773] Re-factoring exercise
+- [Bugzilla: 6826] kernel oops when unloading stmfb
+- [Bugzilla: 6828] problems enumerating V4L2 devices
+- [Bugzilla: 6870] Add TMDS status to hdmi-info
+- [Bugzilla: 6890] Display driver fails to initialize on MB680 with kernel 121
+- [Bugzilla: 6937] Add provisional support for STx5206/5289
+- [Bugzilla: 6938] Integrate board support for IPIDTV 7105 platform
+- [Bugzilla: 6958] RGB Analogue output on 7105 has incorrect red voltage
+- [Bugzilla: 6971] Add preliminary support for 7108/MB837
+- [Bugzilla: 7040] empty blit node crashes BDisp
+- [Bugzilla: 7041] BDisp: always filter when doing stretch blits
+- [Bugzilla: 7047] A STi7200 HDMI Phy macro definition is incorrect
+- [Bugzilla: 7048] BDisp: vertical filter should not have an initial phase
+- [Bugzilla: 7159] Grey Screen of Death
+- [Bugzilla: 7268] don't modify display buffers when FlexVP (TNR) is in use
+- various HDCP related fixes
+- add BIOS support
+
+* stmfb-3.1_stm23_0026
+- [Bugzilla: 6365] Support scaling specific GDP filter coefficients
+- [Bugzilla: 6372] Lock access to BDisp shared area when necessary
+- [Bugzilla: 6542] No sanity check in CalculatingNonLinearZoom 
+- [Bugzilla: 6581] STx7106 and Deepcolour HDMI support
+
+* stmfb-3.1_stm23_0025
+- [Bugzilla: 5822] Add an interface to force the display output YCbCr
+  colourspace
+- [Bugzilla: 5823] Update graphics planes to support video playback.
+  WARNING: this changes the default buffer handling on interlaced displays,
+  V4L2 users should read the bug to see the impact and how to get back to the
+  previous behaviour.
+- [Bugzilla: 5831] correctly implement hide and show of video planes
+- [Bugzilla: 5834] Always use de-interlacer (when available and enabled) for
+  interlaced output.
+- [Bugzilla: 5844] Remove V4L2_BUF_FLAG_BOTTOM_FIELD_FIRST
+- [Bugzilla: 5845] Fully implement display standard APIs for V4L2 output devices
+- [Bugzilla: 5879] v4l2: when queuing MMAP buffers CLUT is not considered
+- [Bugzilla: 5899] PAL/NTSC output on main display pipeline sometimes has bad
+  sync
+- [Bugzilla: 5919] HDMI hotplug misbehaving on SDK-7105 board.
+- [Bugzilla: 5929] HDMI connection status can be confused by short
+  hotplug pulses
+- [Bugzilla: 5932] STMHDMIIO_SET_SAFE_MODE_PROTOCOL locking broken
+- [Bugzilla: 5935] STMHDMIIO_SET_EDID_MODE_HANDLING should take immediate effect
+- [Bugzilla: 5956] Temporal deinterlacing produces a bad frame on scene change
+- [Bugzilla: 5975] Allow HDMI device to be disabled on module load
+- [Bugzilla: 5888] GDP and Video layers are not aligned properly when rescaled
+- [Bugzilla: 6095] need to re init v4l2 buffer list nodes on VIDIOC_STREAMOFF
+- [Bugzilla: 6006] V4L2 Sliced VBI Output for EBU Teletext
+- [Bugzilla: 6113] Should use rounded division to calculate N
+- [Bugzilla: 6148] Allow other hardware drivers to hook into the primary vsync
+  interrupt handler
+- [Bugzilla: 6169] HDMI vertical active area is incorrect for 480i
+- [Bugzilla: 6294] Video pipeline hardware accessing memory when inactive, 
+  but with bypass enabled.
+- [Bugzilla: 6298] Support for graphics buffers with an alpha range of 0-128
+
+* stmfb-3.1_stm23_0024
+- [Bugzilla: 5796] finish implementation of V4L2 controls for color keying
+  Note: Please recompile your applications, binary compatibility has been
+  broken.
+- [Bugzilla: 5801] PLANE_CTRL_CAPS_PSI_CONTROLS is never set in plane
+  control caps
+- [Bugzilla: 5598] v4l2 video plug controls for PSI
+- [Bugzilla: 5799] add macroblock blitting support to BDisp driver
+
+* stmfb-3.1_stm23_0023
+- NEW: core driver support for pixel aspect ratio correction, preserving the
+  original image aspect ratio on 16:9 displays, in a defined central region.
+- NEW: main DVO support on 7111/7141/7105
+- [Bugzilla: 5449] 7200cut2 1080i DVP capture and main video pipeline display
+  artifacts
+- [Bugzilla: 5453] Delay EDID read retries
+- [Bugzilla: 5497] Add new output control STM_CTRL_422_CHROMA_FILTER, currently
+  implemented on DVO output on 7200 and later chips to optionally decimate
+  chroma from 4:4:4 to 4:2:2 with a 1:2:1 three tap filter.
+- [Bugzilla: 5531] Add stmfb board support for 7200cut3.
+- [Bugzilla: 5587] Add an override to allow the EDID safe mode to use HDMI
+  instead of DVI.
+- [Bugzilla: 5588] Use readl/writel etc. for accessing ioreamp()ed registers,
+  instead of ctrl_inl/ctrl_outl etc.
+- [Bugzilla: 5608] Add coredisplay driver support for PDK7105 board.
+- [Bugzilla: 5631] Add scaling limits to the display plane capabilities
+  structure
+- [Bugzilla: 5646]  Remove HDMI rawedid sysfs attribute
+- [Bugzilla: 5655] TV EDID being re-read unnecessarily
+- [Bugzilla: 5683] Audio InfoFrames cannot be queued for transmission
+- [Bugzilla: 5704] Improve Interlaced Video Trick Modes with DEI and P2I
+- [Bugzilla: 5752] 7109 De-interlacer only supports sources up to 720
+  pixels wide
+- [Bugzilla: 5142] homogenise v4l2 drivers
+- [Bugzilla: 4961] add definition of upcoming V4L2 controls for color keying
+
+* stmfb-3.1_stm23_0022
+- [Bugzilla: 5311] APIs required to hide and show video planes.
+
+* stmfb-3.1_stm23_0021
+- WARNING: The HDMI InfoFrame mechanism has been completely rewritten so that
+  new hardware can be accomodated and so that the current hardware can be 
+  programmed using a DMA engine instead of the CPU. Do not be suprised to find
+  bugs despite our best efforts; if you do not want to experiment stay with
+  stmfb-3.0_stm23_0020.
+- CHANGE: The HDMI device interface for sending various InfoFrames and other
+  data island packets has changed. ISRC packets and a usable mechanism for
+  queuing multiple Vendor specific InfoFrames is now available.
+- NEW: The IOCTL STMHDMIIO_SET_HOTPLUG_MODE has been added to the HDMI device,
+  allowing one of 3 different behaviours when a hotplug de-assert is detected.
+  See Linux/stm/coredisplay/stmhdmi.h for details.
+- NEW: The IOCTL STMHDMIIO_SET_CEA_MODE_SELECTION has been added to the HDMI
+  device. This allows the method, by which the CEA mode number in the AVI
+  InfoFrame for modes that support 4:3 and 16:9 variants, is selected. See
+  Linux/stm/coredisplay/stmhdmi.h for details.
+- [Bugzilla: 4881] Change HDMI SPD InfoFrame transmission rate to every
+  1/2 second.
+- [Bugzilla: 4943] HD output over HDMI is broken since -0019 on 7109c3.
+- [Bugzilla: 4994] Fix IOCTL argument copying sizes.
+- [Bugzilla: 5049] Analogue WSS defaults to 4x3 instead of NO_AFD
+- [Bugzilla: 5072] Incorrect HDMI vsync lengths in interlaced display modes
+- [Bugzilla: 5090] stmfb build system doesn't allow to override CROSS_COMPILE
+- [Bugzilla: 5094] Component analogue sync generation for 1080i modes incorrect
+- [Bugzilla: 5106] Make TMDS clock status available to userspace
+- [Bugzilla: 5122] 7109 HDMI output is horizontally shifted to the right by
+  several pixels
+- [Bugzilla: 5161] HDMI AVI InfoFrames no longer indicate a 709 colourspace for
+  HD modes
+- [Bugzilla: 5164] MB519 Analogue YPrPb output disappears after display mode
+  change
+- [Bugzilla: 5180] Review of video output alignments required
+- [Bugzilla: 5216] Definition of HDMI_AVI_INFOFRAME_NOSCANDATA is incorrect.
+- [Bugzilla: 5279] 7200cut2 FVP clock running at the wrong speed.
+
+* stmfb-3.0_stm23_0020
+- [Bugzilla: 4734] Computer Monitor EDIDs may be incorrectly treated as invalid.
+- [Bugzilla: 4740] Framebuffer fails to set 1080p@59.94Hz
+- [Bugzilla: 4757] driver fails to load on STi7105
+- [Bugzilla: 4771] Support different plane queue sizes for different plane types
+
+* stmfb-3.0_stm23_0019
+- NEW: Added support for accessing the BDisp directly from userspace
+- CHANGE: Instead of sharing one BDisp AQ between all the video output
+  pipelines, use a different AQ for every output on platforms that
+  support this.
+- [Bugzilla: 4583] Changes requested to HDMI EDID block0/1 error handling
+- [Bugzilla: 4653] More robust reading of EDID extension blocks.
+- [Bugzilla: 4683] Support for HDMI quad pixel repeated modes required
+  for Dolby TrueHD certification.
+- [Bugzilla: 4689] RLE hardware decoding locks BDisp on some source data
+- [Bugzilla: 4694] Show output IDs in display pipeline's "info" sysfs attribute.
+- [Bugzilla: 4706] Aux SD YPrPB output disabled when main HD display mode
+  changed.
+- [Bugzilla: 4711] Video range clipping may not be correct on Aux display
+  SD YPrPb output on 7111,7105,7141 and 7200cut2.
+- [Bugzilla: 4724] Progressive planar and 422 raster formatted video
+  incorrectly presented.
+
+* stmfb-3.0_stm23_0018
+- NEW: Added status information to display planes, this is available both in
+  the buffer completed callback status information and via
+  stm_display_plane_get_status().
+- [Bugzilla: 4503] Fix incorrect reading of CEA block DTD EDID entries.
+- [Bugzilla: 4506]: colorkey was incorrectly calculated for the ARGB1555 format
+- [Bugzilla: 4536] HDMI output unreliable on Sony KDL-40V3000
+
+* stmfb-3.0_stm23_0017
+- NEW: Support for STx7105.
+- NEW: Support for STi5202/MB602.
+- NEW: Support for HDMI IT content information in the AVI InfoFrame via a new
+  HDMI device IOCTL STMHDMIIO_SET_CONTENT_TYPE.
+- NEW: Added output API function stm_display_output_soft_reset() which when
+  called on master outputs will reset the timing generator causing a top
+  field vsync to be issued immediately. To be used to do a coarse adjustment
+  of the output vsync relative to the input vsync of captured video.
+- NEW: HDMI safe mode when EDID is unreadable, as documented in CEA-861-E
+  section F.3.5. The safe mode reports the sink as DVI supporting 640x480p.
+- NEW: Added new HDMI device IOCTL STMHDMIIO_SET_EDID_MODE_HANDLING; this 
+  changes the behaviour of the HDMI management thread, allowing HDMI to 
+  transmit display modes not listed in the connected sink's EDID. The
+  hdmi-control utility has the related new option --edid-mode .
+- NEW: Added output API function stm_display_output_set_filter_coefficients()
+  which can be used to change the DENC luma and chroma filters (previous 
+  control based mechanism has been removed) and the component analogue DAC
+  sample rate converter filters on 7111/7105/7141 and 7200cut2.
+- CHANGE: Updated HDMI EDID parsing and reporting in sysfs for CEA-861-E.
+- CHANGE: Do not set the HDMI AVI InfoFrame RGB quantization bits unless
+  the corresponding QS bit in the TV's EDID VCDB block has been set and we
+  are outputting RGB.
+- CHANGE: HDMI AVI InfoFrame under/over scan information now supports setting
+  the "not known" value, a new HDMI device IOCTL STMHDMIIO_SET_OVERSCAN_MODE and
+  argument type stmhdmiio_overscan_mode_t has been added; the previous IOCTL
+  STMHDMIIO_SET_VIDEO_SCAN_TYPE has been removed.
+- CHANGE: support 1080p50/60 on analogue out where hardware is capable
+- [Bugzilla: 4347] Fix 7200cut2 HDMI/SPDIF configuration error.
+- [Bugzilla: 4435] Fix HDMI AVI InfoFrame colorimetry bits when outputting RGB.
+
+* stmfb-3.0_stm23_0016
+- NEW: Add support for HDMI ACP packets
+- NEW: Added /sys/class/stmcoredisplay/info attribute which reports useful
+  information about the driver build. Use this to determine if you are running
+  the driver version you think you are running before reporting bugs.
+- NEW: Support soruce video crop coordinates in 1/32nd of a pixel as well as
+  1/16th and whole pixels.
+- NEW: Support for STx7141, it has exactly the same feature set as STi7111.
+- CHANGE: 1080i de-interlacing using full conf motion mode with 8bit motion
+  buffers provoked memory bandwidth artifacts. This change selects the reduced
+  4bit motion mode for content width >960 pixels and appears to eliminate
+  the artifacts.
+- CHANGE: allow HW de-interlacing for all allowable downscales when displaying
+  on an interlaced display. This allows better quality 1080i->PAL/NTSC
+  conversion. When doing SD->1/4SD scaling, for example as part of an EPG,
+  de-interlacing can always be explicitly turned off using the plane controls
+  if required.
+- CHANGE: the fixed point maths that calculates the HW sample rate converter
+  steps when doing a stretch blit has been changed to round the result instead
+  of doing a "floor". This minimises the absolute pixel position error that can
+  be introduced by the 10bit fixed point maths used by the HW.
+- CHANGE: on the 7200cut2, de-interlacer motion buffers (approximately 3Mb) are
+  now allocated from the bigphysarea partition instead of the coredisplay-video
+  partition. This is to balance memory bandwidth usage while processing 1080i
+  video.
+- [Bugzilla: 3740] fix subpixel position register programming in BDisp nodes 
+  when generating a stretchblit operation that requires multiple spans.
+- [Bugzilla: 4330] set the current output format when starting the auxillary
+  display pipeline. This now correctly configures YPrPb/RGB output via the
+  HD DACs on all SoCs that support "SCART mode" on the auxillary display.
+
+* stmfb-3.0_stm23_0015
+- NEW: Add preliminary support for 7200cut2.
+- NEW: Add support for HDMI YUV 422 output.
+- NEW: Add DVO output format configuration support to STMFBIO_SET_OUTPUT_CONFIG
+  ioctl and stfbset.
+- NEW: Hardware progressive to interlaced conversion enabled on 7111 and
+  7200cut2 main video pipelines, allowing the full range of the vertical 
+  rescaler to be used in all circumstances.
+- NEW: De-interlacing of 1080i content enabled on 7111 and 7200cut2.
+- NEW: IQI supported on 7111
+- NEW: AWG firmware filename changes. (See stmcoredisplay.txt for updated
+  modprobe.conf)
+- NEW: Support 8 channel HDMI audio.
+- NEW: Allow HDMI audio processing to be disabled and audio packets to be 
+       invalidated.
+- NEW: Add support for all HDMI audio packet types (1-bit,DST,HBR), supported
+       on 7111 and 7200Cut2.
+- NEW: add DEI plane controls
+- NEW: yuvplayer test program to play back raw yuv (video) streams.
+- [Bugzilla: 3908] Issues with 59/60Hz only sinks and fast mode changes. It
+  has been necessary to disable fast mode changes between 50Hz and 59.94/60Hz
+  modes to avoid problems with HDMI on US TV's that do not support 50Hz.
+- [Bugzilla: 4004] Support new config name for HMS1 board in -0111 kernel.
+- [Bugzilla: 4005] Fix simultaneous SD SCART and HD HDMI output on 7111.
+- [Bugzilla: 4006] Rework VTG setup for the DENC in 7200 and 7111.
+- [Bugzilla: 3906] Make switching video modes more reliable on 710x/HDMI.
+  There seems to be an issue in the HDMI cell, making the serializer fail
+  sometimes. A work-around has been found by experimentation which has
+  been successfully tested on 7100c3.3, 7109c3.0 & 7109c3.2
+- [Bugzilla: 4107] Fix the video filter coefficient loading logic such that
+  multiple instances of the class do not interfere with each other.
+- [Bugzilla: 4165] same as 3906 but for STi7200.
+- [Bugzilla: 4224] cope with 64MB banks in blitter
+
+====================
+stmfb-3.0_stm23_0014
+====================
+
+New Features
+------------
+1. Add preliminary HD FlexDVO support to STi7200 (note external H/V sync
+   only, no embedded EAV/SAV supported at this point).
+
+Changes/Fixes
+-------------
+1. Bug#3724. Fix kernel fault when loading the framebuffer module before the
+   coredriver module.
+2. Bug#3742. Fix stfbset mis-setting DVO configuration.
+3. Changes to 7200 and 7111 HDMI PHY setup, improving behaviour in SD/ED modes
+   on some TVs.
+4. Bug#3786. Change the HDMI maximum extended control period delay for
+   1080p@24/25/30Hz display modes to 1 vsync, hence <50ms.
+5. Bug#3876. Surface fromat query broken on 7200 FlexVP video plane.
+
+====================
+stmfb-3.0_stm23_0013
+====================
+
+New Features
+------------
+
+1. Preliminary STi7111 support.
+2. Support TNR through xVP70.
+3. Add Linux support for changing the video clipping range independently on
+   analogue and digital outputs, for display setup using Pluge patterns. This 
+   is part of the output config IOCTL, stfbset has been extended to report and
+   change these values.
+4. Added new output interface stm_display_output_setup_clock_reference() that
+   allows board support code to specify the input crystal frequency (27 or
+   30Mhz) and an error value in ppm for the clock reference.
+5. Added new output control STM_CTRL_CLOCK_ADJUSTMENT which allows the display
+   clock frequency to be adjusted upto +-500ppm for use in digital clock
+   recovery or "software" genlocking to a DVP captured video source.
+
+Changes/Fixes
+-------------
+1. Bug#3347. Fix 7200 GDP breakup in 1080i@60Hz when the CPU is saturating the
+   bus.
+2. API change: the node's pCompletedCallback() signature was changed to
+   include CRC values (only valid for main display pipeline and with DEI
+   turned off).
+3. Bug#3395. Fix HDMI sync output polarity for negative sync modes. This
+   improves 480p and 480i on some TVs that were not tolerant to the reversed
+   syncs.
+4. Bug#3491. Fix upscaling some small video image sizes to 1080i caused diagonal
+   striped images.
+5. Horizontal and vertical video resize filters updated to latest reference
+   tables for VDP/DEI based video planes (7109 main, all 7200 and 7111 video
+   planes). This includes separate filter tables for chroma sampling, better
+   chroma upsampling when luma is not being resampled and corrected
+   interpolation when doing subpixel pan and scan but no luma resampling.
+6. Bug#3508. Fix incorrect HDMI VSync lengths in NTSC & PAL.
+7. Removed support for 483p display modes. This was a leftover to allow 
+   DirectFB to change between 480i and 480p, but this is no longer required as
+   DirectFB layer configuration has been extended by ST to distinguish between
+   interlaced and progressive display modes.
+8. Bug#3523. Fix EDID parsing for CEA extended block tags.
+9. CHANGED: The default framebuffer graphics plane behaviour is now NOT to 
+   rescale graphics to video range. See the stmfb documentation for 
+   futher details on this.
+10.Bug#3574. Fix HDMI I2C probing corrupts Quantum Data 882 EDID contents.
+11.Restore 7109Cut2 support for Tribbox.
+12.Cope with I2C bus number change in current 2.6.23 kernels for MB411.
+13.Undo the change to setting HDMI overscan/underscan in 0012, it is a property
+   of the content not the TV.
+15.Removed stfbcontrol from the source tree.
+16.Change the default mixer background colour so all components are in the sRGB
+   video range, i.e. no component < 16.
+17.Fix the reporting of TVs with no name in hdmi-info, it mistakenly reported
+   that no information about the TV could be discovered as if it wasn't
+   responding to I2C.
+
+====================
+stmfb-3.0_stm23_0012
+====================
+
+New Features
+------------
+1. Fully interpret the HDMI 1.3 vendor specific data block; attributes
+   have been added to the hdmi sysfs class to report these to userspace. Note
+   that this includes the CEC address assigned to us by the downstream device.
+
+Changes/Fixes
+-------------
+1. Bug#3075. The bottom few lines on video planes can be corrupted in HD modes
+2. Added memory transaction config support for DEI/VDP based video planes, this
+   for example removes video artifacts when downscaling HD video to SD.
+3. Workaround for unreliable video resize filter coefficient loading in 7200
+   VDP.
+4. Improved analogue video signal generation for ED/HD modes on 7200. This
+   requires a new set of AWG firmwares.
+5. Fixed horizontal video rescaling by 1/4 on 7109 DEI and all 7200 video planes
+6. Bug#3220. Wrong I2C bus used on CB101. 
+7. Added support for using additional memory (from LMI_VID). This requires an
+   updated options line to stmfb.ko and an updated DirectFB package as well.
+8. TIME HAS CHANGED!!!! The driver now expects presentation timestamps relative
+   to the POSIX monotonic clock, not the wall clock (gettimeofday). Kernel users
+   needs to use ktime_get/ktime_to_us and V4L2 users need to use clock_gettime
+   to get the value of CLOCK_MONOTONIC (the test v4l2stream has been updated to
+   show how to do this). This avoids video presentation glitches when the wall
+   clock is adjusted, for instance by a network time daemon.
+9. Don't allow HDMI underscan to be set if the connected TV does not specify
+   support for this in the CEA extension format flags.
+10.Added some required glue setup for HDMI audio on 7200 so the kernel ALSA
+   drivers do not need to touch any display registers.
+
+====================
+stmfb-3.0_stm23_0011
+====================
+
+New Features
+------------
+1. Cursor plane support in the core driver.
+   (o) It just acts like any other plane, but with size and format limitations
+   (o) Animations can be done by queuing buffers just like graphics or video
+   (o) New plane flags and controls support a global XY screen position
+       for the cursor plane, so many immediate changes to the mouse cursor
+       position can be made without lag.
+2. New output control STM_CTRL_SIGNAL_RANGE allows control of digital video
+   signal clipping before the output stage. The default for all outputs is now
+   STM_SIGNAL_FILTER_SAV_EAV, which removes 0 and 255. Signals can be clipped
+   to 16-235/240 by setting the control value STM_SIGNAL_VIDEO_RANGE. Note there
+   is no Linux userspace interface to this at the moment.
+3. New application "stfbset" which replaces "stfbcontrol":
+     o supports selecting which framebuffer device to control
+     o can show the current configuration
+     o can change the mixer background colour
+     o uses standard unix command line option format
+4. The DENC luma and chroma filter setup can now be configured in the 
+   Linux core driver board support files. See the comments in the 7100 and 7109
+   board files for Luma filter examples.
+
+Changes/Fixes
+-------------
+1. Bug#2880. Correct display of 1080p images in 422R and planar YUV formats on
+   the 7109 and 7200 main video pipelines.
+2. Bug#2933. Correct error path cleanup when core driver initialization fails.
+3. Bug#3023. Fix obvious horizontal rescale artifacts at span boundaries on
+   7109/7200 BDisp implementation.
+4. Fix a problem with blended blits if the copy direction was reversed (i.e. 
+   bottom/right -> top/left).
+5. Bug#3049. Fix kernel crash when FBIO_WAITFORVSYNC ioctl is called.
+
+====================
+stmfb-3.0_stm23_0010
+====================
+
+Changes/Fixes
+-------------
+1. Remove 7109C2 module support in Linux.
+2. Fix 2.6.23 builds on MB411,MB442 and MB448 platforms, a late change to
+   kernel config defines was missed.
+3. Removed debugfs register entries on 710x, this mechanism will not work in
+   32bit (SE) mode.
+4. Support HDMI AV Mute set/clear in hdmi-control test.
+5. Updated coredisplay documentation, yes we do support STi7200
+
+====================
+stmfb-3.0_stm23_0009
+====================
+
+New Features
+------------
+1. Add a character device for HDMI. Reading the device returns the full raw
+   edid (all 255 possible blocks) if a TV is connected. An IOCTL interface is
+   also defined in Linux/include/stmhdmi.h (also available in the target 
+   filesystem as part of the kernel headers package).
+2. Port to 2.6.23 kernel (supports 29bit and 32bit SH4 configurations).
+
+Changes/Fixes
+-------------
+1. Better reporting of HDMI CEA short codes, including marking of native modes
+   with an asterix
+2. Preliminary code for reading all extended HDMI EDID blocks.
+3. Class device and sysfs usage has changed, there is now a "stmcoredisplay"
+   class entry in sysfs containing entries displayN for each display pipeline.
+   HDMI entries now exist underneath the display pipeline the HDMI output
+   belongs to.
+4. The hdmi-info application has been changed to match the new class device
+   structure in sysfs. Added support for reporting the device name and to
+   select the device to query.
+5. Removed the blitter IOCTL interface in the V4L2 module. This was never
+   intended for general use so is being removed for the LDDE2.3 release.
+
+====================
+stmfb-3.0_stm23_0008
+====================
+
+New Features
+------------
+1. Support for PAL-60 output on CVBS.
+2. New Linux framebuffer IOCTLs to get/set the output configuration: controling
+   analogue output enables, SD TV standard, hdmi enable and properties, mixer
+   background colour and DENC picture controls (brightness,contrast etc..). 
+   Previous individual IOCTLs for these have been removed.
+3. Analogue DACs and HDMI can now be individually enabled and disabled. When
+   HDMI is disabled, the HDMI management thread still recognises hotplug events
+   and makes the EDID information available in sysfs, even though the display
+   link is not switched on.
+
+Changes/Fixes
+-------------
+1. Fix BCH clock in HD modes on 7200 HDMI output. Info frames and YUV output
+   now appear to work.
+2. Some changes to the blitter implementations to help support DirectFB
+   colour modulation flags in a wider set of circumstances. Ideally this
+   needs to be matched with an updated DirectFB package, to be made available
+   soon. 
+3. Bug#2186. Fix NTSC-443 colour.
+4. Removed completely STi5528 and STm8000 code from the tree.
+5. Bug#2379. Fix bdisp initialzation.
+6. Fix a HDMI management state issue which prevented HDMI restarting immediately
+   if the framebuffer module was loaded and then immediately reloaded again.
+7. Speed up driver loading of display firmwares (requires firmware
+   package v1.8+1.3).
+
+====================
+stmfb-3.0_stm23_0007
+====================
+
+New Features
+------------
+1. A brand new package name (spot the difference?) now we really can't be
+   confused with STAPI. Note this is now a LDDE2.3 only package.
+2. A new version number, because the V4L2 driver has changed name and the
+   coredriver API is not compatible and will break users of
+   WrenDVD/LinuxDVB(Player1); see (4) and (6) in changes/fixes.
+3. Preliminary 7200/MB519 support.
+    + All three display pipelines available.
+    + All planes available, graphics and video.
+    + The same blitter functionality as 7109, DirectFB supported.
+    + Analogue and HDMI outputs.
+    - HDMI YUV output fails in HD modes (possibly corrupted info frames), use
+      RGB instead for the moment.
+4. Preliminary internal support for blit composited "virtual" planes, displayed
+   on a GDP.
+
+Changes/Fixes
+-------------
+1. Core driver now supports internal memory allocation from a Linux bpa2 
+   partition named "coredisplay-video" for LMI VID on 710x.
+2. The 7109DEI now switches which de-interlacing mode it uses depending on
+   if it could allocate motion buffer memory from the correct place (e.g. LMI
+   VID). If it can it will use full motion de-interlacing, if not than it
+   uses the median filtering mode that has been the default in previous
+   releases. This requires a 1MB "coredisplay-video" bpa2 partition to be
+   configured in the kernel board setup.
+3. The 7100DEI now allows hardware de-interlacing on buffers up to
+   960pixels wide as supported by the hardware. Previously it was limited to
+   736 pixels.
+4. The V4L2 output driver provided in this package has been rewritten to
+   create devices based on the display pipeline information available from
+   the core driver module's platform device data. This has changed the device
+   mapping, and changes the way planes on the secondary displays are handled.
+   The created devices can be enumerated by looking at the entries in
+   /sys/class/video4linux once the module has loaded. Note the driver has now
+   changed to a generic name, without a chip postfix, as the implementation is
+   no longer chip specific.
+5. The V4L2 output driver now allocates buffer memory from a bpa2 partition
+   called "v4l2-video-buffers", for planes on the 710x that need to use LMI VID.
+   If bpa2 is not configured in the kernel or no such partition is configured
+   in the kernel board setup then it will not be possible to request buffers
+   for these planes. The build options CONFIG_STG_LMI_VID_BASE and
+   CONFIG_STG_LMI_VID_SIZE have been removed.
+6. The core driver buffer queuing interface has been changed such that it now
+   requires a physical hardware address for the buffer data, not a virtual
+   address. This impacts all drivers using the core driver, but on the bright
+   side will mean the driver is completely clean in its usage of Linux address
+   spaces and might actually work when 32bit SH4 Linux becomes available.
+7. Fix rangechecking bug in stmcore_get_display_pipeline.
+8. Fix a bug in the C interface device lock handling, resulting in the interface
+   not being thread safe if a device handle had more than one user.
+9. Bug#1129. Move HDMI hotplug PIO configuration and polling into the Linux core
+   driver and the platform specific setup.
+10.Bug#1278. Incorrect CLUT used on console when display driver first loaded
+11.Bug#1897. Fix CLUT support on GDPs and missing framebuffer release lock on
+   set videomode error path.
+12. Bug#1965. Flicker filter capability not reported before a display mode is
+   is set, which prevents the Linux framebuffer code from using the FF.
+13. Bug#2022. STMFBIO_SET_HDMI_VIDEO fails when no TV is connected.
+
+====================
+stgfb-2.0_stm22_0006
+====================
+
+New Features
+------------
+1. Bug#1574. Added provisional support for PAL-Nc and NTSC-443 SD encodings,
+   including adding linux framebuffer module parameter support to select these
+   as the default SD encoding.
+2. Support for HMS1 board, as in -39 kernel. Note only for 7100 and 7109Cut3.
+3. Add the ability to rescale colour values from full range (0-255) to 
+   the normal TV video output range (16-235) on GDPs. The framebuffer now has
+   this switched _on_ by default to prevent graphics images from clipping when
+   output. The behaviour can be changed via the framebuffer extended var IOCTL,
+   and stfbcontrol.
+
+Changes/Fixes
+-------------
+1. Bug#1472. Disable flicker filter on 8bit framebuffers.
+2. Accelerated DirectFB stretch blit is now supported on source images >128
+   pixels wide on 7109.
+3. Bug#1571. Changed analogue vsync line generation for 480p and 576p, the
+   negative pulse ended too close to the end of the line.
+4. Bug#1573. Changed the sync generation for 295M (1920x1080i @50Hz 1250 total
+   lines) to match the ST reference driver settings.
+5. Changed analogue generation of VGA so that a signal is only
+   produced when RGB output is selected and so that there are no embedded
+   syncs. Therefore a D-Sub connector is required with H&V sync connected to
+   the external sync outputs of the chip.
+6. Bug#1576. Reinstate PAL-M as an available standard for 480i
+7  Bug#1575. Fixed the generation of PAL-N to match the description in Video
+   Demystified.
+8. Bug#1577. Changed the signal black/blank levels on component outputs to 
+   match the descriptions in Video Demystified.
+9. Changed plane buffer management so that buffers are released immediately
+   after being removed from display in the case where the plane does not need
+   a historic buffer for de-interlacing. This allows GDPs to use a two buffer
+   double buffering scheme again in V4L2.
+10. Bug#1596. GDP STBus transaction configuration on 7109Cut3.x
+11. Change to support of single field queueing for video, new explicit
+    buffer flags to specify top or bottom field only.
+12. Bug#1783. Fixed HDMI initialization crash on <Cut3.0 7100, where HDMI isn't
+    supported.
+
+====================
+stgfb-2.0_stm22_0005
+====================
+
+New Features
+------------
+1. Driver split into "core" and "framebuffer" modules, it is no longer necessary
+   for a framebuffer to be active on a display pipeline before another driver
+   can use it. See Linux/Documentation/stmcoredisplay.txt for more details on
+   the core modules.
+2. Extended screen parameters are now queried and set using new
+   IOCTLs STMFBIO_GET_VAR_SCREENINFO_EX and STMFBIO_SET_VAR_SCREENINFO_EX,
+   rather than individual IOCTLs.
+3. Support for plane re-ordering.
+4. Added support for RGB gain control on GDPs, allowing the brightness of
+   graphics planes to be attenuated.
+5. Added support for changing the alpha values used by the hardware when
+   in ARGB1555 for the two alpha states (a=0 or a=1) on GDPs.
+6. 7109 BDisp application queue is now supported for accelerated graphics as
+   used by DirectFB.
+7. 8bit CLUT framebuffer is now available on 7109C3.  
+
+Changes/Fixes
+-------------
+1. Screen parameters such as global alpha are now all persistent across
+   display mode changes.
+2. The default framebuffer layer blend mode has been changed to assume RGB
+   has been premultiplied by the alpha channel.
+3. The IOCTLs STMFBIO_SET_TRANSPARENCY, STMFBIO_SET_COLOURKEY,
+   STMFBIO_SET_PREMULTIPLIED_ALPHA & STMFBIO_SET_FLICKER_FILTER have
+   been removed.
+4. stfbcontrol now uses the VAR_SCREENINFO_EX IOCTLs.
+5. New Linux module parameter setup for the framebuffer module, see
+   Linux/Docmuentation/stmfb.txt for full details.
+6. Remove Linux support for STm8000 and STi5528 as these chips are not
+   supported on LDDE2.2
+
+
+====================
+stgfb-1.0_stm22_0004
+====================
+
+New Features
+------------
+1. Support 7109Cut3 GDP flicker filter. To get flicker filtering the image
+   buffer must be marked as progressive when queued, the display output must
+   be interlaced and the total lines in the source and destination viewports
+   must be the same.
+2. Support flicker filter setup in the Linux framebuffer and add test support
+   into stfbcontrol.
+3. Support for 7109 de-interlacer, although it is currently limited to median
+   filtering until LMI VID allocation is available to allocate motion buffers
+   for full temporal mode.
+
+Changes/Fixes
+-------------
+1. Allow horizontal downscale to 1/2 size on 7109Cut3 GDPs.
+2. Correct the support for single field interlaced buffer queuing.
+3. Fix vertical cropping problem on 7109 main video plane.
+4. Bug#1116 - fix blitter interrupt deregistration.
+
+
+====================
+stgfb-1.0_stm22_0003
+====================
+
+New Features
+------------
+1. Internal support for 7109Cut3 DVO features, 24bit RGB HD output (for extended
+   package) and loopback of output to DVP.
+2. Support NTSC-J as a default standard for the Linux framebuffer (tvstandard=J)
+
+Changes/Fixes
+-------------
+1. Use new HDMI clocksetup on 7109Cut3 to allow the correct clock setup for
+   the DVO in ED modes.
+2. HDMI audio data flat bits are now set when the HDMI link is first started
+   and when audio is not running and only cleared when valid audio is being
+   generated. This should prevent invalid audio being presented by the TV;
+   but it appears that not all TVs take any notice of the flat bits.
+3. Bug#1054. Framebuffer crashes on exit on 7109.   
+4. Bug#1056. HDMI audio source switch broken on 7109Cut3.
+
+
+====================
+stgfb-1.0_stm22_0002
+====================
+
+Changes/Fixes
+-------------
+1. Fix Bug#1010. Blitter rescaling filtering is disabled
+2. Major internal interface rewrite. Kernel drivers wanting to use services
+   from the core display driver now need to use the interfaces defined in
+   stgfb/include/stmdisplay*.h . The previous Linux specific Devfb* interfaces
+   no longer exist. OS21 based applications now need to be written to these
+   new interfaces, rather than using the core driver C++ classes directly,
+   as they are thread safe.
+3. Changed how planes are locked for use; this is no longer done when the
+   plane instance is got from the device. Instead a lock/unlock interface
+   is provided to prevent multiple references to a plane queueing buffers.
+   However other plane operations are available to all.
+4. Fix Bug#1029. Bad video display on 7109 with certain horizontal
+                 cropping parameters
+5. Fix Bug#1036. A number of the FB IOCTLs are specified with the wrong macro
+6. Fix Bug#1037. NTSC Line 20/283 VBI generation incorrect
+7. Added support for all 625line and HDMI wide screen signalling modes. The
+   V4L2 controls for TV aspect ratio, Video aspect ratio and letterbox mode
+   (which is now an enumeration instead of a boolean) control the possibilities.
+   On HDMI the TV aspect ratio control sets the "Picture Aspect Ratio" and
+   sets the appropriate 4x3 or 16x9 CEA video code for the output display mode.
+   The video aspect ratio and letterbox mode combine to set WSS/Active Format
+   bits; undefined combinations result in a full screen display.
+
+
+====================
+stgfb-1.0_stm22_0001
+====================
+
+New Features
+------------
+1. Port to STLinux2.2 (Linux 2.6.17 and above), note that the driver is not
+   backwards compatible with the STLinux2.0 2.6.11.12 kernels.
+   
+Changes/Fixes
+-------------
+1. Removed AVS initialisation from Linux framebuffer driver, if you want
+   a real AV switch driver, write your own!
+2. Changed kbuild support, all modules now build into a single directory
+   Linux/kbuild.
+3. Remove building of the kernel cfb.. software drawing modules. This can
+   now be configured as part of the kernel graphics driver support in 2.6.17.
+4. Major change to GDP (graphics plane) handling to support power management
+   resume correctly in interlaced modes and faster display frame rates with
+   DirectFB.
+5. Change to linux framebuffer pan semantics, using the FB_ACTIVATE_VBL flag
+   will cause the pan not to wait for the change to take effect - as long as
+   there isn't more than one outstanding framebuffer change queued up. This
+   allows DirectFB triple buffering to run at the real display refresh rate
+   (as long as your drawing can keep up).
+6. Remove unused triangle code from from the blitter driver and FB IOCTL
+   interface.
+

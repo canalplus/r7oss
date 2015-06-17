@@ -1,0 +1,68 @@
+STMicroelectronics STi PCIe controller
+
+This binding describes a PCIe device.
+
+Required properties:
+ - compatible: "st,stih416-pcie"
+ - device_type: Must be "pci"
+ - reg: A list of physical base address and length for each set of controller
+   registers. Base addresses and lengths of the pcie controller, ahb bridge
+   on some SOCs, configuration space, memory window, configuration register(s).
+ - reg-names: Must include the following entries:
+   "pcie cntrl": PCIe control registers
+   "pcie ahb": ahb bride registers; Optional, depending on SOC used
+   "pcie cs": configuration space region
+   "mem-window": memory made avalaible to the controller
+   "syscfg0": PCIe IP configuration register
+ - interrupts: A list of interrupt outputs of the controller.
+ - interrupt-names: Must include the following entries:
+   "pcie inta": PCI legacy INTA
+   "pcie syserr": PCIe error interrupt
+   "msi": STi interrupt that is asserted when an MSI is received
+ - #address-cells: Must be 3
+ - #size-cells: Must be 2
+ - ranges: ranges for the PCI memory (non-prefetchable and prefetchable memory)
+ - st,syscfg : should be a phandle of the syscfg node.
+ - st,ahb-fixup: Only required when "pcie ahb" is provided as register area.
+ - resets, reset-names: the power-down and soft-reset lines of PCIe IP.
+   Associated names must be "powerdown" and "softreset".
+ - phys, phy-names: the phandle for the PHY device.
+   Associated name must be "pcie_phy"
+
+Optional properties:
+ - reset-gpio: a GPIO spec to define which pin is connected to the bus reset.
+
+Example:
+
+pcie1: pcie@fe800000 {
+	compatible = "st,stih416-pcie";
+	device_type = "pci";
+	reg = <0xfe800000 0x00001000   /* cntrl registers */
+	       0xfe808000 0x00000008   /* ahb registers */
+	       0x2fff0000 0x00010000   /* configuration space */
+	       0x40000000 0x80000000   /* lmi mem window */
+	       0x82C 0x04>;            /* syscfg 2523 */
+	reg-names = "pcie cntrl", "pcie ahb", "pcie cs", "mem-window",
+		    "syscfg0";
+
+	interrupts = <GIC_SPI 166 IRQ_TYPE_LEVEL_HIGH>,
+		     <GIC_SPI 169 IRQ_TYPE_LEVEL_HIGH>,
+		     <GIC_SPI 167 IRQ_TYPE_LEVEL_HIGH>;
+	interrupt-names = "pcie inta", "pcie syserr", "msi";
+
+	#address-cells = <3>;
+	#size-cells = <2>;
+	ranges = <0x82000000 0 0x20000000 0x20000000 0 0x05550000   /* non-prefetchable memory */
+		  0xc2000000 0 0x25550000 0x25550000 0 0x0AAA0000>; /* prefetchable memory */
+	st,syscfg = <&syscfg_rear>;
+	st,ahb-fixup = <0x26C208>;
+
+	resets		= <&powerdown STIH416_PCIE1_POWERDOWN>,
+			  <&softreset STIH416_PCIE1_SOFTRESET>;
+	reset-names	= "power", "softreset";
+
+	phys = <&miphy365x_phy MIPHY365X_PCIE1_PORT1>;
+	phy-names = "pcie_phy";
+
+	status		= "disabled";
+};

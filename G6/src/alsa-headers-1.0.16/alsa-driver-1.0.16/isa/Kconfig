@@ -1,0 +1,30 @@
+menu "ISA devices"
+	depends on SND!=n && ISA
+
+config SND_PC98_CS4232
+	tristate "NEC PC9800 CS4232 driver"
+	depends on SND && X86_PC9800
+	select SND_OPL3_LIB
+	select SND_MPU401_UART
+	select SND_PCM
+	help
+	  Say Y to include support for the on-board sound chip (CS4232)
+	  in NEC PC-9801/PC-8921 PCs.
+
+	  To compile this driver as a module, choose M here: the module
+	  will be called snd-pc98-cs4232.
+
+config SND_MSND_PINNACLE
+	tristate "Turtle Beach MultiSound Pinnacle/Fiji driver"
+	depends on SND && X86
+	select FW_LOADER
+	select SND_RAWMIDI
+	select SND_PCM
+	help
+	  Say Y to include support for Turtle Beach MultiSound Pinnacle/
+	  Fiji soundcards.
+
+	  To compile this driver as a module, choose M here: the module
+	  will be called snd-msnd-pinnacle.
+
+endmenu

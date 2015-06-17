@@ -1,0 +1,54 @@
+/*
+ * Lantiq DuSlic configuration
+ *
+ * Copyright (C) 2013 STMicroelectronics Limited.
+ * Author: John Boddie <john.boddie@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * publishhed by the Free Software Foundation.
+ */
+
+/ {
+	snd_tdm_lantiq_duslic_handset_info: snd-uni-tdm-handset-info {
+		handset0 {
+			fsync = <8000>;
+			slot1 = <0>;
+			slot2 = <2>;
+			slot2-valid = <0>;
+			duplicate = <0>;
+			data16 = <0>;
+			cnb = <1>;
+			lnb = <1>;
+			cwb = <0>;
+			lwb = <1>;
+		};
+		handset1 {
+			fsync = <8000>;
+			slot1 = <4>;
+			slot2 = <6>;
+			slot2-valid = <0>;
+			duplicate = <0>;
+			data16 = <0>;
+			cnb = <1>;
+			lnb = <1>;
+			cwb = <0>;
+			lwb = <1>;
+		};
+	};
+
+	snd_tdm_lantiq_duslic_config: snd-uni-tdm-config {
+		pclk-rate = <1024000>;
+		fs-rate	 = <8000>;
+		fs-divider = <16>;
+		fs01-rate = <8000>;
+		fs02-rate = <8000>;
+		fs02-delay-clock = <0>;
+		fs02-delay-timeslot = <0>;
+		msbit-start = <0>;
+		frame-size = <4>;
+		handset-count = <2>;
+		handset-info = <&snd_tdm_lantiq_duslic_handset_info>;
+	};
+};
+

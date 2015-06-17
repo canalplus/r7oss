@@ -1,0 +1,63 @@
+ST STiH407 USB-PHY controller
+
+This is the driver to provide the picoPHY ports for both USB2 and USB3
+Host controllers available on STiH407 SoC families.
+
+On STiH410, we have to use the DWC3 port#2 with a picoPHY to manage USB2
+devices. The USB2 Controller will use the ports #0 and #1.
+
+This is to document the DT parameters to be passed from the blob in that case.
+
+Required properties:
+- compatible : can be st,stih407-usb2-phy
+- reg : Contain the offset and length of the system configuration registers
+   used as glue logic to control & parameter phy.
+- reg-names : The names of the system configuration registers filled in "reg".
+- st,syscfg: sysconfig register to manage phy parameter at driver level.
+- resets, reset-names: to reset the whole phy / port.
+
+Example:
+usb2_picophy0: usbpicophy@0 {
+	compatible = "st,stih407-usb2-phy";
+	reg =	<0xf8 0x04>,	/* syscfg 5062 */
+		<0xf4 0x04>;    /* syscfg 5061 */
+	reg-names =	"param",
+			"ctrl";
+	#phy-cells = <0>;
+
+	st,syscfg = <&syscfg_core>;
+	resets = <&softreset STIH407_PICOPHY_SOFTRESET>,
+		 <&picophyreset STIH407_PICOPHY0_RESET>;
+	reset-names = "global",
+		      "port";
+};
+
+usb2_picophy1: usbpicophy@1 {
+	compatible = "st,stih407-usb2-phy";
+	#phy-cells = <0>;
+	reg =	<0xfc 0x04>,	/* syscfg 5063 */
+		<0xf4 0x04>;    /* syscfg 5061 */
+	reg-names =	"param",
+			"ctrl";
+
+	st,syscfg = <&syscfg_core>;
+	resets = <&softreset STIH407_PICOPHY_SOFTRESET>,
+		 <&picophyreset STIH407_PICOPHY1_RESET>;
+	reset-names = "global",
+		      "port";
+};
+
+usb2_picophy2: usbpicophy@2 {
+	compatible = "st,stih407-usb2-phy";
+	#phy-cells = <0>;
+	reg =	<0x100 0x04>,	/* syscfg 5064 */
+		<0xf4 0x04>;    /* syscfg 5061 */
+	reg-names =	"param",
+			"ctrl";
+
+	st,syscfg = <&syscfg_core>;
+	resets = <&softreset STIH407_PICOPHY_SOFTRESET>,
+		 <&picophyreset STIH407_PICOPHY2_RESET>;
+	reset-names = "global",
+		      "port";
+};

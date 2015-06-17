@@ -1,0 +1,65 @@
+#header-code
+#include <initng.h>
+#include <initng_global.h>
+#include <initng_active_state.h>
+
+typedef struct ngcs_active_db_s {
+    char *name;
+    stype_h type;
+    a_state_h* current_state;
+    struct timespec time_current_state;
+    a_state_h* last_state;
+    struct timespec time_last_state;
+    e_is last_rought_state;
+    struct timespec last_rought_time;
+} ngcs_active_db_h;
+
+#end-header-code
+#marshal a_state_h
+  string state_name
+  int is
+#end-marshal
+
+#marshal struct timespec struct_timespec
+  long tv_sec
+  long tv_nsec
+#end-marshal
+
+#marshal(nounmarshaler) active_db_h
+  string name
+  stype_h* type
+  ignore* from_service;
+  a_state_h* current_state
+  struct_timespec time_current_state
+  a_state_h* last_state
+  struct_timespec time_last_state
+  int last_rought_state
+  struct_timespec last_rought_time
+  ignore processes
+  ignore data
+  ignore compleate_data
+  ignore succeeded
+  ignore list
+#end-marshal
+
+/* Note that the marshalled forms of this and active_db_h must
+   remain compatible. */
+#marshal ngcs_active_db_h
+  string name
+  stype_h type
+  a_state_h* current_state
+  struct_timespec time_current_state
+  a_state_h* last_state
+  struct_timespec time_last_state
+  int last_rought_state
+  struct_timespec last_rought_time
+#end-marshal
+
+#marshal stype_h
+  string name
+  ignore* start_service
+  ignore* stop_service
+  ignore* restart_service
+  int name_len
+  ignore list
+#end-marshal

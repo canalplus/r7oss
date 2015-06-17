@@ -1,0 +1,20 @@
+#
+# stm-c8jpg Kconfig
+#
+
+config VIDEO_STM_C8JPG
+	tristate "STMicroelectronics h/w JPEG decoder driver"
+	depends on VIDEO_DEV && VIDEO_V4L2 && BPA2 && MACH_STM_STIH416
+	select VIDEOBUF2_BPA2_CONTIG
+	select V4L2_MEM2MEM_DEV
+	default m
+	---help---
+	  This is a v4l2 driver for STMicroelectronics h/w JPEG decoder
+
+config VIDEO_STM_C8JPG_DEBUG
+	tristate "STMicroelectronics h/w JPEG decoder driver debug"
+	depends on VIDEO_STM_C8JPG
+	select LIBCRC32C
+	default n
+	---help---
+	  Enable few more debugging features in stm-c8jpg

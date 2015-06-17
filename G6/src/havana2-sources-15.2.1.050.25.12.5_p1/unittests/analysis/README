@@ -1,0 +1,41 @@
+This directory contains the configuration for code analyzers.
+
+The content is:
+- annotations.txt : fixed annotations with exact file/line num match
+- annotations-patterns.txt : annotations based on pattern match
+
+These files should be processed by some utilitary scripts such as:
+- generate-annotations : script to generate per source file annotations from
+  annotation patterns
+- generate-annotated-for-lcov : script to generate source file annotated for
+  lcov exclusions
+- generate-annotated-for-<any_tool> : hypothetical script to generate
+exclusion for a particular tool
+
+The annotations and annotations patterns files have to be maintained as long
+as the source code or the project coding rules change such that the
+code analysis tool always report no unwanted defects as a pre-submit check
+condition.
+
+Annotations patterns are generally matching per project convention comments or
+per project/API code idioms that analysis tools are not able to process
+correctly.
+
+The annotations files that contain exact file/line match is to be used in
+last resort in the case where per line regexp search is not sufficient or not
+specific enough to describe unwanted idioms.
+
+The set of static analyzers that may benefit from these annotations are for
+instance:
+- code coverage tools,
+- compiler warnings filters,
+- static analysis tools.
+
+The principle is to map either a file/line or a line regexp match to a generic
+information such as "DEAD_CODE" for specifying (whatever the analysis tool
+used) that a code fragment is dead or unreachable.
+
+Then, some tool specific scripts will transform these generic annotations
+into exclusions such that warnng/errors/deffects are not reported and a simple
+condition (no reported warning/error/defect => OK, otherwise KO) is
+sufficient as a non regression check.

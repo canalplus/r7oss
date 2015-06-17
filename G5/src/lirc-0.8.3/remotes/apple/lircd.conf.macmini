@@ -1,0 +1,110 @@
+#
+# this config file was automatically generated
+# using lirc-0.8.2-CVS(macmini) on Sat Apr 28 21:44:03 2007
+#
+# contributed by Stephen Williams
+#
+# brand:                       Apple
+# model no. of remote control: A1156
+# devices being controlled by this remote: Mac mini
+#
+
+begin remote
+
+  name  Apple_A1156
+  bits            8
+  eps            30
+  aeps          100
+
+  one             0     0
+  zero            0     0
+  pre_data_bits   24
+  pre_data       0x87EEFB
+  gap          211995
+
+      begin codes
+          1                        0x09
+          2                        0x06
+          3                        0x0A
+          4                        0x0C
+          5                        0x05
+          6                        0x03
+      end codes
+
+end remote
+
+
+#
+# this config file was automatically generated
+# using lirc-0.8.2-CVS(macmini) on Sat Apr 28 21:44:03 2007
+#
+# contributed by
+#
+# brand:                       Apple
+# model no. of remote control: A1156
+# devices being controlled by this remote: Mac mini
+#
+
+begin remote
+
+  name  Apple_A1156
+  bits            8
+  eps            30
+  aeps          100
+
+  one             0     0
+  zero            0     0
+  pre_data_bits   24
+#  pre_data       0x87EEFB
+  pre_data       0x87EE5C
+  gap          211995
+
+      begin codes
+       	  vol+                     0xB #+
+          play_pause               0x4 #play/pause
+          vol-                     0xD # -
+          forward   	           0x7 # next
+          backward                 0x8 # prev
+          fullscreen               0x2 #Menu
+      end codes
+
+end remote
+
+
+#
+# this config file was automatically generated
+# using lirc-0.8.2(macmini) on Tue Dec 11 11:35:26 2007
+#
+# contributed by Sebastian Schaetzel 
+#
+# brand:                       Apple
+# model no. of remote control: A1156 
+# devices being controlled by this remote: MacBookPro 15" SantaRosa (3.1)
+#
+
+begin remote
+
+  name  APPLE_MACBOOKPRO31
+  bits            8
+  eps            30
+  aeps          100
+
+  one             0     0
+  zero            0     0
+  pre_data_bits   24
+  pre_data       0x87EE81
+  gap          211982
+  toggle_bit_mask 0x0
+
+      begin codes
+          VOLUP                    0x0B
+          VOLDOWN                  0x0D
+          BACKWARD                 0x08
+          FORWARD                  0x07
+          PLAY                     0x04
+          MENU                     0x02
+      end codes
+
+end remote
+
+

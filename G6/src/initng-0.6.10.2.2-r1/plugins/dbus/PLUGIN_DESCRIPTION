@@ -1,0 +1,7 @@
+          name : dbus
+        author : Patrice Tisserand <ptisserand@wyplay.com>
+  contributors : 
+      commands : 
+       options : require_dbus
+   description : This is a need dependency on a DBUS bus name
+                 initng wont start the service until that DBUS bus name is registered.

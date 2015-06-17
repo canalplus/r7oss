@@ -1,0 +1,94 @@
+Installation Instructions
+*************************
+
+For the most up-to-date installation instructions, please refer to the initng
+wiki: http://www.initng.org/wiki/Installation
+
+As of version 0.6.4, GNU autotools support has been completely removed.
+To compile initng, you will need CMake version 2.2.0 or later.
+
+
+SYSTEM REQUIREMENTS
+===================
+* A computer running linux (support for BSD-based operating systems is under
+development) on one of the following architectures: alpha, amd64, hppa, i386,
+ia64, m68k, mips, mipsel, ppc, sparc. (others may or may not work).
+* GNU GCC 3.4.x, 4.0.x or 4.1.x
+* CMake 2.2.0 or newer
+* ncurses development libs (optional)
+
+
+COMPILING INITNG
+================
+To avoid any potential problems during compilation, you need to create a
+'build' directory for compiled code after unpacking the tarball.
+
+--Release versions
+# tar zxvf initng-version.tar.gz
+# cd initng-version
+# mkdir build
+# cd build
+
+--SVN Trunk
+# svn co https://svn.initng.org/initng/trunk initng
+# cd initng
+# mkdir build
+# cd build
+
+Run cmake (replaces ./configure).  Note if you need to manually disable plugins
+it can be done here.
+
+# cmake .. [-DPLUGIN_NAME=(ON|OFF)]
+(PLUGIN_NAME will be of the form BUILD_NGCS)
+
+To faciliate easier selection of plugins, cmake offers an ncurses-based menu,
+which is accessed with 'ccmake'
+
+# ccmake ..
+
+To compile initng, run 'make' in the usual manner
+
+# make
+
+Obtain root priveledges in the standard manner for your distribution, and run
+'make install' to install initng.
+
+# make install
+
+
+Install initng-ifiles before continuing with configuration.
+
+
+CONFIGURING INITNG
+==================
+
+1: Bootloader
+-------------
+
+LILO:
+Edit lilo.conf and add the 'append' line shown below.
+
+  image = /boot/vmlinuz
+    root = /dev/hda6
+    label = linux-initng
+    append = "init=/sbin/initng"
+    read-only
+
+GRUB:
+Edit the grub configuration file, /boot/grub/grub.conf or /boot/grub/menu.lst
+depepending on your distribution and add init=/sbin/initng to the kernel entry.
+
+  title linux-initng
+  root (hd0,1)
+  kernel /vmlinuz root=/dev/hda6 init=/sbin/initng
+
+Grub also allows options specifying a runlevel, and optionally disabling one
+service from the bootloader.
+
+  title linux-initng runlevel:single +system/modules -net/lo
+  root (hd1,0)
+  kernel /kernel-2.6.16-gentoo-r1 root=/dev/sda2 init=/sbin/initng \
+        runlevel:single +system/modules -net/lo
+
+
+Now you are ready to install the official initng ifiles.

@@ -1,0 +1,33 @@
+--- ../alsa-kernel/ppc/awacs.c	2007-12-20 11:47:37.000000000 +0100
++++ awacs.c	2007-12-20 12:23:14.000000000 +0100
+@@ -1,3 +1,9 @@
++#define __NO_VERSION__
++#include "adriver.h"
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,3,0)
++#define CONFIG_ADB_CUDA
++#define CONFIG_ADB_PMU
++#endif
+ /*
+  * PMac AWACS lowlevel functions
+  *
+@@ -29,7 +35,7 @@
+ #include "pmac.h"
+ 
+ 
+-#ifdef CONFIG_ADB_CUDA
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,3,0) || defined(CONFIG_ADB_CUDA)
+ #define PMAC_AMP_AVAIL
+ #endif
+ 
+@@ -40,7 +46,11 @@
+ 	unsigned char amp_tone[2];
+ };
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,3,0)
++#define CHECK_CUDA_AMP() (adb_hardware == ADB_VIACUDA)
++#else
+ #define CHECK_CUDA_AMP() (sys_ctrler == SYS_CTRLER_CUDA)
++#endif
+ 
+ #endif /* PMAC_AMP_AVAIL */
+ 

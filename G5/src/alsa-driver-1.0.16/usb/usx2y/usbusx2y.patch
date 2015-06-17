@@ -1,0 +1,165 @@
+--- ../../alsa-kernel/usb/usx2y/usbusx2y.c	2007-12-20 11:47:37.000000000 +0100
++++ usbusx2y.c	2007-12-20 12:33:36.000000000 +0100
+@@ -1,3 +1,14 @@
++#include <linux/config.h>
++#include <linux/version.h>
++
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,5)
++#define SND_NEED_USB_SET_INTERFACE
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
++#define SND_NEED_USB_WRAPPER
++#endif
++#endif
++#include "adriver.h"
++
+ /*
+  * usbusy2y.c - ALSA USB US-428 Driver
+  *
+@@ -171,7 +182,11 @@
+ /* 
+  * pipe 4 is used for switching the lamps, setting samplerate, volumes ....   
+  */
++#if !defined(OLD_USB) && !defined(CONFIG_SND_NEW_IRQ_HANDLER)
++static void i_usX2Y_Out04Int(struct urb *urb, struct pt_regs *regs)
++#else
+ static void i_usX2Y_Out04Int(struct urb *urb)
++#endif
+ {
+ #ifdef CONFIG_SND_DEBUG
+ 	if (urb->status) {
+@@ -183,7 +198,11 @@
+ #endif
+ }
+ 
++#if !defined(OLD_USB) && !defined(CONFIG_SND_NEW_IRQ_HANDLER)
++static void i_usX2Y_In04Int(struct urb *urb, struct pt_regs *regs)
++#else
+ static void i_usX2Y_In04Int(struct urb *urb)
++#endif
+ {
+ 	int			err = 0;
+ 	struct usX2Ydev		*usX2Y = urb->context;
+@@ -243,6 +262,9 @@
+ 								  usb_sndbulkpipe(usX2Y->chip.dev, 0x04), &p4out->val.vol, 
+ 								  p4out->type == eLT_Light ? sizeof(struct us428_lights) : 5,
+ 								  i_usX2Y_Out04Int, usX2Y);
++#ifdef OLD_USB
++						usX2Y->AS04.urb[j]->transfer_flags = USB_QUEUE_BULK;
++#endif
+ 						err = usb_submit_urb(usX2Y->AS04.urb[j], GFP_ATOMIC);
+ 						us428ctls->p4outSent = send;
+ 						break;
+@@ -253,8 +275,10 @@
+ 	if (err)
+ 		snd_printk(KERN_ERR "In04Int() usb_submit_urb err=%i\n", err);
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 0)
+ 	urb->dev = usX2Y->chip.dev;
+ 	usb_submit_urb(urb, GFP_ATOMIC);
++#endif
+ }
+ 
+ /*
+@@ -297,6 +321,9 @@
+ 			 usX2Y->In04Buf, 21,
+ 			 i_usX2Y_In04Int, usX2Y,
+ 			 10);
++#ifdef OLD_USB
++	usX2Y->In04urb->transfer_flags = USB_QUEUE_BULK;
++#endif
+ 	return usb_submit_urb(usX2Y->In04urb, GFP_KERNEL);
+ }
+ 
+@@ -356,8 +383,13 @@
+ 	sprintf(card->shortname, "TASCAM "NAME_ALLCAPS"");
+ 	sprintf(card->longname, "%s (%x:%x if %d at %03d/%03d)",
+ 		card->shortname, 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 11)
+ 		le16_to_cpu(device->descriptor.idVendor),
+ 		le16_to_cpu(device->descriptor.idProduct),
++#else
++		device->descriptor.idVendor,
++		device->descriptor.idProduct,
++#endif
+ 		0,//us428(card)->usbmidi.ifnum,
+ 		usX2Y(card)->chip.dev->bus->busnum, usX2Y(card)->chip.dev->devnum
+ 		);
+@@ -370,10 +402,17 @@
+ {
+ 	int		err;
+ 	struct snd_card *	card;
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 11)
+ 	if (le16_to_cpu(device->descriptor.idVendor) != 0x1604 ||
+ 	    (le16_to_cpu(device->descriptor.idProduct) != USB_ID_US122 &&
+ 	     le16_to_cpu(device->descriptor.idProduct) != USB_ID_US224 &&
+ 	     le16_to_cpu(device->descriptor.idProduct) != USB_ID_US428) ||
++#else
++	if (device->descriptor.idVendor != 0x1604 ||
++	    (device->descriptor.idProduct != USB_ID_US122 &&
++	     device->descriptor.idProduct != USB_ID_US224 &&
++	     device->descriptor.idProduct != USB_ID_US428) ||
++#endif
+ 	    !(card = usX2Y_create_card(device)))
+ 		return NULL;
+ 	if ((err = usX2Y_hwdep_new(card, device)) < 0  ||
+@@ -384,6 +423,7 @@
+ 	return card;
+ }
+ 
++#ifndef OLD_USB
+ /*
+  * new 2.5 USB kernel API
+  */
+@@ -403,13 +443,33 @@
+ 	usX2Y_usb_disconnect(interface_to_usbdev(intf),
+ 				 dev_get_drvdata(&intf->dev));
+ }
++#else
++/*
++ * 2.4 USB kernel API
++ */
++static void *snd_usX2Y_probe(struct usb_device *dev, unsigned int ifnum, const struct usb_device_id *id)
++{
++	return usX2Y_usb_probe(dev, usb_ifnum_to_if(dev, ifnum), id);
++}
++                                       
++static void snd_usX2Y_disconnect(struct usb_device *dev, void *ptr)
++{
++	usX2Y_usb_disconnect(dev, ptr);
++}
++#endif
+ 
+ MODULE_DEVICE_TABLE(usb, snd_usX2Y_usb_id_table);
+ static struct usb_driver snd_usX2Y_usb_driver = {
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 70) && LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,15)	/* FIXME: find right number */
++ 	.owner =	THIS_MODULE,
++#endif
+ 	.name =		"snd-usb-usx2y",
+ 	.probe =	snd_usX2Y_probe,
+ 	.disconnect =	snd_usX2Y_disconnect,
+ 	.id_table =	snd_usX2Y_usb_id_table,
++#ifdef OLD_USB
++	.driver_list =	LIST_HEAD_INIT(snd_usX2Y_usb_driver.driver_list), 
++#endif
+ };
+ 
+ static void snd_usX2Y_card_private_free(struct snd_card *card)
+@@ -442,7 +502,11 @@
+ 		}
+ 		if (usX2Y->us428ctls_sharedmem) 
+ 			wake_up(&usX2Y->us428ctls_wait_queue_head);
+-		snd_card_free(card);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 0)
++		snd_card_free(ptr);
++#else
++		snd_card_free_when_closed(ptr);
++#endif
+ 	}
+ }
+ 
+@@ -458,3 +522,5 @@
+ 
+ module_init(snd_usX2Y_module_init)
+ module_exit(snd_usX2Y_module_exit)
++
++EXPORT_NO_SYMBOLS;

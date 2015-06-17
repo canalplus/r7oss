@@ -1,0 +1,4 @@
+debian/tmp/usr/include/ffmpeg/avdevice.h
+debian/tmp/usr/lib/libavdevice.a
+debian/tmp/usr/lib/libavdevice.so
+debian/tmp/usr/lib/pkgconfig/libavdevice.pc

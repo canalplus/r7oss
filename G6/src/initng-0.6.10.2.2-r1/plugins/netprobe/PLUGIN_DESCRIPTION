@@ -1,0 +1,7 @@
+          name : netprobe
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : 
+      commands : 
+       options : require_network, network_provider
+   description : This file will probe system network devices, if any has an
+                 ip adress, this need dep is up.

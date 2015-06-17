@@ -1,0 +1,51 @@
+0001-genbox.patch
+0002-patches-configurable-memory.patch
+0003-patches-player2_vc1_configurable_framerate.patch
+0004-patches-player2_int_131-bug6131-2.patch
+0005-patches-player2_int_169-wybug3798.patch
+0006-patches-player2_int179_st6798.patch
++quiet wyplay_patches/quiet.patch
++minimem wyplay_patches/h264_macroblock_structure_in_bpa0.patch
+0007-disable-avs.patch
+0008-patches-tolerant-h264.patch
+0009-patches-h189_quickfix_decimationoff_bug9563.patch
+0010-patches-annoying_logs.patch
+0011-patches-h264_insufficient_memory_crash.patch
+0012-patches-bug9931-crashtrick.patch
+0013-patches-direc8hd-bug9943.patch
+0014-patches-fix_unlicensed_dtsma_bypass-bug9908.patch
+0015-patches-optimized-find-startcode.patch
+0016-patches-crash-on-zap-bug10074.patch
+0017-patches-default-PolicyH264TreatTopBottomPictureStruc.patch
+0018-patches-hang-191-analyse.patch
+0019-patches-h264-uses-collator1.patch
+0020-patches-h264_vodfix_st10397.patch
+0021-patches-0003-Bug-10585-Prevent-Buffer-Read-Overrun.patch
+0022-patches-0004-10585-PerformOnePartition-after-flush-f.patch
+0023-patches-exclude-mutual-calls-to-frame-flush.patch
++early-capture 0024-patches-early-capture.patch
+0025-Implement-PolicySyncStartImmediate-DVB_OPTION_SYNC_S.patch
+0026-patches-syslog-friendly-logs.patch
+0027-patches-STbug-11178.patch
+0028-patches-STbug-11178-3.patch
+0029-patches-STbug-11581.patch
++capture-2nd-plane-only wyplay_patches/capture_2nd_plane_only.patch
+wyplay_patches/bug8655-osdev_device-platform.patch
+wyplay_patches/h264pp-free-irq.patch
+wyplay_patches/player2-64bits-div-approximation.patch
+0030-Replaced-driver-dvb_cap_video-with-dvb_capture_pipe.patch
+0031-Added-a-pre-post-OSD-capture-option.patch
+0032-Add-rpm-Makefile-and-source-directory.patch
+0035-hack-For-some-reason-wma-parser-wanted-a-non-existan.patch
+0036-Removed-aliasing-caused-by-vertical-downsizing-in-pr.patch
+0037-patches-MEbug-520_crash_hls.patch
+wyplay_patches/update_context_videooutputwindow.patch
+wyplay_patches/redmine7224-persistant-macroblocks-on-lamar-slightly-damaged-stream.patch
+0038-patches-MEbug-530-crc_errors_p1.patch
+0039-patches-MEbug-530-crc_errors_p2.patch
+0040-patches-MEbug-550-machine-gun-glitch-bypass.patch
+0041-patches-MEbug-550-player-hang-when-no-scatter-pages.patch
+0042-patches-MEbug-536-grey-image-transition-DVB-HLS.patch
+wyplay_patches/card_controls_are_in_stm-avio.patch
+wyplay_patches/stm_ioctl_zoom_4_3.patch
+wyplay_patches/setoutputwindows_update_display_size.patch

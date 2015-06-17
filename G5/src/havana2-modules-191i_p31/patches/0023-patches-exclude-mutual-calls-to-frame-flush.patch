@@ -1,0 +1,916 @@
+From 05e19c916978f5c53354bd2be0a229c1723cc1c6 Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:19:59 +0100
+Subject: [PATCH 23/36] patches/exclude-mutual-calls-to-frame-flush
+
+---
+ player/collator/collator_base.cpp            |  122 ++++++++++++++++++++++++--
+ player/collator/collator_base.h              |   17 +++-
+ player/collator/collator_packet.cpp          |   12 ++-
+ player/collator/collator_packet_dvp.cpp      |    7 +-
+ player/collator/collator_pes_audio.cpp       |   14 +--
+ player/collator/collator_pes_audio.h         |    2 +-
+ player/collator/collator_pes_frame.cpp       |   25 ++++--
+ player/collator/collator_pes_frame.h         |    4 +-
+ player/collator/collator_pes_video.cpp       |   29 ++++--
+ player/collator/collator_pes_video.h         |    4 +-
+ player/collator/collator_pes_video_divx.cpp  |   29 +++++-
+ player/collator/collator_pes_video_mjpeg.cpp |    6 +-
+ player/collator/collator_pes_video_raw.cpp   |   13 ++-
+ 13 files changed, 237 insertions(+), 47 deletions(-)
+
+diff --git a/player/collator/collator_base.cpp b/player/collator/collator_base.cpp
+index 99aae13..092e2c4 100644
+--- a/player/collator/collator_base.cpp
++++ b/player/collator/collator_base.cpp
+@@ -68,7 +68,10 @@ Collator_Base_c::Collator_Base_c( void )
+ 
+ //
+ 
+-    OS_InitializeMutex( &FlushLock );
++    OS_InitializeMutex( &Lock );
++
++    InputEntryDepth		= 0;
++
+     Collator_Base_c::Reset();
+ 
+ //
+@@ -85,7 +88,7 @@ Collator_Base_c::~Collator_Base_c(      void )
+ {
+     Collator_Base_c::Halt();
+     Collator_Base_c::Reset();
+-    OS_TerminateMutex( &FlushLock );
++    OS_TerminateMutex( &Lock );
+ }
+ 
+ 
+@@ -96,6 +99,31 @@ Collator_Base_c::~Collator_Base_c(      void )
+ 
+ CollatorStatus_t   Collator_Base_c::Halt(       void )
+ {
++unsigned int Count;
++
++    //
++    // Make sure input is not still running
++    //
++
++    OS_LockMutex( &Lock );
++
++    for( Count = 0; (InputEntryDepth != 0); Count++ )
++    {
++	OS_UnLockMutex( &Lock );
++	OS_SleepMilliSeconds( 10 );
++	OS_LockMutex( &Lock );
++
++	if( (Count % 100) == 99 )
++	{
++	    report( severity_fatal, "Collator_Base_c::Halt - Input still ongoing.\n" );
++	    break;
++	}
++    }
++
++    //
++    // Tidy up
++    //
++
+     if( CodedFrameBuffer != NULL )
+     {
+ 	CodedFrameBuffer->DecrementReferenceCount( IdentifierCollator );
+@@ -108,7 +136,12 @@ CollatorStatus_t   Collator_Base_c::Halt(       void )
+     StartCodeList               = NULL;
+     OutputRing                  = NULL;
+ 
+-    return BaseComponentClass_c::Halt();
++    BaseComponentClass_c::Halt();
++
++//
++
++    OS_UnLockMutex( &Lock );
++    return CollatorNoError;
+ }
+ 
+ 
+@@ -143,6 +176,8 @@ CollatorStatus_t   Collator_Base_c::Reset(      void )
+     LastFramePreGlitchPTS	= INVALID_TIME;
+     FrameSinceLastPTS		= 0;
+ 
++    InputExitPerformFrameFlush	= false;
++
+     return BaseComponentClass_c::Reset();
+ }
+ 
+@@ -286,6 +321,28 @@ PlayerStatus_t  Status;
+ 
+ CollatorStatus_t   Collator_Base_c::FrameFlush(         void )
+ {
++CollatorStatus_t	Status = CollatorNoError;
++
++    OS_LockMutex( &Lock );
++
++    if( InputEntryDepth != 0 )
++	InputExitPerformFrameFlush	= true;
++    else
++	Status	= InternalFrameFlush();
++
++    OS_UnLockMutex( &Lock );
++
++    return Status;
++}
++
++
++// /////////////////////////////////////////////////////////////////////////
++//
++//      The Frame Flush implementation
++//
++
++CollatorStatus_t   Collator_Base_c::InternalFrameFlush(         void )
++{
+ CollatorStatus_t        Status;
+ unsigned char           TerminalStartCode[4];
+ Buffer_t		BufferToOutput;
+@@ -309,7 +366,7 @@ Buffer_t		BufferToOutput;
+ 	Status  = AccumulateData( 4, TerminalStartCode );
+ 	if( Status != CollatorNoError )
+ 	{
+-	    report( severity_error, "Collator_Base_c::FrameFlush - Failed to add terminal start code.\n" );
++	    report( severity_error, "Collator_Base_c::InternalFrameFlush - Failed to add terminal start code.\n" );
+ 	    DiscardAccumulatedData();
+ 	}
+     }
+@@ -326,7 +383,7 @@ Buffer_t		BufferToOutput;
+     Status      = CodedFrameBuffer->ShrinkBuffer( max(AccumulatedDataSize, 1) );
+     if( Status != BufferNoError )
+     {
+-	report( severity_error, "Collator_Base_c::FrameFlush - Failed to shrink the operating buffer to size (%08x).\n", Status );
++	report( severity_error, "Collator_Base_c::InternalFrameFlush - Failed to shrink the operating buffer to size (%08x).\n", Status );
+     }
+ 
+     //
+@@ -337,8 +394,6 @@ Buffer_t		BufferToOutput;
+     // CodedFrameBuffer, and its actual output.
+     //
+ 
+-    OS_LockMutex( &FlushLock );
+-
+     CheckForGlitchPromotion();
+     DelayForInjectionThrottling();
+ 
+@@ -346,8 +401,6 @@ Buffer_t		BufferToOutput;
+     Status      	= GetNewBuffer();
+     OutputRing->Insert( (unsigned int )BufferToOutput );
+ 
+-    OS_UnLockMutex( &FlushLock );
+-
+ //
+ 
+     return Status;
+@@ -377,6 +430,57 @@ CollatorStatus_t   Collator_Base_c::DiscardAccumulatedData(     void )
+ 
+ // /////////////////////////////////////////////////////////////////////////
+ //
++//      This function is called when we enter input 
++//	for a specific collator
++
++CollatorStatus_t   Collator_Base_c::InputEntry(
++			PlayerInputDescriptor_t	 *Input,
++			unsigned int		  DataLength,
++			void			 *Data,
++			bool			  NonBlocking )
++{
++    OS_LockMutex( &Lock );
++
++    InputEntryDepth++;
++
++    OS_UnLockMutex( &Lock );
++
++    return CollatorNoError;
++}
++
++
++// /////////////////////////////////////////////////////////////////////////
++//
++//      Protected - This function is called when we exit input 
++//	for a specific collator
++
++CollatorStatus_t   Collator_Base_c::InputExit(		void )
++{
++CollatorStatus_t	Status;
++
++//
++
++    OS_LockMutex( &Lock );
++
++    Status		= CollatorNoError;
++    if( (InputEntryDepth == 1) && InputExitPerformFrameFlush )
++    {
++	Status				= InternalFrameFlush();
++	InputExitPerformFrameFlush	= false;
++    }
++
++    InputEntryDepth--;
++
++    OS_UnLockMutex( &Lock );
++
++//
++
++    return Status;
++}
++
++
++// /////////////////////////////////////////////////////////////////////////
++//
+ //      Handle a jump
+ //
+ 
+diff --git a/player/collator/collator_base.h b/player/collator/collator_base.h
+index cbf7462..4352da3 100644
+--- a/player/collator/collator_base.h
++++ b/player/collator/collator_base.h
+@@ -131,7 +131,7 @@ protected:
+ 
+     // Data
+ 
+-    OS_Mutex_t                    FlushLock;
++    OS_Mutex_t                    Lock;
+ 
+     CollatorConfiguration_t       Configuration;
+ 
+@@ -154,6 +154,9 @@ protected:
+     unsigned long long		  LastFramePreGlitchPTS;
+     unsigned int		  FrameSinceLastPTS;
+ 
++    unsigned int		  InputEntryDepth;
++    bool			  InputExitPerformFrameFlush;
++
+     // Functions
+ 
+     CollatorStatus_t   GetNewBuffer(            void );
+@@ -169,6 +172,12 @@ protected:
+ 
+     void               CheckForGlitchPromotion( void );
+ 
++    CollatorStatus_t   InputEntry(		PlayerInputDescriptor_t	 *Input,
++						unsigned int		  DataLength,
++						void			 *Data,
++						bool			  NonBlocking );
++    CollatorStatus_t   InputExit(		void );
++
+ public:
+ 
+     //
+@@ -203,6 +212,12 @@ public:
+ 						bool                      ContinuousReverseJump );
+ 
+     CollatorStatus_t   InputGlitch(		void );
++
++    //
++    // Internal function that may well be overridden (or supplemented)
++    //
++
++    virtual CollatorStatus_t   InternalFrameFlush(	void );
+ };
+ 
+ #endif
+diff --git a/player/collator/collator_packet.cpp b/player/collator/collator_packet.cpp
+index b417432..b85914a 100644
+--- a/player/collator/collator_packet.cpp
++++ b/player/collator/collator_packet.cpp
+@@ -109,6 +109,7 @@ CollatorStatus_t Status;
+ 
+     COLLATOR_ASSERT( !NonBlocking );
+     AssertComponentState( "Collator_Packet_c::Input", ComponentRunning );
++    InputEntry( Input, DataLength, Data, NonBlocking );
+ 
+     //
+     // Extract the descriptor timing information
+@@ -121,15 +122,12 @@ CollatorStatus_t Status;
+     //
+ 
+     Status	= AccumulateData( DataLength, (unsigned char *)Data );
+-    if( Status != CollatorNoError )
+-	return Status;
+-
+-    Status	= FrameFlush();
+-    if( Status != CollatorNoError )
+-        return Status;
++    if( Status == CollatorNoError )
++	Status	= InternalFrameFlush();
+ 
+ //
+ 
+-    return CollatorNoError;
++    InputExit();
++    return Status;
+ }
+ 
+diff --git a/player/collator/collator_packet_dvp.cpp b/player/collator/collator_packet_dvp.cpp
+index 6437c13..a077eae 100644
+--- a/player/collator/collator_packet_dvp.cpp
++++ b/player/collator/collator_packet_dvp.cpp
+@@ -59,6 +59,7 @@ CollatorStatus_t Collator_PacketDvp_c::Input(	PlayerInputDescriptor_t  *Input,
+ 						bool			  NonBlocking,
+ 						unsigned int		 *DataLengthRemaining )
+ {
++CollatorStatus_t	 Status;
+ StreamInfo_t		*CapturedFrameDescriptor = (StreamInfo_t *)Data;
+ Buffer_t		 CapturedBuffer;
+ 
+@@ -66,6 +67,7 @@ Buffer_t		 CapturedBuffer;
+ 
+     COLLATOR_ASSERT( !NonBlocking );
+     AssertComponentState( "Collator_Packet_c::Input", ComponentRunning );
++    InputEntry( Input, DataLength, Data, NonBlocking );
+ 
+     //
+     // Attach the decode buffer mentioned in the input packet
+@@ -86,6 +88,9 @@ Buffer_t		 CapturedBuffer;
+     // Perform the standard packet handling
+     //
+ 
+-    return Collator_Packet_c::Input( Input, DataLength, Data );
++    Status	= Collator_Packet_c::Input( Input, DataLength, Data );
++
++    InputExit();
++    return Status;
+ }
+ 
+diff --git a/player/collator/collator_pes_audio.cpp b/player/collator/collator_pes_audio.cpp
+index be1d8eb..8a9073d 100644
+--- a/player/collator/collator_pes_audio.cpp
++++ b/player/collator/collator_pes_audio.cpp
+@@ -672,7 +672,7 @@ CollatorStatus_t Collator_PesAudio_c::HandleElementaryStream( unsigned int Lengt
+ 	  // Pass the accumulated subframes to the frame parser
+ 	  //
+ 
+-	  FrameFlush();
++	  InternalFrameFlush();
+ 	  CollatorState = ReadSubFrame;
+ 	  break;
+ 
+@@ -1093,7 +1093,8 @@ CollatorStatus_t	Status;
+ 
+     COLLATOR_ASSERT( !NonBlocking );
+     AssertComponentState( "Collator_PesAudio_c::Input", ComponentRunning );
+-    
++    InputEntry( Input, DataLength, Data, NonBlocking );
++
+     ActOnInputDescriptor( Input );
+     
+     //
+@@ -1150,7 +1151,8 @@ CollatorStatus_t	Status;
+     	DiscardAccumulatedData();
+     	SeekingPesHeader = true;
+     }
+-    
++
++    InputExit();
+     return Status;
+ }
+ 
+@@ -1197,13 +1199,13 @@ CollatorStatus_t   Collator_PesAudio_c::Reset(	void )
+ ///
+ /// \return Collator status code, CollatorNoError indicates success.
+ ///
+-CollatorStatus_t   Collator_PesAudio_c::FrameFlush(		void )
++CollatorStatus_t   Collator_PesAudio_c::InternalFrameFlush(		void )
+ {
+ CollatorStatus_t	Status;
+ unsigned char CopiedFrameHeader[FrameHeaderLength];
+ //
+ 
+-    AssertComponentState( "Collator_PesAudio_c::FrameFlush", ComponentRunning );
++    AssertComponentState( "Collator_PesAudio_c::InternalFrameFlush", ComponentRunning );
+ 
+ //
+     COLLATOR_DEBUG(">><<\n");
+@@ -1217,7 +1219,7 @@ unsigned char CopiedFrameHeader[FrameHeaderLength];
+     }
+     
+     // now pass the complete frame onward
+-    Status					= Collator_Pes_c::FrameFlush();
++    Status					= Collator_Pes_c::InternalFrameFlush();
+     if( Status != CodecNoError )
+ 	return Status;
+ 	
+diff --git a/player/collator/collator_pes_audio.h b/player/collator/collator_pes_audio.h
+index 4052c0b..2796b9a 100644
+--- a/player/collator/collator_pes_audio.h
++++ b/player/collator/collator_pes_audio.h
+@@ -174,7 +174,7 @@ public:
+ 						bool			  NonBlocking = false,
+ 						unsigned int		 *DataLengthRemaining = NULL );
+     
+-    CollatorStatus_t   FrameFlush(		void );
++    CollatorStatus_t   InternalFrameFlush(	void );
+ 
+     CollatorStatus_t   DiscardAccumulatedData(	void );
+ 
+diff --git a/player/collator/collator_pes_frame.cpp b/player/collator/collator_pes_frame.cpp
+index 3b20ee6..2edfbad 100644
+--- a/player/collator/collator_pes_frame.cpp
++++ b/player/collator/collator_pes_frame.cpp
+@@ -138,6 +138,7 @@ CollatorStatus_t   Collator_PesFrame_c::Input  (PlayerInputDescriptor_t*
+ 
+     COLLATOR_ASSERT( !NonBlocking );
+     AssertComponentState( "Collator_PesFrame_c::Input", ComponentRunning );
++    InputEntry( Input, DataLength, Data, NonBlocking );
+ 
+     Offset                      = 0;
+     while (Offset < DataLength)
+@@ -186,6 +187,7 @@ CollatorStatus_t   Collator_PesFrame_c::Input  (PlayerInputDescriptor_t*
+         {
+             COLLATOR_ERROR("Malformed pes header contains DTS without PTS.\n" );
+             DiscardAccumulatedData();                   // throw away previous frame as incomplete
++	    InputExit();
+             return CollatorError;
+         }
+ 
+@@ -233,6 +235,7 @@ CollatorStatus_t   Collator_PesFrame_c::Input  (PlayerInputDescriptor_t*
+                 COLLATOR_ERROR ("%s: Warning packet contains more bytes than needed %d bytes missing?\n", __FUNCTION__, RemainingDataLength);
+                 DiscardAccumulatedData();                       // throw away previous frame as incomplete
+                 //RemainingDataLength     = 0;
++		//InputExit();
+                 //return CollatorError;
+             }
+             RemainingDataLength = PayloadLength;        // assume new packet is stand alone frame
+@@ -243,39 +246,47 @@ CollatorStatus_t   Collator_PesFrame_c::Input  (PlayerInputDescriptor_t*
+         PayloadStart            = PesHeader + (PesLength + 6 - PayloadLength);
+         Status                  = AccumulateData (PayloadLength, (unsigned char *)PayloadStart);
+         if (Status != CollatorNoError)
++	{
++	    InputExit();
+             return Status;
++	}
+ 
+         RemainingDataLength    -= PayloadLength;
+         if (RemainingDataLength <= 0)
+         {
+-            Status              = FrameFlush();         // flush out collected frame
++            Status              = InternalFrameFlush();         // flush out collected frame
+             if (Status != CollatorNoError )
++	    {
++		InputExit();
+                 return Status;
++	    }
+         }
+ 
+         COLLATOR_DEBUG("%s PrivateDataPresent %d, RemainingDataLength %d, PayloadLength %d\n",
+                         __FUNCTION__, PrivateDataPresent, RemainingDataLength, PayloadLength);
+ 
+     }
++
++    InputExit();
+     return CollatorNoError;
+ }
+ //}}}
+-//{{{  FrameFlush
++//{{{  InternalFrameFlush
+ // /////////////////////////////////////////////////////////////////////////
+ //
+ //      The Frame Flush functions
+ //
+-CollatorStatus_t   Collator_PesFrame_c::FrameFlush( bool        FlushedByStreamTerminate )
++CollatorStatus_t   Collator_PesFrame_c::InternalFrameFlush( bool        FlushedByStreamTerminate )
+ {
+     CodedFrameParameters->FollowedByStreamTerminate     = FlushedByStreamTerminate;
+-    return FrameFlush();
++    return InternalFrameFlush();
+ }
+ 
+-CollatorStatus_t   Collator_PesFrame_c::FrameFlush(             void )
++CollatorStatus_t   Collator_PesFrame_c::InternalFrameFlush(             void )
+ {
+     CollatorStatus_t        Status;
+ 
+-    AssertComponentState( "Collator_PesFrame_c::FrameFlush", ComponentRunning );
++    AssertComponentState( "Collator_PesFrame_c::InternalFrameFlush", ComponentRunning );
+ 
+     CodedFrameParameters->PlaybackTimeValid = PlaybackTimeValid;
+     CodedFrameParameters->PlaybackTime      = PlaybackTime;
+@@ -285,7 +296,7 @@ CollatorStatus_t   Collator_PesFrame_c::FrameFlush(             void )
+     CodedFrameParameters->DecodeTime        = DecodeTime;
+     DecodeTimeValid                         = false;
+ 
+-    Status                                      = Collator_Pes_c::FrameFlush();
++    Status                                      = Collator_Pes_c::InternalFrameFlush();
+     if( Status != CodecNoError )
+         return Status;
+ 
+diff --git a/player/collator/collator_pes_frame.h b/player/collator/collator_pes_frame.h
+index 697ee90..b65691b 100644
+--- a/player/collator/collator_pes_frame.h
++++ b/player/collator/collator_pes_frame.h
+@@ -68,8 +68,8 @@ public:
+ 					bool			  NonBlocking = false,
+ 					unsigned int		 *DataLengthRemaining = NULL );
+ 
+-    CollatorStatus_t    FrameFlush     (void );
+-    CollatorStatus_t    FrameFlush     (bool                   FlushedByStreamTerminate);
++    CollatorStatus_t    InternalFrameFlush     (bool                   FlushedByStreamTerminate);
++    CollatorStatus_t    InternalFrameFlush     (void );
+ 
+ 
+     CollatorStatus_t    Reset          (void);
+diff --git a/player/collator/collator_pes_video.cpp b/player/collator/collator_pes_video.cpp
+index c069d5a..505c459 100644
+--- a/player/collator/collator_pes_video.cpp
++++ b/player/collator/collator_pes_video.cpp
+@@ -119,6 +119,7 @@ FrameParserHeaderFlag_t	HeaderFlags;
+ 
+     COLLATOR_ASSERT( !NonBlocking );
+     AssertComponentState( "Collator_PesVideo_c::Input", ComponentRunning );
++    InputEntry( Input, DataLength, Data, NonBlocking );
+ 
+     ActOnInputDescriptor( Input );
+ 
+@@ -190,7 +191,10 @@ FrameParserHeaderFlag_t	HeaderFlags;
+ 				StoredPesHeader			= StoredPartialHeader;
+ 				Status				= ReadPesHeader();
+ 				if( Status != CollatorNoError )
++				{
++				    InputExit();
+ 				    return Status;
++				}
+ 
+ 				if( SeekingPesHeader )
+ 				{
+@@ -235,9 +239,12 @@ FrameParserHeaderFlag_t	HeaderFlags;
+ 				{
+ 				    memcpy( StoredPartialHeaderCopy, StoredPartialHeader, GotPartialCurrentSize );
+ 
+-				    Status			= FrameFlush();
++				    Status			= InternalFrameFlush();
+ 				    if( Status != CollatorNoError )
++				    {
++					InputExit();
+ 					return Status;
++				    }
+ 
+ 				    memcpy( BufferBase, StoredPartialHeaderCopy, GotPartialCurrentSize );
+ 				    AccumulatedDataSize		= 0;
+@@ -252,6 +259,7 @@ FrameParserHeaderFlag_t	HeaderFlags;
+ 				if( Status != CollatorNoError )
+ 				{
+ 				    DiscardAccumulatedData();
++				    InputExit();
+ 				    return Status;
+ 				}
+ 
+@@ -272,7 +280,10 @@ FrameParserHeaderFlag_t	HeaderFlags;
+ 	    }
+ 
+             if( RemainingLength == 0 )
++	    {
++		InputExit();
+                 return CollatorNoError;
++	    }
+ 	}
+ 
+ 	//
+@@ -287,7 +298,10 @@ FrameParserHeaderFlag_t	HeaderFlags;
+ 	    Skipping            -= Skip;
+ 
+ 	    if( RemainingLength == 0 )
++	    {
++		InputExit();
+ 		return CollatorNoError;
++	    }
+ 	}
+ 
+ 	//
+@@ -401,6 +415,7 @@ FrameParserHeaderFlag_t	HeaderFlags;
+ 		    DiscardAccumulatedData();
+ 
+ 		RemainingLength         = 0;
++		InputExit();
+ 		return Status;
+ 	    }
+ 
+@@ -412,6 +427,7 @@ FrameParserHeaderFlag_t	HeaderFlags;
+ 	    if( Status != CollatorNoError )
+ 	    {
+ 		DiscardAccumulatedData();
++		InputExit();
+ 		return Status;
+ 	    }
+ 
+@@ -470,6 +486,7 @@ FrameParserHeaderFlag_t	HeaderFlags;
+ 	}
+     }
+ 
++    InputExit();
+     return CollatorNoError;
+ }
+ 
+@@ -479,26 +496,26 @@ FrameParserHeaderFlag_t	HeaderFlags;
+ //      The Frame Flush functions
+ //
+ 
+-CollatorStatus_t   Collator_PesVideo_c::FrameFlush( bool        FlushedByStreamTerminate )
++CollatorStatus_t   Collator_PesVideo_c::InternalFrameFlush( bool        FlushedByStreamTerminate )
+ {
+     CodedFrameParameters->FollowedByStreamTerminate     = FlushedByStreamTerminate;
+-    return FrameFlush();
++    return InternalFrameFlush();
+ }
+ 
+ 
+ // -----------------------
+ 
+-CollatorStatus_t   Collator_PesVideo_c::FrameFlush(             void )
++CollatorStatus_t   Collator_PesVideo_c::InternalFrameFlush(             void )
+ {
+ CollatorStatus_t        Status;
+ 
+ //
+ 
+-    AssertComponentState( "Collator_PesVideo_c::FrameFlush", ComponentRunning );
++    AssertComponentState( "Collator_PesVideo_c::InternalFrameFlush", ComponentRunning );
+ 
+ //
+ 
+-    Status                                      = Collator_Pes_c::FrameFlush();
++    Status                                      = Collator_Pes_c::InternalFrameFlush();
+     if( Status != CodecNoError )
+ 	return Status;
+ 
+diff --git a/player/collator/collator_pes_video.h b/player/collator/collator_pes_video.h
+index a599079..a8149e3 100644
+--- a/player/collator/collator_pes_video.h
++++ b/player/collator/collator_pes_video.h
+@@ -64,7 +64,7 @@ public:
+ 					bool			  NonBlocking = false,
+ 					unsigned int		 *DataLengthRemaining = NULL );
+ 
+-    CollatorStatus_t   FrameFlush(      void );
++    CollatorStatus_t   InternalFrameFlush(      void );
+ 
+     //
+     // A frame flush overload that allows the specific setting of a flushed by terminate flag.
+@@ -73,7 +73,7 @@ public:
+     // strictly a new stream. This ensures that last framnes will be seen.
+     //
+ 
+-    CollatorStatus_t   FrameFlush(      bool                    FlushedByStreamTerminate );
++    CollatorStatus_t   InternalFrameFlush(      bool                    FlushedByStreamTerminate );
+ 
+     //
+     // Some strange additions by someone
+diff --git a/player/collator/collator_pes_video_divx.cpp b/player/collator/collator_pes_video_divx.cpp
+index 908177d..222acd4 100644
+--- a/player/collator/collator_pes_video_divx.cpp
++++ b/player/collator/collator_pes_video_divx.cpp
+@@ -132,6 +132,8 @@ unsigned char           Code;
+     AssertComponentState( "Collator_PesVideoDivx_c::Input", ComponentRunning );
+ 
+     COLLATOR_ASSERT( !NonBlocking );
++    InputEntry( Input, DataLength, Data, NonBlocking );
++
+     ActOnInputDescriptor( Input );
+ 
+     //
+@@ -174,7 +176,10 @@ unsigned char           Code;
+ 
+ 		Status  = ReadPesHeader();
+ 		if( Status != CollatorNoError )
++		{
++		    InputExit();
+ 		    return Status;
++		}
+ 
+ 		if( SeekingPesHeader )
+ 		{
+@@ -184,7 +189,10 @@ unsigned char           Code;
+ 	    }
+ 
+ 	    if( RemainingLength == 0 )
++	    {
++		InputExit();
+ 		return CollatorNoError;
++	    }
+ 	}
+ 
+ 	//
+@@ -211,7 +219,10 @@ unsigned char           Code;
+ 	    }
+ 
+ 	    if( RemainingLength == 0 )
++	    {
++		InputExit();
+ 		return CollatorNoError;
++	    }
+ 	}
+ 
+ 	//
+@@ -226,7 +237,10 @@ unsigned char           Code;
+ 	    Skipping            -= Skip;
+ 
+ 	    if( RemainingLength == 0 )
++	    {
++		InputExit();
+ 		return CollatorNoError;
++	    }
+ 	}
+ 
+ 	//
+@@ -368,9 +382,12 @@ unsigned char           Code;
+ 	    else if( TerminationFlagIsSet)
+ 	    {
+ 		AccumulatedDataSize             -=4;
+-		Status                           = FrameFlush();
++		Status                           = InternalFrameFlush();
+ 		if( Status != CollatorNoError )
++		{
++		    InputExit();
+ 		    return Status;
++		}
+ 
+ 		BufferBase[0]                    = 0x00;
+ 		BufferBase[1]                    = 0x00;
+@@ -403,6 +420,7 @@ unsigned char           Code;
+ 	    if( Status != CollatorNoError )
+ 	    {
+ 		DiscardAccumulatedData();
++		InputExit();
+ 		return Status;
+ 	    }
+ 	}
+@@ -446,6 +464,7 @@ unsigned char           Code;
+ 
+ 		RemainingLength         = 0;
+ 
++		InputExit();
+ 		return Status;
+ 	    }
+ 
+@@ -457,6 +476,7 @@ unsigned char           Code;
+ 	    if( Status != CollatorNoError )
+ 	    {
+ 		DiscardAccumulatedData();
++		InputExit();
+ 		return Status;
+ 	    }
+ 
+@@ -530,9 +550,12 @@ unsigned char           Code;
+ 		else if( TerminationFlagIsSet)
+ 		{
+ 		    AccumulatedDataSize         -=4;
+-		    Status                               = FrameFlush();
++		    Status                               = InternalFrameFlush();
+ 		    if( Status != CollatorNoError )
++		    {
++			InputExit();
+ 			return Status;
++		    }
+ 
+ 		    BufferBase[0]                        = 0x00;
+ 		    BufferBase[1]                        = 0x00;
+@@ -568,6 +591,7 @@ unsigned char           Code;
+ 		if( Status != CollatorNoError )
+ 		{
+ 		    DiscardAccumulatedData();
++		    InputExit();
+ 		    return Status;
+ 		}
+ 		else if (Version != 3) // work around for issues with fake start codes in 311 streams
+@@ -585,5 +609,6 @@ unsigned char           Code;
+ 
+     }
+ 
++    InputExit();
+     return CollatorNoError;
+ }
+diff --git a/player/collator/collator_pes_video_mjpeg.cpp b/player/collator/collator_pes_video_mjpeg.cpp
+index 3581ec9..86c657a 100644
+--- a/player/collator/collator_pes_video_mjpeg.cpp
++++ b/player/collator/collator_pes_video_mjpeg.cpp
+@@ -169,6 +169,7 @@ CollatorStatus_t   Collator_PesVideoMjpeg_c::Input     (PlayerInputDescriptor_t*
+ 
+     AssertComponentState( "Collator_PacketPes_c::Input", ComponentRunning );
+     COLLATOR_ASSERT( !NonBlocking );
++    InputEntry( Input, DataLength, Data, NonBlocking );
+ 
+     Offset                      = 0;
+     RemainingData               = (unsigned char *)Data;
+@@ -221,6 +222,7 @@ CollatorStatus_t   Collator_PesVideoMjpeg_c::Input     (PlayerInputDescriptor_t*
+         {
+             COLLATOR_ERROR("Malformed pes header contains DTS without PTS.\n" );
+             DiscardAccumulatedData();                   // throw away previous frame as incomplete
++	    InputExit();
+             return CollatorError;
+         }
+ 
+@@ -256,7 +258,7 @@ CollatorStatus_t   Collator_PesVideoMjpeg_c::Input     (PlayerInputDescriptor_t*
+             {
+                 AccumulatedDataSize    -= 2;
+ 
+-                Status          = FrameFlush ((Configuration.StreamTerminateFlushesFrame && (Code == Configuration.StreamTerminationCode)));
++                Status          = InternalFrameFlush ((Configuration.StreamTerminateFlushesFrame && (Code == Configuration.StreamTerminationCode)));
+                 if (Status != CollatorNoError)
+                     break;
+ 
+@@ -270,11 +272,13 @@ CollatorStatus_t   Collator_PesVideoMjpeg_c::Input     (PlayerInputDescriptor_t*
+             if( Status != CollatorNoError )
+             {
+                 DiscardAccumulatedData();
++		InputExit();
+                 return Status;
+             }
+         }
+     }
+ 
++    InputExit();
+     return CollatorNoError;
+ }
+ //}}}
+diff --git a/player/collator/collator_pes_video_raw.cpp b/player/collator/collator_pes_video_raw.cpp
+index c9ff0ac..7a1ae17 100644
+--- a/player/collator/collator_pes_video_raw.cpp
++++ b/player/collator/collator_pes_video_raw.cpp
+@@ -102,6 +102,7 @@ CollatorStatus_t   Collator_PesVideoRaw_c::Input(       PlayerInputDescriptor_t
+ 
+     COLLATOR_ASSERT( !NonBlocking );
+     AssertComponentState( "Collator_PesRaw_c::Input", ComponentRunning );
++    InputEntry( Input, DataLength, Data, NonBlocking );
+ 
+     // Extract the descriptor timing information
+     ActOnInputDescriptor( Input );
+@@ -163,6 +164,7 @@ CollatorStatus_t   Collator_PesVideoRaw_c::Input(       PlayerInputDescriptor_t
+         else if ((PesHeader[7] & 0xC0) == 0x40)
+         {
+             COLLATOR_ERROR("Malformed pes header contains DTS without PTS.\n" );
++	    InputExit();
+             return CollatorError;
+         }
+         //}}}
+@@ -184,6 +186,7 @@ CollatorStatus_t   Collator_PesVideoRaw_c::Input(       PlayerInputDescriptor_t
+         if (strcmp ((char*)DataBlock, "STMicroelectronics") != 0)
+         {
+             //COLLATOR_TRACE("Id            : %s\n", Id);
++	    InputExit();
+             return FrameParserNoError;
+         }
+         DataBlock                              += strlen ((char*)DataBlock)+1;
+@@ -249,6 +252,7 @@ CollatorStatus_t   Collator_PesVideoRaw_c::Input(       PlayerInputDescriptor_t
+ 
+                 default:
+                     COLLATOR_ERROR("Unsupported decode buffer format request %.4s\n", &Format);
++		    InputExit();
+                     return CollatorError;
+             }
+             //}}}
+@@ -258,6 +262,7 @@ CollatorStatus_t   Collator_PesVideoRaw_c::Input(       PlayerInputDescriptor_t
+             if (Status != ManifestorNoError)
+             {
+                 COLLATOR_ERROR ("Failed to get decode buffer\n");
++		InputExit();
+                 return CollatorError;
+             }
+ 
+@@ -268,6 +273,7 @@ CollatorStatus_t   Collator_PesVideoRaw_c::Input(       PlayerInputDescriptor_t
+             if (Status != BufferNoError)
+             {
+                 COLLATOR_ERROR ("Failed to get decode buffer data reference\n");
++		InputExit();
+                 return CollatorError;
+             }
+ 
+@@ -276,6 +282,7 @@ CollatorStatus_t   Collator_PesVideoRaw_c::Input(       PlayerInputDescriptor_t
+             if (Status != BufferNoError)
+             {
+                 COLLATOR_ERROR ("Failed to get decode buffer data reference\n");
++		InputExit();
+                 return CollatorError;
+             }
+ 
+@@ -297,6 +304,7 @@ CollatorStatus_t   Collator_PesVideoRaw_c::Input(       PlayerInputDescriptor_t
+         if (DecodeBuffer == NULL)
+         {
+             COLLATOR_ERROR ("No decode buffer available\n");
++	    InputExit();
+             return CodecError;
+         }
+ 
+@@ -314,16 +322,17 @@ CollatorStatus_t   Collator_PesVideoRaw_c::Input(       PlayerInputDescriptor_t
+             if (Status != CollatorNoError)
+             {
+                 COLLATOR_ERROR ("Failed to accumulate StreamInfo\n");
++		InputExit();
+                 return Status;
+             }
+-            Status                              = FrameFlush ();
++            Status                              = InternalFrameFlush ();
+             if (Status != CollatorNoError)
+                 COLLATOR_ERROR ("Failed to flush frame\n");
+         }
+     }
+     //}}}
+ 
+-
++    InputExit();
+     return Status;
+ }
+ //}}}
+-- 
+1.7.9.5
+

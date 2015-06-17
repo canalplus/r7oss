@@ -1,0 +1,301 @@
+/*
+ * Copyright (C) 2013 STMicroelectronics (R&D) Limited
+ * Author(s): Giuseppe Cavallaro <peppe.cavallaro@st.com>
+ *	      Alexandre Torgue <alexandre.torgue@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+#include "stid127-clks.h"
+/ {
+	clocks {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		compatible = "st,stid127-clk", "simple-bus";
+
+		/*
+		 * Fixed 27MHz oscillator inputs to SoC
+		 */
+		CLK_IFE_REF: CLK_IFE_REF {
+			#clock-cells = <0>;
+			compatible = "fixed-clock";
+			clock-frequency = <27000000>;
+			clock-output-names = "CLK_IFE_REF";
+		};
+
+		clockgenA@fea10000 {
+			reg = <0xfea10000 0xb58>;
+
+			CLK_S_A0_PLL0: CLK_S_A0_PLL0 {
+				#clock-cells = <1>;
+				compatible = "st,clkgena-plls-c45-ax-0", "st,clkgena-plls-c45";
+
+				clocks = <&CLK_IFE_REF>;
+
+				clock-output-names = "CLK_S_A0_PLL0_HS",
+						     "CLK_S_A0_PLL0_LS";
+			};
+
+			CLK_S_A0_PLL1: CLK_S_A0_PLL1 {
+				#clock-cells = <1>;
+				compatible = "st,clkgena-plls-c45-ax-1", "st,clkgena-plls-c45";
+
+				clocks = <&CLK_IFE_REF>;
+
+				clock-output-names = "CLK_S_A0_PLL1_HS",
+						     "CLK_S_A0_PLL1_LS";
+			};
+
+			CLK_S_A0_OSC_PREDIV: CLK_S_A0_OSC_PREDIV {
+				#clock-cells = <0>;
+				compatible = "st,clkgena-prediv-c45", "st,clkgena-prediv";
+
+				clocks = <&CLK_IFE_REF>;
+
+				clock-output-names = "CLK_S_A0_OSC_PREDIV";
+			};
+
+			CLK_S_A0_HS0: CLK_S_A0_HS0 {
+				#clock-cells = <1>;
+				compatible = "st,clkgena-divmux-c45-hs-0", "st,clkgena-divmux";
+
+				clocks = <&CLK_S_A0_OSC_PREDIV>,
+					 <&CLK_S_A0_PLL0 0>, /* PLL0 HS */
+					 <&CLK_S_A0_PLL1 0>; /* PLL1 HS */
+
+				clock-output-names = "CLK_CT_DIAG",
+						     "CLK_FDMA_0",
+						     "CLK_FDMA_1";
+			};
+
+			CLK_S_A0_HS1: CLK_S_A0_HS1 {
+				#clock-cells = <1>;
+				compatible = "st,clkgena-divmux-c45-hs-1", "st,clkgena-divmux";
+
+				clocks = <&CLK_S_A0_OSC_PREDIV>,
+					 <&CLK_S_A0_PLL0 1>, /* PLL0 LS */
+					 <&CLK_S_A0_PLL1 0>; /* PLL1 HS */
+
+				clock-output-names = "";
+			};
+
+			CLK_S_A0_LS: CLK_S_A0_LS {
+				#clock-cells = <1>;
+				compatible = "st,clkgena-divmux-c45-ls", "st,clkgena-divmux";
+
+				clocks = <&CLK_S_A0_OSC_PREDIV>,
+					 <&CLK_S_A0_PLL0 1>, /* PLL0 LS */
+					 <&CLK_S_A0_PLL1 1>; /* PLL1 LS */
+
+				clock-output-names = "CLK_IC_CM_ST40",
+						     "CLK_IC_SPI",
+						     "CLK_IC_CPU",
+						     "CLK_IC_MAIN",
+						     "CLK_IC_ROUTER",
+						     "CLK_IC_PCIE",
+						     "CLK_IC_LP",
+						     "CLK_IC_LP_CPU",
+						     "CLK_IC_STFE",
+						     "CLK_IC_DMA",
+						     "CLK_IC_GLOBAL_ROUTER",
+						     "CLK_IC_GLOBAL_PCI",
+						     "CLK_IC_GLOBAL_PCI_TARG",
+						     "CLK_IC_GLOBAL_NETWORK",
+						     "CLK_A9_TRACE_INT",
+						     "CLK_A9_EXT2F",
+						     "CLK_IC_LP_D3",
+						     "CLK_IC_LP_DQAM",
+						     "CLK_IC_LP_ETH",
+						     "CLK_IC_LP_HD",
+						     "CLK_IC_SECURE",
+						     "";
+			};
+		};
+
+		CLK_M_A9_EXT2F_DIV2: CLK_M_A9_EXT2F_DIV2S {
+			#clock-cells = <0>;
+			compatible = "fixed-factor-clock";
+			clocks = <&CLK_S_A0_LS 15>;
+			clock-div = <2>;
+			clock-mult = <1>;
+		};
+
+		clockgenA@fea20000 {
+			reg = <0xfea20000 0xb58>;
+
+			CLK_S_A1_PLL0: CLK_S_A1_PLL0 {
+				#clock-cells = <1>;
+				compatible = "st,clkgena-plls-c45-ax-0", "st,clkgena-plls-c45";
+
+				clocks = <&CLK_IFE_REF>;
+
+				clock-output-names = "CLK_S_A1_PLL0_HS",
+						     "CLK_S_A1_PLL0_LS";
+			};
+
+			CLK_S_A1_OSC_PREDIV: CLK_S_A1_OSC_PREDIV {
+				#clock-cells = <0>;
+				compatible = "st,clkgena-prediv-c45", "st,clkgena-prediv";
+
+				clocks = <&CLK_IFE_REF>;
+
+				clock-output-names = "CLK_S_A1_OSC_PREDIV";
+			};
+
+			CLK_S_A1_HS0: CLK_S_A1_HS0 {
+				#clock-cells = <1>;
+				compatible = "st,clkgena-divmux-c45-hs-0", "st,clkgena-divmux";
+
+				clocks = <&CLK_S_A1_OSC_PREDIV>,
+					 <&CLK_S_A1_PLL0 0>; /* PLL0 HS */
+
+				clock-output-names = "",
+						     "",
+						     "",
+						     "",
+						     "",
+						     "CLK_IC_DDR";
+			};
+
+			CLK_S_A1_HS1: CLK_S_A1_HS1 {
+				#clock-cells = <1>;
+				compatible = "st,clkgena-divmux-c45-hs-1", "st,clkgena-divmux";
+
+				clocks = <&CLK_S_A1_OSC_PREDIV>,
+					 <&CLK_S_A1_PLL0 1>; /* PLL0 LS */
+
+				clock-output-names = "";
+			};
+
+			CLK_S_A1_LS: CLK_S_A1_LS {
+				#clock-cells = <1>;
+				compatible = "st,clkgena-divmux-c45-ls", "st,clkgena-divmux";
+
+				clocks = <&CLK_S_A1_OSC_PREDIV>,
+					 <&CLK_S_A1_PLL0 1>; /* PLL0 LS */
+
+				clock-output-names = "";
+			};
+		};
+
+		/*
+		 * A9 PLL.
+		 *
+		 */
+		clockgenA9 {
+			reg = <0xfe9a0058 0x9C>;
+
+			CLOCKGEN_A9_PLL: CLOCKGEN_A9_PLL {
+				#clock-cells = <1>;
+				compatible = "st,stid127-a9-plls-c45", "st,clkgen-pll";
+
+				clocks = <&CLK_IFE_REF>;
+				clock-output-names = "CLOCKGEN_A9_PLL_ODF";
+			};
+		};
+
+		/*
+		 * ARM CPU related clocks.
+		 */
+		CLK_M_A9: CLK_M_A9 {
+			#clock-cells = <0>;
+			compatible = "st,stih415-clkgen-a9-mux", "st,clkgen-mux";
+			reg = <0xfe9a0058 0x4>;
+			clocks = <&CLOCKGEN_A9_PLL 0>, <&CLOCKGEN_A9_PLL 0>, <&CLK_S_A0_LS 15>, <&CLK_M_A9_EXT2F_DIV2>;
+		};
+
+		/*
+		 * ARM Peripheral clock for timers
+		 */
+		arm_periph_clk: CLK_M_A9_PERIPHS {
+			#clock-cells = <0>;
+			compatible = "fixed-factor-clock";
+			clocks = <&CLK_M_A9>;
+			clock-div = <2>;
+			clock-mult = <1>;
+		};
+
+		/*
+		 * Frequency synthesizers.
+		 *
+		 */
+		CLOCKGEN_TEL: CLOCKGEN_TEL {
+				#clock-cells = <1>;
+				compatible = "st,stid127-quadfs660-TEL", "st,quadfs";
+				reg = <0xfe910000 0x24>,
+					  <0xfe91001c 0x4>;
+
+				clocks = <&CLK_IFE_REF>;
+				clock-output-names = "CLK_FDMA_TEL",
+						     "CLK_ZSI",
+						     "CLK_ETH0",
+						     "CLK_PAD_OUT",
+						     "CLK_USB_SRC";	/* VCO Output */
+		};
+
+		CLOCKGEN_DOC: CLOCKGEN_DOC {
+				#clock-cells = <1>;
+				compatible = "st,stid127-quadfs660-TEL", "st,quadfs";
+				reg = <0xfef62000 0x24>,
+					  <0xfef6201c 0x4>;
+
+				clocks = <&CLK_IFE_REF>;
+				clock-output-names = "CLK_FP",
+						     "CLK_D3_XP70",
+						     "CLK_IFE",
+						     "CLK_TSOUT_SRC",
+						     "CLK_DOC_VCO";	/* VCO Output */
+			};
+
+		/*
+		 * CCM Module for TEL
+		 *
+		 */
+		CLOCKGEN_CCM_TEL: CLOCKGEN_CCM_TEL {
+				#clock-cells = <1>;
+				compatible = "st,stid127-ccm-A", "st,clkgen-ccm";
+				reg = <0xfe910060 0x4>;
+
+				clocks = <&CLOCKGEN_TEL 1>;
+				clock-output-names = "CLK_ZSI_TEL",
+						     "",
+						     "",
+						     "CLK_ZSI_APPL";
+		};
+
+		/*
+		 * CCM Module for USB
+		 *
+		 */
+		CLOCKGEN_CCM_USB: CLOCKGEN_CCM_USB {
+				#clock-cells = <1>;
+				compatible = "st,stid127-ccm-B", "st,clkgen-ccm";
+				reg = <0xfe910064 0x4>;
+
+				clocks = <&CLOCKGEN_TEL 4>;
+				clock-output-names = "",
+						     "",
+						     "",
+						     "CLK_USB_REF";
+		};
+
+		/*
+		 * CCM Module for LPC
+		 *
+		 */
+		CLOCKGEN_CCM_LPC: CLOCKGEN_CCM_LPC {
+				#clock-cells = <1>;
+				compatible = "st,stid127-ccm-D", "st,clkgen-ccm";
+				reg = <0xfe91006c 0x4>;
+
+				clocks = <&CLK_IFE_REF>;
+				clock-output-names = "",
+						     "",
+						     "CLK_THERMAL_SENSE",
+						     "CLK_LPC_COMMS";
+		};
+	};
+};

@@ -1,0 +1,578 @@
+* Mon Sep 29 2014 Pavan Goyal<pavan.goyal@st.com> - 1.87.2
+-[Bugzilla :56457] disable sysfs/debugfs usage on flags
+
+* Mon Jul 21 2014 Nidhi Chadha<nidhi.chadha@st.com> - 1.87.1
+-[Bugzilla :53888] customer name removal from change log
+
+* Thu Jul 10 2014 Nidhi Chadha<nidhi.chadha@st.com> - 1.87
+-[Bugzilla :53204] VIBE statistics no more working
+
+* Fri Jun 27 2014 Pavan Goyal  <pavan.goyal@st.com> - 1.86
+-[Bugzilla :45626] kernel oops during zapping btween SD and HD satellite channels in infra_queue.c:128
+
+* Wed Jun 25 2014 Pavan Goyal  <pavan.goyal@st.com> - 1.85
+-[Bugzilla :52847] Add flush support in stm_data_interface_get_push_sink interface
+
+* Mon Jun 16 2014 Pavan Goyal  <pavan.goyal@st.com> - 1.84
+-[Bugzilla :51557] Support of updating the attributes in registry
+-[Bugzilla :43506] [MEMSINK]: Dynamically change the mode of memsink
+-[Bugzilla :52391] sdp: Add tag name for secure data interface
+
+* Fri Jun 06 2014 Pavan Goyal  <pavan.goyal@st.com> - 1.83
+-[Bugzilla :51516] increase the tag size for adding symbolic link in sysfs
+-[Bugzilla :46275] introduce stm_data_interface_secure_sink
+
+* Thu May 22 2014 Pavan Goyal  <pavan.goyal@st.com> - 1.82
+-[Bugzilla :50700] Remove memsrc obj attributes in memsrc detach
+-[Bugzilla :48326] Ensure exit of node removal triggering task before node free
+
+* Wed May 07 2014 Pavan Goyal  <pavan.goyal@st.com> - 1.81
+-[Bugzilla :49787] update script to correctly take the stlinuxtv.ko dependency
+
+* Tue May 06 2014 Pavan Goyal  <pavan.goyal@st.com> - 1.80
+-[Bugzilla :35822] Fix checkpatch errors in INFRA(stm_registry, stm_event, stm_memsrcsink)
+
+* Mon Apr 28 2014 Pavan Goyal  <pavan.goyal@st.com> - 1.79
+-[Bugzilla :48326] [SDK2][SC 136931] Kernel oops during slow zapping in te_read_section_buffer
+
+* Thu Apr 17 2014 Pavan Goyal  <pavan.goyal@st.com> - 1.78
+-[Bugzilla :46423] Development of stm_data_interface_get_push_sink interface
+
+* Thu Apr 03 2014 Pavan Goyal  <pavan.goyal@st.com> - 1.77
+-[Bugzilla :47533] Removal of Klocwork warning
+-[Bugzilla :47629] Update param name for compliant coding rules
+
+* Mon Mar 24 2014 Pavan Goyal  <pavan.goyal@st.com> - 1.76
+-[Bugzilla :46172] Make thread priorities for all sub-systems tuneable
+-[Bugzilla :46577] Need an infra os function doing just kthread_should_stop()
+
+* Wed Mar 12 2014 Pavan Goyal  <pavan.goyal@st.com> - 1.75
+-[Bugzilla :43972] Crash in evt_mng_handle_evt() during channel change
+-[Bugzilla :42989] EVT_MAX_BITS_IN_UINT32 is wrongly defined as 31 in event_utils.c
+
+* Fri Feb 21 2014 Pavan Goyal  <pavan.goyal@st.com> - 1.74
+-[Bugzilla :44950] [sti310] [Infra base] infra base for Kernel STI-3.10-event
+
+* Fri Feb 21 2014 Pavan Goyal  <pavan.goyal@st.com> - 1.73
+-[Bugzilla :44950] [sti310] [Infra base] infra base for Kernel STI-3.10
+
+* Fri Feb 14 2014 Nidhi Chadha  <nidhi.chadha@st.com> - 1.72-1
+-[Bugzilla :44712] Removal of "stm_scr" and "stm_ci" from infrastructure repo
+-[Bugzilla :44757] Remove cec stkpi driver and test module from infrastructure
+-[Bugzilla :22796] NON_BLOCKING_IO is not supported in stm_memsrc infrastructure module
+
+* Fri Jan 10 2014 Nidhi Chadha  <nidhi.chadha@st.com> - 1.71-1
+-[Bugzilla :40009] [NSK2] stm_scr_transfer() does not report invalid procedure byte
+-[Bugzilla :41008] hang in stm_se_play_stream_detach during channel zapping
+-[Bugzilla :41265] [PM] [ASB][Cannes] - Scripts need updation for displaylink module
+-[Bugzilla :41859] Crash in registry_internal_get_node_info()
+-[Bugzilla :41978] [MEMSINK]: Pointer access before checking it's validity may crash the system
+-[Bugzilla :41987] [MEMSINK]: stm_memsink_pull_data() after calling stm_memsink_delete() will crash the system
+-[Bugzilla :42013] [INFRA:SCR] SCR porting to 3.10
+-[Bugzilla :42014] [INFRA:CI] CI port to 3.10
+-[Bugzilla :42016] [INFRA:CEC] CEC porting to 3.10
+-[Bugzilla :42026] [INFRA:wrapper] : wrapper porting to the 3.10
+
+* Wed Nov 20 2013 Nidhi Chadha  <nidhi.chadha@st.com> - 1.70-1
+-[Bugzilla :34338] timeout unit confusion stm_scr_transfer()
+-[Bugzilla :34352] SCR: allow CA to override default Di table
+-[Bugzilla :37534] CEC:H407: Failure in sending CEC broadcast message on Monaco/Cannes
+-[Bugzilla :39771] [STiH407] CEC timings fine tuning no more necessary
+-[Bugzilla :40425] Update of EPLD related flag checking procedure in DVBCI driver
+
+* Tue Nov 12 2013 Nidhi Chadha  <nidhi.chadha@st.com> - 1.69-1
+-[Bugzilla :38433] Additional checkpoint and correction in DVBCI driver code.
+-[Bugzilla :39006] INFRA : TREE_ROOT is horrible
+-[Bugzilla :39263] [SDK2.12][NSK2] incorrect reset-to-clock timing when deactivating non-responding card
+-[Bugzilla :39240] [NSK2] incorrect reset-to-clock timing when deactivating non-responding card
+-[Bugzilla :39264] [SDK2.12]Removed unused ca ops for CA3
+-[Bugzilla :39267] [SDK2.12] warning removal in scr
+-[Bugzilla :37522] [CTS] android.permission.cts.FileSystemPermissionTest#testAllFilesInSysAreNotWritable FAIL
+-[Bugzilla :39723] [DVB-CI ][Device Tree] Take doc/code review into account
+-[Bugzilla :39337] PM [ASB]-Scripts need updation for stm_display module
+
+* Fri Oct 18 2013 Nidhi Chadha  <nidhi.chadha@st.com> - 1.68-1
+-[Bugzilla :37785] SCR:proc entries added for interrupt and error information
+-[Bugzilla :38068] [PM] [ASB] : ASB scripts needed for Monaco
+-[Bugzilla :38395] [ORLY][SDK2.12] SmartCard Module Insertion
+
+* Wed Oct 09 2013 Nidhi Chadha  <nidhi.chadha@st.com> - 1.67-1
+- [Bugzilla :36295] Infra SCR need to handle 3V/5V switching
+- [Bugzilla :36411] Fix for Initialization and RAW Data transfer fail issue on few non CI+ cards
+- [Bugzilla :37224] Data read fail for DVBCI plus card
+- [Bugzilla :37864] Fix for Buffer negotiation implementation defect
+
+* Fri Sep 20 2013 Nidhi Chadha  <nidhi.chadha@st.com> - 1.66-1
+- [Bugzilla :36043] [CTS - android.media] kernel oops in rt_mutex_unlock when running media cts tests
+- [Bugzilla :36113] SCR: support of new ISO test scripts v 2.3.0 in smartcard tests
+- [Bugzilla :36231] Infrastructure build fails on B2120 and B2089 as there is not arch_modprobe_func for DT
+- [Bugzilla :36475] SCR: block waiting time calculation is incorrect for T=1 protocol
+- [Bugzilla :36490] SCR: introduce delay in deactivation sequence for CA
+- [Bugzilla :36692] SCR:Correct the T=1 CGT time as per CA2 requirement
+- [Bugzilla :36784] SCR: correct sema signalling in error scenerio inside asc
+- [Bugzilla :36886] stm_wrapper:Add a wrapper function for micorsec delay
+
+* Fri Sep 13 2013 B harat Jauhari <bharat.jauhari@st.com> - 1.65-1
+- [Bugzilla :36530] [cec] logical address allocation issue
+- [Bugzilla :36233] [event] code hangs while calling stm_event_get_wait_queue()
+- [Bugzilla :36200] ASB scripts are broken on SDK2-11
+- [Bugzilla :36199] [event][tests] add tests cases to test stm_event_get_xxx() API
+- [Bugzilla :36197] [cec][tests] add new test cases for abort and lpm tests
+- [Bugzilla :36075] [INFRA:SCR]Poll support required on Smart Card event at user Level
+- [Bugzilla :36050] [DVBCI] Coverity Bug fixes
+- [Bugzilla :35979] [INFRA: SCR] semaphore wait not handling kernel signals properly
+- [Bugzilla :35911] SCR: wrong data bits stored in asc handle
+- [Bugzilla :35884] SCR: introduce delay between last ATR byte to first reader's write (IBWT)
+- [Bugzilla :35744] SCR: allow CA to disable auto parity rejection
+- [Bugzilla :35728] SCR: not able to get asc fifo size from SCR DT node
+- [Bugzilla :34847] [INFRA]: module_rm.sh script keeps on unloading modules irrespective of rmmod failures
+
+* Tue Aug 27 2013 Nidhi Chadha <nidhi.chadha@st.com> - 1.64-1
+- [Bugzilla :35306] Zero Coverity Warning
+- [Bugzilla :35528] [INFRA:Smart card] CWT timeout happening while sending command
+- [Bugzilla :35522] ASC error interrupt handling should be revisited
+- [Bugzilla :35513] smart card data write should be atomic
+- [Bugzilla :35491] [cec][pm] dont enable TX interrupt while resuming
+- [Bugzilla :35490] [infra][tests] test framework has memory leakage
+- [Bugzilla :35589] [cec][hw] disable RX_SOM interrupt after first RX_SOM interrupt is received
+- [Bugzilla :35588] [CEC][Probe] array size to store the cec device name is too short
+
+* Sun Aug 25 2013 Bharat Jauhari <bharat.jauhari@st.com> - 1.63-1
+- [Bugzilla :34485] infrastructure scripts should not depend on bash
+- [Bugzilla :35499] [cec][pm] module doesnt disable pm_runtime at exit
+- [Bugzilla :35498] [cec][dt] sysconf resource claimed should be released at exit of the module
+- [Bugzilla :34734] [Infra:SCR] SC reading Wrong data in interrupt
+- [Bugzilla :34435] [Registry] Infinite Loop on linked list of entries
+- [Bugzilla :33996] [SmartCard] Ioctl should be defined in a header, not C files
+- [Bugzilla :33378] [MW:Nagra] SmartCard requirements specific to OPENTV5 project
+
+* Wed Aug 14 2013 Nidhi Chadha <nidhi.chadha@st.com> - 1.62-1
+- [Bugzilla :34664] To add DT support in DVB CI driver for Monaco Platform
+- [Bugzilla :31293] Addition of a source Get/Set control API for memsink
+- [Bugzilla :34687] [cec][tests] remove dependency from vibe modules for HPD support
+
+* Thu Aug 01 2013 Nidhi Chadha <nidhi.chadha@st.com> - 1.61-1
+- [Bugzilla :33538] [DT][CI] : Add DT support in CI driver
+- [Bugzilla :33941] [SCR Test App] User Interface file name Correction
+- [Bugzilla :33665] renaming all Infrastructure threads to facilitate CPU usage measurements report
+- [Bugzilla :34067] [PM][ASB][Scripts] ASB scripts should display clock diff
+- [Bugzilla :34454] [PM][HPS][IR] increase the tolerance level for IR key parsing
+- [Bugzilla :33954] [LX clocks] Handling LX clocks, Move to DT clock handling
+- [Bugzilla :33610] Modification required for automating HPS using test framework
+
+* Sun Jul 21 2013 Bharat Jauhari <bharat.jauhari@st.com> - 1.60-1
+- [Bugzilla :34068] [nvm] move nvm source code a to new git repo
+- [Bugzilla :34067] [PM][ASB][Scripts] ASB scripts should display clock diff
+- [Bugzilla :32549] [DT][SCR] : Add DT support in smart card driver
+- [Bugzilla :31458] [MW:Nagra] Return value of calling stm_cec_send_msg()
+- [Bugzilla :29576] [DT] [CEC]: DT support for CEC driver on all DT enabled boards
+
+* Tue Jul 02 2013 Nidhi Chadha <nidhi.chadha@st.com> - 1.59-1
+- [Bugzilla :32592] [SCR] semaphore wait do not handle kernel signals correctlly
+- [Bugzilla :32594] [scr] user space test code doesn't comply with latest header st_scr.h
+- [Bugzilla :32430] Erroneous error print with registry KPI stm_registry_get_connection()
+- [Bugzilla :32595] Warnings in infrastructure test module(event, scr)
+- [Bugzilla :32670] [nvm] add support to update keys in nvm db
+- [Bugzilla :32672] [Coverity] [os wrapper] timeout value in sempahore wait cannot be unsigned
+
+* Mon Jun 24 2013 Bharat Jauhari <bharat.jauhari@st.com> - 1.58-1
+- [Bugzilla :32358] [scr][tests][user space] cold/warm reset doesn't work from user space
+- [Bugzilla :32346] [nvm] code updates to support eCM read requests
+- [Bugzilla :32345] [pm][scripts] add test case for CEC
+- [Bugzilla :32344] [pm][scripts] update device path
+- [Bugzilla :32341] [pm][asb][scripts] update device list for each profile
+- [Bugzilla :32326] [arch][scr] compilation error for b2092
+- [Bugzilla :32324] [scr][tests][scripts] update test scripts for raw read/write use case
+- [Bugzilla :32321] [scr][tests] multi-instance not supported
+- [Bugzilla :32318] [scr][tests] raw read fails as buffer_size is of char type
+- [Bugzilla :32363] [MSS][tests][scripts]: Memory Source sink test script update
+- [Bugzilla :31957] [MSS][tests]: Add iomode capability in test producer module for updated pull interface
+- [Bugzilla :31956] [MSS][tests]: Add test support for kernel memory type in MSS test module
+- [Bugzilla :32495] [Event][Tests] use case to test event from an interrupt handler
+- [Bugzilla :31560] [INFRA]: module_rm.sh unable to unload all the modules
+
+* Wed Jun 05 2013 Nidhi Chadha <nidhi.chadha@st.com> - 1.57-1
+- [Bugzilla :31443] Fix Warnings in cec and power in tag infrastructure-1.56-1
+- [Bugzilla :26492] Issue with STM_EVENT APIs begin called from an interrupt context
+- [Bugzilla :31366] [INFRA:POWER] test code for wakeup reason config
+- [Bugzilla :31419] [CEC] change the device name to be compliant with other kernel devices
+- [Bugzilla :31420] [cec] do not disable the h/w during abort
+- [Bugzilla :31509] Remove obsolete Doxyfile from MSS
+- [Bugzilla :30716] DVBCI+ "Data Available" Interrupt issue
+- [Bugzilla :30872] Fix stm_ci driver formatting errors
+- [Bugzilla :25966] Redesign of data pull interface
+- [Bugzilla :31236] [INFRA:CEC] CEC as wakeup reason
+- [Bugzilla :28605] EPLD reset logic changed for DVB-CI on B2003C INFRA_CommonInterface
+- [Bugzilla :31583] [NVM] read fdt values after proper conversion
+- [Bugzilla :31580] [NVM] all read APIs should take buffer size as input
+- [Bugzilla :31574] [NVM] write API should allow instant flushing of data
+- [Bugzilla :31573] [NVM] build support for flash wrapper code
+- [Bugzilla :31484] [NVM] stm_nvm_open does not read the root database size correctly
+- [Bugzilla :31483] [NVM: Tests] development of test application for nvm library
+
+* Mon May 27 2013 Bharat Jauhari <bharat.jauhari@st.com> - 1.56-1
+- [Bugzilla :30701] Add debug mechanism in Memorysrcsink
+- [Bugzilla :30618] New Infra Test Framework :Infra event test hangs
+- [Bugzilla :30316] [pm/arch] Move lx clock device registration to platform code
+- [Bugzilla :30099] [Arch:StiH407] Add support for Monaco SOC
+- [Bugzilla :29816] configuration for swts injection
+- [Bugzilla :29396] Adding HPD support and various modifications for application tests
+- [Test Scripts] Updates in test scripts
+
+* Fri May 17 2013 Nidhi Chadha <nidhi.chadha@st.com> - 1.55-1
+- [Bugzilla :30100] Add support to pass arguments for infra test cases
+- [Bugzilla :29554] Warning from infrastructure KOs while installing stlinuxtv modules
+- [Bugzilla :22584] Support for vmalloc scatterlist in memsink and memsrc
+- [Bugzilla :30220] [INFRA:SCR] Protocol negotiation flawed
+- [Bugzilla :30109] [INFRA:SCR] User space test application
+
+* Wed May 08 2013 Bharat Jauhari <bharat.jauhari@st.com> - 1.54-1
+- [Bugzilla :29991] [INFRA:SCR] code violating the linux coding guidelines
+- [Bugzilla :29394] logical address allocation not correctly handled
+- [Bugzilla :28491] [CPS] Implementation with subsystem supporting CPS functionality, CEC and SCR
+
+* Fri Apr 26 2013 Nidhi Chadha <nidhi.chadha@st.com> - 1.53-1
+- [Bugzilla :29811] [PM] Script update to install PM related KOs by default
+- [Bugzilla :24117] Create a target specific RPM to install scripts on the target fs
+- [Bugzilla :23807] A script to unload all the STKPI modules
+
+* Sat Apr 13 2013 Bharat Jauhari <bharat.jauhari@st.com> - 1.52-1
+- [Bugzilla :29258] [PM][HPS][IR] IR parser should unregister its notify callback on module exit
+- [Bugzilla :29145] [INFRA:OS] Changing the semaphore implementation to absolute timeout value
+- [Bugzilla :24842] [NDS-NSK2 Certification]:Query regarding the I/O Transfer at C4/C8 Pin
+- [Bugzilla :29273] H415 Smartcard Uart config are wrong.
+- [Bugzilla :15462] Smart card reader cardsim T=1 tests (1850-1970) failing with HZ < 1000
+- Added test scripts to the sub system test application
+- Moved the test app code to seperate source directory.
+
+* Fri Apr 05 2013 Nidhi Chadha <nidhi.chadha@st.com> - 1.51-1
+- [Bugzilla :28509] [INFRA:SCR] T1 test application hangs at HZ=100
+- [Bugzilla :28088] Adding new data interface (async push/release): SE -> Adaptation
+- [Bugzilla :29073] [PM][LX] disable st231 GP clocks for B2116
+- [Bugzilla :28617] [CEC:B2105] CEC register address is wrong
+- [Bugzilla :28631] incorrect error msg when stm_registry_get_connection() fails
+- [Bugzilla :29014] Fix checkpatch.pl errors and warnings in MSS 
+- [Bugzilla :29095] [PM][HPS][IR] early parser for NEC/STM PVR remote when system is in HPS mode
+
+* Thu Mar 14 2013 Bharat Jauhari <bharat.jauhari@st.com> - 1.50-1
+- [Bugzilla :28279] stm_common.h includes Linux kernel headers without C++ protection
+- [Bugzilla :28278] [OS Wrapper] Use interruptable mutex
+- [Bugzilla :28263] [INFRA:CI] CI support on STIH416-B2000
+- [Bugzilla :28262] [Infra] coverity reported bugs for release 1.50-1
+- [Bugzilla :28261] [NVM] Add pkg_config file for nvm library
+- [Bugzilla :28149] compile error: inlining failed in call to always_inline: function body not available
+- [Bugzilla :26300] infrastructure NVM makefile issues
+
+* Mon Mar 11 2013 Bharat Jauhari <bharat.jauhari@st.com> - 1.49-1
+- [Bugzilla :27854] [INFRA:power] Gpio support for wakeup device
+- [Bugzilla :27759] Avoid warning from stm_common.h in user-space
+- [Bugzilla :27739] Calling stm_memsrc_detach on a memsrc that is not attached causes Oops
+- [Bugzilla :27357] SCR driver returns unexpected baud rate
+- [Bugzilla :27240] Investigate results of Coverity on ML35 in INFRA code
+- [Bugzilla :27053] [INFRA] Support for H315/B2116 Platform in SDK2
+- [Bugzilla :26602] Query for NSK2 certification: SCR returns WWT in which unit when using stm_scr_get_control() API ?
+
+* Sun Feb 24 2013 Bharat Jauhari <bharat.jauhari@st.com> - 1.48-1
+- [Bugzilla :21019] [MEMSINK]: notify works for all mode except BLOCKING
+- [Bugzilla :24018] LPM support in CEC driver
+- [Bugzilla :24114] Add sysfs store_attribute callback in stm_registry
+- [Bugzilla :26636] memsink API exits without cleaning the registry instance
+- [Bugzilla :27027] Active standby: System is crashing when Idle Profile standby is requested
+
+* Fri Feb 01 2013 Nidhi Chadha <nidhi.chadha@st.com> - 1.47-1
+- [Bugzilla : 26534] PIOs to be updated for H416
+- [Bugzilla : 20810] Gap Analysis : Registry API document and source code
+- [Bugzilla : 26591] [PM][Scripts] Enable verbose for rmmod
+
+* Thu Jan 24 2013 Nidhi Chadha <nidhi.chadha@st.com> - 1.46-1
+- [Bugzilla: 26306] the fix to bug #25766 prevents stmfb from loading
+
+* Wed Jan 23 2013 Nidhi Chadha <nidhi.chadha@st.com> - 1.45-1
+- [Bugzilla : 25766 ]   Kernel Crash observed in overnite long duration Zap
+
+* Sat Jan 19 2013 Bharat Jauhari  <bharat.jauhari@st.com> - 1.44-1
+- [Bugzilla : 26130]  Initial release of NVM library
+
+* Thu Jan 17 2013 Nidhi Chadha <nidhi.chadha@st.com> - 1.43-1
+- [Bugzilla : 23795]  Optimization-of-registry_xxx-functions
+- [Bugzilla : 25689]  CDI: Event Mask Update seems to be not working
+- [Bugzilla : 25920]  stm_event ko hangs on exit
+- [Bugzilla : 25924]  Module removal script breaks the telnet connection
+- [Bugzilla : 25936]  Release function missing in platform_device for CI
+
+* Fri Jan 11 2013 Nidhi Chadha <nidhi.chadha@st.com> - 1.42-1
+- [Bugzilla : 25027]   [MW: NAGRA] Writing command to Smartcard with T1 protocol fails
+- [Bugzilla : 25285]   Smart Card I/O command fails after setting guard time to 22 etu
+- [Bugzilla : 25286]  *New* infra driver for Common interface "stm_ci"
+
+* Wed Dec 19 2012 Nidhi Chadha <nidhi.chadha@st.com> - 1.41-1
+- [Bugzilla : 25122]  B2105-board-support-in-SDK2
+- [Bugzilla : 25284]  MSS test module update
+- [Bugzilla : 25341]  [Smart card]smart card code not linux compliant
+
+* Thu Nov 29 2012 Bharat Jauhari <bharat.jauhari@st.com> - 1.40-1
+- [Bugzilla: 24795] CEC support for ORLY2
+- [Bugzilla: 24781] Record all access to the subscriber control structure
+- [Bugzilla: 24780] Single step NDS-NSK test app
+- [Bugzilla: 24727] Notification of an unwanted event in case of multi-subscription
+- [Bugzilla: 24629] Default Reset frequency to be internally set by the scr driver when compiled in NDS CA mode
+- [Bugzilla 23382] __must_check directive not added for all the MSS API
+
+* Mon Nov 19 2012 Bharat Jauhari <bharat.jauhari@st.com> - 1.39-1
+- [Bugzilla: 24278] stm_memsrc calls push interface disconnect handler with wrong arguments
+- [Bugzilla: 23837] [NDS-NSK2 Certification]I/O transfer not working at 4.5 Mhz working Frequency
+
+* Thu Nov 08 2012 Bharat Jauhari <bharat.jauhari@st.com> - 1.38-1
+- [Bugzilla: 24129] Add support for Orly2
+- [Bugzilla: 24081] MSS test module and scripts updation for API test
+- [Bugzilla: 24080] Issue in MSS test module unload/load
+- [Bugzilla: 24025] stm_power/scripts folder need to be updated
+- [Bugzilla: 24019] LPM support in SCR driver
+- [Bugzilla: 23996] Reset does not work for some smart cards on b2020 board
+- [Bugzilla: 23552] stm_registry_get_attribute error in SDK2-06.5
+- [Bugzilla: 23516] CDI: stm_te_api.te_read_section_buffer() () - Notify sink failed (-1)
+- [Bugzilla: 22111] SCR driver claims 3V/5V gpio on b2000 but doesn't support voltage changes
+
+* Sun Oct 28 2012 Bharat Jauhari <bharat.jauhari@st.com> - 1.37-1
+- [Bugzilla: 18984] stm_memsink registers STM_DATA_INTERFACE_PUSH, but not implemented
+- [Bugzilla: 21361] stm_registry_remove_object does not return -EBUSY when object has connection
+- [Bugzilla: 22932] [VSOC HCE] Add support for VSOC platform execution (targets STiH416)
+- [Bugzilla: 23470] Script to unload all STKPI kos
+- [Bugzilla: 23471] Compilation error in CA specific file in the scr driver
+- [Bugzilla: 23806] Event Manager async thread retrieves event without subscriber validation
+- [Bugzilla: 22814] MSS Test module does not check data transfer validity in user space
+
+* Fri Oct 05 2012 Bharat Jauhari <bharat.jauhari@st.com> - 1.36-1
+- [Bugzilla: 22857] Incorrect names of the devices in the profile scripts
+- [Bugzilla: 22856] Increase the array size of the macro INFRA_MAX_DEV_NAME
+- [Bugzilla: 22814] MSS Test module does not check data transfer validity in user space
+- [Bugzilla: 22764] External API should not allow parenting from STM_REGISTRY_ROOT
+- [Bugzilla: 22763] memsource and memsink don't follow normal type/instance registry conventions
+- [Bugzilla: 20962] STProbe driver implementation
+
+* Mon Sep 17 2012 Bharat Jauhari <bharat.jauhari@st.com> - 1.35-1
+- [Bugzilla: 16738] Add Debug Prints in Registry
+- [Bugzilla: 17931] Introduce __must_check for all Infrastructure STKPI functions
+- [Bugzilla: 22373] stm_cec_new crashes for 7108
+- [Bugzilla: 22374] Invalid state assignment while invoking the event handler
+- [Bugzilla: 22460] T0 test fails due to improper SCR reset after class change
+- Code fixes repotred by Coverity
+- Removed unwanted whitespaces
+
+* Wed Sep 05 2012 Bharat Jauhari <bharat.jauhari@st.com> - 1.34-1
+- [Bugzilla: 16313] Memory Source Sink Test app is not valid any more
+- [Bugzilla: 19256] Smart Card clock frequencies very inaccurate
+- [Bugzilla: 21220] Events missed while using wait_event_freezable()
+- [Bugzilla: 22037] Wrong definition of .disconnect function of sink pull interface in MSS
+- [Bugzilla: 22058] CPS : Lirc support for wakeup
+- [Bugzilla: 22073] no revision number available for infrastructure sub system
+
+* Sat Aug 25 2012 Bharat Jauhari <bharat.jauhari@st.com> - 1.33-1
+- [Bugzilla: 21323] Class change support for the SCR for b2000
+- [Bugzilla: 21324] Class change support for the SCR on New man
+- [Bugzilla: 21640] [Android] stm_object_h is declared in 2 files
+- [Bugzilla: 21758] Event handler not called after an event is raised
+- [Bugzilla: 21801] Wait to complete the event reporting before deletion
+- [Bugzilla: 21802] updated the print mechanism in event manager
+
+* Tue Aug 07 2012 Bharat Jauhari <bharat.jauhari@st.com> - 1.32-2
+- [spec] Correction in the SPEC from the release 1.32-1. The bugzilla entries were wrong.
+
+* Mon Aug 06 2012 Bharat Jauhari <bharat.jauhari@st.com> - 1.32-1
+- [Bugzilla: 20629] Please add support for B2020 (STiH415-ADI) in infrastructure/stm-arch for the smartcard driver
+- [Bugzilla: 20759] stm_memsink_pull_data return a positive value (size of block list) in case of success
+- [Bugzilla: 20974] Active standby fix
+- [Bugzilla: 21354] Event database is reset while doing lookup of events
+- [Bugzilla: 21355] Incorrect subscription while accessing the event database
+
+* Thu Jul 12 2012 Bharat Jauhari <bharat.jauhari@st.com> - 1.31-1
+- [Bugzilla: 19848] ON SDK2, with Orly, CEC certification is failing
+- [Bugzilla: 20250] Smart card - Resolve gaps between STKPI document and code
+- [Bugzilla: 20254] CEC - Resolve gaps between STKPI document and code
+- [Bugzilla: 20255] [Memsink]: pull interface is not based on mode property of memsink
+- [Bugzilla: 20443] SCR related updates for Newman
+
+* Mon Jun 25 2012 Bharat Jauhari <bharat.jauhari@st.com> - 1.30-1
+- [Bugzilla: 19091] BUG: key 9d438194 not in .data
+- [Bugzilla: 19389] stm_event_wait returns -ETIME instead of -ETIMEDOUT
+- [Bugzilla: 19390] The timeout value in stm_event_wait should be an absolute timeout
+- [Bugzilla: 19391] Registry test app is not fully functional
+- [Bugzilla: 19537] Clock change frequency support added
+- [Bugzilla: 19539] Support of user interface added
+- [Bugzilla: 19540] SCR interrrupt and pio name fix
+- [Bugzilla: 19541] Opentv support for uart params
+- [Bugzilla: 19542] CA specific code enhancements and bug fix
+- [Bugzilla: 19543] T0 timeout fix in scr test application
+- [Bugzilla: 19579] Registry attribute data not getting dynamically update
+- [Bugzilla: 19622] Newman specific changes for CEC
+- [Bugzilla: 19636] stm_memsink_test_for_data is broken
+- [Bugzilla: 19724] Remove the STPIO based code
+- [Bugzilla: 19941] insmod for arch ko fails for 7108
+- [Bugzilla: 19943] [MSS] wrong value returned for the total injected data
+- [Bugzilla: 19982] Memsink: calling notify callback on memsink causes bad state
+
+* Mon May 21 2012 Bharat Jauhari <bharat.jauhari@st.com> - 1.29-1
+- [Bugzilla: 17304] memsink/memsrc should avoid doing copy_from_user & copy_to_user
+- [Bugzilla: 17767] Memory sink doesn't implement thread synchro for common data protection
+- [Bugzilla: 19121] CEC test application crashes due to a missed mutex unlock
+- [Bugzilla: 19122] CEC Test application enhancement for certification test suite
+- [Bugzilla: 19123] remove printk from stm_event driver
+
+* Wed Apr 25 2012 Bharat Jauhari <bharat.jauhari@st.com> - 1.28-1
+- [Bugzilla: 16827] STM_MEMSINK_EVENT_DATA_AVAILABLE event notification seems to be disabled in memsink.c
+- [Bugzilla: 16918] [MW:NAGRA] STM_MEMSINK: need an event to notify buffer overflow
+- [Bugzilla: 17895] Power module support for LX in Infra
+- [Bugzilla: 18285] MSS code cleanup
+- [Bugzilla: 18345] CA support
+- [Bugzilla: 18346] Protocol negotiation bug fix
+- [Bugzilla: 18500] Zero History bytes bug fix
+- [Bugzilla: 18508] Profiles for active standby needed on target
+- [Bugzilla: 18540] Registry test application made modular
+- [Bugzilla: 18589] First release of CEC driver
+
+* Tue Mar 27 2012 Bharat Jauhari <bharat.jauhari@st.com> - 1.27-1
+- [Bugzilla: 17874] stm_event_wait returns after probing for events
+
+* Tue Mar 27 2012 Bharat Jauhari <bharat.jauhari@st.com> - 1.26-1
+- [Bugzilla: 17647] The stm_memsink_pull_data() can lead to a crash in case of error returned by the source pull function
+- [Bugzilla: 17717] Kernel crash due to duplicate entry in the sysfs
+- [Bugzilla: 17726] stm_memsink_detach doesn't disconnect correctly and allow stm_memsink_pull_data that leads to a crash
+- [Bugzilla: 17764] stm_memsink_pull_data() doesn't return correct error code when connection not established
+- [Bugzilla: 17776] Bug fix for smart card(SCR)
+- [Bugzilla: 17818] warning in 7108 compilation for scr code
+- Removed warnings from smart code.
+- Removed vendor specific code from smart card source code.
+
+* Fri Mar 16 2012 Bharat Jauhari <bharat.jauhari@st.com> - 1.25-1
+- [Bugzilla: 16860] Need to reduce size of the BOUNCE_BUFFER used for memsrc/memsink in order to be kmalloc allocable
+- [Bugzilla: 17197] memsrc registry instance are stored at stkpi root instead of below memsource
+- [Bugzilla: 17376] stm_result_t has been included in stm_common.h
+- [Bugzilla: 17428] infrastructure build system is suboptimal
+- [Bugzilla: 17607] Update stm_scr driver as per the SCR STKPI doc V0.10
+- [Bugzilla: 17608] Update ASC driver as per STKPI API style
+
+* Fri Feb 24 2012 Bharat Jauhari <bharat.jauhari@st.com> - 1.24-1
+- [Bugzilla: 17127] Compile error for adi7108v4 platform
+
+* Wed Feb 22 2012 Bharat Jauhari <bharat.jauhari@st.com> - 1.23-1
+- [Bugzilla: 17022] Enhancement in Smart card for Shark
+- Updated Makefiles to build test application automatically
+- Created script to load infrastrcuture test objects
+
+* Wed Feb 01 2012 Bharat Jauhari <bharat.jauhari@st.com> - 1.22-1
+- [Bugzilla: 15701] stm_memsrc -> stm_memsink results in only a single connection (there is no back link)
+- [Bugzilla: 16209] Memory sink does not support capture to kernel memory
+- [Bugzilla: 16289] [memsink] No way currently to check for available data (targetting poll syscall)
+- [Bugzilla: 16312] Memory Source & Sink have conflicting types causing build errors
+- [Bugzilla: 16474] Kernel null pointer dereference when decode live channel
+
+* Mon Jan 16 2012 Bharat Jauhari <bharat.jauhari@st.com> - 1.21-1
+- [Bugzilla: 16144] stm_event_subscription_delete()+stm_event_wait() hangs
+- [Bugzilla: 16240] Build warnings are to be removed targeting SDK2-04: Infrastructure
+- [Bugzilla: 16248] Reference to "Shark" or "Havana" to be removed from the code for SDK2-04: Infrastructure
+
+* Wed Dec 21 2011 André Draszik <andre.draszik@st.com> - 1.20-1
+- split rpmbuild specific makefile parts out into own makefile
+
+* Tue Dec 20 2011 Bharat Jauhari <bharat.jauhari@st.com> - 1.19-1
+- [Bugzilla: 15701] stm_memsrc -> stm_memsink results in only a single connection (there is no back link)
+
+* Mon Dec 19 2011 Bharat Jauhari <bharat.jauhari@st.com> - 1.18-1
+- [Bugzilla: 15823] Smoketest is able to trigger kernel crash
+
+* Fri Dec 09 2011 Bharat Jauhari <bharat.jauhari@st.com> - 1.17-1
+- [Bugzilla: 15682] Introduce API inconsistency between memsink/memsrc documentation and code
+
+* Mon Dec 05 2011 Bharat Jauhari <bharat.jauhari@st.com> - 1.16-1
+- [Bugzilla: 15412] Linux-3.1: Infrastructure update required for Linux-3.1 compile
+
+* Tue Nov 22 2011 Bharat Jauhari <bharat.jauhari@st.com> - 1.15-1
+- [Bugzilla: 15377] Timing improvements for Smart Card protocol handling
+
+* Sun Nov 20 2011 Bharat Jauhari <bharat.jauhari@st.com> - 1.14-1
+- [Bugzilla: 15309] Update data interfaces for use between shark components
+
+* Fri Nov 18 2011 Bharat Jauhari <bharat.jauhari@st.com> - 1.13-1
+- [Bugzilla: 14477] Basic support for SMART CARD in INFRASTRUCTURE module
+- [Bugzilla: 14754] Handle timeout using HZ rather than 1000
+
+* Wed Nov 09 2011 Bharat Jauhari <bharat.jauhari@st.com> - 1.12-1
+- [Bugzilla: 14776] STKPI stm_error_handler type definition is missing
+
+* Tue Oct 25 2011 André Draszik <andre.draszik@st.com> - 1.11-1
+- [Bugzilla: 14903] spec file update needed
+
+* Fri Sep 30 2011 Bharat Jauhari <bharat.jauhari@st.com> - 1.10-1
+- [Bugzilla: 14173] stm_registry_get_connection causes bad dereference if connection does not exist
+- [Bugzilla: 14204] [Orly] - A new sysfs bug from stm_registry_add_instance
+
+* Mon Sep 12 2011 Bharat Jauhari <bharat.jauhari@st.com> - 1.9-1
+- [Bugzilla: 14041] [registry] strncpy bug in stm_registry_add_connection
+
+* Mon Sep 12 2011 Bharat Jauhari <bharat.jauhari@st.com> - 1.8-1
+- [Bugzilla: 13960] [INFRASTRUCTURE] crash while inserting stmfb on havana release 20110826
+- [Bugzilla: 14097] [MemSrcSink] Mismatch in spin lock and unlock
+
+* Fri Aug 19 2011 Bharat Jauhari <bharat.jauhari@st.com> - 1.7-1
+- [Bugzilla: 13434] [MEMSRCSINK] add push,pull block
+- [Bugzilla: 13729] Coverity bug fixes for INFRASTRUCTURE modules
+- [Bugzilla: 13781] [Event Manager] Support for Asynchronous Callback
+
+* Tue Aug 16 2011 Bharat Jauhari <bharat.jauhari@st.com> - 1.6-1
+- [Bugzilla: 13701] Minor fixes in the wrapper code
+- [Bugzilla: 13700] Updation of event test app
+- [Bugzilla: 13699] Deletion of subscription while a wait has been issued on that susbcription
+- [Bugzilla: 13609] stm_event_wait() returns with previously captured event
+
+* Wed Aug 03 2011 Bharat Jauhari <bharat.jauhari@st.com> - 1.5-1
+- [Bugzilla: 13492] stlinux24-host-infrastructure-source rpm depends on target filesystem
+
+* Thu Jul 28 2011 Bharat Jauhari <bharat.jauhari@st.com> - 1.4-1
+- [Bugzilla: 13128] How to I determine the type of an object via sysfs?
+- [Bugzilla: 13204] Incorrect specification of stm_registry_get_object_tag
+- [Bugzilla: 13205] registry: Connection soft-links point to wrong place
+- [Bugzilla: 13208] registry: cat does not work on object attributes
+- [Bugzilla: 13385] Adding Support for ARM Build in Infra
+- [Bugzilla: 13416] Memory Source Sink code change due to Registry API change
+
+* Mon Jul 18 2011 Bharat Jauhari <bharat.jauhari@st.com> - 1.3-1
+- [Bugzilla: 13098] [EVENT MANAGER] Compliance with API doc v1.0
+- [Bugzilla: 13143] Debug Prints for evt test
+- [Bugzilla: 13159] Memory leakage fix in event manager
+- [Bugzilla: 13160] minor fixes in the evt test code
+
+* Thu Jul 14 2011 Bharat Jauhari <bharat.jauhari@st.com> - 1.2-1
+- [Bugzilla: 12866] [MEMSRCSINK] add Non-blocking push/pull
+- [Bugzilla: 12887] [MEMSRCSINK] running test crash the kernel
+- [Bugzilla: 13017] [MEMSRCSINK] follows new API from STKPI_MemorySourceSink_v0.5
+- [Bugzilla: 13090] stm_common.h cannot be included from C++ code
+- [Bugzilla: 13099] Remove unimportant debug messages and definations
+- [Bugzilla: 13132] Using parent argument causes registry corruption
+- [Bugzilla: 13135] Infrastructure RPM is incorrectly named
+- [Bugzilla: 13142] Support for building infra tests through havana build
+- [Bugzilla: 13161] Memory leakage fix in registry
+- [Bugzilla: 13162] new test case added for registry
+
+* Tue Jul 12 2011 Daniel Thompson <daniel.thompson@st.com> - 1.1-1
+- [Bugzilla: 12471] Add memory source memory sink in infra repository
+- [Bugzilla: 12478] Add rpm build for infra tree
+- [Bugzilla: 12495] Unable to use the current makefile in havana_build
+- [Bugzilla: 12597] Memsrcsink doesn't use the correct print function
+- [Bugzilla: 12592] memory src sink minor correction after review
+- [Bugzilla: 12589] Update internal trace system
+- [Bugzilla: 12603] Unknown symbol error when using STM_REGISTRY_TYPES and STM_REGISTRY_INSTANCES
+- [Bugzilla: 12605] Update Infra SPEC File
+- [Bugzilla: 12626] update clean rules in infrastructure makefile
+- [Bugzilla: 12797] [MEMSINK] cleaner variable initialization
+- [Bugzilla: 12798] [MEMSRCSINK] remove useless code
+- [Bugzilla: 12799] [MEMSINK] should manage the TERM and KILL signals
+- [Bugzilla: 12800] [MEMSRCSINK] code cleanup
+- [Bugzilla: 12869] [WRAPPER] Removal of BOOL definition in stm_common.h
+- [Bugzilla: 12870] [MEMSINK] remove unused variable
+- [Bugzilla: 12919] [REGISTRY] Error return from the API stm_registry_get_attribute
+- [SPEC] Renamed infra to infrastructure in the SPEC file and added host prefix
+
+* Tue Jun 14 2011 Bharat Jauhari<bharat.jauhari@st.com> - int1-1
+- Initial delivery of the Infrastructure package.
+- Contains first version of Event manager, Regsitry manager , Memory Source/Sink
+

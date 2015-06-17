@@ -1,0 +1,24 @@
+- midlevel:
+H remove *fallback memory allocation functions once the hw_params stuff is finished
+H change defaults for Wave volume and DAC/ADC volume
+H add nonblock ioctl for rawmidi
+M add schedule call in all loop that may last more than 1 ms (search udelay/mdelay)
+M add master/divisor to timer
+M add configuration parser for OSS PCM (and perhaps mixer) emulation code
+M add the __setup code to all modules (including midlevel ones)
+L lock, grant and revoke ioctls (not available to application I propose)
+L nonblocking async mode (with requests queue)
+L check multithread safeness wrt at least read/write
+L extend the use of __init and __exit to all initialization code wherever it is
+L clean endianness stuff
+L add work_ptr (to think about)
+
+- lowlevel:
+M create an USB audio driver
+M reduce prepare path (a lot of stuff may be moved to hw_params) for faster xrun recovery
+L ICE1712 - fix consumer part PCM/AC'97 code - Hoontech Envy24 DSP (Jaroslav)
+L CS4236 - test the half duplex (one DMA) settings
+L rewrite CMI8330 PCM part
+L separate chip structure from pcm device
+L get rid of snd_pcm_lib_period_bytes and snd_pcm_lib_buffer_bytes
+L optimize lowlevel drivers for frame unit use

@@ -1,0 +1,34 @@
+Binding for PWM driver for STMicroelectronics SoCs.
+
+Required parameters:
+- compatible : st,pwm
+- #pwm-cells : number of cells used to specify a PWM.First cell specifies the per-chip
+		index of the PWM to use and the second cell is the period in nanoseconds.
+		Fixed to 2 for STiH41x.
+- reg : physical base address and length of the controller's registers.
+- pinctrl-names: Set to "default".
+- pinctrl-0: List of phandles pointing to pin configuration nodes for PWM module.
+	      For (4) & (5), please refer the following binding doc:
+	      Documentation/devicetree/bindings/pinctrl/pinctrl-bindings.txt
+- clock-names: Set to "pwm".
+- clocks: phandle of the clock used by the PWM module.
+	   For (6) & (7), please refer the following binding doc:
+	   Documentation/devicetree/bindings/clock/clock-bindings.txt
+Optional properties:
+- st,pwm-num-chan: number of available channels. If not passed the driver will
+  consider single channel by default.
+
+Example:
+pwm1: pwm@fe510000 {
+	compatible = "st,pwm";
+	#pwm-cells = <2>;
+	reg = <0xfe510000 0x68>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_pwm1_chan0_default
+		     &pinctrl_pwm1_chan1_default
+		     &pinctrl_pwm1_chan2_default
+		     &pinctrl_pwm1_chan3_default>;
+	clock-names = "pwm";
+	clocks = <&CLK_SYSIN>;
+	st,pwm-num-chan = <4>;
+};

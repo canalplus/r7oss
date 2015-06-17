@@ -1,0 +1,18 @@
+--- ../../alsa-kernel/pci/echoaudio/echo3g.c	2007-12-20 11:47:36.000000000 +0100
++++ echo3g.c	2007-12-20 12:04:13.000000000 +0100
+@@ -1,3 +1,9 @@
++#include "adriver.h"
++
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)
++#define pci_device(chip) pci_name(chip->pci)
++#endif
++
+ /*
+  *  ALSA driver for Echoaudio soundcards.
+  *  Copyright (C) 2003-2004 Giuliano Pochini <pochini@shiny.it>
+@@ -120,3 +126,5 @@
+ #include "echoaudio_3g.c"
+ #include "echoaudio.c"
+ #include "midi.c"
++
++EXPORT_NO_SYMBOLS;

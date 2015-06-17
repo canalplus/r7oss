@@ -1,0 +1,22 @@
+--- ../alsa-kernel/pci/atiixp.c	2007-12-20 11:47:36.000000000 +0100
++++ atiixp.c	2007-12-20 11:59:11.000000000 +0100
+@@ -1,3 +1,4 @@
++#include "adriver.h"
+ /*
+  *   ALSA driver for ATI IXP 150/200/250/300 AC97 controllers
+  *
+@@ -1670,7 +1671,7 @@
+ 
+ 	snprintf(card->longname, sizeof(card->longname),
+ 		 "%s rev %x with %s at %#lx, irq %i", card->shortname,
+-		 pci->revision,
++		 snd_pci_revision(pci),
+ 		 chip->ac97[0] ? snd_ac97_get_short_name(chip->ac97[0]) : "?",
+ 		 chip->addr, chip->irq);
+ 
+@@ -1715,3 +1716,5 @@
+ 
+ module_init(alsa_card_atiixp_init)
+ module_exit(alsa_card_atiixp_exit)
++
++EXPORT_NO_SYMBOLS;

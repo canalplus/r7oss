@@ -1,0 +1,48 @@
+ST LPM Device
+-------------
+
+Required properties:
+- compatible: should be "st,lpm" for non 407 family SoCs, while it
+	      should be "st,stih407-family-lpm" as well as "st,lpm"
+	      for 407-family SoCs.
+- reg: There are 4 address-size list property. The first one refer to
+       the base of the SBC controller. The second one refer to the
+       mailbox address and size. Third one refer to the
+       configuration registers and the last one refer to the pmem area
+       where normally the LPM-f/w has to be loaded and ran from.
+- reg-names: Should list the registers names
+- interrupts: Standrard interrupt line and type description.
+
+- gpios: A list property, first cell containing the phandle to the gpio
+	 port and the second one describes the pin number, that is passed
+	 as a parameter to the phandle. This is the gpio pin that is used
+	 to switch on/off the SoC power domain by the SBC controller.
+
+- st,lmi-ret-gpio: As the name suggests, this describes the list property
+		   describing the gpio pin responsible for lmi retention
+		   during the CPS. The first cell contains the phandle to the
+		   gpio port and the second one describes the pin number.
+- st,fw_name : Should contains the LPM Firmware name
+
+Properties such as compatible, reg, interrupts, st,fw_name typically goes to
+the chip description DT file, while gpios and st,lmi-ret-gpio typically goes
+to the board description DT file. 
+
+Example:
+	lpm:stm-lpm@9400000 {
+		compatible = "st,stih407-family-lpm", "st,lpm";
+		reg = <0x9400000 0xa0000>,
+		<0x94b4000 0x400>,
+		<0x94b5100 0x100>,
+		<0x020000 0x0>;
+		reg-names = "base", "mailbox", "confreg", "pmem";
+		interrupts = <GIC_SPI 144 IRQ_TYPE_NONE>;
+		st,fw_name = "lpm-fw-STiH407.elf";
+		status = "disabled";
+	};
+
+	lpm:stm-lpm@9400000 {
+		status = "okay";
+		gpios = <&PIO3 2>;
+		st,lmi-ret-gpio = <&PIO5 2>;
+	};

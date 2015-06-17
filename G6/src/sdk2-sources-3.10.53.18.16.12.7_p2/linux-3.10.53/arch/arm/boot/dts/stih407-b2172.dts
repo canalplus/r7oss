@@ -1,0 +1,181 @@
+/*
+ * Copyright (C) 2014 STMicroelectronics (R&D) Limited.
+ * Author: Giuseppe Cavallaro <peppe.cavallaro@st.com>
+ * Author:  Seraphin Bonnaffe	<seraphin.bonnaffe@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+/dts-v1/;
+#include "stih407.dtsi"
+/ {
+	model = "STiH407 B2172";
+	compatible = "st,stih407", "st,stih407-b2172";
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		cpu@1 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a9";
+			reg = <1>;
+		};
+	};
+
+	memory {
+		device_type = "memory";
+		reg = <0x40000000 0x80000000>;
+	};
+
+	chosen {
+		bootargs = "console=ttyAS0,115200";
+		linux,stdout-path = &sbc_serial0;
+	};
+
+	aliases {
+		ttyAS0 = &sbc_serial0;
+		ethernet0 = &ethernet0;
+		miphy0 = &miphy28lp_phy0;
+		miphy1 = &miphy28lp_phy1;
+		miphy2 = &miphy28lp_phy2;
+	};
+
+	soc {
+		sbc_serial0: serial@9530000 {
+			status = "okay";
+		};
+
+		leds {
+			compatible = "gpio-leds";
+			red {
+				#gpio-cells = <2>;
+				gpios = <&PIO12 0 0>;
+				linux,default-trigger = "heartbeat";
+			};
+			green {
+				#gpio-cells = <2>;
+				gpios = <&PIO11 2 0>;
+				default-state = "off";
+			};
+		};
+
+		rc: rc@09518000 {
+			status = "disabled";
+		};
+
+		/* SSC0 to connector CN1031 */
+		spi0: spi@9840000 {
+			status = "okay";
+		};
+
+		/* SSC1 to connector CN37 */
+		i2c1: i2c@9841000 {
+			status = "okay";
+		};
+
+		/* SSC2 to PCIe connector, E2PROM */
+		i2c2: i2c@9842000 {
+			status = "okay";
+		};
+
+		/* SSC3 to MLB connector */
+		i2c3: i2c@9843000 {
+			status = "okay";
+			pinctrl-0 = <&pinctrl_i2c3_alt3_0>;
+		};
+
+		/* SSC4 to PCIe connector */
+		i2c4: i2c@9844000 {
+			status = "okay";
+		};
+
+		/* SSC10 to STV0368 */
+		i2c@9540000 {
+			status = "okay";
+		};
+
+		/* SSC11 to HDMI */
+		i2c@9541000 {
+			status = "okay";
+			/* HDMI V1.3a supports Standard mode only */
+			clock-frequency = <100000>;
+			st,i2c-min-scl-pulse-width-us = <0>;
+			st,i2c-min-sda-pulse-width-us = <5>;
+		};
+
+		mmc0: sdhci@09060000 {
+			status = "okay";
+			non-removable;
+		};
+
+		mmc1: sdhci@09080000 {
+			status = "okay";
+		};
+
+		lpm:stm-lpm@9400000 {
+			status = "okay";
+			gpios = <&PIO4 0 0>;
+			st,lmi-ret-gpio = <&PIO5 2 0>;
+                };
+
+		gpio_keys {
+			compatible = "gpio-keys";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			button@1 {
+				label = "wakeup";
+				linux,code = <41>;
+				gpios = <&PIO3 3 0>;
+				gpio-key,wakeup;
+			};
+		};
+
+		ethernet0: dwmac@9630000 {
+			st,tx-retime-src = "clkgen";
+			status = "okay";
+			phy-mode = "rgmii";
+			pinctrl-0 = <&pinctrl_rgmii1 &pinctrl_rgmii1_mdio>;
+
+			snps,phy-bus-name = "stmmac";
+			snps,phy-bus-id = <0>;
+			snps,phy-addr = <0>;
+			snps,reset-gpio = <&PIO2 6>;
+			snps,reset-active-low;
+			snps,reset-delays-us = <0 10000 1000000>;
+		};
+
+		st_dwc3: dwc3@8f94000 {
+			status = "okay";
+		};
+
+		miphy28lp_phy0: miphy28lp@0 {
+                        status = "okay";
+                };
+
+		pcie0: pcie@9b00000 {
+			status = "okay";
+		};
+
+		spifsm@9022000 {
+			status = "okay";
+			flash-name = "n25q256";
+			partitions = <&b2172_fsm_partitions>;
+
+			b2172_fsm_partitions: partitions-b2172 {
+				#address-cells = <1>;
+				#size-cells = <1>;
+				partition@0 {
+					label = "boot";
+					/* 20M */
+					reg = <0x00000000 0x01400000>;
+				};
+				partition@1400000 {
+					label = "rest";
+					/* 12M */
+					reg = <0x01400000 0x00c00000>;
+				};
+			};
+		};
+	};
+};

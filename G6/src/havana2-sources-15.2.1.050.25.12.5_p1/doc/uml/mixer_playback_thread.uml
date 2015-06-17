@@ -1,0 +1,101 @@
+@startuml
+
+title Mixer_Mme_c::PlaybackThread
+
+hide footbox
+
+participant "StreamBufferQueue" as bufferQueue
+participant "Manifestor_Audio_Ksound_c" as manifestor_ksound
+participant "Mixer_Mme_c::PlaybackThread"   as playbackThread
+participant "MixerMmeTransformer"   as mixer
+participant "PcmPlayer Ksound" as pcmPlayer
+participant "Alsa soundcard" as alsa
+
+loop
+    activate playbackThread
+    playbackThread -> playbackThread: FillOutMixCommand()
+    activate playbackThread
+    playbackThread  -> pcmPlayer: *:MapPcmPlayerSamples(SampleCount)
+    activate pcmPlayer
+    pcmPlayer -> alsa: pcm_avail_update()
+    activate alsa
+    pcmPlayer <-- alsa: avail
+    deactivate alsa
+
+    pcmPlayer -> alsa: pcm_wait()
+    activate alsa
+    deactivate alsa
+
+    pcmPlayer -> alsa: pcm_mmap_begin()
+    activate alsa
+    deactivate alsa
+    deactivate pcmPlayer
+
+    playbackThread -> manifestor_ksound: *: FillOutInputBuffer()
+    activate manifestor_ksound
+    manifestor_ksound -> bufferQueue: DequeueBuffer()
+    activate bufferQueue
+    manifestor_ksound <-- bufferQueue: Buffer
+    deactivate bufferQueue
+    playbackThread <- manifestor_ksound: SetOutputRateAdjustment()
+
+    activate playbackThread
+    playbackThread -> pcmPlayer: SetOutputRateAdjustment()
+    activate pcmPlayer
+    pcmPlayer -> alsa: hctl_elem_write(ClockAdjustment)
+    activate alsa
+    deactivate alsa
+    deactivate pcmPlayer
+    deactivate playbackThread
+    deactivate manifestor_ksound
+
+    deactivate playbackThread
+
+    playbackThread -> playbackThread: SendMMEMixCommand()
+    activate playbackThread
+    playbackThread -> mixer: MME_SendCommand(MixCommand)
+    activate mixer
+    deactivate playbackThread
+    deactivate playbackThread
+
+    playbackThread <<- mixer: CallbackFromMME()
+    deactivate mixer
+    activate playbackThread
+
+    playbackThread -> playbackThread: UpdateOutputBuffers()
+    activate playbackThread
+
+    playbackThread -> pcmPlayer: *: CommitMappedSamples()
+    activate pcmPlayer
+    pcmPlayer -> alsa: pcm_mmap_commit()
+    activate alsa
+    deactivate alsa
+    deactivate pcmPlayer
+
+    playbackThread -> pcmPlayer: *: GetTimeOfNextCommit()
+    activate pcmPlayer
+    pcmPlayer -> alsa: pcm_mtimestamp()
+    activate alsa
+    deactivate alsa
+    playbackThread <-- pcmPlayer: time
+    deactivate pcmPlayer
+
+    playbackThread -> manifestor_ksound: UpdateDisplayTimeOfNextCommit(time)
+    activate manifestor_ksound
+    deactivate manifestor_ksound
+    
+    deactivate playbackThread
+
+    playbackThread -> playbackThread: UpdateInputBuffers()
+    activate playbackThread
+    playbackThread -> manifestor_ksound: UpdateInputBuffer(Buffer)
+    activate manifestor_ksound
+    deactivate manifestor_ksound
+    deactivate playbackThread
+    
+
+    deactivate playbackThread
+
+end
+    
+@enduml

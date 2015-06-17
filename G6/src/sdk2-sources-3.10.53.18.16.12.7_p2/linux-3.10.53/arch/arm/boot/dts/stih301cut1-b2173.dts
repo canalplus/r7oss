@@ -1,0 +1,25 @@
+
+/*
+ * Copyright (C) 2014 STMicroelectronics Limited.
+ * Author: Seraphin Bonnaffe <seraphin.bonnaffe@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+#include "stih301cut1-b21xx.dts"
+/ {
+	model = "STiH301cut1 B2173";
+	compatible = "st,stih301-b2173", "st,stih301", "st,stih410";
+
+	soc {
+		miphy28lp_phy0: miphy28lp@0 {
+			st,px_rx_pol_inv;
+		};
+
+		snd_uni_player0: snd-uni-player@0 {
+			status = "okay";
+		};
+
+	};
+};

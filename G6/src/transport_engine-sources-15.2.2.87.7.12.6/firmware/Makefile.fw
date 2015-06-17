@@ -1,0 +1,82 @@
+#########################################################################
+# COPYRIGHT (C) 2011-2013 ST Microelectronics (R&D) Ltd
+#########################################################################
+
+# default xp70 toolset
+#STxP70_TOOLSET := /sw/st_division/cpt/stxp70/rhel/STxP70_Toolset_4_1_0_Patched/bin/STxP70.sh
+STxP70_TOOLSET := /sw/st_division/cpt/stxp70/rhel/STxP70_Toolset_2011.2_Patched/bin/STxP70.sh
+
+export STM_TE_TOPDIR := $(shell readlink -e ../)
+
+ifeq ($(SX),)
+# If STxP70 toolset is not already sourced, source the default one above
+$(MAKECMDGOALS):
+	bash -c "source $(STxP70_TOOLSET) && $(MAKE) -C $(CURDIR) -f Makefile.fw $(MAKECMDGOALS)"
+
+else
+
+# If STPTI5_FW_ROOT is not set choose a default
+ifeq ($(STPTI5_FW_ROOT),)
+STPTI5_FW_ROOT := $(STM_TE_TOPDIR)/../TANGO_TP
+export STPTI5_FW_ROOT
+$(warning WARNING! STPTI5_FW_ROOT is not set.  Using default firmware path $(STPTI5_FW_ROOT))
+endif
+
+# Destination path for firmare headers
+HEADER_INSTALL_PATH := $(STM_TE_TOPDIR)/stm_te_hal/tango/firmware
+
+FW_HASH := $(shell git --git-dir=$(STPTI5_FW_ROOT)/.git rev-parse HEAD)
+
+default all: TP
+
+################################################################################
+
+.PHONY: TP clean_TP build_fw move_headers FORCE
+
+TP: build_fw pti_tp1.elf pti_tp2.elf pti_tp3.elf pti_tp4.elf pti_tp5.elf move_headers
+
+################################################################################
+
+# Cleaning up
+clean_TP:
+	-rm -f pti_tp*
+	$(MAKE) -C $(STPTI5_FW_ROOT) clean
+
+
+# Shared Memory Interface file.
+pti_tp_api.h: FORCE
+	@echo "Copying .... $@ (to driver directory)"
+	perl -ne 'print if s/\$$Rev\$$/'"$(FW_HASH)"'/ or 1' $(STPTI5_FW_ROOT)/include/exported_api.h > $@
+
+
+pti_tp%.elf: $(STPTI5_FW_ROOT)/$@
+	@echo "Stripping Symbols and Copying .... $@ (to driver directory)"
+	stxp70-strip $(STPTI5_FW_ROOT)/$@ -o $@
+
+
+build_fw:
+	echo "Building in firmware directory $(STPTI5_FW_ROOT)"
+	echo "Firmware git hash is $(FW_HASH)"
+	$(MAKE) -C $(STPTI5_FW_ROOT)
+
+
+move_headers: pti_tp_api.h
+	mv $^ $(HEADER_INSTALL_PATH)
+
+
+# Create loaders
+pti_%.h: pti_%.elf
+	@echo "Creating Loader .... $@"
+	perl $(STM_TE_TOPDIR)/utils/elf_to_h.pl $< stptiHAL_firmare_$* > $@
+
+
+perf: FORCE
+	$(MAKE) -C $(STPTI5_FW_ROOT) perf
+
+FORCE:
+
+
+# Keep intermediate files such as .elf files (without this make will delete them automatically)
+.SECONDARY:
+
+endif

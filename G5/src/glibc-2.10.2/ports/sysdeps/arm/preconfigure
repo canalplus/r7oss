@@ -1,0 +1,13 @@
+case "$machine" in
+arm*)
+	base_machine=arm
+	case $config_os in
+	linux-gnueabi)
+		machine=arm/eabi/$machine
+		;;
+	*)
+		machine=arm/$machine
+		;;
+	esac
+	;;
+esac

@@ -1,0 +1,6 @@
+          name : prescript
+        author : Pierre Carru <pcarru@wyplay.com>
+  contributors :
+      commands : 
+       options : noprescript
+   description : run a script before running a service

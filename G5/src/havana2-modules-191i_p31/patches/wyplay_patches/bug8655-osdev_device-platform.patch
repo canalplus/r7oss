@@ -1,0 +1,65 @@
+diff -ur a/linux/components/inline/osdev_device.h b/linux/components/inline/osdev_device.h
+--- a/linux/components/inline/osdev_device.h	2010-09-08 22:55:58.000000000 +0000
++++ b/linux/components/inline/osdev_device.h	2013-04-05 09:13:00.000000000 +0000
+@@ -250,15 +250,14 @@
+ #define OSDEV_RegisterPlatformDriverFn( name2, Loadfn, Unloadfn )       \
+ 	OSDEV_PlatformLoadEntrypoint(Loadfn);                           \
+ 	OSDEV_PlatformUnloadEntrypoint(Unloadfn);                       \
+-	static int plat_probe(struct device *dev) {                     \
++	static int plat_probe(struct platform_device *pdev) {           \
+ 		PlatformData_t PData;                                   \
+ 		struct resource *res;                                   \
+-		struct platform_device *device_data = to_platform_device(dev); \
+-		if (!device_data || !device_data->name) OSDEV_Print("Error No Platform Data\n"); \
+-		PData.PrivateData = device_data->dev.platform_data;     \
++		if (!pdev || !pdev->name) OSDEV_Print("Error No Platform Data\n"); \
++		PData.PrivateData = pdev->dev.platform_data;            \
+ 		PData.NumberBaseAddresses = 0;                          \
+ 		do {                                                    \
+-			res = platform_get_resource(device_data,IORESOURCE_MEM,PData.NumberBaseAddresses); \
++			res = platform_get_resource(pdev,IORESOURCE_MEM,PData.NumberBaseAddresses); \
+ 			if (res) { \
+ 				PData.BaseAddress[PData.NumberBaseAddresses] = res->start; \
+ 				PData.NumberBaseAddresses++;            \
+@@ -266,7 +265,7 @@
+ 		} while (res);                                          \
+ 		PData.NumberInterrupts = 0;                             \
+ 		do {                                                    \
+-			res = platform_get_resource(device_data,IORESOURCE_IRQ,PData.NumberInterrupts); \
++			res = platform_get_resource(pdev,IORESOURCE_IRQ,PData.NumberInterrupts); \
+ 			if (res) { \
+ 				PData.Interrupt[PData.NumberInterrupts] = res->start; \
+ 				PData.NumberInterrupts++;               \
+@@ -274,21 +273,24 @@
+ 		} while (res);                                          \
+ 		return Loadfn(&PData);                                  \
+ 	}                                                               \
+-	static int plat_remove(struct device *dev) {                    \
++	static int plat_remove(struct platform_device *pdev) {          \
+ 		Unloadfn();                                             \
+ 		return 0;                                               \
+ 	}                                                               \
+-	static struct device_driver plat_driver = {                     \
+-		.name   = name2,                                        \
+-		.bus    = &platform_bus_type,                           \
+-		.probe  = plat_probe,                                   \
+-		.remove = plat_remove                                   \
++	static struct platform_driver plat_driver = {                   \
++        	.driver = {                                             \
++	                .name = name2,                                  \
++                	.bus = &platform_bus_type,                      \
++        	        .owner = THIS_MODULE,                           \
++	        },                                                      \
++        	.probe = plat_probe,                                    \
++	        .remove = plat_remove,                                  \
+ 	};                                                              \
+ 	static int plat_init(void) {                                    \
+-		return driver_register(&plat_driver);                   \
++		return platform_driver_register(&plat_driver);          \
+ 	}                                                               \
+ 	static void plat_cleanup(void) {                                \
+-		driver_unregister(&plat_driver);                        \
++		platform_driver_unregister(&plat_driver);               \
+ 	}                                                               \
+ 	module_init(plat_init);                                         \
+ 	module_exit(plat_cleanup);

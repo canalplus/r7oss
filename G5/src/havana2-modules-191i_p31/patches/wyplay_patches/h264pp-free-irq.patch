@@ -1,0 +1,46 @@
+diff -ur a/linux/drivers/media/dvb/stm/h264_preprocessor/h264pp.c b/linux/drivers/media/dvb/stm/h264_preprocessor/h264pp.c
+--- a/linux/drivers/media/dvb/stm/h264_preprocessor/h264pp.c	2010-09-08 22:55:59.000000000 +0000
++++ b/linux/drivers/media/dvb/stm/h264_preprocessor/h264pp.c	2013-04-05 09:12:59.000000000 +0000
+@@ -125,6 +125,7 @@
+ /* --- Internal entrypoints --- */
+ 
+ static void H264ppInitializeDevice( 	void );
++static void H264ppReleaseDevice(     void );
+ static void H264ppQueueBufferToDevice( 	H264ppProcessBuffer_t	 *Buffer );
+ static void H264ppWorkAroundGNBvd42331( H264ppState_t		 *State,
+ 					unsigned int		  N );
+@@ -194,6 +195,12 @@
+ {
+ OSDEV_Status_t          Status;
+ 
++    //
++    // Release the hardware device
++    //
++
++    H264ppReleaseDevice();
++
+ /* --- */
+ 
+     OSDEV_UnloadEntry();
+@@ -665,6 +672,21 @@
+ 
+ // ////////////////////////////////////////////////////////////////////////////////
+ //
++//    The function to release the hardware device
++
++static void H264ppReleaseDevice(     void )
++{
++unsigned int    N;
++
++    for( N=0; N<DeviceContext.NumberOfPreProcessors; N++ )
++    {
++        free_irq(DeviceContext.InterruptNumber[N], (void *)N );
++    }
++}
++
++
++// ////////////////////////////////////////////////////////////////////////////////
++//
+ //    The function to handle queueing a pre-process to an actual device.
+ 
+ static void H264ppQueueBufferToDevice( 	H264ppProcessBuffer_t	 *Buffer )

@@ -1,0 +1,6 @@
+          name : chroot
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : 
+      commands : 
+       options : chroot
+   description : Change current workroot before launch.

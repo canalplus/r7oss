@@ -1,0 +1,68 @@
+Below are the steps you need to follow to help out the team with
+testing/debugging of the rt73 kernel module:
+
+
+1. Get the latest source from the CVS tree.
+    Easiest way to do this is to download the hourly tarball from our
+    website: http://rt2x00.serialmonkey.com/rt73-cvs-daily.tar.gz
+    Alternatively, you can anonymously check out the current CVS code:
+
+cvs -d:pserver:anonymous@rt2400.cvs.sourceforge.net:/cvsroot/rt2400 login
+cvs -z3 -d:pserver:anonymous@rt2400.cvs.sourceforge.net:/cvsroot/rt2400 \
+co -P source/rt73
+
+2. Compile the module with debug logging:
+    $ make clean
+    $ make debug
+
+3. Ensure there are no copies of the module left in memory:
+    # ifconfig wlan0 down
+    # rmmod rt73
+
+4. Load the module with full debug enabled:
+    # insmod rt73.ko debug=31
+    Then proceed as usual (config, ifup, etc)...
+
+5. Check the debug output.
+    It is located in your system log file (most likely /var/log/debug
+    or /var/log/syslog). If you don't see any debug you probably need
+    to add the following line to your /etc/syslog.conf and reboot:
+
+       kern.=debug       /var/log/debug
+
+    If you system hard-locks before it's able to log anything
+    interesting in these files, you'll have to rely on the netconsole
+    module to remotely log your kernel messages to another box (see
+    netconsole.txt in your kernel sources Documentation folder).
+
+6. Report the following to the rt2400-devel mailing list (or rt73
+   forum):
+    * Steps to reproduce the bug
+    * The _whole_content_ of your debugging output
+    * Your module details, i.e. the output of:
+      # modinfo rt73.ko
+    * Your kernel details, i.e. the output of:
+      $ uname -a
+    * Your rt73 hardware manufacturer, model and revision
+    * Anything else you think may help us resolve the issue (even a
+      patch if you are so inclined)
+
+7. Monitor the mailing list (or forum thread) for replies/further
+   queries.  :-)
+
+Whenever we do major changes to the source - and always just before a
+release - we will call for testing to be done before we make the
+general release. You're very much welcome to help us with this testing
+and report any success/issue you experience with this code.
+
+
+!!!! NOTE !!!!
+
+AS PER STEP 6 ABOVE: Please provide the *whole* debug output! The last
+few lines are hardly any good.
+If it's large (which it will be) then GZip it. Either attach it to
+your forum post or, if you're going to report via the mailing list,
+upload it somewhere and give a link to it (or email it directly to the
+developer you are working with).
+
+!!!! END NOTE !!!!

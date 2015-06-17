@@ -1,0 +1,7 @@
+          name : ngcs
+        author : Aidan Thornton <makomk@lycos.co.uk>
+  contributors : 
+      commands : 
+       options : 
+   description : This is an experimental initng control tool, similar to ngc
+                 but using python.

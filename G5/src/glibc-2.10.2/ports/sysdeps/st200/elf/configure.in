@@ -1,0 +1,43 @@
+GLIBC_PROVIDES dnl See aclocal.m4 in the top level source directory.
+# Local configure fragment for sysdeps/st200/elf.
+
+if test "$usetls" != no; then
+# Check for support of thread-local storage handling in assembler and
+# linker.
+AC_CACHE_CHECK(for st200 TLS support, libc_cv_st200_tls, [dnl
+cat > conftest.s <<\EOF
+	.section ".tdata", "awT", @progbits
+	.global foo
+foo:	.long	1
+	.section ".tbss", "awT", @nobits
+	.global bar
+bar:	.skip	4
+	.text
+baz:	ldw	$r1=@tprel(bar)[[$r13]]
+	;;
+	ldw	$r1=@gotoff(@tprel(foo))[[$r14]]
+	;;
+	ldw	$r1=@dtprel(bar)[[$r1]]
+	;;
+	ldw	$r1=@gotoff(@dtpndx(foo))[[$r14]]
+	;;
+	ldw	$r1=@gotoff(@dtpldm(bar))[[$r14]]
+	;;
+EOF
+dnl
+if AC_TRY_COMMAND(${CC-cc} -v -c $CFLAGS conftest.s 1>&AS_MESSAGE_LOG_FD); then
+  libc_cv_st200_tls=yes
+else
+  libc_cv_st200_tls=no
+fi
+rm -f conftest*])
+if test $libc_cv_st200_tls = yes; then
+  AC_DEFINE(HAVE_TLS_SUPPORT)
+fi
+fi
+
+dnl It is always possible to access static and hidden symbols in an
+dnl position independent way.
+AC_DEFINE(PI_STATIC_AND_HIDDEN)
+
+

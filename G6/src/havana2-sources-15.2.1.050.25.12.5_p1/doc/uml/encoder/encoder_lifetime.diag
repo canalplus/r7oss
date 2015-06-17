@@ -1,0 +1,59 @@
+seqdiag {
+	// Define the logical order of components
+	Wrapper;	Encoder;	Encode;
+
+	// Provide a better label for the Wrapper to highlight STKPI interaction
+	Wrapper [label = "STKPI/Wrapper"];
+
+
+	// First create a new Encode class to hold collective streams
+	Wrapper ->	Encoder     					[label = "Encoder->CreateEncode()"]
+									[leftnote = "stkpi_encode_new()"];
+
+			Encoder	->	Encode				[label = "new class Encode_c"];
+
+	Wrapper <--	Encoder
+
+	// Create a new stream to manipulate the Audio Stream data flow lifetime
+	Wrapper ->	Encoder     					[label = "Encoder->CreateEncodeStream()"]
+									[leftnote = "stkpi_encode_stream_new()"];
+
+			Encoder	=>			EncodeStream	[label = "new class EncodeStream_c"];
+
+					Encode ->	EncodeStream	[label = "Encode->AddStream()"]
+									[rightnote = "This commences\noperation of threads"];
+
+	Wrapper <--	Encoder
+
+
+
+	// Set some controls
+	Wrapper =>					EncodeStream	[label = "EncodeStream->SetControl()"]
+									[leftnote = "stkpi_encode_stream_set_control()"];
+
+
+	// Connect the Output!
+	Wrapper =>					EncodeStream	[label = "EncodeStream->AddTransport()"]
+									[leftnote = "stkpi_encode_stream_attach()"]
+									[rightnote="This determines where\nthe data will be output"];
+
+	// Inject some data...
+	Wrapper =>					EncodeStream	[label = "EncodeStream->InputData()"]
+									[leftnote = "stkpi_encode_stream_inject_frame()"];
+
+
+	=== Repeated calls to Inject\nwhile there is data ===
+
+	// Eventually we can signal an EOS
+	Wrapper =>					EncodeStream	[label = "EncodeStream->InjectDiscontinuity()"]
+									[leftnote = "stm_se_encode_stream_inject_discontinuity()"]
+									[rightnote = "Signal the\nEnd Of Stream"];
+
+	// Remove the stream at the end
+	Wrapper <--					EncodeStream	[leftnote = "stkpi_encode_stream_delete()"]
+									[rightnote = "Remove objects"];
+
+	// Finally clean up the left over Encode Instance
+	Wrapper <--			Encode				[leftnote = "stkpi_encode_delete()"];
+
+}

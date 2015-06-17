@@ -1,0 +1,4 @@
+debian/tmp/usr/include/postproc
+debian/tmp/usr/lib/libpostproc.a
+debian/tmp/usr/lib/libpostproc.so
+debian/tmp/usr/lib/pkgconfig/libpostproc.pc

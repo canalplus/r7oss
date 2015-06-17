@@ -1,0 +1,21 @@
+--- ../../alsa-kernel/isa/sb/sb16_csp.c	2007-12-20 10:23:34.000000000 +0100
++++ sb16_csp.c	2007-12-20 11:20:57.000000000 +0100
+@@ -1,3 +1,4 @@
++#include "adriver.h"
+ /*
+  *  Copyright (c) 1999 by Uros Bizjak <uros@kss-loka.si>
+  *                        Takashi Iwai <tiwai@suse.de>
+@@ -730,8 +731,12 @@
+ #ifdef CONFIG_SND_SB16_CSP_FIRMWARE_IN_KERNEL
+ 		program = &snd_sb_csp_static_programs[index];
+ #else
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
+ 		int err = request_firmware(&program, names[index],
+-				       p->chip->card->dev);
++					   p->chip->card->dev);
++#else
++		int err = request_firmware(&program, names[index], "sb16_csp");
++#endif
+ 		if (err < 0)
+ 			return err;
+ #endif

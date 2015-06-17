@@ -1,0 +1,235 @@
+/*
+ * Copyright (C) 2013 STMicroelectronics (R&D) Limited.
+ * Author: Srinivas Kandagatla <srinivas.kandagatla@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * publishhed by the Free Software Foundation.
+ */
+#include <dt-bindings/input/input.h>
+/ {
+
+	memory{
+		device_type = "memory";
+		reg = <0x60000000 0x40000000>;
+	};
+
+	chosen {
+		bootargs = "console=ttyAS0,115200";
+		linux,stdout-path = &serial2;
+	};
+
+	aliases {
+		ttyAS0 = &serial2;
+		ethernet0 = &ethernet0;
+		ethernet1 = &ethernet1;
+		usb0 = &usb0;
+		usb1 = &usb1;
+		usb2 = &usb2;
+	};
+
+	soc {
+		serial2: serial@fed32000 {
+			status = "okay";
+		};
+
+		leds {
+			compatible = "gpio-leds";
+			fp_led {
+				#gpio-cells = <1>;
+				label = "Front Panel LED";
+				gpios = <&PIO105 7>;
+				linux,default-trigger = "heartbeat";
+			};
+		};
+
+		ethernet0: dwmac@fe810000 {
+			status = "okay";
+			st,tx-retime-src = "txclk";
+
+			phy-mode = "mii";
+
+			snps,reset-gpio = <&PIO106 2>;
+			snps,reset-active-low;
+			snps,reset-delays-us = <0 10000 10000>;
+		};
+
+		ethernet1: dwmac@fef08000 {
+			status = "okay";
+			st,tx-retime-src = "txclk";
+
+			phy-mode = "mii";
+
+			snps,reset-gpio = <&PIO4 7>;
+			snps,reset-active-low;
+			snps,reset-delays-us = <0 10000 10000>;
+		};
+
+		lpm:stm-lpm@fe400000 {
+			status = "okay";
+			gpios = <&PIO4 3>;
+			st,lmi-ret-gpio = <&PIO4 4>;
+		};
+
+		/* HDMI Tx I2C */
+		i2c@fed41000 {
+			/* HDMI V1.3a supports Standard mode only */
+			clock-frequency = <100000>;
+			st,i2c-min-scl-pulse-width-us = <0>;
+			st,i2c-min-sda-pulse-width-us = <5>;
+
+			status = "okay";
+		};
+
+		/* On the reference boards, the mmc can be available if use the
+		   b2048 daughter board exclusively plugged on CN22 (often used
+		   for b2032 daughter board (PHY device).
+		   The b2048 can be available with eMMC or SD/MMC slot so
+		   "non-removable" field should be used as consequence of the
+		   selected setup.
+
+		mmc0: sdhci@fe81e000 {
+			status = "okay";
+			non-removable;
+		};
+		*/
+
+		usb0: usb@fe100000 {
+			status = "okay";
+		};
+
+		usb1: usb@fe200000 {
+			status = "okay";
+		};
+
+		usb2: usb@fe300000 {
+			status = "okay";
+		};
+
+		keyscan: keyscan@fe4b0000 {
+			keypad,num-rows = <4>;
+			keypad,num-columns = <4>;
+			st,debounce_us = <5000>;
+			linux,keymap = < /* in0	in1	in2    in3 */
+					KEY_F13 KEY_F9  KEY_F5 KEY_F1		/* out0 */
+					KEY_F14 KEY_F10 KEY_F6 KEY_F2		/* out1 */
+					KEY_F15 KEY_F11 KEY_F7 KEY_F3		/* out2 */
+					KEY_F16 KEY_F12 KEY_F8 KEY_F4 >;	/* out3 */
+		};
+
+		/* FSM */
+		spifsm:	spifsm@fe902000 {
+			status = "okay";
+			flash-name = "n25q128";
+			partitions = <&b2000_fsm_partitions>;
+
+			b2000_fsm_partitions: partitions-b2000 {
+		                #address-cells = <1>;
+			        #size-cells = <1>;
+				partition@0 {
+					label = "boot";
+					reg = <0x00000000 0x00500000>;
+				};
+				partition@500000 {
+					label = "rest";
+					reg = <0x00500000 0x00b00000>;
+				};
+			};
+		};
+
+		nandafm: nand-afm {
+			status = "okay";
+			st,rbn-flex-connected;
+			st,nand-banks = <&nand_banks>;
+		};
+
+		nand_banks: nand-banks {
+			/*
+			 * NAND Flash via b2006/b2007 VPMEM module.
+			 * Configuration below assumes module is fitted
+			 * with Samsung K9F2G08U0C device:
+			 *   - Size = 2Gib(256MiB), Page = 2048+64, Block = 128MiB
+			 *   - ECC = 1-bit/526B min
+			 * Please update configuration if module is populated
+			 * with a different device.
+			 */
+			bank0 {
+				nand-on-flash-bbt;
+				nand-no-autoincr;
+				st,nand-csn = <0>;
+				st,nand-timing-spec = <&samsung_k9f2g08u0c_tspec>;
+				st,nand-timing-relax = <0>;
+				partitions {
+					#address-cells = <1>;
+			                #size-cells = <1>;
+					partition@0 {
+						label = "NAND Flash 1";
+						reg = <0x00000000 0x00800000>;
+					};
+					partition@800000 {
+						label = "NAND Flash 2";
+						reg = <0x00800000 0x0f800000>;
+					};
+				};
+			};
+		};
+
+		samsung_k9f2g08u0c_tspec: nand-timing-spec {
+			tR = <40>;
+			tCLS = <12>;
+			tCS = <20>;
+			tALS = <12>;
+			tDS = <12>;
+			tWP = <12>;
+			tCLH = <5>;
+			tCH = <5>;
+			tALH = <5>;
+			tDH = <5>;
+			tWB = <100>;
+			tWH = <10>;
+			tWC = <25>;
+			tRP = <12>;
+			tREH = <15>;
+			tRC = <25>;
+			tREA = <20>;
+			tRHOH = <15>;
+			tCEA = <25>;
+			tCOH = <15>;
+			tCHZ = <30>;
+			tCSD = <10>;
+		};
+
+		/* Uniperipheral */
+		snd_uni_player0: snd-uni-player@0xfe002000 {
+			status = "okay";
+		};
+
+		snd_uni_player1: snd-uni-player@0xfe003000 {
+			status = "okay";
+		};
+
+		snd_uni_player2: snd-uni-player@0xfe004000 {
+			status = "okay";
+		};
+
+		snd_uni_player3: snd-uni-player@0xfe006000 {
+			status = "okay";
+		};
+
+		snd_uni_reader0: snd-uni-reader@0xfe005000 {
+			status = "disabled";
+		};
+
+		snd_uni_reader1: snd-uni-reader@0xfe007000 {
+			status = "disabled";
+		};
+
+		snd_conv_dac_sc: snd-conv-dac-sc {
+			status = "okay";
+		};
+
+		snd_conv_biphase: snd-conv-biphase {
+			status = "okay";
+		};
+	};
+};

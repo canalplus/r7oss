@@ -1,0 +1,537 @@
+2006-08-18  Tom Tromey  <tromey@redhat.com>
+
+	* gnu/java/util/prefs/NodeWriter.java (writeParents): Removed
+	debugging prints.
+	* gnu/java/util/prefs/NodeReader.java (readNodes): Removed debugging
+	print.
+	(readEntries): Likewise.
+
+2006-07-12  Tom Tromey  <tromey@redhat.com>
+
+	* java/util/zip/ZipFile.java (getInputStream): Call addDummyByte
+	on PartialInputStream.
+	(PartialInputStream.addDummyByte): New field.
+	(PartialInputStream.singleByte): Likewise.
+	(PartialInputStream): Initialize new fields.
+	(PartialInputStream.read()): Rewrote.
+	(PartialInputStream.read(byte[],int,int)): Handle dummy byte, if
+	added.
+	(PartialInputStream.addDummyByte): New method.
+
+2006-06-14  Tom Tromey  <tromey@redhat.com>
+
+	PR java/28024:
+	* aclocal.m4, configure: Rebuilt.
+	* m4/acinclude.m4 (REGEN_WITH_JAY): Use backquote, not $(...).
+	* configure.ac (QT_INCLUDE_DIR): Use backquote, not $(...).
+
+2006-04-21  Tom Tromey  <tromey@redhat.com>
+
+	PR classpath/27163:
+	* gnu/java/net/protocol/ftp/FTPConnection.java
+	(changeWorkingDirectory): Do nothing if path is empty.
+
+2006-04-21  Tom Tromey  <tromey@redhat.com>
+
+	PR libgcj/27231:
+	* gnu/java/net/protocol/http/HTTPURLConnection.java (connect): Handle
+	case where no '/' appears in 'location'.
+
+2006-04-19  Tom Tromey  <tromey@redhat.com>
+
+	PR classpath/27163:
+	* gnu/java/net/protocol/ftp/ActiveModeDTP.java: Replaced with
+	latest classpath version.
+	* gnu/java/net/protocol/ftp/FTPURLConnection.java: Likewise.
+
+2006-04-11  Mark Wielaard  <mark@klomp.org>
+
+	PR 27081
+	* java/lang/StackTraceElement.java (toString): Don't add space
+	between type and source indicator.
+
+2006-04-06  Tom Tromey  <tromey@redhat.com>
+
+	* java/util/zip/ZipFile.java (checkLocalHeader): Don't check name
+	length.
+
+2006-04-05  Tom Tromey  <tromey@redhat.com>
+
+	PR libgcj/26625:
+	* lib/Makefile.in: Rebuilt.
+	* lib/Makefile.am (compile-classes): Touch the output file.
+
+2006-04-05  Tom Tromey  <tromey@redhat.com>
+
+	PR libgcj/27024:
+	* java/net/MimeTypeMapper.java (getContentTypeFor): Fall back
+        to MimeTypes.
+
+2006-04-05  Bryce McKinlay  <mckinlay@redhat.com>
+
+	PR classpath/27028
+	PR classpath/24752
+	* java/util/AbstractList.java (hasNext): Don't throw
+	ConcurrentModificationException. Update Javadoc.
+	(hasPrevious): Likewise.
+	(nextIndex): Likewise.
+	(previousIndex): Likewise.
+	* java/util/HashMap.java (hasNext): Likewise.
+	* java/util/Hashtable.java (hasNext): Likewise.
+	* java/util/IdentityHashMap.java (hasNext): Likewise.
+	* java/util/LinkedHashMap.java (hasNext): Likewise.
+	* java/util/LinkedList.java (nextIndex): Likewise.
+	(previousIndex): Likewise.
+	(hasNext): Likewise.
+	(hasPrevious): Likewise.
+	* java/util/TreeMap.java (hasNext): Likewise.
+	* java/util/WeakHashMap.java (hasNext): Likewise.
+
+2006-04-05  Tom Tromey  <tromey@redhat.com>
+
+	* java/lang/ClassNotFoundException.java: Imported from
+        Classpath.
+
+2006-04-04  Tom Tromey  <tromey@redhat.com>
+
+	* lib/gen-classlist.sh.in: Correct handle generated files.
+
+2006-04-04  Mark Wielaard  <mark@klomp.org>
+
+	* lib/gen-classlist.sh.in: Use classes.tmp, not classes.2
+	as temporary file name.
+
+2006-04-04  Tom Tromey  <tromey@redhat.com>
+
+	* lib/split-for-gcj.sh: Updated for multi-field format.
+	* lib/Makefile.am (CLEANFILES): Added classes.2.
+	* lib/gen-classlist.sh.in (GCJ): Removed.  Create classes.1 and
+	classes.2 using multiple fields.
+
+2006-04-03  Bernhard Rosenkraenzer  <bero@arklinux.org>
+
+	PR classpath/25924:
+	* java/awt/image/DirectColorModel.java (extractAndNormalizeSample):
+	Handle case where alpha==0.
+
+2006-03-16  Tom Tromey  <tromey@redhat.com>
+
+	PR libgcj/26706:
+	* aclocal.m4, configure: Rebuilt.
+	* configure.ac (GCC_NO_EXECUTABLES): Moved earlier.
+
+2006-03-15  Tom Tromey  <tromey@redhat.com>
+
+	PR libgcj/26688:
+	* lib/Makefile.in: Rebuilt.
+	* lib/Makefile.am (propertydirs): Ignore .svn directories.
+	(metafiles): Likewise.
+
+2006-02-13  Ito Kazumitsu  <kaz@maczuka.gcd.org>
+
+	Fixes bug #26166
+	* gnu/regexp/RE.java(initialize): Parsing of character class expression
+	was moved to a new method parseCharClass.
+	(parseCharClass): New method originally in initialize. Added parsing
+	of nested character classes.
+	(ParseCharClassResult): New inner class used as a return value of
+	parseCharClass.
+	(getCharExpression),(getNamedProperty): Made static.
+	* gnu/regexp/RESyntax.java(RE_NESTED_CHARCLASS): New syntax flag.
+	* gnu/regexp/RETokenOneOf.java(addition): New Vector for storing
+	nested character classes.
+	(RETokenOneOf): New constructor accepting the Vector addition.
+	(getMinimumLength), (getMaximumLength): Returns 1 if the token
+	stands for only one character.
+	(match): Added the processing of the Vector addition.
+	(matchN), (matchP): Do not check next token if addition is used.
+
+2006-02-09  Ito Kazumitsu  <kaz@maczuka.gcd.org>
+
+	Fixes bug #26112
+	* gnu/regexp/RE.java(REG_REPLACE_USE_BACKSLASHESCAPE): New execution
+	flag which enables backslash escape in a replacement.
+	(getReplacement): New public static method. 
+	(substituteImpl),(substituteAllImpl): Use getReplacement.
+	* gnu/regexp/REMatch.java(substituteInto): Replace $n even if n>=10.
+	* java/util/regex/Matcher.java(appendReplacement)
+	Use RE#getReplacement.
+	(replaceFirst),(replaceAll): Use RE.REG_REPLACE_USE_BACKSLASHESCAPE.
+
+2006-02-06  Ito Kazumitsu  <kaz@maczuka.gcd.org>
+
+	* java/util/regex/Matcher.java(matches):
+	set RE.REG_TRY_ENTIRE_MATCH as an execution flag of getMatch.
+
+2006-02-06  Ito Kazumitsu  <kaz@maczuka.gcd.org>
+
+	Fixes bug #25812
+ 	* gnu/regexp/CharIndexed.java(lookBehind),(length): New method.
+	* gnu/regexp/CharIndexedCharArray.java
+	(lookBehind),(length): Implemented.
+	* gnu/regexp/CharIndexedInputStream.java: Likewise.
+	* gnu/regexp/CharIndexedString.java: Likewise.
+	* gnu/regexp/CharIndexedStringBuffer.java: Likewise.
+	* gnu/regexp/REToken.java(getMaximumLength): New method.
+	* gnu/regexp/RE.java(internal constructor RE): Added new argument
+	maxLength.
+	(initialize): Parse (?<=X), (?<!X), (?>X).
+	(getMaximumLength): Implemented.
+	* gnu/regexp/RETokenAny.java(getMaximumLength): Implemented.
+	* gnu/regexp/RETokenChar.java: Likewise.
+	* gnu/regexp/RETokenEnd.java: Likewise.
+	* gnu/regexp/RETokenEndSub.java: Likewise.
+	* gnu/regexp/RETokenLookAhead.java: Likewise.
+	* gnu/regexp/RETokenNamedProperty.java: Likewise.
+	* gnu/regexp/RETokenOneOf.java: Likewise.
+	* gnu/regexp/RETokenPOSIX.java: Likewise.
+	* gnu/regexp/RETokenRange.java: Likewise.
+	* gnu/regexp/RETokenRepeated.java: Likewise.
+	* gnu/regexp/RETokenStart.java: Likewise.
+	* gnu/regexp/RETokenWordBoundary.java: Likewise.
+	* gnu/regexp/RETokenIndependent.java: New file.
+	* gnu/regexp/RETokenLookBehind.java: New file.
+
+2006-02-04  Ito Kazumitsu  <kaz@maczuka.gcd.org>
+
+	* gnu/regexp/RETokenNamedProperty.java(getHandler): Check for
+	a Unicode block if the name starts with "In".
+	(UnicodeBlockHandler): New inner class.
+
+2006-02-02  Ito Kazumitsu  <kaz@maczuka.gcd.org>
+
+	* gnu/regexp/REMatch.java(REMatchList): New inner utility class
+	for making a list of REMatch instances.
+	* gnu/regexp/RETokenOneOf.java(match): Rewritten using REMatchList.
+	* gnu/regexp/RETokenRepeated.java(findDoables): New method.
+	(match): Rewritten using REMatchList.
+	(matchRest): Rewritten using REMatchList.
+
+2006-02-01  Mark Wielaard  <mark@klomp.org>
+
+	* gnu/regexp/RE.java (getRETokenNamedProperty): Chain exception.
+	* gnu/regexp/RETokenNamedProperty.java (LETTER, MARK, SEPARATOR,
+	SYMBOL, NUMBER, PUNCTUATION, OTHER): New final byte[] fields.
+	(getHandler): Check for grouped properties L, M, Z, S, N, P or C.
+	(UnicodeCategoriesHandler): New private static class.
+	
+2006-01-31  Mark Wielaard  <mark@klomp.org>
+
+	* java/net/URI.java (getURIGroup): Check for null to see whether
+	group actually exists.
+
+2006-01-31  Ito Kazumitsu  <kaz@maczuka.gcd.org>
+
+	Fixes bug #22873
+	* gnu/regexp/REMatch(toString(int)): Throw IndexOutOfBoundsException
+	for an invalid index and return null for a skipped group.
+
+2006-01-31  Ito Kazumitsu  <kaz@maczuka.gcd.org>
+
+	Fixes bug #26002
+	* gnu/regexp/gnu/regexp/RE.java(initialize): Parse /\p{prop}/.
+	(NamedProperty): New inner class.
+	(getNamedProperty): New method.
+	(getRETokenNamedProperty): New Method.
+	* gnu/regexp/RESyntax.java(RE_NAMED_PROPERTY): New syntax falg.
+	* gnu/regexp/RETokenNamedProperty.java: New file.
+
+2006-01-30  Ito Kazumitsu  <kaz@maczuka.gcd.org>
+
+	Fixes bug #24876
+	* gnu/regexp/gnu/regexp/RE.java(REG_TRY_ENTIRE_MATCH):
+	New execution flag.
+	(getMatchImpl): if REG_TRY_ENTIRE_MATCH is set, add an
+	implicit RETokenEnd at the end of the regexp chain.
+	Do not select the longest match, but select the first match.
+	(match): Do not take care of REMatch.empty.
+	* gnu/regexp/REMatch.java(empty): To be used only in RETokenRepeated.
+	* gnu/regexp/RETokenOneOf.java: Corrected a typo in a comment.
+	* gnu/regexp/RETokenBackRef.java: Do not take care of REMatch.empty.
+	* gnu/regexp/RETokenRepeated.java (match): Rewrote stingy matching.
+	Do not take care of REMatch.empty. Set and check REMatch.empty
+	when trying to match the single token.
+
+2006-01-24  Tom Tromey  <tromey@redhat.com>
+
+	* java/util/regex/PatternSyntaxException.java: Added @since.
+	* java/util/regex/Matcher.java (Matcher): Implements MatchResult.
+	* java/util/regex/MatchResult.java: New file.
+
+2006-01-23  Ito Kazumitsu  <kaz@maczuka.gcd.org>
+
+	* gnu/regexp/REToken.java(empty): Made Cloneable.
+	* gnu/regexp/RETokenOneOf.java(match): RE.java(match):
+	Use separate methods matchN and matchP depending on the
+	boolean negative.
+	(matchN): New method used when negative. Done as before.
+	(matchP): New method used when not negative. Each token is
+	tried not by itself but by a clone of it.
+
+2006-01-22  Ito Kazumitsu  <kaz@maczuka.gcd.org>
+
+	Fixes bug #25837
+	* gnu/regexp/REMatch.java(empty): New boolean indicating
+	an empty string matched.
+	* gnu/regexp/RE.java(match): Sets empty flag when an empty
+	string matched.
+	(initialize): Support back reference \10, \11, and so on.
+	(parseInt): renamed from getEscapedChar and returns int.
+	* gnu/regexp/RETokenRepeated.java(match): Sets empty flag
+	when an empty string matched. Fixed a bug of the case where
+	an empty string matched. Added special handling of {0}.
+	* gnu/regexp/RETokenBackRef.java(match): Sets empty flag
+	when an empty string matched. Fixed the case insensitive matching.
+
+2006-01-19  Ito Kazumitsu  <kaz@maczuka.gcd.org>
+
+	Fixes bug #23212
+	* gnu/regexp/RE.java(initialize): Support escaped characters such as
+	\0123, \x1B, \u1234.
+	(getEscapedChar): New method.
+	(CharExpression): New inner class.
+	(getCharExpression): New Method.
+	* gnu/regexp/RESyntax.java(RE_OCTAL_CHAR, RE_HEX_CHAR,
+	RE_UNICODE_CHAR): New syntax bits.
+
+2006-01-17  Ito Kazumitsu  <kaz@maczuka.gcd.org>
+
+	Fixes bug #25817
+	* gnu/regexp/RETokenRange.java(constructor):
+	Keep lo and hi as they are.
+	(match): Changed the case insensitive comparison.
+
+2006-01-17  Ito Kazumitsu  <kaz@maczuka.gcd.org>
+
+	* gnu/regexp/RETokenChar.java(chain):
+	Do not concatenate tokens whose insens flags are diffent.
+
+2006-01-16  Ito Kazumitsu  <kaz@maczuka.gcd.org>
+
+	Fixes bug #22884
+	* gnu/regexp/RE.java(initialize): Parse embedded flags.
+	* gnu/regexp/RESyntax.java(RE_EMBEDDED_FLAGS): New syntax bit.
+
+2006-01-13  Mark Wielaard  <mark@klomp.org>
+
+	* java/util/regex/Pattern.java (Pattern): Chain REException.
+
+2006-01-12  Ito Kazumitsu  <kaz@maczuka.gcd.org>
+
+	Fixes bug #22802
+	* gnu/regexp/RE.java(initialize): Fixed the parsing of
+	character classes within a subexpression.
+
+2006-01-08  Ito Kazumitsu  <kaz@maczuka.gcd.org>  
+
+	Fixes bug #25679
+	* gnu/regexp/RETokenRepeated.java(match): Optimized the case
+	when an empty string matched an empty token.
+
+2006-01-06  Ito Kazumitsu  <kaz@maczuka.gcd.org>  
+
+	Fixes bug #25616
+	* gnu/regexp/RE.java(initialize): Allow repeat.empty.token.
+	* gnu/regexp/RETokenRepeated.java(match): Break the loop
+	when an empty string matched an empty token.
+
+2006-02-06  Tom Tromey  <tromey@redhat.com>
+
+	* gnu/java/rmi/registry/RegistryImpl.java (version): Use 2006.
+	* gnu/CORBA/NamingService/NamingServiceTransient.java (main): Use
+	2006.
+
+2006-02-06  Anthony Green  <green@redhat.com>
+
+	* gnu/xml/aelfred2/XmlParser.java: Add missing break;.
+
+2006-02-06  Mark Wielaard  <mark@klomp.org>
+
+	Backports from 0.21.
+
+	2006-01-26  Mark Wielaard  <mark@klomp.org>
+
+	Fixes bug #25970 reported by Michael Kay <mike@saxonica.com>
+	* java/math/BigDecimal.java (compareTo): Don't strip trailing zeros.
+	Add trailing zeros to the fraction of the decimal with the smallest
+	scale.
+
+	2006-02-02  Mark Wielaard  <mark@klomp.org>
+
+	Fixes bug #25769 reported by Artemus Harper <subanark@gmail.com>
+	* java/util/AbstractCollection.java (toString): Only use Iterator,
+	check whether collection contains itself.
+
+2006-02-04  Mark Wielaard  <mark@klomp.org>
+
+	Backports from trunk/0.20.
+
+	2005-12-25  Jeroen Frijters  <jeroen@frijters.net>
+
+	* java/util/Collections.java
+	(binarySearch(List,Object,Comparator)): Changed comparison order
+	for improved compatibility.
+
+	2005-12-07  Ito Kazumitsu  <kaz@maczuka.gcd.org>
+
+	Fixes bug #25273
+	* java/text/DecimalFormat.java(scanFormat): Don't set
+	minimumIntegerDigits to 0.
+
+	2006-01-10  Jeroen Frijters  <jeroen@frijters.net>
+
+	PR classpath/25727
+	* java/util/Hashtable.java
+	(contains): Call equals on existing value.
+	(containsKey, get, put, remove): Call equals on existing key.
+	(getEntry): Call equals on existing entry.
+
+	2006-01-10  Jeroen Frijters  <jeroen@frijters.net>
+
+	PR classpath/24618
+	* java/util/AbstractMap.java
+	(equals(Object,Object)): Test for identity first.
+	* java/util/WeakHashMap.java
+	(WeakBucket.WeakEntry.equals): Use helper method to determine equality.
+	(WeakBucket.WeakEntry.toString): Fixed string representation of
+	null key.
+	(internalGet): Use helper method to determine equality.
+
+	2005-12-04  Guilhem Lavaux  <guilhem@kaffe.org>
+
+	* java/net/URL.java (URL): Check whether context is null before
+	accessing ph.
+
+	2005-11-29  Tom Tromey  <tromey@redhat.com>
+
+	PR classpath/25141:
+	* java/net/URL.java (URL): Use context's stream handler.
+
+2006-01-06  Tom Tromey  <tromey@redhat.com>
+
+	PR libgcj/23499:
+	* lib/Makefile.in: Rebuilt.
+	* lib/Makefile.am (glibj_DATA): Commented out.
+
+2005-12-15  Caolan McNamara  <caolanm@redhat.com>
+
+	PR classpath/25426:
+	* gnu/xml/dom/DomNode.java (detach): Check whether current is
+	already null.
+
+2005-12-08  Matthias Klose  <doko@debian.org>
+
+	2005-11-20  Chris Burdess  <dog@gnu.org>
+        * gnu/xml/transform/TransformerImpl.java: Ensure that output stream
+	is not closed if provided in the StreamResult.
+
+2005-12-01  Anthony Green  <green@redhat.com>
+
+        PR bootstrap/25207
+        * configure.ac: Make sure we have an alsa library in addition to
+        the headers.  This extra test is required for systems with
+        multilibs.
+        * configure: Rebuilt.
+
+2005-10-03  Tom Tromey  <tromey@redhat.com>
+
+	* native/jawt/Makefile.in: Rebuilt.
+	* native/jawt/Makefile.am (noinst_LTLIBRARIES): Renamed.
+	* native/jni/xmlj/Makefile.in: Rebuilt.
+	* native/jni/xmlj/Makefile.am (noinst_LTLIBRARIES): Renamed.
+	* native/jni/qt-peer/Makefile.in: Rebuilt.
+	* native/jni/qt-peer/Makefile.am (noinst_LTLIBRARIES): Renamed.
+	* native/jni/gtk-peer/Makefile.in: Rebuilt.
+	* native/jni/gtk-peer/Makefile.am (noinst_LTLIBRARIES): Renamed.
+
+2005-10-03  Tom Tromey  <tromey@redhat.com>
+
+	PR libgcj/24057:
+	* include/Makefile.in: Rebuilt.
+	* include/Makefile.am: Don't install headers.
+
+2005-09-30  Tom Tromey  <tromey@redhat.com>
+
+	PR libgcj/24051:
+	* Makefile.in: Rebuilt.
+	* Makefile.am (ACLOCAL_AMFLAGS): Added -I ../../config
+	* configure: Rebuilt.
+	* configure.ac: Use GCC_NO_EXECUTABLES
+
+2005-09-23  Tom Tromey  <tromey@redhat.com>
+
+	* native/jawt/.cvsignore: Likewise.
+	* native/jni/qt-peer/.cvsignore
+	* native/jawt/Makefile.in: Added.
+	* native/jni/qt-peer/Makefile.in: Likewise.
+
+2005-09-23  Tom Tromey  <tromey@redhat.com>
+
+	Imported Classpath 0.18.
+
+2005-08-23  Tom Tromey  <tromey@redhat.com>
+
+	* configure: Rebuilt.
+	* configure.ac: Fixed typo.
+
+2005-08-22  Tom Tromey  <tromey@redhat.com>
+
+	PR libgcj/23498:
+	* doc/Makefile.am (info_TEXINFOS): Commented out.
+	* doc/Makefile.in: Rebuilt.
+
+2005-08-22  Kelley Cook  <kcook@gcc.gnu.org>
+
+	* Makefile.am (ACLOCAL_AMFLAGS): New.
+	* Makefile.in: Regenerate.
+	
+2005-08-22  Tom Tromey  <tromey@redhat.com>
+
+	PR libgcj/23498:
+	* doc/Makefile.am (info_TEXINFOS): Commented out.
+	* doc/Makefile.in: Rebuilt.
+
+2005-08-11  Rainer Orth  <ro@TechFak.Uni-Bielefeld.DE>
+
+	* lib/split-for-gcj.sh: Don't use unportable %{parameter%word}.
+	Don't use unportable !.
+
+2005-07-15  Tom Tromey  <tromey@redhat.com>
+
+	* ChangeLog.gcj, Makefile.in, aclocal.m4, config.guess,
+	config.sub, configure, ltmain.sh, doc/Makefile.in,
+	doc/api/Makefile.in, examples/Makefile.in, external/Makefile.in,
+	external/sax/Makefile.in, external/w3c_dom/Makefile.in,
+	include/Makefile.in, include/config.h.in, include/jni.h,
+	lib/Makefile.in, native/Makefile.in, native/fdlibm/Makefile.in,
+	native/jni/Makefile.in, native/jni/classpath/Makefile.in,
+	native/jni/gtk-peer/Makefile.in, native/jni/java-io/Makefile.in,
+	native/jni/java-lang/Makefile.in, native/jni/java-net/Makefile.in,
+	native/jni/java-nio/Makefile.in, native/jni/java-util/Makefile.in,
+	native/jni/xmlj/Makefile.in, native/target/Makefile.in,
+	native/target/Linux/Makefile.in,
+	native/target/generic/Makefile.in, resource/Makefile.in,
+	scripts/Makefile.in: Added.
+	* native/fdlibm/.cvsignore, native/jni/xmlj/.cvsignore,
+	native/jni/java-util/.cvsignore, native/jni/classpath/.cvsignore,
+	native/jni/java-net/.cvsignore, native/jni/java-io/.cvsignore,
+	native/jni/.cvsignore, native/jni/java-lang/.cvsignore,
+	native/jni/gtk-peer/.cvsignore, native/jni/java-nio/.cvsignore,
+	native/testsuite/.cvsignore, native/.cvsignore,
+	native/vmi/.cvsignore, native/target/.cvsignore,
+	native/target/generic/.cvsignore, native/target/Linux/.cvsignore,
+	include/.cvsignore, doc/api/.cvsignore,
+	doc/www.gnu.org/faq/.cvsignore,
+	doc/www.gnu.org/downloads/.cvsignore,
+	doc/www.gnu.org/docs/.cvsignore, doc/www.gnu.org/.cvsignore,
+	doc/www.gnu.org/events/.cvsignore,
+	doc/www.gnu.org/announce/.cvsignore, doc/.cvsignore,
+	resource/.cvsignore, external/w3c_dom/.cvsignore,
+	external/sax/.cvsignore, external/.cvsignore,
+	java/util/.cvsignore, .cvsignore, test/java.net/.cvsignore,
+	test/java.io/.cvsignore, test/.cvsignore,
+	test/java.util/.cvsignore, test/gnu.java.lang.reflect/.cvsignore,
+	test/java.lang.reflect/.cvsignore, examples/.cvsignore,
+	lib/.cvsignore, gnu/classpath/.cvsignore, gnu/test/.cvsignore,
+	compat/java.net/.cvsignore, compat/.cvsignore, vm/.cvsignore,
+	vm/reference/.cvsignore, scripts/.cvsignore: Updated.

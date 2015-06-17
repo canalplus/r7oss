@@ -1,0 +1,13 @@
+config ST_THERMAL
+	tristate "Thermal sensors on STMicroelectronics STi series of SoCs"
+	depends on ARCH_STI
+	help
+	  Support for thermal sensors on STMicroelectronics STi series of SoCs.
+
+config ST_THERMAL_SYSCFG
+	bool "STi series syscfg register access based thermal sensors"
+	depends on ST_THERMAL
+
+config ST_THERMAL_MEMMAP
+	bool "STi series memory mapped access based thermal sensors"
+	depends on ST_THERMAL

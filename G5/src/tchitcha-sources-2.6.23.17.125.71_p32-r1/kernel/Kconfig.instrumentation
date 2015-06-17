@@ -1,0 +1,43 @@
+menu "Instrumentation Support"
+
+config KPROBES
+	bool "Kprobes (EXPERIMENTAL)"
+	depends on EXPERIMENTAL
+	help
+	  Kprobes allows you to trap at almost any kernel address and
+	  execute a callback function.  register_kprobe() establishes
+	  a probepoint and specifies the callback.  Kprobes is useful
+	  for kernel debugging, non-intrusive instrumentation and testing.
+	  If in doubt, say "N".
+
+config KPTRACE
+	tristate "KPTrace (EXPERIMENTAL)"
+	select KPROBES
+	select DEBUG_FS
+	select RELAY
+	select SYSFS
+	select KALLSYMS
+	help
+	  KPTrace is a Kprobes-based trace tool. It provides a full set
+	  of pre-defined tracepoints, plus a simple way to add and remove
+	  tracepoints at runtime.
+
+config KPTRACE_SYNC
+	bool "Trace synchronization events"
+	depends on KPTRACE
+	default n
+	help
+	 For KPTrace to be able to trace synchonization events (for example
+	 mutex and semaphore usage), certain key functions like mutex_lock
+	 must not be inlined. This may adversely affect system performance,
+	 and so this option must be used with care.
+
+config MARKERS
+	bool "Activate markers"
+	help
+	  Place an empty function call at each marker site. Can be
+	  dynamically changed for a probe function.
+
+source "ltt/Kconfig"
+
+endmenu

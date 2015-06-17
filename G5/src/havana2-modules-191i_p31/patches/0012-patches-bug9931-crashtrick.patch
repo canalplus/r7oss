@@ -1,0 +1,56 @@
+From ca524db5f88a8efb5ab1dd5fa6869b96a7df785a Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:19:59 +0100
+Subject: [PATCH 12/36] patches/bug9931-crashtrick
+
+---
+ player/collator2/collator2_base.cpp |   17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
+
+diff --git a/player/collator2/collator2_base.cpp b/player/collator2/collator2_base.cpp
+index 8f692df..8f20650 100644
+--- a/player/collator2/collator2_base.cpp
++++ b/player/collator2/collator2_base.cpp
+@@ -749,7 +749,7 @@ unsigned long long 	 NewOffset;
+     if( Configuration.GenerateStartCodeList )
+     {
+ 	if( NextReadInStartCodeList != Descriptor->StartCodeListIndex )
+-	    report( severity_fatal, "Collator2_Base_c::PerformOnePartition - Start code list in dubious condition (%d %d %d) - Implementation error\n", NextReadInStartCodeList, NextWriteInStartCodeList, Descriptor->StartCodeListIndex );
++	    report( severity_fatal, "Collator2_Base_c::PerformOnePartition - Start code list in dubious condition (%2d %2d %d) - Implementation error\n", NextReadInStartCodeList, NextWriteInStartCodeList, Descriptor->StartCodeListIndex );
+ 
+ 
+ 	Status  = Descriptor->Buffer->ObtainMetaDataReference( Player->MetaDataStartCodeListType, (void **)(&StartCodeList) );
+@@ -998,6 +998,9 @@ bool			PreservedNonBlocking;
+     OS_LockMutex( &PartitionLock );
+     AccumulateOnePartition();
+ 
++    PartitionPointSafeToOutputCount	= PartitionPointMarkerCount;		// If we are flushing, then we should move the marker and safe to output pointers
++    PartitionPointMarkerCount		= PartitionPointUsedCount;
++
+     PreservedNonBlocking	= NonBlockingInput;
+     NonBlockingInput		= false;
+     Status			= PartitionOutput();
+@@ -1020,8 +1023,20 @@ CollatorStatus_t   Collator2_Base_c::DiscardAccumulatedData(     void )
+     if( CodedFrameBuffer != NULL )
+     {
+ 	OS_LockMutex( &PartitionLock );
++#if 0
+ 	EmptyCurrentPartition();		// Empty to handle correct accounting
+ 	InitializePartition();
++#else
++	while( PartitionPointUsedCount > PartitionPointSafeToOutputCount )
++	{
++	    EmptyCurrentPartition();
++	    PartitionPointUsedCount--;
++	    NextPartition		= &PartitionPoints[PartitionPointUsedCount];
++	}
++	PartitionPointMarkerCount	= PartitionPointSafeToOutputCount;
++	EmptyCurrentPartition();
++	InitializePartition();
++#endif
+ 	OS_UnLockMutex( &PartitionLock );
+     }
+     return CollatorNoError;
+-- 
+1.7.9.5
+

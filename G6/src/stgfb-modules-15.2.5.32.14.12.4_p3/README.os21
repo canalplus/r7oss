@@ -1,0 +1,52 @@
+Introduction
+------------
+
+This file explains how to build and use the tests for the display
+driver using the ST40 embedded toochain.
+
+Building the Tree
+-----------------
+To build the driver tree you require the ST40 4.0.2 (or later) toolset installed
+and on your shell's PATH. A version of GNU make must also be available on your
+PATH. The following will build the driver for the STB7100 with extensive debug
+output turned on:
+
+cd os21
+make ARCH=sh CONFIG_STB7100_MB411=y CONFIG_STG_DEBUG=y
+
+The tree can be built without debug simply by removing CONFIG_STG_DEBUG
+from the build line. The tree can be built for the STi7200/MB519
+by replacing CONFIG_STB7100_MB411=y with CONFIG_STI7200_MB519=y .
+
+Note that there are no make dependency rules in the OS21 build; hence
+if you make any changes to the code you are advised to use the "clean"
+makefile target and then rebuild the tree. You must also clean the tree if
+it has previously been built for Linux, before building for OS21.
+
+The build creates two executables:
+
+1) tests/interlaced_display/interlaced_display.out
+2) tests/progressive_display/progressive_display.out
+
+Running the Tests
+-----------------
+Both tests take command line arguments, although there are a number of
+ways of starting applications with the ST40 embedded toolset, the following
+is how we work.
+
+First create a gdb script to automatically connect load and run a program,
+e.g.
+
+mb411cut2bypass titch
+load
+c
+
+If this script was called run.cmd, then the following command will start
+the display in PAL with component RGB enabled:
+
+sh4gdb -x run.cmd --args tests/interlaced_display/interlaced_display.out p r
+
+Start either test with no arguments will print a list of the arguments that
+the test accepts. Note that not all functionality may be available on all
+devices.
+

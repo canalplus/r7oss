@@ -1,0 +1,895 @@
+/*
+ * Copyright (C) 2013 STMicroelectronics Limited.
+ * Author(s): Giuseppe Cavallaro <peppe.cavallaro@st.com>
+ *            Alexandre Torgue <alexandre.torgue@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * publishhed by the Free Software Foundation.
+ */
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+#include <dt-bindings/reset-controller/stid127-resets.h>
+#include "stid127-pinctrl.dtsi"
+#include "stid127-clock.dtsi"
+#include "telss/lantiq_duslic.dtsi"
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+
+	aliases {
+		fdma0 = &fdma0_mpe;
+		fdma1 = &fdma1_mpe;
+		fdma2 = &fdma2_mpe;
+		fdmaxbar0 = &fdma_xbar_mpe;
+	};
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu@0 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a9";
+			reg = <0>;
+		};
+		cpu@1 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a9";
+			reg = <1>;
+		};
+	};
+
+	intc: interrupt-controller@fffe1000 {
+		compatible = "arm,cortex-a9-gic";
+		#interrupt-cells = <3>;
+		interrupt-controller;
+		reg = <0xfffe1000 0x1000>,
+		      <0xfffe0100 0x100>;
+	};
+
+	scu@fffe0000 {
+		compatible = "arm,cortex-a9-scu";
+		reg = <0xfffe0000 0x1000>;
+	};
+
+	timer@fffe0200 {
+		interrupt-parent = <&intc>;
+		compatible = "arm,cortex-a9-global-timer";
+		reg = <0xfffe0200 0x100>;
+		interrupts = <GIC_PPI 11 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&arm_periph_clk>;
+	};
+
+	L2: cache-controller {
+		compatible = "arm,pl310-cache";
+		reg = <0xfffe2000 0x1000>;
+		arm,data-latency = <3 3 3>;
+		arm,tag-latency = <2 2 2>;
+		cache-unified;
+		cache-level = <2>;
+	};
+
+	soc {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		interrupt-parent = <&intc>;
+		ranges;
+		compatible = "simple-bus";
+
+		restart{
+			compatible = "st,stid127-restart";
+			st,syscfg = <&syscfg_cpu>;
+		};
+
+		socinfo {
+			compatible = "st,stid127-socinfo";
+			st,syscfg = <&syscfg_cpu>;
+		};
+
+		powerdown: powerdown-controller {
+			#reset-cells = <1>;
+			compatible = "st,stid127-powerdown";
+		};
+
+		ddr-pctl-controller {
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges;
+			compatible = "simple-bus";
+			reg = <0xfea20000 0x1000>;
+			reg-names = "ddr_pll";
+
+			ddr-pctl@0xfe990000 {
+				compatible = "st,ddr-controller";
+				reg = <0xfe990000 0x2000>;
+			};
+		};
+
+		memory {
+			device_type = "eram";
+			reg = <0xfe240000 0x8000>;
+			reg-names = "eram_1";
+		};
+
+		softreset: softreset-controller {
+			#reset-cells = <1>;
+			compatible = "st,stid127-softreset";
+		};
+
+		pmu {
+			compatible = "st,stid127-pmu-syscfg";
+			st,syscfg = <&syscfg_cpu>;
+
+			arm-pmu {
+				interrupt-parent = <&intc>;
+				compatible = "arm,cortex-a9-pmu";
+				interrupts = <GIC_PPI 15 IRQ_TYPE_LEVEL_HIGH>;
+			};
+		};
+
+		syscfg_west:west-syscfg@febf0000{
+			compatible = "st,stid127-west-syscfg", "syscon";
+			reg = <0xfebf0000 0x1000>;
+		};
+
+		syscfg_south:south-syscfg@fefa0000{
+			compatible = "st,stid127-south-syscfg", "syscon";
+			reg = <0xfefa0000 0x1000>;
+		};
+
+		syscfg_docsis:docsis-syscfg@fef90000{
+			compatible = "st,stid127-docsys-syscfg", "syscon";
+			reg = <0xfef90000 0x1000>;
+		};
+
+		syscfg_cpu:cpu-syscfg@fe9a0000{
+			compatible = "st,stid127-cpu-syscfg", "syscon";
+			reg = <0xfe9a0000 0x1000>;
+		};
+
+		syscfg_hd:hd-syscfg@fe930000{
+			compatible = "st,stid127-hd-syscfg", "syscon";
+			reg = <0xfe930000 0x1000>;
+		};
+
+		syscfg_pwest:pwest-syscfg@fec00000{
+			compatible = "st,stid127-pwest-syscfg", "syscon";
+			reg = <0xfec00000 0x1000>;
+		};
+
+		syscfg_psouth:psouth-syscfg@fefd0000{
+			compatible = "st,stid127-psouth-syscfg", "syscon";
+			reg = <0xfefd0000 0x1000>;
+		};
+
+		syscfg_peast:peast-syscfg@febd0000{
+			compatible = "st,stid127-peast-syscfg", "syscon";
+			reg = <0xfebd0000 0x1000>;
+		};
+
+		/* Comms block ASCs in SASG2 */
+		uart0: serial@fe530000{
+			compatible = "st,asc";
+			reg = <0xfe530000 0x2c>;
+			interrupts = <GIC_SPI 25 IRQ_TYPE_NONE>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_uart0>;
+			clocks = <&CLK_S_A0_LS CLK_IC_LP_HD>;
+
+			status = "disabled";
+		};
+
+		uart2: serial@fe532000{
+			compatible = "st,asc";
+			reg = <0xfe532000 0x2c>;
+			interrupts = <GIC_SPI 27 IRQ_TYPE_NONE>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_uart2>;
+			clocks = <&CLK_S_A0_LS CLK_IC_LP_HD>;
+
+			status = "disabled";
+		};
+
+		ethernet0: dwmac@feb00000 {
+			device_type = "network";
+			compatible = "st,stid127-dwmac", "snps,dwmac", "snps,dwmac-3.610";
+			reg = <0xfeb00000 0x8000>, <0x158 0x4>;
+			reg-names = "stmmaceth", "sti-ethconf";
+			st,syscon = <&syscfg_south>;
+			st,gmac_en;
+			resets = <&softreset STID127_ETH0_SOFTRESET>;
+			reset-names = "stmmaceth";
+
+			interrupts = <GIC_SPI 31 IRQ_TYPE_NONE>,
+				     <GIC_SPI 30 IRQ_TYPE_NONE>,
+				     <GIC_SPI 29 IRQ_TYPE_NONE>;
+			interrupt-names = "macirq",
+					  "eth_wake_irq",
+					  "eth_lpi";
+
+			snps,pbl = <32>;
+			snps,fixed-burst;
+
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_rgmii0>;
+			clocks = <&CLK_S_A0_LS CLK_IC_LP_DQAM>,
+				 <&CLOCKGEN_TEL CLK_ETH0>;
+			clock-names = "stmmaceth",
+				      "sti-ethclk";
+		};
+
+		fpethernet:stmfp@fee80000 {
+			compatible = "st,fplite";
+			device_type = "network";
+
+			reg = <0xfee80000 0x40000>;
+			interrupts = <GIC_SPI 101 IRQ_TYPE_NONE>,
+				     <GIC_SPI 102 IRQ_TYPE_NONE>,
+				     <GIC_SPI 103 IRQ_TYPE_NONE>;
+			interrupt-names = "fptxdmairq",
+				          "fprxdma0irq",
+					  "fprxdma1irq";
+
+			resets = <&softreset STID127_FP_SOFTRESET>;
+			reset-names = "stmfpeth";
+
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_fp0>, <&pinctrl_fp1>;
+
+			clocks = <&CLOCKGEN_DOC CLK_FP>,
+				 <&CLOCKGEN_DOC CLK_IFE>;
+			clock-names = "CLK_FP",
+				      "CLK_IFE_216_FP";
+
+			st,fp_clk_rate = <200>;
+
+			status = "disabled";
+		};
+
+		usb2_phy: usb2phy@0 {
+			compatible = "st,stid127-usb-phy";
+			#phy-cells = <0>;
+
+			st,syscfg = <&syscfg_hd>;
+
+			clocks = <&CLOCKGEN_CCM_USB CLK_USB_REF>;
+			clock-names = "osc_phy";
+		};
+
+		st_usb_bus_config: st-usb-amba-config {
+			st,bridge_type2;
+			st,sd_config_missing;
+			st,complete_on_error;
+			st,read_ahead;
+			st,max_opcode_LD64_ST64;
+			st,chunks_in_msg = <0>;
+			st,packets_in_chunk = <2>;
+			st,threshold = <16>;
+		};
+
+		usb0: usb@fe800000{
+			compatible = "st,usb-300x";
+			status = "disabled";
+			st,amba-config = <&st_usb_bus_config>;
+			reg = <0xfe800000 0x100>,
+			      <0xfe803c00 0x100>,
+			      <0xfe803e00 0x100>,
+			      <0xfe803f00 0x100>;
+			reg-names = "wrapper",
+				    "ohci",
+				    "ehci",
+				    "protocol";
+
+			interrupts = <GIC_SPI 147 IRQ_TYPE_NONE>,
+				     <GIC_SPI 148 IRQ_TYPE_NONE>;
+			interrupt-names = "ehci",
+					  "ohci";
+
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_usb0>;
+
+			clocks = <&CLK_S_A0_LS CLK_IC_LP_HD>;
+			clock-names = "ic";
+
+			resets = <&powerdown STID127_USB0_POWERDOWN>,
+				 <&softreset STID127_USB0_SOFTRESET>;
+
+			reset-names = "power", "softreset";
+
+			phys = <&usb2_phy>;
+			phy-names = "usb2-phy";
+
+			status = "disabled";
+		};
+
+		temp0{
+			compatible = "st,stid127-thermal";
+			clock-names = "thermal";
+			clocks = <&CLOCKGEN_CCM_LPC CLK_THERMAL_SENSE>;
+		};
+
+		eCM@0 {
+			compatible = "st,rproc";
+			boot_addr = <&syscfg_cpu 0x98 1 28>;
+			resets = <&softreset STID127_ST40_MANRESET>,
+				 <&softreset STID127_ST40_PWRRESET>;
+			reset-names = "manual_reset",
+				      "power_reset";
+			interrupts = <GIC_SPI 38 IRQ_TYPE_NONE>;
+		};
+
+		docsis: docsis@fee00000 {
+			compatible = "st,docsis";
+			reg = <0xfee2e000 0x100>,
+			      <0xfee1a000 0x100>;
+			reg-names = "dfwd-reg",
+				    "upiim-reg";
+
+			status = "okay";
+		};
+
+		/*
+			ISVE - Virtual Interfaces
+
+			Downstream queue:
+				docsis_base + 0x2E400 + (queue * 0x20)
+			Upstream queue:
+				docsis_base + 0x1A400 + (queue * 0x28)
+		*/
+		if17:queue_3 {
+			compatible = "st,isve";
+			device_type = "network";
+			reg = <0xfee2e460 0x20>, <0xfee1a478 0x20>;
+			interrupts = <GIC_SPI 78 IRQ_TYPE_NONE>,
+				     <GIC_SPI 89 IRQ_TYPE_NONE>;
+			interrupt-names = "isveirq_ds",
+					  "isveirq_us";
+
+			isve,queue_number = <3>;
+			isve,skip_hdr = <0x2>; /* two extra bytes have to be removed */
+			isve,hw_rem_hdr = <0x3>; /* remove docsis and extra HDR */
+
+			status = "disabled";
+		};
+
+		if18:queue_4 {
+			compatible = "st,isve";
+			device_type = "network";
+			reg = <0xfee2e480 0x20>, <0xfee1a4a0 0x20>;
+			interrupts = <GIC_SPI 79 IRQ_TYPE_NONE>,
+				     <GIC_SPI 90 IRQ_TYPE_NONE>;
+			interrupt-names = "isveirq_ds",
+					  "isveirq_us";
+
+			isve,queue_number = <4>;
+			isve,skip_hdr = <0x2>; /* two extra bytes have to be removed */
+			isve,hw_rem_hdr = <0x3>; /* remove docsis and extra HDR */
+
+			status = "disabled";
+		};
+
+		if16:queue_5 {
+			compatible = "st,isve";
+			device_type = "network";
+			reg = <0xfee2e4a0 0x20>, <0xfee1a4c8 0x20>;
+			interrupts = <GIC_SPI 80 IRQ_TYPE_NONE>,
+				     <GIC_SPI 91 IRQ_TYPE_NONE>;
+			interrupt-names = "isveirq_ds",
+					  "isveirq_us";
+			isve,queue_number = <5>;
+			isve,skip_hdr = <0x2>; /* two extra bytes have to be removed */
+			isve,hw_rem_hdr = <0x3>; /* remove docsis and extra HDR */
+
+			status = "disabled";
+		};
+
+		if1:queue_7 {
+			compatible = "st,isve";
+			device_type = "network";
+			reg = <0xfee2e4e0 0x20>, <0xfee1a518 0x20>;
+			interrupts = <GIC_SPI 82 IRQ_TYPE_NONE>,
+				     <GIC_SPI 93 IRQ_TYPE_NONE>;
+			interrupt-names = "isveirq_ds",
+					  "isveirq_us";
+
+			isve,queue_number = <7>;
+			isve,skip_hdr = <0x2>; /* two extra bytes have to be removed */
+			isve,hw_rem_hdr = <0x3>; /* remove docsis and extra HDR */
+
+			status = "disabled";
+		};
+
+		if0:queue_0 {
+			compatible = "st,isve";
+			device_type = "network";
+			reg = <0xfee2e400 0x20>, <0xfee1a400 0x20>;
+			interrupts = <GIC_SPI 75 IRQ_TYPE_NONE>,
+				     <GIC_SPI 86 IRQ_TYPE_NONE>;
+			interrupt-names = "isveirq_ds",
+					  "isveirq_us";
+
+			isve,queue_number = <0>;
+			isve,skip_hdr = <0x2>; /* two extra bytes have to be removed */
+			isve,hw_rem_hdr = <0x3>; /* remove docsis and extra HDR */
+
+			status = "disabled";
+		};
+
+		pwm0: pwm@fe510000 {
+			compatible = "st,pwm";
+			#pwm-cells = <2>;
+			reg = <0xfe510000 0x68>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_pwm0_chan0_default
+				     &pinctrl_pwm0_chan1_default>;
+			clock-names = "pwm";
+			clocks = <&CLK_IFE_REF>;
+			st,pwm-num-chan = <2>;
+
+			status = "disabled";
+		};
+
+		pcie0: pcie@fef20000 {
+			compatible = "st,stid127-pcie";
+			device_type = "pci";
+			reg = <0xfef20000 0x00001000   /* cntrl registers */
+			       0xfef28000 0x00000008   /* ahb registers */
+			       0x27ff0000 0x00010000   /* configuration space */
+			       0x40000000 0xbc000000   /* lmi mem window */
+			       0x10c 0x04>;            /* syscfg 267 */
+			reg-names = "pcie cntrl",
+				    "pcie ahb",
+				    "pcie cs",
+				    "mem-window",
+				    "syscfg0";
+
+			interrupts = <GIC_SPI 44 IRQ_TYPE_LEVEL_HIGH>,
+				     <GIC_SPI 43 IRQ_TYPE_LEVEL_HIGH>,
+				     <GIC_SPI 46 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "pcie inta",
+					  "pcie syserr",
+					  "msi";
+
+			bus-range = <0x00 0x7f>;
+			#address-cells = <3>;
+			#size-cells = <2>;
+			ranges = <0x81000000 0 0x00001000 0x00001000 0 0x00007000   /* dummy I/O space */
+				  0x82000000 0 0x20000000 0x20000000 0 0x02AA0000   /* non-prefetchable memory */
+				  0xc2000000 0 0x22AA0000 0x22AA0000 0 0x05550000>; /* prefetchable memory */
+			st,syscfg = <&syscfg_south>;
+			st,ahb-fixup = <0x26c028>;
+
+			resets = <&powerdown STID127_PCIE0_POWERDOWN>,
+				 <&softreset STID127_PCIE0_SOFTRESET>;
+			reset-names = "power",
+				      "softreset";
+
+			status = "disabled";
+		};
+
+		pcie1: pcie@fef30000 {
+			compatible = "st,stid127-pcie";
+			device_type = "pci";
+			reg = <0xfef30000 0x00001000   /* cntrl registers */
+			       0xfef38000 0x00000008   /* ahb registers */
+			       0x2fff0000 0x00010000   /* configuration space */
+			       0x40000000 0xbc000000   /* lmi mem window */
+			       0xfc 0x04>;             /* syscfg 263 */
+			reg-names = "pcie cntrl",
+				    "pcie ahb",
+				    "pcie cs",
+				    "mem-window",
+				    "syscfg0";
+
+			interrupts = <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH>,
+				     <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>,
+				     <GIC_SPI 52 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "pcie inta",
+					  "pcie syserr",
+					  "msi";
+
+			bus-range = <0x80 0xff>;
+			#address-cells = <3>;
+			#size-cells = <2>;
+			ranges = <0x81000000 0 0x00008000 0x00008000 0 0x00008000   /* dummy I/O space */
+				  0x82000000 0 0x28000000 0x28000000 0 0x02AA0000   /* non-prefetchable memory */
+				  0xc2000000 0 0x2AAA0000 0x2AAA0000 0 0x05550000>; /* prefetchable memory */
+			st,syscfg = <&syscfg_south>;
+			st,ahb-fixup = <0x26c028>;
+
+			resets = <&powerdown STID127_PCIE1_POWERDOWN>,
+				 <&softreset STID127_PCIE1_SOFTRESET>;
+			reset-names = "power",
+				      "softreset";
+
+			status = "disabled";
+		};
+
+		/* SSC0 */
+		spi@fe540000 {
+			compatible = "st,comms-ssc-spi";
+			reg = <0xfe540000 0x110>;
+			interrupts = <GIC_SPI 18 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&CLK_S_A0_LS CLK_IC_LP_HD>;
+			clock-names = "ssc";
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_spi0_default>;
+			cs-gpios = <&PIO7 7>;
+
+			status = "disabled";
+		};
+
+		i2c@fe540000 {
+			compatible = "st,comms-ssc4-i2c";
+			status = "disabled";
+			interrupts = <GIC_SPI 18 IRQ_TYPE_LEVEL_HIGH>;
+			reg = <0xfe540000 0x110>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			clocks = <&CLK_S_A0_LS CLK_IC_LP_HD>;
+			clock-names = "ssc";
+			clock-frequency = <400000>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_i2c0>;
+		};
+
+		i2c@fe541000 {
+			compatible = "st,comms-ssc4-i2c";
+			status = "disabled";
+			interrupts = <GIC_SPI 19 IRQ_TYPE_LEVEL_HIGH>;
+			reg = <0xfe541000 0x110>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			clocks = <&CLK_S_A0_LS CLK_IC_LP_HD>;
+			clock-names = "ssc";
+			clock-frequency = <400000>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_i2c1>;
+		};
+
+		i2c@fe542000 {
+			compatible = "st,comms-ssc4-i2c";
+			status = "disabled";
+			interrupts = <GIC_SPI 20 IRQ_TYPE_LEVEL_HIGH>;
+			reg = <0xfe542000 0x110>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			clocks = <&CLK_S_A0_LS CLK_IC_LP_HD>;
+			clock-names = "ssc";
+			clock-frequency = <400000>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_i2c2>;
+		};
+
+		i2c@fe543000 {
+			compatible = "st,comms-ssc4-i2c";
+			status = "disabled";
+			interrupts = <GIC_SPI 21 IRQ_TYPE_LEVEL_HIGH>;
+			reg = <0xfe543000 0x110>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			clocks = <&CLK_S_A0_LS CLK_IC_LP_HD>;
+			clock-names = "ssc";
+			clock-frequency = <400000>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_i2c3>;
+		};
+
+		i2c@fe544000 {
+			compatible = "st,comms-ssc4-i2c";
+			status = "disabled";
+			interrupts = <GIC_SPI 22 IRQ_TYPE_LEVEL_HIGH>;
+			reg = <0xfe544000 0x110>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			clocks = <&CLK_S_A0_LS CLK_IC_LP_HD>;
+			clock-names = "ssc";
+			clock-frequency = <400000>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_i2c4>;
+		};
+
+		i2c@fe545000 {
+			compatible = "st,comms-ssc4-i2c";
+			status = "disabled";
+			interrupts = <GIC_SPI 23 IRQ_TYPE_LEVEL_HIGH>;
+			reg = <0xfe545000 0x110>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			clocks = <&CLK_S_A0_LS CLK_IC_LP_HD>;
+			clock-names = "ssc";
+			clock-frequency = <400000>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_i2c5>;
+		};
+
+		i2c@fe546000 {
+			compatible = "st,comms-ssc4-i2c";
+			status = "disabled";
+			interrupts = <GIC_SPI 24 IRQ_TYPE_LEVEL_HIGH>;
+			reg = <0xfe546000 0x110>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			clocks = <&CLK_S_A0_LS CLK_IC_LP_HD>;
+			clock-names = "ssc";
+			clock-frequency = <400000>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_i2c6>;
+		};
+
+		wdt: lpc_wdt@0xfe9c6000 {
+			compatible = "st,stid127-lpc-wdt";
+			reg = <0xfe9c6000 0x1000>;
+			clock-names = "lpc_wdt";
+			clocks = <&CLOCKGEN_CCM_LPC CLK_LPC_COMMS>;
+			timeout-sec = <30>;
+			st,syscfg = <&syscfg_cpu>;
+			status = "okay";
+		};
+
+		cid-irqmux@fea2d000{
+			compatible = "st,cid-irqmux", "simple-bus";
+			reg = <0xfea2d000 0x400>;
+			irqmux-name = "FDMA-2-CID";
+			irqmux-inputs = <16>;
+			irqmux-outputs = <4>;
+			interrupts-enable;
+			interrupts-multiplier = <0>;
+			interrupts-constant = <0>;
+		};
+
+		/* FDMA */
+		fdma_fw_regs: fdma-fw-regs {
+			fw-rev-id = <0x10000>;
+			fw-mchi-rx-nb-cur = <0x100c4>;
+			fw-mchi-rx-nb-all = <0x100c8>;
+			fw-cmd-statn = <0x10200>;
+			fw-req-ctln = <0x10240>;
+			fw-ptrn = <0x10800>;
+			fw-ctrln = <0x10804>;
+			fw-cntn = <0x10808>;
+			fw-saddrn = <0x1080c>;
+			fw-daddrn = <0x10810>;
+			fw-node-size = <128>;
+		};
+
+		fdma_hw_config: fdma-hw-config {
+			slim-reg-id = <0x0>;
+			slim-reg-ver = <0x4>;
+			slim-reg-en = <0x8>;
+			slim-reg-clk-gate = <0xc>;
+			slim-reg-slim-pc = <0x20>;
+
+			dmem-offset = <0x10000>;
+			dmem-size = <0x3000>;
+
+			periph-reg-sync-reg = <0x17f88>;
+			periph-reg-cmd-sta = <0x17fc0>;
+			periph-reg-cmd-set = <0x17fc4>;
+			periph-reg-cmd-clr = <0x17fc8>;
+			periph-reg-cmd-mask = <0x17fcc>;
+			periph-reg-int-sta = <0x17fd0>;
+			periph-reg-int-set = <0x17fd4>;
+			periph-reg-int-clr = <0x17fd8>;
+			periph-reg-int-mask = <0x17fdc>;
+
+			imem-offset = <0x18000>;
+			imem-size = <0x8000>;
+		};
+
+		fdma_xbar_mpe: fdma-xbar-mpe {
+			compatible = "st,fdma-xbar";
+			reg = <0xfe96a000 0x1000>;
+			first-fdma = <0>;
+			last-fdma = <2>;
+		};
+
+		fdma0_mpe: fdma-mpe@0 {
+			compatible = "st,fdma";
+			reg = <0xfe2c0000 0x20000>;
+			interrupts = <GIC_SPI 172 IRQ_TYPE_NONE>;
+			hw-conf = <&fdma_hw_config>;
+			fw-regs = <&fdma_fw_regs>;
+			xbar = <0>;
+			fw-name = "fdma_STiD127_0.elf";
+			clocks = <&CLK_S_A0_HS0 CLK_FDMA_0>,
+				 <&CLK_S_A0_LS CLK_IC_LP_HD>,
+				 <&CLK_S_A0_LS CLK_IC_DMA>,
+				 <&CLK_S_A0_LS CLK_IC_LP_HD>;
+			clock-names = "fdma_slim",
+				      "fdma_hi",
+				      "fdma_low",
+				      "fdma_ic";
+		};
+
+		fdma1_mpe: fdma-mpe@1 {
+			compatible = "st,fdma";
+			reg = <0xfe2e0000 0x20000>;
+			interrupts = <GIC_SPI 176 IRQ_TYPE_NONE>;
+			hw-conf = <&fdma_hw_config>;
+			fw-regs = <&fdma_fw_regs>;
+			xbar = <0>;
+			fw-name = "fdma_STiD127_1.elf";
+			clocks = <&CLK_S_A0_HS0 CLK_FDMA_1>,
+				 <&CLK_S_A0_LS CLK_IC_LP_HD>,
+				 <&CLK_S_A0_LS CLK_IC_DMA>,
+				 <&CLK_S_A0_LS CLK_IC_LP_HD>;
+			clock-names = "fdma_slim",
+				      "fdma_hi",
+				      "fdma_low",
+				      "fdma_ic";
+		};
+
+		fdma2_mpe: fdma-mpe@2 {
+			compatible = "st,fdma";
+			reg = <0xfeb80000 0x20000>;
+			interrupts = <GIC_SPI 180 IRQ_TYPE_NONE>;
+			hw-conf = <&fdma_hw_config>;
+			fw-regs = <&fdma_fw_regs>;
+			xbar = <0>;
+			fw-name = "fdma_STiD127_2.elf";
+			clocks = <&CLOCKGEN_TEL CLK_FDMA_TEL>,
+				 <&CLK_S_A0_LS CLK_IC_LP_ETH>,
+				 <&CLK_S_A0_LS CLK_IC_ROUTER>,
+				 <&CLK_S_A0_LS CLK_IC_LP_ETH>;
+			clock-names = "fdma_slim",
+				      "fdma_hi",
+				      "fdma_low",
+				      "fdma_ic";
+		};
+
+		/* FSM */
+		spifsm:	spifsm@fe302000 {
+			compatible = "st,spi-fsm";
+			reg = <0xfe302000 0x1000>;
+			reg-names = "spi-fsm";
+			clocks = <&CLK_S_A0_LS CLK_IC_SPI>;
+			clock-names = "emi_clk";
+			pinctrl-0 = <&pinctrl_fsm>;
+			st,syscfg = <&syscfg_west>;
+			st,boot-device-reg = <0xd8>;
+			st,boot-device-spi = <0x68>;
+			st,boot-device-msk = <0x7c>;
+			caps-handle = <&fsm_caps>;
+
+			status = "disabled";
+
+			fsm_caps: fsm-caps {
+				no-read-repeat;
+				no-write-repeat;
+				read-status-clkdiv4;
+				dual-mode;	/* DUAL mode */
+				quad-mode;	/* QUAD mode */
+			};
+		};
+
+		/* TELSS Duslic DXT */
+		duslic_dxt: duslic-dxt{
+			compatible = "st,duslic_dxt";
+			gpios = <&PIO17 2 0>;
+		};
+
+		/* TELSS SPI */
+		telss_spi0: telss-spi0{
+			compatible = "st,comms-ssc-spi";
+			status = "disabled";
+			reg = <0xfeba7000 0x110>;
+			interrupts = <GIC_SPI 143 IRQ_TYPE_NONE>;
+			clocks = <&CLK_S_A0_LS CLK_IC_LP_HD>;
+			clock-names = "ssc";
+			cs-gpios = <&PIO17 1 0>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_telss_spi0>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			/* SLIC Lantiq device SPI */
+			slic_lantiq_spi0: slic-lantiq-spi0@0{
+				compatible = "spicore";
+				status = "okay";
+				reg = <0>;
+				spi-max-frequency = <4000000>;
+				spi-cpha = <1>;
+				spi-cpol = <1>;
+			};
+		};
+
+		snd_tdm_player0: snd-uni-tdm@0xfeba4000 {
+			compatible = "st,snd_uni_tdm";
+			status = "disabled";
+			reg = <0xfeba4000 0x150>;
+			interrupts = <GIC_SPI 145 IRQ_TYPE_NONE>;
+			description = "Uni TDM Player #0";
+			version	= <0>;
+			card-device = <0xffffffff>;
+			dmas = <&fdma2_mpe>;
+			fdma-name = "stm-fdma.2";
+			fdma-channel = <1>;
+			fdma-initiator = <1>;
+			fdma-direction = "DMA_MEM_TO_DEV";
+			fdma-direct-conn = <1>;
+			fdma-request-line = <30>;
+			rising-edge = <1>;
+			clocks = <&CLOCKGEN_TEL CLK_ZSI>, <&CLOCKGEN_CCM_TEL CLK_ZSI_APPL>;
+			clock-names = "uniperif_tdm_clk", "uniperif_tdm_pclk";
+			clk-rate = <49152000>;
+			frame-count = <80>;
+			max-periods = <10>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_lantiq_duslic_player0>;
+			hw-config = <&snd_tdm_lantiq_duslic_config>;
+		};
+
+		snd_tdm_reader0: snd-uni-tdm@0xfeba5000 {
+			compatible = "st,snd_uni_tdm";
+			status = "disabled";
+			reg = <0xfeba5000 0x150>;
+			interrupts = <GIC_SPI 146 IRQ_TYPE_NONE>;
+			description = "Uni TDM Reader #0";
+			version	= <0>;
+			card-device = <0xffffffff>;
+			dmas = <&fdma2_mpe>;
+			fdma-name = "stm-fdma.2";
+			fdma-channel = <2>;
+			fdma-initiator = <1>;
+			fdma-direction = "DMA_DEV_TO_MEM";
+			fdma-direct-conn = <1>;
+			fdma-request-line = <29>;
+			rising-edge = <0>;
+			frame-count = <80>;
+			max-periods = <10>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_lantiq_duslic_reader0>;
+			hw-config = <&snd_tdm_lantiq_duslic_config>;
+		};
+
+		snd_telss_glue: snd-telss-glue {
+			compatible = "st,snd_telss_glue";
+			status = "okay";
+			reg = <0xfeba8000 0x1000>;
+			version = <0>;
+			mode = "LANTIQ";
+			loopback = <0>;
+		};
+
+		/* STM3 System Trace Port */
+		stm_systrace: systrace@fe260000 {
+			compatible = "st,systrace-ipv3";
+			reg = <0xFE260000 0x10000>,
+			      <0xFE270000 0x1000>;
+			reg-names = "stm-systrace-channels",
+				    "stm-systrace-conf";
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_systrace_default>;
+
+			/* STM IP v3 configuration */
+			systrace-phy-config {
+				stm_reg0 { /* fck = 25Mhz */
+					nam = "STM_CR";
+					ofs = <0x0000>;
+					val = <0x0200>;
+				};
+				stm_reg1 {
+					nam = "STM_MCR";
+					ofs = <0x0008>;
+					val = <0x0000>;
+				};
+				stm_reg2 { /* Enable all initiators */
+					nam = "STM_TER";
+					ofs = <0x0010>;
+					val = <0x03ff>;
+				};
+				stm_reg3 { /* ASYNC period (ftr) */
+					nam = "STM_FTR";
+					ofs = <0x0080>;
+					val = <1>;
+				};
+				stm_reg4 { /* ASYNC period (ctr) */
+					nam = "STM_CTR";
+					ofs = <0x0088>;
+					val = <1>;
+				};
+			};
+		};
+	};
+};

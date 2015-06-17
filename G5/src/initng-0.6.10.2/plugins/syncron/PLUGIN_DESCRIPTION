@@ -1,0 +1,9 @@
+          name : syncron
+        author : Neuron <neuron@hollowtube.mine.nu>
+  contributors : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+      commands : 
+       options : syncron
+  cmd_line_opt : synchronously
+   description : IF syncron or synchronously is set, initng will make sure that
+                 there are not multiple services started simultaneously.
+                 Useful for debugging, or with interactive plugin.

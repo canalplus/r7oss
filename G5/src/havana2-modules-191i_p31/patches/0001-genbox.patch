@@ -1,0 +1,100 @@
+From 140d3e5a262ffeefa2c30c91480cd4bbe7f2b826 Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:19:59 +0100
+Subject: [PATCH 01/36] genbox
+
+genbox initng and modprobe.d files
+---
+ genbox/asound.conf            |    3 +++
+ genbox/asoundrc               |    4 ++++
+ genbox/initng/engine.i        |   29 +++++++++++++++++++++++++++++
+ genbox/modprobe.d/player2.tpl |   20 ++++++++++++++++++++
+ 4 files changed, 56 insertions(+)
+ create mode 100644 genbox/asound.conf
+ create mode 100644 genbox/asoundrc
+ create mode 100644 genbox/initng/engine.i
+ create mode 100644 genbox/modprobe.d/player2.tpl
+
+diff --git a/genbox/asound.conf b/genbox/asound.conf
+new file mode 100644
+index 0000000..9f23811
+--- /dev/null
++++ b/genbox/asound.conf
+@@ -0,0 +1,3 @@
++# set default card to MIXER0
++defaults.ctl.card 1
++defaults.pcm.card 1
+diff --git a/genbox/asoundrc b/genbox/asoundrc
+new file mode 100644
+index 0000000..e99df8f
+--- /dev/null
++++ b/genbox/asoundrc
+@@ -0,0 +1,4 @@
++pcm.!default {
++        type plug
++	        slave.pcm "hw:1,0"
++}
+diff --git a/genbox/initng/engine.i b/genbox/initng/engine.i
+new file mode 100644
+index 0000000..e836823
+--- /dev/null
++++ b/genbox/initng/engine.i
+@@ -0,0 +1,29 @@
++#!/sbin/itype
++# This is a i file, used by initng parsed by install_service
++
++# NAME: player2
++# DESCRIPTION: Loads STMicroelectronics player2 modules
++# WWW: http://www.wyplay.com
++
++service modules/engine {
++        env_file = /etc/initng/env;
++        stdall = ${OUTPUT};
++        need = system/initial modules/stmfb;
++
++        script start = {
++                /sbin/modprobe player2 || exit 1
++
++                /usr/bin/alsa_cset hw:MIXER0 \
++			"Boost factor" 255 \
++			"Cut   factor" 255 \
++			"DRC Enable" 1 \
++			"DRC Type  " 3 \
++			"Analog Limiter Playback Switch" 0 \
++			'Downmix Promotion Playback Switch' 1
++		/usr/bin/toposet \
++			channel_assignment[0] LT_RT \
++		        channel_assignment[1] LT_RT \
++		        channel_assignment[2] LT_RT
++        };
++}
++
+diff --git a/genbox/modprobe.d/player2.tpl b/genbox/modprobe.d/player2.tpl
+new file mode 100644
+index 0000000..3373aea
+--- /dev/null
++++ b/genbox/modprobe.d/player2.tpl
+@@ -0,0 +1,20 @@
++
++# uncomment this this to allow MPEG2 PIP on 7109 and 7200
++__MPEG2HW_ENABLE__ options mpeg2hw mmeName=__MPEG2_TRANSFORMER__
++
++# disable platform_device for tkdma
++options platform tkdma=0
++
++install player2 \
++		/sbin/modprobe strelay; \
++                /sbin/modprobe multicom; \
++                /sbin/modprobe stmfb; \
++                /sbin/modprobe mpeg2hw; \
++		/sbin/modprobe silencegen; \
++                /sbin/modprobe  --ignore-install player2; \
++                /sbin/modprobe stmalloc; \
++                /sbin/modprobe platform; \
++                /sbin/modprobe sth264pp
++
++alias engine player2
++
+-- 
+1.7.9.5
+

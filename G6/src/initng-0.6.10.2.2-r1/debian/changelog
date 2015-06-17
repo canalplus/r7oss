@@ -1,0 +1,397 @@
+initng (0.6.10.1-1) experimental; urgency=low
+
+  * New upstream release
+
+ -- Florian Knauf <f.knauf@mmkf.de>  Thu, 24 May 2007 06:09:05 +0100
+
+initng (0.6.10-1) experimental; urgency=low
+
+  * New upstream release
+
+ -- Florian Knauf <f.knauf@mmkf.de>  Sun, 25 Mar 2007 02:39:05 +0100
+
+initng (0.6.9+svn-1) experimental; urgency=low
+
+  * New upstream release
+
+ -- Florian Knauf <f.knauf@mmkf.de>  Sun, 04 Feb 2007 03:50:25 +0100
+
+initng (0.6.9-1) experimental; urgency=low
+
+  * New upstream release
+
+ -- Florian Knauf <f.knauf@mmkf.de>  Sun, 04 Feb 2007 03:50:25 +0100
+
+initng (0.6.8-1) experimental; urgency=low
+
+  * New upstream release
+
+ -- Armin Berres <a.berres@onlinehome.de>  Mon, 18 Sep 2006 12:05:31 +0200
+
+initng (0.6.7-1) experimental; urgency=low
+
+  * New upstream release
+  * don't depend on initng-ifiles, just recommend it.
+    Otherwise we have a circular dependency
+  * don't execute ngc -c in postinst anymore - Initng will do it for us
+
+ -- Armin Berres <a.berres@onlinehome.de>  Fri, 19 May 2006 12:26:19 +0200
+
+initng (0.6.6-1) experimental; urgency=low
+
+  * New upstream release
+  * Set LIB_INSTALL_DIR dir to /lib - otherwise we FTBFS on amd64
+
+ -- Armin Berres <a.berres@onlinehome.de>  Fri, 12 May 2006 13:39:57 +0200
+
+initng (0.6.5-1) experimental; urgency=low
+
+  * New upstream release
+  * raised dephelper compat level to 5
+  * corrected dependencies for initng-dev
+  * watch file fixed
+  * indented homepage in debian/control with two blanks
+  * disabled rpath
+  * call dh_shlibdeps with the path to the libraries
+
+ -- Armin Berres <a.berres@onlinehome.de>  Mon,  8 May 2006 14:35:31 +0200
+
+initng (0.6.3-1) experimental; urgency=low
+
+  * New upstream release
+
+ -- Armin Berres <a.berres@onlinehome.de>  Wed, 26 Apr 2006 12:47:20 +0200
+
+initng (0.6.2-1) experimental; urgency=low
+
+  * New upstream release. Highlights since the last Debian release:
+    - Completed support for cmake
+    - Filecache updates: Initng won't read an i file over and over 
+      again for each entry in it
+    - "ngc -u /etc/full/path/ifile.i" works now
+    - Fixed segfault from DBus plugin
+    - Initng data storage backend rewritten
+    - found and fixed a lot of memoryholes 
+    - Cpu usage has been reduced
+    - Hot reload issues fixed
+    - lots of bugfixes
+  * use cmake instead of autotools
+  * copy system.runlevel to system.virtual, if system.virtual doesn't 
+    exist yet
+
+ -- Armin Berres <a.berres@onlinehome.de>  Mon, 24 Apr 2006 15:13:56 +0200
+
+initng (0.6.0-1) experimental; urgency=low
+
+  * New upstream release
+  * don't rerun autoconf
+  * removed most patches - merged upstream
+
+ -- Armin Berres <a.berres@onlinehome.de>  Mon, 27 Mar 2006 11:50:40 +0200
+
+initng (0.5.5-1) experimental; urgency=low
+
+  * New upstream release. Highlights from the release notes:
+    - lots of bugfixing :-)
+
+ -- Armin Berres <a.berres@onlinehome.de>  Wed,  8 Mar 2006 14:08:14 +0100
+
+initng (0.5.4-1) experimental; urgency=low
+
+  * New upstream release
+  * don't use things from /usr in early stage (closes #350567)
+  * correct advice for lilo users in manpage (closes #328688)
+  * no more wrong examples in the ngc.8 manpage (closes #325018)
+  
+ -- Armin Berres <a.berres@onlinehome.de>  Wed, 22 Feb 2006 21:23:00 +0100
+
+initng (0.5.3-1) experimental; urgency=low
+
+  * New upstream release
+
+ -- Armin Berres <a.berres@onlinehome.de>  Sun, 22 Jan 2006 23:04:19 +0100
+
+initng (0.5.2-1) experimental; urgency=low
+
+  * New upstream release. Highlights from the release notes:
+    - env_file bug fixed
+    - system/udev added, and many udev bugs seems resolved
+    - fixed serious parsing bug in i_parser
+    - lots of bugfixing
+  * sh_libdeps gets the path to the initng libs now
+  * remove the Makefiles with "make distclean"
+
+ -- Armin Berres <a.berres@onlinehome.de>  Sat, 14 Jan 2006 12:39:13 +0100
+
+initng (0.5.1-1) experimental; urgency=low
+
+  * New upstream release. Highlights from the release notes:
+    - Made ngc nicer
+    - logfile plugin fixed again
+    - daemon_clean plugin, you can now execute code, when daemon dies
+    - initial work for ngc replacements
+    - sysvinit plugin now understands more sysvnint commands, like U, q.
+    - Fixed bugs in env_parser
+  * gdm will be now start if it lives in /usr/bin or /usr/sbin
+  * Ifplugd works now very nice with Initng
+  * net/all will bring up all configured interfaces
+  * lots of cleanup in debian/ - thanks to Michal Biebl for his help
+
+ -- Armin Berres <a.berres@onlinehome.de>  Sat,  8 Jan 2006 16:27:18 +0100
+
+initng (0.5.0-1) UNRELEASED; urgency=low
+
+  * (NOT RELEASED YET) New upstream release
+  * Never released due to a bug
+
+ -- Armin Berres <a.berres@onlinehome.de>  Sat, 24 Dec 2005 01:27:48 +0100
+
+initng (0.4.8-1) experimental; urgency=low
+
+  * New upstream release
+  * make hald not forking - otherwise Initng thinks it stopped
+
+ -- Armin Berres <a.berres@onlinehome.de>  Wed, 14 Dec 2005 18:17:02 +0100
+
+initng (0.4.7-3) experimental; urgency=low
+
+  * mount all virtual file systems in system/initial.i again
+  * don't start dbus with start-stop-daemon
+  * hald is started by Initng and not by Dbus
+  * Missing blank in debian/rules
+  * Lots of .i file updates from current svn
+
+ -- Armin Berres <a.berres@onlinehome.de>  Sun, 11 Dec 2005 21:59:47 +0100
+
+initng (0.4.7-2) experimental; urgency=low
+
+  * Fixed some typos.
+
+ -- Armin Berres <a.berres@onlinehome.de>  Sun, 11 Dec 2005 16:50:23 +0100
+
+initng (0.4.7-1) experimental; urgency=low
+
+  * New upstream release. Highlights from the release notes:
+    - gen_system_runlevel got some work to probe existing services when
+    migrating from sysvinit.
+    - Fixed hot-reload
+    - ngc -L is now more beautiful
+    - Lots of bugfixing
+    - Ability to choose runlevel again with grub runlevel:
+    - New .i parser syntax, more hard, and requires a ';'
+    - i_parser generates niceer errors
+  * Should be fully compatible to Ubuntu now - no more changes needed
+  * More stuff I don't remember
+
+ -- Armin Berres <a.berres@onlinehome.de>  Sun, 11 Dec 2005 11:40:20 +0100
+
+initng (0.4.4-2) experimental; urgency=low
+
+  * dbus and hal will be started properly
+
+ -- Armin Berres <a.berres@onlinehome.de>  Sat, 19 Nov 2005 16:12:47 +0100
+
+initng (0.4.4-1) experimental; urgency=low
+
+  * New upstream release
+  * Hopefully all virtual filesystems are mounted now
+  * Lots of changes upstream
+
+ -- Armin Berres <a.berres@onlinehome.de>  Sat, 19 Nov 2005 13:57:02 +0100
+
+initng (0.4.2-1) UNRELEASED; urgency=low
+
+  * (NOT RELEASED YET) New upstream release
+  * Has never been released
+
+ -- Armin Berres <a.berres@onlinehome.de>  Mon, 14 Nov 2005 17:36:15 +0100
+
+initng (0.4.0-1) experimental; urgency=low
+
+  * New upstream release. Highlights from the release notes:
+    - New imanual.txt
+    - ngc will only wait 10 seconds on staring/stoping services and not
+    clutter the screen
+    - Only check for a pidfile, when daemon returns, and returns happily
+    (return code 0)
+    - work on build system, every plugin can be disabled/enabled in
+    ./configure
+    - lots of bugfixing
+    - lots of updates to .ii files
+    - lots of unpaid work by the Initng team
+
+ -- Armin Berres <a.berres@onlinehome.de>  Tue,  8 Nov 2005 00:15:50 +0100
+
+initng (0.3.5-1) experimental; urgency=low
+
+  * New upstream release. Highlights from the release notes:
+    - added a runlevelEditor gui using python and pykde
+    - update to reload ngc -c command
+    - lots of posix fixes to scripts
+    - added a net_check plugin that probes network capabilities before
+    launching network daemons
+    - bugfixes all over
+  * Alsa should now be stopped properly
+
+ -- Armin Berres <a.berres@onlinehome.de>  Thu,  3 Nov 2005 10:08:21 +0100
+
+initng (0.3.4-1) experimental; urgency=low
+
+  * New upstream release. Highlights from the release notes:
+    - bug, not fetching parameters while loading static modules
+    - Huge updates to the internal api now we can add more processes then a
+    start, daemon, and stop process to our services, i will implent the
+    soultion for this in next release.
+    - ngc will print initng and ngc version, on all commands, and warn if
+    version differs
+    - added an environ parser plugin, include by option "env_file =
+    /etc/envrionment" for example in a service.
+    - moved stdout to logfile
+    - fixed lots of bugs
+  * /bin/sh is used instead of /bin/bash - i recommend you to use the fast dash instead
+    of bash as default shell
+  * Package is now managed via svn
+  * all the changes in the source are done via dpatch
+   
+ -- Armin Berres <a.berres@onlinehome.de>  Fri, 28 Oct 2005 20:25:48 +0200
+
+initng (0.3.3-2) experimental; urgency=low
+
+  * Fixed a typo in dbus.ii 
+
+ -- Armin Berres <a.berres@onlinehome.de>  Thu, 13 Oct 2005 11:18:05 +0200
+
+initng (0.3.3-1) experimental; urgency=low
+
+  * New upstream release
+  * Start some scripts from /etc/init.d as temporary workaround
+  * Major cleanups in Initng code
+
+ -- Armin Berres <a.berres@onlinehome.de>  Wed, 12 Oct 2005 22:57:53 +0200
+
+initng (0.3.2-1) experimental; urgency=low
+
+  * New upstream release
+  * Correct links to not yet exesting manpages (closes: 332783)
+  * Offer sulogin if system is shuting down, and is not shut down within 120
+    seconds.
+  * Now when initng segfaults, it wont leave init down, it will execve
+    /sbin/initng-segfault that will offer sulogin.
+  * Endless loop bug fixed.
+  * Now syslog will get initng errormessages also.
+  * Cleanups.
+
+ -- Armin Berres <a.berres@onlinehome.de>  Sat,  8 Oct 2005 17:48:06 +0200
+
+initng (0.3.1-1) experimental; urgency=low
+
+  * New upstream release
+  * syslog plugin - now all daemon output, and actions are sent
+    directly to syslogd, if syslogd is not started they are buffered in
+    initng, and flushed so that no dbug msgs is missed.
+  * Lots of bugfixing all over
+  
+ -- Armin Berres <a.berres@onlinehome.de>  Wed,  5 Oct 2005 12:39:15 +0200
+
+initng (0.3.0-1) experimental; urgency=low
+
+  * New upstream release
+  * Lots of changes in the code
+  * New framework for halt and reboot, use ngc --reboot or ngc --halt
+
+ -- Armin Berres <a.berres@onlinehome.de>  Tue, 27 Sep 2005 12:50:10 +0200
+
+initng (0.2.5-1) experimental; urgency=low
+
+  * New upstream release
+  
+ -- Armin Berres <a.berres@onlinehome.de>  Mon, 26 Sep 2005 13:59:01 +0200
+
+initng (0.2.4-1) experimental; urgency=low
+
+  * New upstream release
+  * Hopefully shutting down/rebooting
+
+ -- Armin Berres <a.berres@onlinehome.de>  Mon, 26 Sep 2005 00:54:02 +0200
+
+initng (0.2.3-2) experimental; urgency=low
+
+  * Fix postinst 
+
+ -- Armin Berres <a.berres@onlinehome.de>  Sun, 25 Sep 2005 18:31:42 +0200
+
+initng (0.2.3-1) experimental; urgency=low
+
+  * New upstream release
+  * Correct dbus.i file
+
+ -- Armin Berres <a.berres@onlinehome.de>  Sun, 25 Sep 2005 16:04:38 +0200
+
+initng (0.2.0-2) experimental; urgency=low
+
+  * Don't use --rpath
+  * Cosmetic change in debian/postinst
+
+ -- Armin Berres <a.berres@onlinehome.de>  Mon,  5 Sep 2005 17:35:55 +0200
+
+initng (0.2.0-1) experimental; urgency=low
+
+  * New upstream release
+  * Removed bashisms in postinst (closes: 324234)
+
+ -- Armin Berres <a.berres@onlinehome.de>  Mon,  5 Sep 2005 12:42:28 +0200
+
+initng (0.1.9-1) experimental; urgency=low
+
+  * New upstream release
+  * Create /dev/xconsole when starting syslogd (closes: 323693)
+  * If you add cardmgr to default runlevel it is started before
+    networking (closes: 323244)
+  * Run discover and start klogd during boot
+  * Create /dev/MAKEDEV during boot (closes: 324836)
+  * Fix examples section in manpage (closes: 325018)
+  
+ -- Armin Berres <a.berres@onlinehome.de>  Sun, 21 Aug 2005 12:11:37 +0200
+
+initng (0.1.8-1) experimental; urgency=low
+
+  * New upstream release
+  * Delete all the files created by autoconf/automake during cleanup
+  * Correct the typo in the URL of the upstream homepage (closes: 323144)
+  * Changed section in debian/control to admin
+  * run "ngc -c" for proper reboot when updating running Initng
+
+ -- Armin Berres <a.berres@onlinehome.de>  Fri, 12 Aug 2005 18:20:20 +0200
+
+initng (0.1.7-1) experimental; urgency=low
+
+  * Initial upload to Debian experimental, thanks to Bartosz Fenski
+    for sponsoring this package (closes: #315877)
+  * New upstream release
+  * Added and changed some manpages
+  * Work on gen_system_runlevel - install the right display manager
+  * Start only tty1 to tty6
+  * other little fixes
+
+ -- Armin Berres <a.berres@onlinehome.de>  Tue,  9 Aug 2005 14:30:31 +0200
+
+initng (0.1.6-1) experimental; urgency=low
+
+  * New upstream release
+  * Run /sbin/gen_system_runlevel.sh during postinst
+  
+ -- Armin Berres <a.berres@onlinehome.de>  Fri, 29 Jul 2005 14:03:54 +0200
+
+initng (0.1.5-1) experimental; urgency=low
+
+  * New upstream release
+
+ -- Armin Berres <a.berres@onlinehome.de>  Sun, 24 Jul 2005 19:58:28 +0200
+
+initng (0.1.4-1) experimental; urgency=low
+
+  * Initial release
+  
+ -- Armin Berres <a.berres@onlinehome.de>  Sun, 17 Jul 2005 21:43:04 +0200
+ 
+

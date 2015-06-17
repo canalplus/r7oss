@@ -1,0 +1,26 @@
+From 06aec0c8ff97d4013baf91474e7ba5b36fb0bd3f Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:19:59 +0100
+Subject: [PATCH 05/36] patches/player2_int_169-wybug3798
+
+wyplay bug #3798
+---
+ player/frame_parser/frame_parser_video_h264.cpp |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/player/frame_parser/frame_parser_video_h264.cpp b/player/frame_parser/frame_parser_video_h264.cpp
+index a30e473..314c803 100644
+--- a/player/frame_parser/frame_parser_video_h264.cpp
++++ b/player/frame_parser/frame_parser_video_h264.cpp
+@@ -5518,7 +5518,7 @@ report( severity_info, "NickQ NonPairedOutput - (%d %d) (%d %d) (%d %d)\n",
+     // framerate is ridiculous, then we use the default value.
+     //
+ 
+-    if( !inrange( ParsedVideoParameters->Content.FrameRate, 8, 120 ) )
++    if ( UserSpecifiedDefaultFrameRate || !inrange( ParsedVideoParameters->Content.FrameRate, 8, 120 ) )
+ 	ParsedVideoParameters->Content.FrameRate	= DefaultFrameRate;
+ 
+ 
+-- 
+1.7.9.5
+

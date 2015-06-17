@@ -1,0 +1,67 @@
+* Wed Sep 10 2014 Megha Gupta  <megha.gupta@st.com> - 2.0.5-1
+- [Bugzilla: 57953]- comms_clk is used in CA but does not exist in kernel 3.10
+
+* Wed Aug 06 2014 Megha Gupta  <megha.gupta@st.com> - 2.0.4-1
+- [Bugzilla: 56107][SC] SmartCard issues with PPS handling
+
+* Wed Jul 30 2014 Megha Gupta  <megha.gupta@st.com> - 2.0.3-1
+- [Bugzilla: 55662][SC] SmartCard issues with PPS negociation
+- [Bugzilla: 54178][Hardening] Compilation error in ca_interface: stm_scr
+
+* Tue Jun 24 2014 Megha Gupta  <megha.gupta@st.com> - 2.0.2-1
+- [Bugzilla: 52170]-Wall build option mandatory to be activated in CA
+
+* Fri Jun 6 2014 Megha Gupta  <megha.gupta@st.com> - 2.0.0-1
+- [Bugzilla:51837]RPM generation error in CA Interface changelog
+- [Bugzilla:50319][CANNES NDS] Certification blocker: Wrong timing between vcc and clock
+
+* Thu May 22 2014 Megha Gupta  <megha.gupta@st.com> - 1.9.0-1
+- [Bugzilla: 50828]Segregation of CA test to new internal repository "ca_interface_int"
+
+* Tue May 20 2014 Megha Gupta  <megha.gupta@st.com> - 1.8.0-1
+- [Bugzilla: 49773][CANNES NSK2] regression on nsk2 tests with TX of 256 bytes
+- [Bugzilla: 50612]Crash while opening scr for CA1
+- [Bugzilla: 50487][PM][SDK2] Run Time idle power management
+- [Bugzilla: 48644][NSK2 KERNEL 3.10] Add CA-specific clock configuration in smart card driver
+
+* Fri May 2 2014 Megha Gupta  <megha.gupta@st.com> - 1.7.0-1
+- [Bugzilla: 49693][PM][SDK2] Run Time power management functionality with CA subsystem(STEP 2 and 3)
+
+* Tue Apr 22 2014 Megha Gupta  <megha.gupta@st.com> - 1.6.0-1
+- [Bugzilla: 49492]smart card raw read timeout error
+- [Bugzilla: 49016][SDK2-13.1] : Coverity bug fixes for DVBCI
+- [Bugzilla: 49489][SDK2-14] : [PM][SDK2] Run Time power management functionality with CA subsystem
+- [Bugzilla: 49015][CANNES NSK2] Harmonizer tests 31-39 fail: wrong WWT value
+- [Bugzilla: 49008] scr bidirectional gpio changes for Kernel STI-3.10
+- [Bugzilla: 49012] Make thread priorities for all sub-systems tuneable using module parameters
+- [Bugzilla: 49007][CANNES NSK2] Harmonizer 1.49 test 10 fails because of rx timeout value
+
+* Tue Mar 11 2014 Megha Gupta  <megha.gupta@st.com> - 1.5.0-1
+- [Bugzilla: 46374][SDK2-13.1] Coverity bug fixes for SCR
+- [Bugzilla: 46393][SDK2-13.1] Coverity bug fixes for DVBCI
+
+* Wed Mar 5 2014 Megha Gupta  <megha.gupta@st.com> - 1.4.0-1
+- [Bugzilla: 45978]Crash while accessing scr_platform_s in reset/term
+
+* Tue Mar 04 2014 Nidhi Chadha <nidhi.chadha@st.com> - 1.3-2
+Add RPM information
+Remove Spec File
+
+* Wed Feb 20 2014 Megha Gupta  <megha.gupta@st.com> - 1.3-1
+- [Bugzilla: 42633] [sti310][INFRA:SCR] SCR porting for Kernel STI-3.10
+- [Bugzilla: 44947] [sti310] [INFRA:DVBCI] DVBCI porting for Kernel STI-3.10
+
+* Tue Feb 18 2014 Bharat Jauhari  <bharat.jauhari@st.com> - 1.2-1
+- [Bugzilla: 44961] addition of stm_scr and stm_ci under dmxsec sub system
+- Fix SPEC file typo errors
+
+* Fri Feb 14 2014 Megha Gupta  <megha.gupta@st.com> - 1.1-1
+- [Bugzilla: 41947] [SCR] Fix Coverity issues for SDK2-12
+- [Bugzilla: 43183] [SCR] SCR init for ca3: division by 0
+- [Bugzilla: 43986] [NSK2 cannes1] tests 648 & 647 fail with stm_sct_transfer error
+- [Bugzilla: 44317] [NASC][HARDENING] proc_fs cannot be disable in smartcard driver
+- [Bugzilla: 44375] [POLSAT][SC#126543] SCR - Problem with write/read
+
+* Fri Feb 14 2014 Megha Gupta  <megha.gupta@st.com> - 1.0-1
+- Initial delivery of the ca_interface package.
+- Contains migrated version of Smart Card Reader and DVB CI from infrastructure packege.

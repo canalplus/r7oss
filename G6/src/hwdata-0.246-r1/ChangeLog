@@ -1,0 +1,1100 @@
+commit 4b964783ddd8b25d24484b3ee5a295023d71beb6
+Author: Michal Minar <miminar@redhat.com>
+Date:   Wed Mar 27 07:11:42 2013 +0100
+
+    data files update
+
+commit d0adbba18dd200c1aeedc19fe30e2447fcd0f3a9
+Author: Michal Minar <miminar@redhat.com>
+Date:   Mon Mar 18 11:46:48 2013 +0100
+
+    data files update
+
+commit 5e931dd336e03c1029b2ae856298e450471f38dc
+Author: Michal Minar <miminar@redhat.com>
+Date:   Mon Feb 18 09:18:27 2013 +0100
+
+    data files update
+
+commit ab16cd38b8c676c69b4e2329d9d36d0f3899dae4
+Author: Michal Minar <miminar@redhat.com>
+Date:   Fri Jan 18 13:16:15 2013 +0100
+
+    updated text of GPLv2 file
+
+commit 1eef266fb376a5208246c0b54da82b8fbe8475ad
+Author: Michal Minar <miminar@redhat.com>
+Date:   Fri Jan 18 11:52:02 2013 +0100
+
+    updated data files
+
+commit 3ec4e33c01d479ed3cf4321a7b7f4dc91a79e970
+Author: Michal Minar <miminar@redhat.com>
+Date:   Fri Dec 7 13:33:21 2012 +0100
+
+    Updated data files
+
+commit 1ce7e5ea843892755c43ee751f032c8c6e47137b
+Author: Michal Minar <miminar@redhat.com>
+Date:   Wed Nov 7 10:03:05 2012 +0100
+
+    updated spec
+
+commit 4df2658e8024a019f5621d9c509a6ab2255ee85e
+Author: Michal Minar <miminar@redhat.com>
+Date:   Wed Nov 7 10:01:02 2012 +0100
+
+    updated pci.ids and out.txt
+
+commit a7b95c1323b88cacc9ef51ab345a86449dbb965d
+Author: Michal Minar <miminar@redhat.com>
+Date:   Wed Oct 31 15:32:46 2012 +0100
+
+    added script for comparison of old and new pci.ids
+
+commit 2f39fb805e3a861bd49f4524764104f2db0dab37
+Author: Michal Minar <miminar@redhat.com>
+Date:   Wed Sep 26 13:22:08 2012 +0200
+
+    update data files, fixed spec file
+    
+    configure script made executable
+     - it is now used in spec's prep section
+    
+    updated oui.txt and pci.ids
+
+commit 9665c98dd34ab927772ce359e9ee9fbc0a549d97
+Author: Michal Minar <miminar@redhat.com>
+Date:   Tue Sep 25 10:05:12 2012 +0200
+
+    updated data files (pci.ids, oui.txt, usb.ids)
+
+commit 3ab47e5247be12cb03df83682a6d1c1f5a716cff
+Author: Colin Walters <walters@verbum.org>
+Date:   Mon Aug 27 09:38:30 2012 -0400
+
+    build: Don't depend on hwdata.spec for 'make install'
+    
+    It's really not necessary to parse "hwdata.spec" to tell us our
+    package name is "hwdata".
+    
+    The other targets still do depend on the version/release in
+    hwdata.spec.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 249c1310f7c55dd65735735c5c2984d7d0867e85
+Author: Colin Walters <walters@verbum.org>
+Date:   Mon Aug 27 09:35:59 2012 -0400
+
+    Add a configure script to implement GNOME Build API
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    This also required modifying the install rule to honor DESTDIR.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 666e71eed24bb8da8efd89e6626882bc52476dde
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Aug 23 13:56:55 2012 -0400
+
+    Fix Source0 yet again.
+
+commit 80fee73efc415482cb87437a5f4ba10ab8fa8a3d
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Aug 23 13:53:50 2012 -0400
+
+    Ahem.  Fix Source0.  This time for sure.
+
+commit 2564f4ef5afbc87fdd759852ccbaa1901f965c6b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Aug 23 13:52:38 2012 -0400
+
+    hwdata 0.236
+
+commit d91f4ddd9a0bb4ed52b8c6c9caf217c6d2fb0510
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Aug 23 13:43:43 2012 -0400
+
+    Don't embed %dist into VERSION when making git tag names
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 86b943b874f4d5fcb5f2ff8ba671cd85a16eecfd
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Aug 23 13:40:59 2012 -0400
+
+    Update reference spec file to current Fedora idiom
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit c480927b52b324e23c52a5e5b57cf10a81ff46d4
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Aug 23 13:40:00 2012 -0400
+
+    Don't create videoaliases subdir at install
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit da7bba7605fc449dab30d98fd8dd4e20d326dee3
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Aug 23 13:34:16 2012 -0400
+
+    Remove an old comment about MonitorsDB
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit fd5d9a7e8ffd9fb79c2d5564ff55aa7a4207f878
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Aug 23 13:33:30 2012 -0400
+
+    Update pci/usb/oui
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 5c40dd3d0e98755e4bb07b7e98b473a4f6a1dc8a
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Aug 23 13:22:27 2012 -0400
+
+    Nuke upgradelist
+    
+    <notting> it was used by kudzu back in the old days to munge modprobe.conf
+              when modules changed names
+    <notting> we stopped shipping module_upgrade in upstream kudzu in....
+              september 2006
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 22495d9f53e572fdafd999dcfb0cb35166b232ab
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Sep 6 13:30:13 2011 -0400
+
+    Remove system-config-display leftovers
+    
+    s-c-d is not currently shipping in any supported Fedora branch.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit e5856be396537253b3add3e513ba8fccd8db4571
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Mon Aug 8 11:07:33 2011 +0200
+
+    update pci.ids, usb.ids, oui.txt
+
+commit 0797b2ff6378235cf5ffdf7454354c742ab42a4c
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Wed Apr 27 10:51:05 2011 +0200
+
+    fix release, changelog
+
+commit 3eb50502409b4015ef51eca8b35d8f40387a74f1
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Wed Apr 27 10:49:59 2011 +0200
+
+    update to latest oui.txt, pci.ids, usb.ids
+
+commit 1e74339b842c0e4ced4cfba787a301fc956b5470
+Author: Matt Domsch <Matt_Domsch@dell.com>
+Date:   Mon Apr 4 16:46:25 2011 -0500
+
+    add more Dell monitors
+
+commit 85ec982e35ed1d70bf44cf94de382dd68197f8d5
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Jan 28 17:59:57 2011 +0100
+
+    let rpm figure out the release
+
+commit c2102859968da03f9ae0910886bedae0766b69aa
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Jan 28 17:53:42 2011 +0100
+
+    different solution for the tarball naming
+
+commit c2daa38c1f652d4a279495681a4bc9f2886e1771
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Jan 28 17:50:39 2011 +0100
+
+    more dist fixes
+
+commit a52b41402b339d76fd1dddabda064e83269f55bb
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Jan 28 17:42:28 2011 +0100
+
+    update oui.txt URL
+
+commit c783af28464e094ac5f27d210e4995ffa13f9c46
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Jan 28 16:05:33 2011 +0100
+
+    don't use %dist in tarball name
+
+commit 7351357d12e830bad1cc4386fe70f56166214c48
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Jan 28 11:41:41 2011 +0100
+
+    fix tarball name in specfile
+
+commit 08d8a35d4bf47ddb673629d60a21a3ad98a5b650
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Jan 28 11:40:07 2011 +0100
+
+    bump release
+
+commit 5b2b31bd4b5a762741b9b2de09d82eb7711599e8
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Jan 28 11:38:21 2011 +0100
+
+    create tarball with n-v-r instead of n-v
+
+commit c7dbac14aa076229cb62cc3033115b8119b9f4f9
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Jan 28 11:35:09 2011 +0100
+
+    bump release and add changelog
+
+commit 4a0379e27bb0e53c8ae22935134ed863b56ca38c
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Jan 28 11:34:23 2011 +0100
+
+    update
+
+commit 41b5b1da6b0ec98563b1cd9743e770237cb2d379
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Tue Aug 31 11:01:31 2010 +0200
+
+    - add  Samsung SyncMaster 2343BW/2343BWX (Ronald Warsow)
+
+commit 084b588ea5a6f03e2aa91afd6424c4db76712386
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Wed Aug 25 12:04:28 2010 +0200
+
+    - update pci.ids, usb.ids, oui.txt
+
+commit 5e930c28a77fa9544191f4b6b500dadae3c3c430
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Thu Aug 5 13:25:39 2010 +0200
+
+    fix changelog order
+
+commit 2cf1269ae705860700a4fa5370530ef7691a83d1
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Thu Aug 5 13:20:28 2010 +0200
+
+    - update usb.ids, out.txt and pci.ids (#550020, #611860)
+    - fix incorrect syntax doc/comment in blacklist.conf (Ville Skyttä, #532802)
+    - add Acer B243HL and BenQ G2420HDBL (Ville Skyttä, #590787)
+    - add HP LP2475w and Samsung 2494HM (Ville Skyttä, #595059)
+
+commit 61232acc757b1dedc3dceff06d43f6036eec7484
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Thu Aug 5 13:15:13 2010 +0200
+
+    Add HP LP2475w and Samsung 2494HM
+
+commit bac99084b136f01b90e9fc49bead91ce41463547
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Thu Aug 5 12:00:57 2010 +0200
+
+    - add Acer B243HL and BenQ G2420HDBL (Ville Skyttä, #590787)
+
+commit fd440dcf6ab4d40fe2305ea4d3756932c0272e16
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Thu Aug 5 10:53:26 2010 +0200
+
+    fix Incorrect syntax doc/comment in blacklist.conf (#532802)
+
+commit 7361dc65a2d47c427257e8431e513baa37521d7c
+Author: Philip Knirsch <pknirsch@hamburg.str.redhat.com>
+Date:   Tue May 25 19:13:14 2010 +0200
+
+    - update usb.ids, out.txt and pci.ids
+    - Resolves: #584788
+
+commit 568cf9d32089f72abdfc199aa55b54785882e5e1
+Author: Matt Domsch <Matt_Domsch@dell.com>
+Date:   Wed Mar 31 10:38:21 2010 -0500
+
+    add 14 Dell monitors
+
+commit b015c34f6186f15afb214190384f642a1cc8824c
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Mon Mar 29 12:39:27 2010 +0200
+
+    - update usb.ids, out.txt and pci.ids for F-13 (#571914)
+
+commit 8d1a5ea764656c69854a02f48334419a2627110b
+Author: Philip Knirsch <pknirsch@hamburg.str.redhat.com>
+Date:   Wed Mar 17 12:05:47 2010 +0100
+
+    - Blacklist chsc_sch for s390x
+
+commit ad7603fea5508e822f965b4dd87c78f9f161ce4d
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Mon Feb 22 18:09:01 2010 +0100
+
+    - update  oui.txt pci.ids usb.ids , license
+
+commit a9fa19769d79f87780d463baef17c69921e9ff30
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Feb 23 08:06:35 2010 +1000
+
+    hwdata: add viafb to the fb blacklist
+
+commit 539c655211290d207c592dcb4751aa3b9ec469da
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Jan 15 16:23:11 2010 +0100
+
+    fix changelog
+
+commit b2bb33a9ceb7644d3e94ce9b1ed2f677f4230f3e
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Jan 15 16:21:21 2010 +0100
+
+    - update release number
+
+commit be2fc6832b38c1491a439668d9c4d30b2ba8446b
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Jan 15 16:17:48 2010 +0100
+
+    - update usb.ids pci.ids oui.txt
+
+commit b74271fcbe41aac2e29f9f9e6b3f59e68c641577
+Author: Matt Domsch <matt@domsch.com>
+Date:   Tue Sep 1 12:08:08 2009 -0500
+
+    add 4 Dell monitors
+
+commit 40bce2a3b88530356ccc61d43afb2000553816f8
+Author: Matt Domsch <matt@domsch.com>
+Date:   Wed Aug 19 15:45:41 2009 -0500
+
+    add 42 new Dell monitors
+
+commit 253e468c4991ceae48740a146f2defcf9a4545be
+Merge: bd0e652 de79002
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Wed Jul 8 15:06:11 2009 +0200
+
+    update
+
+commit de79002fc0d0ebb32633907823eb977372473ee7
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jul 7 18:14:36 2009 -0400
+
+    pnp.ids: DEL -> Dell
+    
+    Don't know who Deltec is, and don't care either.
+
+commit c54650f5504140e8b86504aae582ece57024dbdd
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Jun 12 15:50:31 2009 -0400
+
+    pnp.ids: Update
+
+commit 1b216e8decd37f56d77267e2c818400112b7a88a
+Author: Matt Domsch <matt@domsch.com>
+Date:   Mon Apr 13 11:17:18 2009 -0500
+
+    add 12 Dell monitors
+
+commit c8f2fbbfe37bc9cd06e6aa46a8a2be9fe8f955cd
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Apr 9 14:33:30 2009 -0400
+
+    hwdata 0.225
+    
+    Missed a specfile change
+
+commit b46eb3c8ff6b14edb0020ed603aa833b34545a74
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Apr 9 14:30:54 2009 -0400
+
+    hwdata 0.224
+
+commit dac9640a1ac63a60752c663662a1b279bf5beb82
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Apr 9 14:30:22 2009 -0400
+
+    mv blacklist blacklist.conf
+
+commit ead2541d4badb743f8f9fab1ebba9ccb626ed425
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Apr 9 14:26:46 2009 -0400
+
+    Fix upload target
+
+commit a1c5ab9276d09ee8bab78325659122db6596fd12
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Apr 9 14:20:08 2009 -0400
+
+    Release 0.223
+
+commit e278beb31bd7d0964c3812dda38b3e9841a08d18
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Apr 9 14:24:47 2009 -0400
+
+    Fix create-archive target
+
+commit c8b69e84f6a66738873a4222e19fd7395eb9e5b6
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Apr 9 14:24:01 2009 -0400
+
+    Add 'upload' target for releaseballs
+
+commit e952123b799f831f18a91a229bb4840bc409e0d6
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Apr 9 14:19:28 2009 -0400
+
+    Fix ChangeLog rule
+
+commit efbb0335d93132ccabe007f212d4fb17f6cf9867
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Apr 9 14:18:00 2009 -0400
+
+    Update README
+
+commit 740c0293beb84eb6987e08b69fbf0f9eddaca7b5
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Apr 9 14:16:08 2009 -0400
+
+    Add pnp.ids
+    
+    Hand-maintained, sadly
+
+commit c6334bd4e29e4e3e516ebad4930e771c6da075db
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Apr 9 14:09:19 2009 -0400
+
+    Update oui.txt
+
+commit fc46377e8680cbbb7e6b81a06e0f643cbd9d25aa
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Apr 9 14:08:01 2009 -0400
+
+    Update usb.ids
+
+commit a844b422f808da67d547ce44cd784675e070476a
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Apr 9 14:07:53 2009 -0400
+
+    Update pci.ids
+
+commit bd0e6525410000571376c9e6f6b685bfb120f29d
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Thu Mar 19 20:42:17 2009 +0100
+
+    - fix syntax of git-archive and git-log
+
+commit 9ebe79d15a91bbca0191129f679117374f21796a
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Thu Mar 19 20:39:24 2009 +0100
+
+    - rename /etc/modprobe.d/blacklist to /etc/modprobe.d/blacklist.conf
+
+commit a6e5970e33c6b963294501949aec6fc0b8d58f2c
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Thu Mar 19 20:38:47 2009 +0100
+
+    - update usb.ids oui.txt pci.ids
+
+commit 609f9485187bb6e99a63ebc8e392397b71b37abd
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Sun Feb 8 18:19:53 2009 -0500
+
+    Update videodrivers to match reality
+
+commit 55501f0bd440564a607d999224c41dbd02a688cc
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Wed Jan 28 10:46:46 2009 +0100
+
+    - update usb.ids pci.ids oui.txt and build for all current releases
+      Fixes p.e. #465440
+
+commit cc07688bfe87ace7239a5293512b4ab79a5eda21
+Merge: eea1522 a9cfa56
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Wed Jan 21 14:08:31 2009 +0100
+
+    Merge branch 'master' of ssh://karsten@git.fedorahosted.org/git/hwdata
+    
+    * 'master' of ssh://karsten@git.fedorahosted.org/git/hwdata:
+      MonitorsDB: add 12 Dell Monitors
+
+commit eea1522c244546d0ce22bfafae59309868d2ec3a
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Wed Jan 21 13:57:33 2009 +0100
+
+    - update usb.ids pci.ids oui.txt
+
+commit a9cfa563d02a768779594c66203bfebe68a8808b
+Author: Raghavendra B <Raghavendra_Biligiri@dell.com>
+Date:   Fri Dec 26 00:28:48 2008 -0600
+
+    MonitorsDB: add 12 Dell Monitors
+
+commit 35db4ea5e354241232273e34c070972f1bb8a6dd
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Tue Dec 2 17:14:13 2008 +0100
+
+    - add changelog
+
+commit 89d9d8eb05a5153e40756693d264133faa9085c0
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Tue Dec 2 16:54:22 2008 +0100
+
+    - add new monitor entries from Mandriva hardware database (Thierry Vignaud)
+
+commit ad9a5db69dc8cba9d2de709b739abd8221858680
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Tue Dec 2 15:10:55 2008 +0100
+
+    - make generic entries have properly formated frequencies (Thierry Vignaud)
+
+commit 79e982e50edb4ac854c3c2520e188b2ed3a8b7b2
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Tue Dec 2 14:12:52 2008 +0100
+
+    - remove duplicate Dell monitor entries (Thierry Vignaud)
+
+commit e12d509410d7a9e17a12cf7bd4b6ae75f6b9f97a
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Wed Nov 19 11:41:07 2008 +0100
+
+    - more vendor name fixes
+
+commit 2686854d00a96048a72b44480e730bfeda030be6
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Tue Nov 18 17:17:39 2008 +0100
+
+    - fix extra field in 'Compudyne KD-1500N' definition (Thierry Vignaud)
+    - make Dell monitors case consistent (Thierry Vignaud)
+    - make all GoldStar monitors have the same vendor name (Thierry Vignaud)
+
+commit 4b04168b192a402c7cc099986dfd234565f0ff34
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Tue Nov 18 13:04:15 2008 +0100
+
+    - sort again with LANG=C
+
+commit b1fca1d93e2834124da514fbf1274448d88eefa3
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Tue Nov 18 12:15:21 2008 +0100
+
+    - add URL of git repository
+
+commit 59c9ae2afa5c18f6c8e8e8772e438dac784e2229
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Tue Nov 18 11:56:43 2008 +0100
+
+    - fix spacing (Thierry Vignaud)
+    - sort file with sort -f -t ";" -k1,2
+
+commit 1569cfbb7a816c91c68bde7692157cd2e54e908f
+Merge: abe5f53 41d815c
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Wed Nov 5 13:17:29 2008 +0100
+
+    Merge branch 'master' of ssh://karsten@git.fedorahosted.org/git/hwdata
+    
+    * 'master' of ssh://karsten@git.fedorahosted.org/git/hwdata:
+      MonitorsDB: add 16 Dell Monitors
+      MonitorsDB: add Dell E1709W
+
+commit abe5f534ab911f72bd2720d936c2a08ef85b14cb
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Wed Nov 5 13:12:53 2008 +0100
+
+    - add Samsung SyncMaster 2443BWX (Marc van den Dikkenberg)
+
+commit 41d815c2972110bde8d967d2ba0e58ff2897faf1
+Author: Raghavendra B <Raghavendra_Biligiri@dell.com>
+Date:   Sun Sep 28 07:13:12 2008 -0500
+
+    MonitorsDB: add 16 Dell Monitors
+
+commit e96b0c7b8999766df7bedb2cab9a7cd71f3d3155
+Author: Matt Domsch <matt@domsch.com>
+Date:   Mon Aug 4 11:04:12 2008 -0500
+
+    MonitorsDB: add Dell E1709W
+
+commit e904375aaa861bb70c89401af1d34368924112e5
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Mon Aug 4 11:49:51 2008 +0200
+
+    - add some Lenovo monitors (Im Sza)
+
+commit 1be9f70065622a1123b9f4a226edae3081db103d
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Wed Jul 23 12:18:30 2008 +0200
+
+    build new Rawhide version:
+    - update pci.ids, usb.ids, oui.txt
+    - MonitorsDB: add some Samsung monitors (Ronald Warsow)
+    - MonitorsDB: add Dell E1609W (Matt Domsch)
+    - MonitorsDB: add 7 Dell monitors (Matt Domsch)
+    - MonitorsDB: add a bunch of Hyundai and ImageQuest monitors
+
+commit 953378d28dca1ba873898749aaa76999d15bc668
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Wed Jul 23 12:18:02 2008 +0200
+
+    - update usb.ids  pci.ids oui.txt
+
+commit 8f2d40b54304a5715f5eb51b8ec1cb166ac61649
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Wed Jul 23 12:10:36 2008 +0200
+
+    - add some Samsung monitors (Ronald Warsow)
+
+commit f76188a2a463862e6285aebbb93fb946e1680c19
+Author: Matt Domsch <matt@domsch.com>
+Date:   Tue Jul 1 09:14:53 2008 -0500
+
+    MonitorsDB: add Dell E1609W
+
+commit a07420d7f050f72cc002b29e4adbce0796b74070
+Author: Matt Domsch <matt@domsch.com>
+Date:   Tue Jun 24 15:29:09 2008 -0500
+
+    add 7 Dell monitors
+
+commit 71031f400f414a9acef187c45c7f390edb6bd8f4
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Mon Jun 9 14:00:19 2008 +0200
+
+    - add a bunch of Hyundai and ImageQuest monitors
+
+commit 0313e32723ceec41aaeece48cd3e83a05afcc462
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Mon Jun 9 13:49:00 2008 +0200
+
+    add a bunch of Hyundai and ImageQuest monitors
+
+commit eb8527a9cfcaef02eb759383fe73667178af8e1c
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Mon Jun 9 11:40:54 2008 +0200
+
+    - add BenQ FP2091 monitor (Peter Williams)
+
+commit 401e23c636b77255486ade376a85d356b964db22
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Mon Jun 9 11:39:46 2008 +0200
+
+    - add BenQ FP2091 monitor
+
+commit e2329665c69a5c2bb825de4310702354920dbe30
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Thu Jun 5 14:17:12 2008 +0200
+
+    - add check script from Sergey Scobich (#246102)
+
+commit cde1ddf2c0536c5cc8093a1ddaee2d9b9c5d6305
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Mon Jun 2 14:28:35 2008 +0200
+
+    - update pci.ids, usb.ids, oui.txt
+    - blacklist snd-pcsp (#448425)
+
+commit 53eff24fe9f34162e7faf95ff28cbf52b2ba1cd3
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Mon Jun 2 14:27:39 2008 +0200
+
+    - fix check output
+
+commit 8d0cc1f09a14c2c9254bb752103ef8b3b931157d
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Mon Jun 2 14:22:54 2008 +0200
+
+    - add targets for oui.txt download and a shortcut for all downloads
+
+commit 20696e063455422c4d18c59e962d42c1747950be
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Mon Jun 2 14:22:31 2008 +0200
+
+    - update oui.txt
+
+commit 8f8cf0610758532753cd10edf245eb469ab0fded
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Mon Jun 2 14:18:19 2008 +0200
+
+    - blacklist snd-pcsp (#448425)
+
+commit 63e0128a1d36ef3a2411c85da94c1ec83af6a729
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Mon Jun 2 14:17:42 2008 +0200
+
+    - update pci.ids, oui.txt
+
+commit 4c6a5b93be47ae328beb356defec4aa511944522
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Mon May 19 11:54:56 2008 +0200
+
+    - add some Acer monitors (Im Sz)
+
+commit c19a94f67e8567672aac54a3c75d00032050e5eb
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Tue Apr 1 16:24:01 2008 +0200
+
+    - update
+
+commit 582482c296f0bb30f6f653234f55581a13afad8c
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Tue Apr 1 15:47:11 2008 +0200
+
+    - fix some monitor entries (Stanislav Ievlev, #430276)
+
+commit 5ae63e88c1224ad8309dfa3ee0cb9bdf1cb794e9
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Tue Apr 1 14:45:25 2008 +0200
+
+    - update
+
+commit 275fa484ff71ff9930668c5790322af488a04aeb
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Tue Apr 1 14:45:10 2008 +0200
+
+    - update
+
+commit 49e4a4bfa38981b9d7ef30a6df5fe204ce8cd4e0
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Tue Apr 1 14:44:40 2008 +0200
+
+    - update
+
+commit 51bc15c96ceab2b7da09f227ffeb28211e218ec5
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Tue Apr 1 14:43:21 2008 +0200
+
+    - add HP w1907 LCD monitor. (#431359)
+
+commit e79e984bbe6d831baddb046f9cded4267be712fb
+Author: Matt Domsch <matt@domsch.com>
+Date:   Mon Mar 17 00:05:45 2008 -0500
+
+    MonitorsDB: add Dell 2009W
+
+commit ff48263a462bd7648d9fc09ad3fdfd2878a92d6e
+Author: Matt Domsch <matt@domsch.com>
+Date:   Wed Mar 5 11:22:00 2008 -0600
+
+    MonitorsDB: add LG L222W
+    
+    from https://bugs.launchpad.net/bugs/186026
+
+commit 41f19a8da1774361770db752c2f2316c0dff7c66
+Author: Matt Domsch <matt@domsch.com>
+Date:   Wed Mar 5 10:35:31 2008 -0600
+
+    MonitorsDB: add ViewSonic VA702b
+    
+    from https://launchpad.net/bugs/192899
+
+commit 5ba15f6ae558649510b913a167b12d0ee862eb68
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Mon Mar 3 11:03:03 2008 +0100
+
+    - update pci.ids, usb.ids (#431658)
+
+commit 9352289e6b924246c9ac0297d7911aea5e0b960e
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Wed Jan 23 10:45:39 2008 +0100
+
+    - add oui.txt, #429714
+
+commit 778fa9c8d91f459de9ee11facfba035dd4775e8a
+Author: Philip Knirsch <pknirsch@hamburg.stuttgart.redhat.com>
+Date:   Tue Jan 29 11:26:04 2008 +0100
+
+    - Forgot to bump version. Fixed.
+    - Added changelog entry for pci.ids pull from upstream
+
+commit 070562f3cf3af46894cfc1c7fc9b233c7ebe92f5
+Author: Philip Knirsch <pknirsch@hamburg.stuttgart.redhat.com>
+Date:   Tue Jan 29 10:45:04 2008 +0100
+
+    Updated pci.ids from upstream 28.1.2008
+
+commit 663a1151509357ca174271374fa5acec5be887d6
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Tue Jan 22 17:31:18 2008 +0100
+
+    - add HP W2207 monitor
+
+commit d0b3fcd4184a14026e8a3a9b3a3a06454482d5fa
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Jan 18 11:25:00 2008 +0100
+
+    - bump version and rebuild
+
+commit 5d91b2e8e44564e40b337257b4a3d2bfc4c71e44
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Jan 18 11:21:10 2008 +0100
+
+    remove MonitorsDB.generic as it isn't used anywhere
+
+commit dfe0797b4c99fecea15e616610e1ab67c74f5748
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Jan 18 11:19:27 2008 +0100
+
+    drop RHEL-5 blacklist patch in -devel
+
+commit 6e04827ab12dc3463e224bada5755f8550784139
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Tue Jan 15 17:11:34 2008 +0100
+
+    - add many monitor entries (Im Sza, #367111)
+
+commit bca2f3e40e8c26ef274cc82c5937d8510e5f0ea2
+Merge: fc46dd1 f68bb00
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Tue Jan 15 17:02:31 2008 +0100
+
+    Merge commit 'origin/master'
+    
+    * commit 'origin/master':
+      MonitorsDB: add Dell C22W
+
+commit fc46dd133d0fdfd7e32f97fb2ca56152de9bb37c
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Tue Jan 15 16:42:32 2008 +0100
+
+    - add > 600 LG monitors  (Im Sza)
+
+commit f68bb00f11968becaa8ce5e9385758ca027dc85d
+Author: Matt Domsch <matt@domsch.com>
+Date:   Tue Jan 15 09:40:25 2008 -0600
+
+    MonitorsDB: add Dell C22W
+
+commit e2fdb30ea8b8e40d48eed471eb2418b2fb35ede1
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Jan 11 23:22:38 2008 +0100
+
+    fix erroneous tab in videodrivers
+
+commit f157062ea1a94f93f5eb1646ce6019f6c6f6d7e6
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Jan 11 23:17:35 2008 +0100
+
+    - add Samsung Monitors
+
+commit 9c07d4bddd2d50e12bd5f635e84b85f1331d0ad4
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Jan 11 23:02:22 2008 +0100
+
+    add Samsung 795DF/795MB
+
+commit 1c5b48ca727b0da54bcad26300165920dddcbc1b
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Jan 11 23:00:29 2008 +0100
+
+    add Eizo L568
+
+commit 9fe002b2873ddc29b8c01768f9b93095012c3491
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Jan 11 22:33:26 2008 +0100
+
+    update usb.ids
+
+commit 2cf4c157e0872a11e91bd34d51884b40afd9d14d
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Jan 11 22:32:48 2008 +0100
+
+    update pci.ids
+
+commit b3edaa6da9b8636054191ef86a1a3cc75192a5eb
+Merge: d40ede6 3e81c4b
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Jan 11 22:31:39 2008 +0100
+
+    Merge commit '3e81c4bd3a889849da7a0bdeaa266e22dbff8977' into rhel5
+    
+    * commit '3e81c4bd3a889849da7a0bdeaa266e22dbff8977':
+      MonitorsDB: add Dell 2408WFP
+      - add Proview 926w monitor
+      - add Proview 926w monitor (#363091)
+      - use bzip2 sources
+      - new release
+      add Dell 3008WFP monitor
+      - changes for git
+      - fix license tag
+      Update pci.ids and usb.ids
+      Add helper targets for updating PCI and USB ID lists.
+      Document which versions of the license we mean
+      MonitorsDB: add Dell E157FPT
+      - sort Acer monitors
+      inf2mondb: replace various forms of "DELL" with "Dell" for consistency
+      inf2mondb: remove double-quote characters in ini string table
+      inf2mondb: add --inflist to pass filename with list of ini files
+      -drop dell-monitors patch, move all entries to MonitorsDB
+      add Proview monitors (#363091)
+    
+    Conflicts:
+    
+    	MonitorsDB
+    	hwdata.spec
+    	pci.ids
+    	usb.ids
+
+commit d40ede652bbd6d93202f03f051933ece4b035a85
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Jan 11 21:58:39 2008 +0100
+
+    add missing file from hwdata-0.211
+
+commit 3121e41ef89b82c8c5a98ad7ca319cf8d4f68d1b
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Jan 11 21:49:07 2008 +0100
+
+    commit hwdata-0.211 from rhel5
+
+commit 3e81c4bd3a889849da7a0bdeaa266e22dbff8977
+Author: Matt Domsch <matt@domsch.com>
+Date:   Wed Dec 26 23:04:52 2007 -0600
+
+    MonitorsDB: add Dell 2408WFP
+
+commit 7c71fb47722a3d4e2697d77e32ebc08c2453e20b
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Sat Dec 22 22:56:10 2007 +0100
+
+    - add Proview 926w monitor
+
+commit c0ba445bb19e39a942aed0e955e8cd94e6727530
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Sat Dec 22 22:55:09 2007 +0100
+
+    - add Proview 926w monitor (#363091)
+
+commit 1b5061aaf95e21211477fb43c42be8bacd5a7fc9
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Sat Dec 22 22:37:54 2007 +0100
+
+    - use bzip2 sources
+    - drop dell-monitors patch
+
+commit 7e840b9da881a6022b0bada34bb76fc8a6f61ca5
+Merge: fb2d992 9bfd21a
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Sat Dec 22 19:06:56 2007 +0100
+
+    Merge branch 'master' of ssh://karsten@git.fedorahosted.org/git/hwdata
+    
+    * 'master' of ssh://karsten@git.fedorahosted.org/git/hwdata:
+      add Dell 3008WFP monitor
+
+commit fb2d9923934a9dc76733b51faa3886c35b4b20af
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Sat Dec 22 19:06:20 2007 +0100
+
+    - new release
+
+commit 9bfd21aeb33546e2441469796a2e9950cd3a4081
+Author: Matt Domsch <matt@domsch.com>
+Date:   Mon Dec 17 13:47:32 2007 -0600
+
+    add Dell 3008WFP monitor
+
+commit a0496010e0728ec0fffc052ec8857539326578c8
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Thu Dec 13 13:25:12 2007 +0100
+
+    - changes for git
+
+commit d6b450a241edd7a2a30c0f83017e89b4c7363da3
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Thu Dec 13 12:15:06 2007 +0100
+
+    - fix license tag
+    - add %%build section
+
+commit 8c429ee6f9b074f7c451e4b74ee16b48159c6e1f
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Mon Nov 5 10:50:24 2007 -0500
+
+    Update pci.ids and usb.ids
+
+commit f6f34cd96d1eaa2e2ed59c1ac0034fc502af8074
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Mon Nov 5 10:41:14 2007 -0500
+
+    Add helper targets for updating PCI and USB ID lists.
+    
+    Also mark a bunch of stuff .PHONY for correctness.
+
+commit e9f674ef932fbe83e0b7bbebc93fd9ed02b8aa13
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Mon Nov 5 10:35:51 2007 -0500
+
+    Document which versions of the license we mean
+
+commit f5f8ff731af831504fa5bdaead4f9a9de54469d3
+Merge: 819bd4b db5d42c
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Mon Nov 5 16:58:44 2007 +0100
+
+    Merge branch 'master' of git://git.fedoraproject.org/hosted/hwdata
+
+commit db5d42c1a4aa4754dcd0a2dd0e0765175f94d729
+Author: Matt Domsch <matt@domsch.com>
+Date:   Mon Nov 5 09:37:51 2007 -0600
+
+    MonitorsDB: add Dell E157FPT
+
+commit 819bd4b085e9bd45bea33476a09f17abf4e2a228
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Mon Nov 5 13:04:37 2007 +0100
+
+    - sort Acer monitors
+    - add and change a few Acer entries (bz #350111)
+
+commit 93c3a84eecfcab9f1ec421e5c6b21ee9d985a637
+Author: Matt Domsch <matt@domsch.com>
+Date:   Fri Nov 2 13:37:17 2007 -0500
+
+    inf2mondb: replace various forms of "DELL" with "Dell" for consistency
+
+commit 5dfd20cef1f8a97f0948dc7ffbfeda78b0f12e07
+Author: Matt Domsch <matt@domsch.com>
+Date:   Fri Nov 2 13:36:00 2007 -0500
+
+    inf2mondb: remove double-quote characters in ini string table
+    
+    They're unnecessary and don't belong in the output file.
+
+commit b81e6c83bbeb87c6899e96f103de0c5543e2df93
+Author: Matt Domsch <matt@domsch.com>
+Date:   Fri Nov 2 13:33:14 2007 -0500
+
+    inf2mondb: add --inflist to pass filename with list of ini files
+    
+    This avoids problems with shell expands in paths to ini files that
+    include spaces and other odd characters.  Files listed in inflist are
+    parsed before the rest of the args on the command line.
+
+commit 52e9c9d85155c2c878eecbbcfc1db080097f7122
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Nov 2 17:38:03 2007 +0100
+
+    -drop dell-monitors patch, move all entries to MonitorsDB
+
+commit 812267dfe6be2a98460584ac346a5f49289a25d0
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Nov 2 16:31:07 2007 +0100
+
+    add Proview monitors (#363091)
+
+commit 0ae29dfc90b6e49a4a886ba7a4b588c180614cb5
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Nov 2 11:56:53 2007 +0100
+
+    remove vim swap file
+
+commit 6e3fe3dc08c3892cf80e1699f8ae6ed9853fa248
+Author: Karsten Hopp <karsten@redhat.com>
+Date:   Fri Nov 2 11:55:53 2007 +0100
+
+    Initial git import

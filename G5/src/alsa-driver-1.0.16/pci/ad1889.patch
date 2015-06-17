@@ -1,0 +1,22 @@
+--- ../alsa-kernel/pci/ad1889.c	2007-12-20 11:47:36.000000000 +0100
++++ ad1889.c	2007-12-20 11:57:28.000000000 +0100
+@@ -1,3 +1,4 @@
++#include "adriver.h"
+ /* Analog Devices 1889 audio driver
+  *
+  * This is a driver for the AD1889 PCI audio chipset found
+@@ -52,6 +53,14 @@
+ 
+ #define	AD1889_DRVVER	"Version: 1.7"
+ 
++/* for 2.2.x kernels */
++#ifndef PCI_VENDOR_ID_ANALOG_DEVICES
++#define PCI_VENDOR_ID_ANALOG_DEVICES	0x11d4
++#endif
++#ifndef PCI_DEVICE_ID_AD1889JS
++#define PCI_DEVICE_ID_AD1889JS		0x1889
++#endif
++
+ MODULE_AUTHOR("Kyle McMartin <kyle@parisc-linux.org>, Thibaut Varene <t-bone@parisc-linux.org>");
+ MODULE_DESCRIPTION("Analog Devices AD1889 ALSA sound driver");
+ MODULE_LICENSE("GPL");

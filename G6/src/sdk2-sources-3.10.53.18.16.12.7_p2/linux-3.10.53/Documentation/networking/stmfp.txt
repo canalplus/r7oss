@@ -1,0 +1,302 @@
+       STMicroelectronics 10/100/1000 FastPath Ethernet driver
+
+Copyright (C) 2012-2014  STMicroelectronics Ltd
+Author: Manish Rathi <manish.rathi@st.com>
+
+This is the driver for the MAC 100/1000 on-chip Ethernet controllers
+(ST FASPATH IP blocks).
+
+Currently this network device driver is for STM embedded chips stig125,
+stid127
+
+There are 2 versions of FP IP (FP used in stig125, FPLite used in stid127)
+
+1) Kernel Configuration
+The kernel configuration option is STM_FASTPATH:
+ Device Drivers ---> Network device support ---> Ethernet driver support
+ ---> STMicroelectronics 10/100/1000 Ethernet driver--> STM FastPath Driver
+
+2) Driver information and notes
+Following callbacks are defined by driver
+static const struct net_device_ops fpif_netdev_ops = {
+	.ndo_open = fpif_open,
+	.ndo_stop = fpif_close,
+	.ndo_start_xmit = fpif_xmit_frame,
+	.ndo_change_mtu = fpif_change_mtu,
+	.ndo_set_rx_mode = fpif_set_multi,
+	.ndo_get_stats = fpif_get_stats,
+	.ndo_set_mac_address = eth_mac_addr,
+};
+
+2.1) Open method (fpif_open)
+This callback is called when interface is brought up
+(e.g. ifconfig <if> up).
+It does following
+- Generate MAC address if mac address is not specified.
+- Connect & start the PHY
+- Enable NAPI
+- Add the entry in l2cam for broadcast and interface MAC addresses
+- Setup the RXDMA hw channel associated with the interface & Queue up the
+rx buffers into HW RX ring
+- Setup the TXDMA hw channel associated with the interface
+
+2.2) Stop method (fpif_close)
+This callback is called when interface is brought down
+(e.g. ifconfig <if> down).
+It does following
+- Disable NAPI
+- Stop & Disconnect the PHY is started
+- Release the RXDMA hw channel associated with the interface & release
+  the rx buffers
+- Release the TXDMA hw channel associated with the interface
+- Delete the entry in l2cam for broadcast and interface MAC addresses
+
+
+2.3) Transmit method (fpif_xmit_frame)
+The xmit method is invoked when the kernel needs to transmit a packet; it sets
+the descriptors in the ring and informs the DMA engine that there is a packet
+ready to be transmitted.
+Once the controller has finished transmitting the packet, an interrupt is
+triggered; So the driver will be able to release the socket buffers.
+It does following
+- Check if transmitted pkts will not overflow the DMA TXQ & HP HW
+- Fill the meta data for FP HW
+- Queue the buffers in TX DMA HW ring
+
+Transmit method implement the scatter gather func. It also vary the intr
+latencies based on ring buffer thresholds to delay the transmit intr.
+
+
+2.4) Change MTU (fpif_change_mtu)
+Change MTU is not allowed for certain interfaces like DOCSIS. MTU is changed
+only when interface is down. New MTU should be between  minimum ethernet
+ethernet framesize and Mini Jumbo frame.
+FP HW support upto mini jumbo frames (2000 bytes).
+HP HW registers are changed for new MTU for that interface.
+New RX buffer size is calculated for new MTU
+
+2.5) ndo_set_rx_mode  callback(fpif_set_multi)
+This callback is called for kernel at various points (e.g. new multicast
+MAC address is added for interface). By this callback, Driver should enable
+the HW to allow  multicast traffic for the subscribed multicast groups.
+If adds the multicast MAC addresses entries in L2CAM.
+If promisc or ALL_MULTI mode is enabled then all the interface entries
+are removed for L2CAM.
+
+2.6) ndo_get_stats method (fpif_get_stats)
+This callback is called to retrieve interface statistics (e.g. xmitted pkts,
+received pkts).
+This method read various counters for RGMII func, FP HW and determine the
+interface stats.
+It's possible for HW to reports 2 errors corresponding to 1 pkt. For example
+both CRC and symbol error counters can be incremented for one pkt.
+For few interfaces like DOCSIS, RGMII counters are not there.
+
+
+2.7) Driver Interrupt Handling
+Driver can receive 2 type of interrupts
+- RX DMA Interrupt (On receiving new pkts). The incoming packets are stored,
+by the DMA, in a list of pre-allocated socket buffers.
+- TX DMA Interrupt (On completing the transfer of transmitted pkts)
+On both the interrupt, driver disable the interrupt and schedules the NAPI.
+NAPI call the poll function at some future point.
+
+2.8) Poll function (fpif_poll)
+Poll function (Called by rx NAPI) does following
+- Call fpif_clean_rx_ring(priv, budget) to read from HW RX ring & process.
+  Only <budget> pkts are read and processed.  For every frame,
+  fpif_process_frame is called which push the packet to the Linux stack
+- Call fpif_clean_tx_ring(priv, budget) to read transmitted pkt desc from TX
+  RING HW.
+
+If no interface require transmit and receive handling then it enables the
+transmit and receive interrupts. Now napi functions will not be called by
+kernel unless scheduled again by intr handler.
+
+In addition to above, driver implement the following func
+
+2.9) Interrupt Mitigation
+Driver reduce the no of interrupts by following
+- Mitigate the number of DMA interrupts using NAPI for the transmission and
+reception.
+- poll function check both TX and RX rings on every interrupt. This also help
+in reducing the no of interrupts.
+- It also checks if other interfaces want to generate  the TX/RX interrupt. In
+that case it schedules the NAPI for those interfaces. This approach also help
+in reducing the number of TX and RX interrupts.
+- Changes the txdma interrupt latencies based on no of pkts in TX DMA Queue
+
+2.10) Ethtool support
+ethtool is supported.
+
+2.11) MDIO support
+MDIO is supported for few interfaces only(e.g. GIGE1). For few interfaces
+(e.g. DOCSIS), it's not supported.
+Support of mdio is controlled by platform device specific parameter.
+
+2.12) Promisc mode support
+TCAM is used to enable the promisc mode support. If promisc mode is enabled
+then other multicast MAC addresses for that interfaces are not required
+in L2CAM. If promisc mode is enabled then TCAM is not required for ALL_MULTI
+mode.
+
+2.13) ALL_MULTI mode support
+TCAM is used to enable the ALL_MULTI mode support. If ALL_MULTI mode is enabled
+then other multicast MAC addresses for that interfaces are not required
+If promisc mode is enabled then TCAM is not required for ALL_MULTI mode.
+
+2.14) L3 and L4 checksum offloads
+Both L3 and L4 checksums are offloaded to the HW
+
+2.15) DT support : DT is supported in driver
+Please refer to Documentation/devicetree/bindings/stmfp.txt for driver DT
+description
+
+2.16) Data structures
+Several driver's information can be passed through the platform
+These are included in the include/linux/stmfp.h header file
+and detailed below as well:
+
+struct plat_stmfp_data {
+	int available_l2cam;
+	int l2cam_size;
+	int version;
+	u32 fp_clk_rate;
+	int common_cnt;
+	int empty_cnt;
+	struct plat_fpif_data *if_data[NUM_INTFS];
+	/* Below callbacks are used mainly for FPGA-FP */
+	void (*platinit)(void *fpgrp);
+	void (*preirq)(void *fpgrp);
+	void (*postirq)(void *fpgrp);
+};
+
+preirq : CallbackKept for platform spec PRE IRQ handling (if any)
+postirq : CallbackKept for platform spec POST IRQ handling (if any)
+if_data : Interface specific platform info
+fp_clk_rate : fastpath clock rate
+version : Which chip version is used (FPLITE, FP, FP2)
+available_l2cam : available L2CAM
+l2cam_size : size of L2CAM
+common_cnt, empty_cnt : qos parameters
+
+
+
+Following platform spec information is kept for interfaces.
+
+struct plat_fpif_data {
+	char *phy_bus_name;
+	int bus_id;
+	int phy_addr;
+	int interface;
+	int id;
+	int iftype;
+	int tso_enabled;
+	int tx_dma_ch;
+	int rx_dma_ch;
+	char ifname[IFNAMSIZ];
+	struct stmfp_mdio_bus_data *mdio_bus_data;
+	int buf_thr;
+	int q_idx;
+};
+
+q_idx : Refers to qos q_idx used in FPHW for this interface
+buf_thr : Refers to qos buf_thr used in FPHW for this interface
+shared_mdio : It indicates whether this interface use synp MDIO for PHY
+control.
+tso_enabled : Indiacte whether TSO offload supported for this interface
+rx_dma_ch : Indicate physical rx_dma_ch used for this interface
+tx_dma_ch : Indicate physical tx_dma_ch used for this interface
+ifname : name of the interface
+iftype : Interface index in FPHW
+
+2 structures are kept in driver
+1) fpif_grp (Driver private structure, Common to all the interfaces)
+
+struct fpif_grp {
+	void __iomem *base; /* FP plat virtual address */
+	unsigned long active_if; /* Bitmap of active interfaces */
+	/* Bitmap of interfaces which want to raise intr*/
+	unsigned long set_intr;
+	struct fp_rxdma_regs *rxbase; /* RX DMA reg offset */
+	/* Bitmap describing RX channel to interface mapping */
+	unsigned long rxch_ifmap[MAX_RXDMA];
+	struct fp_txdma_regs *txbase;/* TX DMA reg offset */
+	/* Bitmap describing TX channel to interface mapping */
+	unsigned long txch_ifmap[MAX_TXDMA];
+	struct net_device *netdev[NUM_INTFS];
+	struct device *devptr;
+	int rx_irq; /* RX Irq no for FP platform */
+	int tx_irq; /* TX irq no for FP platform */
+	/* Available l2cam size */
+	int available_l2cam;
+	/* This lock  protect critical region in fpif_poll */
+	spinlock_t sched_lock;
+	/* This mutex protect shared data structures for interfaces */
+	struct mutex mutex;
+	struct fpif_rxdma rxdma_info[MAX_RXDMA];
+	struct fpif_txdma txdma_info[MAX_TXDMA];
+	/* Platform specific info 8/
+	struct plat_stmfp_data *plat;
+	void *mdio_ctrl;
+};
+
+
+2) fpif_priv(Per interface private strcture in Driver)
+struct fpif_priv {
+	struct napi_struct napi;
+	struct net_device *netdev; /* Reference to net_device */
+	struct fpif_grp *fpgrp; /* Reference to global FP structure */
+	int rx_dma_ch; /* RX DMA channel no */
+	int tx_dma_ch; /* TX DMA channel no */
+	struct fpif_rxdma *rxdma_ptr; /* Ref to RXDMA channel specific info */
+	struct fpif_txdma *txdma_ptr;/* Ref to TXDMA channel specific info */
+	short allmulti_idx; /* TCAM idx used for ALL_MULTI mode */
+	short promisc_idx; /* TCAM idx used for promisc mode */
+	u32 id; /* FPHW interface idx. */
+	u32 dma_port; /* FPHW dma port */
+	u32 sp; /* Fastpath source port */
+	u32 dmap; /* Fastpath Destination Map */
+	u32 rx_buffer_size; /* RX buffer size */
+	struct sk_buff_head rx_recycle;
+	struct device *devptr;
+	u8 l2_idx[FP_L2CAM_SIZE]; /* L2CAM indexes used */
+	u8 l2cam_count; /* No of l2cam entries used */
+	struct phy_device *phydev; /* Ref to phy data structure for intf */
+	int oldlink;
+	int speed;
+	int oldduplex;
+	unsigned int flow_ctrl;
+	unsigned int pause;
+	struct mii_bus *mii;
+	int mii_irq[PHY_MAX_ADDR];
+	u32 msg_enable;
+	/* This lock  protect critical region in fpif_adjust_link */
+	spinlock_t fpif_lock;
+	struct plat_fpif_data *plat; /* Ref to platform specific info */
+	void *rgmii_base; /* RGMII base register adr for this interfrace */
+	int ifidx; /* Ifindex specified in meta data. Used for DOCSIS */
+	u8 stand_cm_en; /* Flag to tell if it's eRouter Disabled mode */
+	u8 ifaddr_idx;
+	u8 allmulti_idx; /* TCAM idx for ALL_MULTI */
+	u8 promisc_idx; /* TCAM id for promisc */
+	u8 br_l2cam_idx; /* l2cam idx for bridge mac */
+	u8 br_tcam_idx; /* Tcam idx for bridge mac */
+};
+
+
+2.17) List of source files:
+ o Kconfig
+ o Makefile
+ o stmfp_main.c: main network device driver;
+ o stmfp_main.h: main network device driver;
+ o stmfp_mdio.c: mdio functions;
+ o stmfp_ethtool.c: ethtool support;
+ o stmfp_infra.c: FP infra support (clock, PIOs);
+ o stmfp.h: platform specific information ;
+ o stmfp_tcam.c: TCAM generic functions ;
+ o stmfp_tcam.c: TCAM header file for generic functions ;
+ o stmfp_sysfs.c: fastpath sysfs parameters;
+
+2.18) TODO list
+Refer to TODO list specified in stmfp_main.c source file

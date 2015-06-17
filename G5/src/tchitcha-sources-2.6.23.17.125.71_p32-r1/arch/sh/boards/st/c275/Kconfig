@@ -1,0 +1,16 @@
+
+if SH_ST_C275
+
+config SH_G5_SPLASH
+	bool "Splash screen"
+	default y
+	help
+	  This enable splash for G5 boards.
+config MTD_PACE_BSL_COMPATIBILITY
+	bool "NAND compatibility with Pace BSL"
+	default y
+	help
+	  This sets the configuration allowing NAND
+	  devices to be compatible with Pace BSL.
+
+endif

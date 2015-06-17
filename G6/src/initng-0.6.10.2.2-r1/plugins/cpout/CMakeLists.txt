@@ -1,0 +1,6 @@
+INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR}/src ${CMAKE_BINARY_DIR} )
+
+ADD_LIBRARY(cpout MODULE initng_colorprint_out.c)
+TARGET_LINK_LIBRARIES(cpout initng)
+INSTALL_TARGETS(${LIB_INSTALL_DIR}/initng cpout)
+

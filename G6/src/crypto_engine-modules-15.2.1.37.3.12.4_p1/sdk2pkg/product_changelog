@@ -1,0 +1,232 @@
+* Thu Sep 25 2014 Alain Volmat <alain.volmat@st.com> - 1.37.3
+72018c6 CPS: Have CPS working with both PM_RUNTIME enabled or not
+52d95ec pm_runtime: Fix unused label term_ce
+f356aec stm_cipher.h: Avoid exposing bool type in user space include
+16da545 stm_ce_transform_new does not report correct return value
+
+* Thu Aug 21 2014 Alain Volmat <alain.volmat@st.com> - 1.37.2
+99f4efb stm_ce: Avoid bad handling after init failure
+a9328af Support CPS without PM_RUNTIME (via pm_notifier)
+
+* Fri Jul 18 2014 Alain Volmat <alain.volmat@st.com> - 1.37.1
+e0b6285 Implement MME attachment retry in case of init failure
+
+* Mon Jul 07 2014 Alain Volmat <alain.volmat@st.com> - 1.37.0
+cadb59c CPS support: Improvement of PM_RUNTIME support
+b2c547b Fix typo in variable name
+dc2f534 Compute properly the number of block sent to the sink object
+
+* Fri Jun 27 2014 Alain Volmat <alain.volmat@st.com> - 1.36.0
+bf07c2a DT: Remove DT fuse handling
+099b8dc Use stfuse in CEFW.
+bb523f9 Fix number of blocks sent to perform dma in case of tunneled M2M dma
+
+* Wed Jun 25 2014 Alain Volmat <alain.volmat@st.com> - 1.35.0
+1a1f46b Helpers: Remove firmware load helpers
+f07c363 DT: Introduction of DT support for clocks/session_name/fuses
+5c3640c Avoid loading the key-rules firmware at every session load
+dadb53e Fix error handling of stm_ce_session_new function
+
+* Mon Jun 10 2014 Philippe GUERRI <philippe.guerri@st.com> - 1.34.0
+- Update product_version
+- [Bugzilla: 51997] Incorrect RPM version in Crypto Engine
+
+* Mon Jun 02 2014 Alain Volmat <alain.volmat@st.com> - 1.33.0
+- Fix sdk2build.mak: Upadte to match with multicom new file tree
+
+* Mon May 12 2014 Alain Volmat <alain.volmat@st.com> - 1.32.0
+- Fix sdk2build.mak for CRYPTO_ENGINE env variable
+
+* Fri May 09 2014 Alain Volmat <alain.volmat@st.com> - 1.31.0
+- Removal of unused anymore files (utils)
+- Introduce sdk2build.mak compilation
+- [Bugzilla: 48629] Crypto Engine FW packages should be aligned with new SDK2 structure (firmwares_bin dir)
+- [Bugzilla: 31446] checkpatch.pl shows 58 Errors and 172 Warnings in CryptoEngine 
+- [Bugzilla: 48779] Crypto engine header file package has to be removed from SDK2
+
+* Tue Apr 15 2014 Alain Volmat <alain.volmat@st.com> - 1.30.0
+- Introduce support for h305,h310,h407,h410 SoCs
+- [Bugzilla: 45259] [Cannes] : crypto device cannot be opened
+- [Bugzilla: 47954] Update crypto_engine to add support for H407 fuse & NSK2
+- [Bugzilla: 46186] Make thread priorities for all sub-systems tuneable using module parameters
+- [Bugzilla: 46654] H416 FW loading isn't enabled for ML and SDK2-12
+- Fix coverity problems
+- Remove stm_ce_test
+
+* Wed Mar 12 2014 Alain Volmat <alain.volmat@st.com> - 1.29.0
+- [Bugzilla: 46462]  Date format error in change log
+
+* Mon Mar 3 2014 Philippe GUERRI <philippe.guerri@st.com> - 1.28.0
+- [Bugzilla: 45937]  new files needed to produce RPM
+
+* Fri Feb 7 2014 Alain Volmat <alain.volmat@st.com> - 1.27.0-1
+- [Bugzilla: 39520]  All compiler warnings must be removed
+- [Bugzilla: 41303]  SDK2 port on kernel 3.10 (step1) - minimal changes to build
+- [Bugzilla: 44143]  Allow proper CE build with Kernel 3.10 STI
+
+* Wed Dec 4 2013 Paul Grant <paul.grant-ext@st.com> - 1.26.0-1
+- [Bugzilla: 40117] Add CEFW bypass enable flag to make for h416
+
+* Tue Oct 22 2013 Jonathan Brett <jonathan.brett@st.com> - 1.25.0-1
+- [Bugzilla: 20153] Add fuse function through compound control
+- [Bugzilla: 36811] Add reference key management
+- [Bugzilla: 36812] Add fuse management
+- [Bugzilla: 36813] Support CLR/ENC keys in single transform
+- [Bugzilla: 36816] Adaptation of stm cipher for specific CA requirements
+- [Bugzilla: 36819] Adaptation of stm cipher for specific CA requirements
+- [Bugzilla: 38744] Remove platform-specific conditional compilation in CE MME code
+
+* Thu Sep 26 2013 Jonathan Brett <jonathan.brett@st.com> - 1.24.0-1
+- [Bugzilla: 33615] CE HPS failure on h416 platform
+
+* Thu Sep 05 2013 Jonathan Brett <jonathan.brett@st.com> - 1.23.0-1
+- [Bugzilla: 29439] Implement pull_data interface test_for_data function for memory transform
+
+* Thu Jul 25 2013 Jonathan Brett <jonathan.brett@st.com> - 1.22.0-1
+- [Bugzilla: 20667] Remove unnecessary memory barriers
+
+* Thu Jun 27 2013 Jonathan Brett <jonathan.brett@st.com> - 1.21-1
+- [Bugzilla: 27177] Implement interface to communicate power state to CE slave
+
+* Fri Jun 21 2013 Jonathan Brett <jonathan.brett@st.com> - 1.20-1
+- [Bugzilla: 31305] Wrong DMA transfer direction while unmapping DMA source buffer
+
+* Thu May 30 2013 Jonathan Brett <jonathan.brett@st.com> - 1.19-1
+- [Bugzilla: 27243] Fix Coverity warnings from SDK2 ML_0035
+- [Bugzilla: 27176] Implement function to check for any active CE session
+- [Bugzilla: 26759] Add simple M2M DMA test
+
+* Thu May 16 2013 Jonathan Brett <jonathan.brett@st.com> - 1.18-1
+- [Bugzilla: 28251] Workaround to set T3 request filter registers correctly on stxh415 (GOOLO filter)
+- [Bugzilla: 30272] Coalesce adjacent scatterpages in dma
+
+* Thu Apr 25 2013 Jonathan Brett <jonathan.brett@st.com> - 1.17-1
+- [Bugzilla: 29608] Fix 2.6.32.x kernel build
+
+* Thu Apr 18 2013 Jonathan Brett <jonathan.brett@st.com> - 1.16-1
+- [Bugzilla: 29200] Add flags for stm_cipher to skip key/iv setting during en/decrypt
+
+* Thu Mar 28 2013 Jonathan Brett <jonathan.brett@st.com> - 1.15-1
+- [Bugzilla: 28807] Add interchangeable security profile support
+- [Bugzilla: 28836] Support 2/3 stage key ladder derivation and use for M2M operations
+
+* Fri Mar 22 2013 Jonathan Brett <jonathan.brett@st.com> - 1.14-1
+- [Bugzilla: 27821] Fix crypto_engine-headers rpm build
+- [Bugzilla: 28586] crypto_adaptation: stm_cipher needs to return ce_session and ce_transform handles
+
+* Thu Feb 28 2013 Jonathan Brett <jonathan.brett@st.com> - 1.13-1
+- [Bugzilla: 26505] Register stm custom cipher with Linux crypto framework
+
+* Mon Feb 11 2013 Jonathan Brett <jonathan.brett@st.com> - 1.12-1
+- [Bugzila: 24615] Pushing data to DMA in pipelined mem transform fixed
+
+* Thu Jan 31 2013 Jonathan Brett <jonathan.brett@st.com> - 1.11-1
+- [Bugzilla: 24069] Update ce thread names to be consistent with other STKPI threads
+- [Bugzilla: 24251] Device stm_ce does not have a release() function
+
+* Thu Jan 17 2013 Jonathan Brett <jonathan.brett@st.com> - 1.10-1
+- [Bugzilla: 25755] Workaround for H416: Bypass MME firmware initialisation
+
+* Fri Jan 04 2013 Jonathan Brett <jonathan.brett@st.com> - 1.9-1
+- [Bugzilla: 25036] In m2m transform packet size 0 is not handled
+
+* Thu Dec 06 2012 Jonathan Brett <jonathan.brett@st.com> - 1.8-1
+- [Bugzilla: 24609] M2M unit test failure: Fix push sink disconnection
+- [Bugzilla: 24674] Remove printk calls to improve Cryptodev-linux performance
+- [Bugzilla: 24682] Implement zero-copy mechanism for Cryptodev-linux
+
+* Fri Nov 30 2012 Jonathan Brett <jonathan.brett@st.com> - 1.7-1
+- [Bugzilla: 24674] Cryptodev linux performance improvement (less console trace)
+
+* Mon Nov 19 2012 Jonathan Brett <jonathan.brett@st.com> - 1.6-1
+- [Bugzilla: 24418] Remove workaround in memory transform push disconnect function
+
+* Thu Nov 08 2012 Jonathan Brett <jonathan.brett@st.com> - 1.5-1
+- [Bugzilla: 20669] Add the ability to set a packet size for DMA operations
+- [Bugzilla: 22770] Add support for VSOC platform execution (targets STiH416)
+- [Bugzilla: 23116] Compiler warnings on not checking registry return values
+
+* Mon Nov 05 2012 Jonathan Brett <jonathan.brett@st.com> - 1.4-1
+- [Bugzilla: 20247] Resolve gaps between STKPI document and code
+- [Bugzilla: 23443] Allow overriding of default key rules name via environment variable at build
+
+* Thu Oct 04 2012 Jonathan Brett <jonathan.brett@st.com> - 1.3-1
+- [Bugzilla: 21843] Crypto_adaptation IV size for AES-CBC mode is incorrectly set to zero
+
+* Fri Sep 14 2012 Jonathan Brett <jonathan.brett@st.com> - 1.2-1
+- [Bugzilla: 20697] Add initial power management callbacks
+- [Bugzilla: 20997] Multi2 system key management fixed
+
+* Wed Jul 11 2012 Jon Brett <jonathan.brett@st.com> - 1.1-1
+- [Bugzilla: 19398] Unknown symbol max_low_pfn/min_low_pfn
+- [Bugzilla: 19237] Build cleanup
+
+* Tue May 22 2012 Jon Brett <jonathan.brett@st.com> - 1.0-1
+- [Bugzilla: 19174] Detaching a transform from a push sink causes hang
+
+* Fri May 18 2012 Jon Brett <jonathan.brett@st.com> - 0.9-1
+- [Bugzilla: 15673] Crypto_engine adaptation layer. Added integration with linux crypto api
+- [Bugzilla: 16675] CA-specific security profile work
+- [Bugzilla: 17625] Add support for memory transform attach/detachment
+- [Bugzilla: 18427] Fix GPL notices in headers
+- [Bugzilla: 18520] Modify stm_ce_transform_dma function prototype
+- [Bugzilla: 18552] stm_ce_transform_set_iv is calling set_key
+- [Bugzilla: 18634] Setting a multi2 cipher prior to system key setup causes fw crash
+- [Bugzilla: 18710] Add key invalidate behaviour
+
+* Wed Mar 28 2012 Jon Brett <jonathan.brett@st.com> - 0.8-1
+- [Bugzilla: 17571] Adde compound control
+- [Bugzilla: 17711] Fixed static analysis errors
+- [Bugzilla: 17689] Added GPL notice to stm_ce sources
+
+* Thu Mar 15 2012 Jon Brett <jonathan.brett@st.com> - 0.7-1
+- [Bugzilla: 17085] Parameter checking fixup. Brings API inline with doc 0.9
+- [Bugzilla: 17086] Updated crypto firmware MME interface to v2. Requires crypto firmware >=1.3
+- stm_ce trace disabled by default
+- Removed redundant "Host only" code
+- Tweaked version number for git builds
+
+* Thu Feb 16 2012 Jon Brett <jonathan.brett@st.com> - 0.6-1
+- Fixed-up kernel 3.x build
+
+* Fri Jan 27 2012 Jon Brett <jonathan.brett@st.com> - 0.5-2
+- Fixed rpm build makefile
+
+* Fri Jan 27 2012 Jon Brett <jonathan.brett@st.com> - 0.5-1
+- Driver now works in dual-CPU mode by default for Tango-based devices. Firmware for slave CPU must be loaded externally.
+- [Bugzilla: 14962] PID-centric transforms. Transforms now contain multiple-stages and are attached only to stm_te PID filters.
+- [Bugzilla: 15332] Key rules are now dynamically-loaded via Linux firmware load mechanism
+- [Bugzilla: 15301] Dual-CPU multicom interface updated.
+
+* Thu Dec 08 2011 Stuart Hodgson <stuart.hodgson@st.com> - 0.4-4
+- [Bugzilla: 15652] Package name censorship
+
+* Mon Nov 22 2011 Jon Brett <jonathan.brett@st.com> - 0.4-3
+- spec file update
+
+* Mon Nov 21 2011 Jon Brett <jonathan.brett@st.com> - 0.4-2
+- Rpm packaging fix
+
+* Thu Nov 17 2011 Jon Brett <jonathan.brett@st.com> - 0.4-1
+- [Bugzilla: 15168] Added initial direct memory-to-memory API.
+- [Bugzilla: 14962] API modifications for simpler, PID-centric stream transform model.
+- Internal interface to stm_te updated.
+- Basic CA supported on host-only mode.
+- Added run-time stm_ce module version
+
+* Mon Oct 24 2011 André Draszik <andred.draszik@st.com> - 0.3-1
+- [Spec; Bugzilla: 14892] spec file update needed
+
+* Fri Oct 07 2011 Jon Brett <jonathan.brett@st.com> - 0.2-1
+- Release for basic 7108 CA demo
+- All code runs on host cpu. Multicom (loopback) is used to communicate with the HAL
+- Uses built-in key rules, which support only the 7108 non-secure "Z" profile. These key rules allow for the use of clear keys only.
+
+* Thu Aug 04 2011 Jon Brett <jonathan.brett@st.com> - 0.1-2
+- Fixed release number
+
+* Wed Aug 03 2011 Jon Brett <jonathan.brett@st.com> - 0.1-1
+- [Bugzilla 13448] - crypto-engine source rpm must be a noarch package
+
+* Tue Jul 26 2011 Jon Brett <jonathan.brett@st.com> - 0.1-0
+- Initial revision

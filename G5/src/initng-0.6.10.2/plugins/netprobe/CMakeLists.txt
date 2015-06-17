@@ -1,0 +1,6 @@
+INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR}/src ${CMAKE_BINARY_DIR} )
+
+ADD_LIBRARY(netprobe MODULE initng_netprobe.c)
+TARGET_LINK_LIBRARIES(netprobe initng)
+INSTALL_TARGETS(${LIB_INSTALL_DIR}/initng netprobe)
+

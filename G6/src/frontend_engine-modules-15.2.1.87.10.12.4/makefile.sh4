@@ -1,0 +1,7 @@
+CROSS_COMPILE ?= sh4-linux-
+STM_TARGET_CPU := sh
+
+CC  := $(CROSS_COMPILE)gcc
+CXX := $(CROSS_COMPILE)g++
+LD  := $(CROSS_COMPILE)ld
+AR  := $(CROSS_COMPILE)ar

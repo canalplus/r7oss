@@ -1,0 +1,79 @@
+#
+# Configuration Makefile for ALSA driver
+# Copyright (c) 1994-98 by Jaroslav Kysela <perex@perex.cz>
+#
+
+NEW_KBUILD       = @NEW_KBUILD@
+
+mainsrcdir	= @srcdir@
+MAINSRCDIR	= @SRCDIR@
+
+CROSS_COMPILE   ?= @CROSS_COMPILE@
+ARCH            ?= @ARCH@
+ifdef NEW_KBUILD
+CC		= $(CROSS_COMPILE)@CC@
+CPP		= $(CROSS_COMPILE)@CPP@
+export CROSS_COMPILE ARCH
+else
+AS		= $(CROSS_COMPILE)@AS@
+LD		= $(CROSS_COMPILE)@KLD@
+CC		= $(CROSS_COMPILE)@CC@
+CPP		= $(CROSS_COMPILE)@CPP@
+AR		= $(CROSS_COMPILE)@AR@
+MODFLAGS	= -DMODULE=1
+CFLAGS_KERNEL	=
+GENKSYMS	= @GENKSYMS@
+endif
+
+prefix		= @prefix@
+exec_prefix	= @exec_prefix@
+sysconfdir	= @sysconfdir@
+bindir		= @bindir@
+sbindir		= @sbindir@
+mandir		= @mandir@
+moddir		= @moddir@
+moddir_tree	= @moddir_tree@
+c_opts		= @c_opts@
+m_opts		= @m_opts@
+processor	= @processor@
+msmp		= @msmp@
+kaversion	= @kaversion@
+kversion	= @kversion@
+kpatchlevel	= @kpatchlevel@
+ksublevel	= @ksublevel@
+kextraversion	= @kextraversion@
+
+CONFIG_SND_VERSION	= @CONFIG_SND_VERSION@
+CONFIG_SND_KERNELDIR	= @CONFIG_SND_KERNELDIR@
+CONFIG_MODULES		= y
+CONFIG_SND_MVERSION	= @CONFIG_SND_MVERSION@
+CONFIG_ISAPNP_KERNEL	= @CONFIG_ISAPNP_KERNEL@
+CONFIG_PNP_KERNEL	= @CONFIG_PNP_KERNEL@
+CONFIG_PROC_FS		= @CONFIG_PROC_FS@
+CONFIG_PM		= @CONFIG_PM@
+CONFIG_AC97_BUS		= @CONFIG_AC97_BUS@
+CONFIG_HAS_DMA		= @CONFIG_HAS_DMA@
+
+ifndef NEW_KBUILD
+INCLUDE		= -I$(TOPDIR)/include @EXTRA_INCLUDES@ @KERNEL_INC@
+CFLAGS		= $(MODFLAGS) $(INCLUDE) $(c_opts) -Wall -Wstrict-prototypes \
+	-fomit-frame-pointer -Wno-trigraphs -O2 -fno-strict-aliasing -fno-common \
+	-pipe -DALSA_BUILD -nostdinc -iwithprefix include
+ifdef CONFIG_SND_MVERSION
+CFLAGS += -DMODVERSIONS -include $(CONFIG_SND_KERNELDIR)/include/linux/modversions.h
+endif
+CPPFLAGS = $(MODFLAGS) $(INCLUDE) $(c_opts) -DALSA_BUILD -nostdinc -iwithprefix include
+MAKE		+= $(m_opts)
+SNDVERSIONS	= $(TOPDIR)/include/sndversions.h
+DEXPORT		= $(TOPDIR)/include/modules
+else
+# 2.6 kbuild
+EXTRA_CFLAGS += -DALSA_BUILD
+LINUXINCLUDE := -I$(MAINSRCDIR)/include $(LINUXINCLUDE)
+CPPFLAGS := -I$(MAINSRCDIR)/include $(CPPFLAGS)
+KBUILD_CPPFLAGS := -I$(MAINSRCDIR)/include $(KBUILD_CPPFLAGS)
+# 2.6.24 complains this override...
+# CFLAGS := -I$(MAINSRCDIR)/include $(CFLAGS)
+MAKE_ADDS = @MAKE_ADDS@
+endif
+

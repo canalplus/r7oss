@@ -1,0 +1,127 @@
+#!/usr/bin/perl
+# Copyright (C) 2010 Google Inc. All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met:
+#
+#     * Redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above
+# copyright notice, this list of conditions and the following disclaimer
+# in the documentation and/or other materials provided with the
+# distribution.
+#     * Neither the name of Google Inc. nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# This file is a temporary hack.
+# It will be removed as soon as all platforms are are ready to move to
+# new-run-webkit-tests and we can then update the buildbots to explicitly
+# call old-run-webkit-tests for any platforms which will never support
+# a Python run-webkit-tests.
+
+# This is intentionally written in Perl to guarantee support on
+# the same set of platforms as old-run-webkit-tests currently supports.
+# The buildbot master.cfg also currently passes run-webkit-tests to
+# perl directly instead of executing it in a shell.
+
+use strict;
+use warnings;
+
+use File::Spec;
+use FindBin;
+use lib $FindBin::Bin;
+use webkitdirs;
+
+sub runningOnBuildBot()
+{
+    # This is a hack to detect if we're running on the buildbot so we can
+    # pass --verbose to new-run-webkit-tests.  This will be removed when we
+    # update the buildbot config to call new-run-webkit-tests explicitly.
+    my %isBuildBotUser = ("apple" => 1, "buildbot" => 1, "webkitbuildbot" => 1, "slave" => 1);
+    return $isBuildBotUser{$ENV{"USER"}};
+}
+
+# We could use isWebKit2() instead of our own custom usingWebKit2(), but then
+# we'd have to be careful to add -2 or --webkit-test-runner back into @ARGV below.
+sub usingWebKit2()
+{
+    # If either -2 or --webkit-test-runner is passed, we're supposed to use WebKit2.
+    # NRWT's WebKit2 support is still a work in progress:
+    # https://bugs.webkit.org/show_bug.cgi?id=56729
+    return grep(/(-2|--webkit-test-runner)/, @ARGV);
+}
+
+sub usingLeaks()
+{
+    # LeaksViewer gets confused by NRWT's --leaks output, see bugs:
+    # https://bugs.webkit.org/show_bug.cgi?id=66227
+    # https://bugs.webkit.org/show_bug.cgi?id=66228
+    return grep(/--leaks/, @ARGV);
+}
+
+sub useNewRunWebKitTests()
+{
+    # Change this check to control which platforms use new-run-webkit-tests by default.
+    # Example: return runningOnBuildBot() && isLeopard();
+    # would enable new-run-webkit-tests on only the leopard buildbots.
+
+    # Note: We use a whitelist here to avoid calling isPORT() for ports
+    # for which we haven't explicitly added support.  Calling isPORT()
+    # will remove the --PORT argument from @ARGV, causing us to fail to pass it to the test harness.
+
+    # NRWT Windows support still needs work: https://bugs.webkit.org/show_bug.cgi?id=38756
+
+    # NRWT doesn't support qt-mac, qt-arm and qt-4.8 platforms now: https://bugs.webkit.org/show_bug.cgi?id=64071 and https://bugs.webkit.org/show_bug.cgi?id=64086
+    if (isQt()) {
+        return (!isDarwin() and !isARM() and (getQtVersion() ne "4.8"));
+    }
+
+    return ((isLeopard() or isSnowLeopard() or isGtk()) and !usingWebKit2() and !usingLeaks());
+}
+
+my $harnessName = "old-run-webkit-tests";
+
+if (useNewRunWebKitTests()) {
+    $harnessName = "new-run-webkit-tests";
+    push(@ARGV, "--child-processes=1");
+    print "Running new-run-webkit-tests with one child process.\n";
+    print "For more parallelism, run new-run-webkit-tests directly.\n";
+    if (runningOnBuildBot()) {
+        push(@ARGV, "--verbose");
+    }
+
+    # FIXME: We need a cleaner way to do --platform handling.
+    # webkitdirs.pm strips --qt and --gtk from @ARGV when we call isQt/isGtk.
+    # Unfortunately new-run-webkit-tests wouldn't understand --qt/--gtk if we passed it to it anyway,
+    # so we have to convert it to --platform=PORT equivalents.
+    # https://bugs.webkit.org/show_bug.cgi?id=63970
+    if (isQt()) {
+        push(@ARGV, "--platform=qt");
+    } elsif (isGtk()) {
+        push(@ARGV, "--platform=gtk");
+    }
+} else {
+    # We have to add back any --PORT arguments which may have been removed by isPort() checks above.
+    if (isQt()) {
+        push(@ARGV, "--qt");
+    } elsif (isGtk()) {
+        push(@ARGV, "--gtk");
+    }
+}
+
+my $harnessPath = File::Spec->catfile(relativeScriptsDir(), $harnessName);
+exec $harnessPath ($harnessPath, @ARGV) or die "Failed to execute $harnessPath";

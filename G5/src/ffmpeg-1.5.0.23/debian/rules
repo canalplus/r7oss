@@ -1,0 +1,111 @@
+#!/usr/bin/make -f
+
+#export DH_VERBOSE=1
+
+include /usr/share/dpatch/dpatch.make
+
+NCPUS := $(shell getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)
+
+ifeq ($(NCPUS),-1)
+	NCPUS:=1
+endif
+
+ifeq ($(NCPUS),0)
+	NCPUS:=1
+endif
+
+CC:=ccache $(CC)
+
+version := $(shell sed -n 's/Package: \(.*\)/\1/p' debian/control | head -1)
+
+DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+
+CFLAGS = -Wall -g
+LDCONFIG =
+
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+	CFLAGS += -O0 -fPIC -DPIC
+else
+	CFLAGS += -fPIC -DPIC
+endif
+
+configure: configure-stamp
+configure-stamp: patch-stamp
+	dh_testdir
+
+	./configure --prefix=/usr --libdir=\$${prefix}/lib  --shlibdir=\$${prefix}/lib  \
+	--incdir=\$${prefix}/include/ffmpeg --enable-shared --enable-libmp3lame \
+	--enable-gpl --enable-libfaad  --mandir=\$${prefix}/share/man \
+	--enable-libvorbis --enable-pthreads --enable-libfaac --enable-libxvid \
+	--enable-pp --enable-libamr-nb --enable-libamr-wb --enable-x11grab \
+	--enable-libgsm --enable-libx264 --enable-liba52 --enable-libtheora \
+	--extra-cflags="$(CFLAGS)" --cc="$(CC)" --enable-swscaler \
+	--disable-mmx
+
+# Enable XvMC.
+	echo "HAVE_XVMC_ACCEL=yes" >> config.mak
+	echo "#define HAVE_XVMC 1" >> config.h
+	perl -i -pe 's,ENABLE_MPEG_XVMC_DECODER 0,ENABLE_MPEG_XVMC_DECODER 1,'  config.h
+
+# PREFIX isn't prefix
+	perl -i -pe 's,PREFIX,prefix,' config.mak
+
+	touch configure-stamp
+
+build: build-stamp
+build-stamp: configure-stamp
+	dh_testdir
+
+	$(MAKE) -j $(NCPUS)
+#	$(MAKE) test
+
+	touch build-stamp
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp configure-stamp
+
+	-$(MAKE) distclean
+	[ ! -f doc/Makefile ] || $(MAKE) -C doc clean
+
+	debian/rules unpatch 
+
+	dh_clean output_example qt-faststart libavformat/libavformat.so \
+	libavcodec/amrwb_float/*.o config.log *.pc libavcodec/amr_float/*.o \
+	libavutil/libavutil.so.49 libavcodec/libavcodec.so.51 config.err \
+	libpostproc/libpostproc.so.51
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
+
+	$(MAKE) install prefix=$(CURDIR)/debian/tmp/usr
+
+	dh_install --fail-missing
+
+# Build architecture-independent files here.
+binary-indep: build install
+
+# Build architecture-dependent files here.
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs Changelog
+	dh_installdocs
+	dh_link
+	dh_strip
+	dh_compress
+	dh_fixperms 
+	dh_makeshlibs -V
+	dh_installdeb
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install configure

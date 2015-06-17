@@ -1,0 +1,81 @@
+From 015e11b5dffd97d3600577bd099fd004284645b8 Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:19:59 +0100
+Subject: [PATCH 18/36] patches/hang-191-analyse
+
+---
+ player/manifestor/manifestor_video.cpp |   17 ++++++++++++++---
+ player/manifestor/manifestor_video.h   |    2 +-
+ 2 files changed, 15 insertions(+), 4 deletions(-)
+
+diff --git a/player/manifestor/manifestor_video.cpp b/player/manifestor/manifestor_video.cpp
+index 5eb7eab..f88145d 100644
+--- a/player/manifestor/manifestor_video.cpp
++++ b/player/manifestor/manifestor_video.cpp
+@@ -433,9 +433,11 @@ ManifestorStatus_t      Manifestor_Video_c::GetNextQueuedManifestationTime   (un
+         Period          = (Behind.IntegerPart() + 5) * Period;          // we want to be at least 4 vsyncs ahead
+         *Time           = Vsync + Period.RoundedLongLongIntegerPart();
+         NextTimeSlot    = *Time;                                        // Initialize timeslot.
+-        MANIFESTOR_DEBUG ("Estimate %llu, Time from now %u, Time since Vsync %u, FrameRate %d.%06d\n", *Time,
++        MANIFESTOR_TRACE ("0 - Estimate %llu, Time from now %u, Time since Vsync %u, FrameRate %d.%06d\n", *Time,
+                           (unsigned int)(*Time - Now), (unsigned int)(Now - Vsync),
+                           SurfaceDescriptor.FrameRate.IntegerPart(), SurfaceDescriptor.FrameRate.RemainderDecimal());
++	Behind.Print();
++	Period.Print();
+         return ManifestorNoError;
+     }
+ 
+@@ -443,7 +445,8 @@ ManifestorStatus_t      Manifestor_Video_c::GetNextQueuedManifestationTime   (un
+     if ((NextTimeSlot != 0ull) && (TimeSlotOnDisplay == 0ull))
+     {
+         *Time           = NextTimeSlot;
+-        MANIFESTOR_DEBUG ("Estimate %llu, Time from now %u\n", *Time, (unsigned int)(*Time - Now));
++        MANIFESTOR_TRACE ("1 - Estimate %llu, Time from now %u\n", *Time, (unsigned int)(*Time - Now));
++	Period.Print();
+         return ManifestorNoError;
+     }
+ 
+@@ -457,12 +460,20 @@ ManifestorStatus_t      Manifestor_Video_c::GetNextQueuedManifestationTime   (un
+         Period          = (Behind.IntegerPart() + 5) * Period;        // we want to be at least 4 vsyncs ahead
+         *Time          += Period.RoundedLongLongIntegerPart();
+     }
+-    MANIFESTOR_DEBUG ("NextTimeSlot %llu, TimeSlotOnDisplay %llu Buff.TimeOnDisplay %llu  Estimate %llu, Now %llu diff %d\n",
++    MANIFESTOR_TRACE ("2 - NextTimeSlot %llu, TimeSlotOnDisplay %llu Buff.TimeOnDisplay %llu  Estimate %llu, Now %llu diff %d\n",
+                       NextTimeSlot, TimeSlotOnDisplay, StreamBuffer[BufferOnDisplay].TimeOnDisplay,
+                       *Time, Now, *Time - Now);
++    Behind.Print();
++    Period.Print();
+ 
+     return ManifestorNoError;
+ }
++//{{{  ReleaseQueuedDecodeBuffers
++ManifestorStatus_t      Manifestor_Video_c::ReleaseQueuedDecodeBuffers(void)
++{
++    NextTimeSlot	= TimeSlotOnDisplay;
++    return Manifestor_Base_c::ReleaseQueuedDecodeBuffers();
++}
+ //}}}
+ //{{{  InitialFrame
+ //{{{  doxynote
+diff --git a/player/manifestor/manifestor_video.h b/player/manifestor/manifestor_video.h
+index 0afa44f..64f29ad 100644
+--- a/player/manifestor/manifestor_video.h
++++ b/player/manifestor/manifestor_video.h
+@@ -211,6 +211,7 @@ public:
+     ManifestorStatus_t   GetDecodeBufferPool            (class BufferPool_c**   Pool);
+     ManifestorStatus_t   GetSurfaceParameters           (void**                 SurfaceParameters);
+     ManifestorStatus_t   GetNextQueuedManifestationTime (unsigned long long*    Time);
++    ManifestorStatus_t   ReleaseQueuedDecodeBuffers     (void);
+     ManifestorStatus_t   InitialFrame                   (class Buffer_c*        Buffer);
+     ManifestorStatus_t   QueueDecodeBuffer              (class Buffer_c*        Buffer);
+     ManifestorStatus_t   GetNativeTimeOfCurrentlyManifestedFrame       (unsigned long long*     Pts);
+@@ -245,6 +246,5 @@ public:
+     // Methods to be supplied by this derived classes
+ 
+     ManifestorStatus_t   FillOutBufferStructure( BufferStructure_t       *RequestedStructure );
+-
+ };
+ #endif
+-- 
+1.7.9.5
+

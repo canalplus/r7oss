@@ -1,0 +1,49 @@
+#!/bin/bash
+
+WANT_AUTOMAKE_1_6=1 export WANT_AUTOMAKE_1_6
+WANT_AUTOMAKE=1.6 export WANT_AUTOMAKE
+AUTOMAKE_MIN=1.6.0
+AUTOCONF_MIN=2.53
+LIBTOOL_MIN=1.4.0
+
+if [ $# -ne 0 ]; then
+  args="$@"
+elif [ -r /etc/asound/driver_args ]; then
+  args="`cat /etc/asound/driver_args`"
+else
+  args="--with-debug=full --with-isapnp=yes --with-sequencer=yes"
+fi
+
+if [ -r /usr/share/aclocal/alsa-lib.m4 ]; then
+  rm -f /usr/share/aclocal/alsa-lib.m4
+fi
+if [ -r /usr/local/share/aclocal/alsa-lib.m4 ]; then
+  rm -f /usr/local/share/aclocal/alsa-lib.m4
+fi
+#if [ -d ../alsa-lib ]; then
+#  echo "Building hard symlinks with alsa-lib sources..."
+#  cd kernel
+#  pwd
+#  cd ..
+#fi
+
+# check for alsa-kernel directory
+if [ -d alsa-kernel -a -f alsa-kernel/last.c ]; then
+  ALSAKERNELDIR="alsa-kernel"
+else
+  test -z $ALSAKERNELDIR && ALSAKERNELDIR=../alsa-kernel
+  if [ ! -d $ALSAKERNELDIR -o ! -f $ALSAKERNELDIR/last.c ]; then
+    echo "No alsa-kernel is found."
+    echo "Please specify the correct location via ALSAKERNELDIR environment variable."
+    exit 1
+  fi
+fi
+make ALSAKERNELDIR="$ALSAKERNELDIR" all-deps
+aclocal $ACLOCAL_FLAGS
+autoconf
+echo "./configure $args"
+./configure $args || exit 1
+if [ -z "$HGCOMPILE_NO_MAKE" ]; then
+  make dep || exit 1
+  make
+fi

@@ -1,0 +1,10 @@
+* Fri May 09 2014 Alain Volmat <alain.volmat@st.com> - 1.1.0
+- Rework on how headers are exposed. (see Bugzilla 48629)
+
+* Wed Apr 30 2014 Philippe Guerri <philippe.guerri@st.com> - 1.0.0
+- Initial version with all headers files from both CE FW BIN gits for the GENERIC secure profil:
+     packages/DMXSEC_crypto_engine-firmware-base-stih416_pkg_ext.git 1.20.3
+     packages/DMXSEC_crypto_engine-firmware-base-stih407_pkg_ext.git 1.21.3
+
+
+

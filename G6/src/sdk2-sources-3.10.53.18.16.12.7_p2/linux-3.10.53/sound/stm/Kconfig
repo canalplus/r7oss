@@ -1,0 +1,76 @@
+menuconfig SND_STM
+	tristate "STMicroelectronics SoCs support"
+	depends on SND
+	select SND_PCM
+	select DMADEVICES
+	select ST_FDMA
+	select BPA2
+	select SND_STM_AUDIO_GLUE
+	select SND_STM_UNIPERIF_PLAYER
+	select SND_STM_UNIPERIF_READER
+	select SND_STM_CONV_BIPHASE
+	select SND_STM_CONV_DAC_SYSCONF
+	select SND_STM_CONV_DAC_BUFFER
+	select SND_STM_UNIPERIF_TDM
+	select SND_STM_TELSS_GLUE
+	help
+		Say Y here for ALSA support on the STMicroelectronics SoCs.
+
+		It is recommended to have BPA2 enabled with dedicated
+		partition defined, however it is not absolutely necessary.
+
+		To compile this driver as a module, choose M here: the module
+	 	will be called snd-stm.ko
+
+config SND_STM_AUDIO_GLUE
+       tristate "Audio Glue driver"
+       depends on SND_STM
+
+config SND_STM_UNIPERIF_PLAYER
+	tristate "Uniperif Player driver"
+	depends on SND_STM
+	select ST_FDMA_AUDIO
+
+config SND_STM_UNIPERIF_READER
+	tristate "Uniperif Reader driver"
+	depends on SND_STM
+
+config SND_STM_CONV_BIPHASE
+	tristate "Conv Biphase driver"
+	depends on SND_STM
+
+config SND_STM_CONV_DAC_SYSCONF
+	tristate "Conv DAC driver"
+	depends on SND_STM
+
+config SND_STM_CONV_DAC_BUFFER
+    tristate "Audio DAC Buffer st6440"
+    depends on SND_STM
+
+config SND_STM_TELSS_GLUE
+       tristate "TELSS Top Glue driver"
+       depends on SND_STM
+
+config SND_STM_UNIPERIF_TDM
+	tristate "Uniperipheral TDM driver"
+	depends on SND_STM
+
+config SND_STM_BPA2_PARTITION_NAME
+	string "Name of BPA2 partition to allocate buffers from"
+	depends on SND_STM
+	depends on BPA2
+	default "audio"
+	help
+		Define a name of BPA2 partition the driver should try to
+		allocate from.
+
+		If name is not given or given partition does not exist, driver
+		will try to use "bigphysmem" partition or eventually
+		preallocate some system memory using
+		ALSA snd_pcm_lib_preallocate_pages_for_all() method.
+
+		This value can be overridden by module parameter
+		"bpa2_part=<name>" (or kernel command line parameter
+		"snd-stm.bpa2_part=<name>", if driver is compiled into
+		kernel).
+

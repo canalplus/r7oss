@@ -1,0 +1,35 @@
+From 7892b5e202797aa2bef1f254e25ce0ba1e7e513e Mon Sep 17 00:00:00 2001
+From: Peter Bennett <peter.bennett@mathembedded.com>
+Date: Tue, 21 Sep 2010 15:21:24 +0100
+Subject: [PATCH 35/36] [hack] For some reason wma parser wanted a non
+ existant string.h, NULL, memset and memcmp in a C++
+ file...
+
+Signed-off-by: Peter Bennett <peter.bennett@mathembedded.com>
+---
+ player/frame_parser/wma_properties.cpp |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/player/frame_parser/wma_properties.cpp b/player/frame_parser/wma_properties.cpp
+index f1eec6e..e96a797 100644
+--- a/player/frame_parser/wma_properties.cpp
++++ b/player/frame_parser/wma_properties.cpp
+@@ -6,9 +6,14 @@
+  * Stream properties object decoding utility classes
+  */
+ 
+-#include <string.h>
++//#include <string.h>
+ 
++extern "C" {
++  int memcmp(const void *a, const void *b, int n);
++  int memset(void *a, int c, int n);
++}
+ 
++#define NULL (0)
+ 
+ #include "wma_properties.h"
+ #include "report.h"
+-- 
+1.7.9.5
+

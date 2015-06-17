@@ -1,0 +1,20 @@
+* ST LPC RTC
+
+Required properties:
+- compatible : "st,lpc-rtc"
+- interrupt-parent: controller from which depends the IRQ
+- reg : Address range of the rtc registers
+- interrupts: Should contain the rtc interrupt number
+- clock-names : Should be "lpc_rtc"
+- clocks: Clock used by RTC device
+
+Example:
+
+	rtc@0xfde05000 {
+	        compatible = "st,lpc-rtc";
+		interrupt-parent = <&intc>;
+	        reg = <0xfde05000 0x1000>;
+		interrupts = <GIC_SPI 118 IRQ_TYPE_EDGE_RISING>;
+		clock-names = "lpc_rtc";
+		clocks		= <&CLK_M_MPETHSENS>;
+	};

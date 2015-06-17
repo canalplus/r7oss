@@ -1,0 +1,12 @@
+diff --git a/linux/drivers/media/dvb/stm/backend/player_module.c b/linux/drivers/media/dvb/stm/backend/player_module.c
+index 10ec7c7..ea6958e 100644
+--- a/linux/drivers/media/dvb/stm/backend/player_module.c
++++ b/linux/drivers/media/dvb/stm/backend/player_module.c
+@@ -112,6 +112,7 @@ static int __init PlayerLoadModule (void)
+ {
+ 
+     report_init ();
++    report_restricted_severity_levels(severity_fatal, severity_interrupt * 10);
+ 
+     DisplayInit ();
+     BackendInit ();

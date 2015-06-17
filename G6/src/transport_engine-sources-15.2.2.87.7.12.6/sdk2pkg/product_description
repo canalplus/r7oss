@@ -1,0 +1,7 @@
+ The Transport Engine driver, covers the following ST SOCs:
+    stx7108
+    stih415
+    stih416
+    stih407
+    fli76xx
+    stxd127

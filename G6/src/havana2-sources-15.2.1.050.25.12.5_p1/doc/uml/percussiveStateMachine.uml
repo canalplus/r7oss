@@ -1,0 +1,24 @@
+@startuml
+
+state MonitoringSynchronizationError {
+    [*] --> SyncStateInSynchronization
+        SyncStateInSynchronization --> SyncStateSuspectedSyncError: DifferenceExceedsThreshhold
+        SyncStateSuspectedSyncError --> SyncStateInSynchronization: !DifferenceExceedsThreshhold
+        SyncStateSuspectedSyncError: if (DifferenceExceedsThreshhold) ErrorCount++;
+    SyncStateSuspectedSyncError --> SyncStateConfirmedSyncError: ErrorCount > ErrorIntegrationCount
+        SyncStateConfirmedSyncError: CorrectSynchronizationError();
+    SyncStateConfirmedSyncError --> SyncStateStartAwaitingCorrectionWorkthrough
+        SyncStateStartAwaitingCorrectionWorkthrough: WorkthroughCount = 0;
+        SyncStateStartAwaitingCorrectionWorkthrough: WorkthroughIntegrationCount = 64;
+    SyncStateStartAwaitingCorrectionWorkthrough --> SyncStateAwaitingCorrectionWorkthrough
+        SyncStateAwaitingCorrectionWorkthrough: WorkthroughCount++;
+    SyncStateAwaitingCorrectionWorkthrough --> SyncStateInSynchronization: WorkthroughCount > WorkthroughIntegrationCount
+}
+
+MonitoringSynchronizationError --> SyncStateStartLongSyncHoldoff: Sudden Change on System Clock Adjustment
+    SyncStateStartLongSyncHoldoff: WorkthroughCount = 0;
+    SyncStateStartLongSyncHoldoff: WorkthroughIntegrationCount = 1024 + 64;
+SyncStateStartLongSyncHoldoff --> SyncStateAwaitingCorrectionWorkthrough
+
+
+@enduml

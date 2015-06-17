@@ -1,0 +1,407 @@
+What is stmcoredisplay?
+=======================
+
+This is a display pipeline driver for certain STMicroelectronics SoCs. The
+following chips are supported:
+
+(o) STx7100 Cut3.x
+(o) STx7109 Cut2/Cut3.x
+(o) STi7200 Cut2
+(o) STi7111
+(o) STx7141
+(o) STi7105
+(o) STx5202
+
+The driver constructs a number of platform devices to represent the display
+pipelines available in the system. Other drivers, such as the stmfb framebuffer,
+can register platform drivers to use the display, or get direct access to the
+underlying core display API. 
+
+How to use it?
+==============
+
+Simply modprobe the core driver module required. If you regularly change the
+chip type in your board then you can set up an /etc/modprobe.conf rule to load
+all the modules you might need and only one will succeed, e.g.
+
+install stmcore-display \
+  _CPU=`grep 'cpu type' < /proc/cpuinfo | cut -d ' ' -f 3 | tr -c -d 0-9` ; \
+  _CUT=`grep 'cut' < /proc/cpuinfo | cut -d ' ' -f 2 | cut -b 1` ; \
+  echo "running /sbin/modprobe --ignore-install stmcore-display-st[ix]${_CPU}c${_CUT} || stmcore-display-st[ix]${_CPU}" ; \
+  /sbin/modprobe --ignore-install stmcore-display-sti${_CPU}c${_CUT} || \
+  /sbin/modprobe --ignore-install stmcore-display-stx${_CPU}c${_CUT} || \
+  /sbin/modprobe --ignore-install stmcore-display-sti${_CPU} || \
+  /sbin/modprobe --ignore-install stmcore-display-stx${_CPU}
+
+install stmfb-automatic \
+  _BOARD=`grep 'machine' < /proc/cpuinfo | cut -d ' ' -f 2` ; \
+  _CPU=`grep 'cpu type' < /proc/cpuinfo | cut -d ' ' -f 3 | tr -c -d 0-9` ; \
+  _CUT=`grep 'cut' < /proc/cpuinfo | cut -d ' ' -f 2 | cut -b 1` ; \
+  \
+  _AWG=component_${_CPU}c${_CUT}_${_BOARD}.fw ; \
+  [ -f /lib/firmware/${_AWG} ] || _AWG=component_${_CPU}c${_CUT}.fw ; \
+  [ -f /lib/firmware/${_AWG} ] || _AWG=component_${_CPU}_${_BOARD}.fw ; \
+  [ -f /lib/firmware/${_AWG} ] || _AWG=component_${_CPU}.fw ; \
+  echo using ${_AWG} ; \
+  ln -sf ${_AWG} /lib/firmware/component.fw ; \
+  \
+  /sbin/modprobe stmcore-display; \
+  /sbin/modprobe stmfb ; \
+  [ x$BOARD = xhdk7108 ] && i2cset -y 1 0x4a 0x00 0x03 || true ; \
+  [ x$BOARD = xhdk7108 ] && i2cset -y 1 0x4a 0x01 0x00 || true
+
+alias fb0 stmfb-automatic
+
+
+alternatively:
+--------------
+install stmcore-display \
+  /sbin/modprobe stmcore-display-stx7100; \
+  /sbin/modprobe stmcore-display-stx7109c3; \
+  /bin/true
+  
+install stmfb-automatic \
+  /sbin/modprobe stmcore-display; \
+  /sbin/modprobe stmfb
+  
+alias fb0 stmfb-automatic
+
+
+The former will dynamically select the correct firmware(**) files to be used to
+generate horizontal and vertical sync signals on the component analogue
+YPbPr output in ED and HD display modes. These are potentially different on
+each SoC and even each board, depending on the SoC hardware and the video signal
+output path design of the board. The scripting is convenient if you switch 
+boards often; but if you only use a single board, you can just copy the
+appropriate component firmware file to /lib/firmware/component.fw and remove the
+scripting.
+
+If the driver cannot find /lib/firmware/component.fw, it will give a warning 
+on the console, but this does not mean the driver will not work. The composite
+and S-Video standard definition outputs, HDMI and DVO will still work as
+expected. Also, component YPrPb or RGB (for SCART) output from the HD DACs will
+work when the display is configured for PAL/SECAM or NTSC.
+
+(**) The 7100/7109 SoCs do not require a firmware for SMPTE defined ED and HD
+modes. They would require a firmware for Australian AS4933 modes, but these
+are not supported by this driver.
+
+Module Parameters
+=================
+The core driver has a single module paramter named hdmi0, its parameter string
+has the form:
+
+paramstring := e[nable] | E[NABLE] | d[isable] | D[ISABLE]
+
+The default behaviour, if no parameter is given, is for HDMI output to be
+enabled once a valid display mode is requested, for instance by loading the
+framebuffer module. However for some applications it may be desirable to keep
+HDMI disabled until the application has had a chance to inspect the sink's EDID.
+
+e.g. one could add the following to your modprobe configuration file:
+
+option stmcore-display-stx7109c3 hdmi0=disable
+
+Sysfs
+=====
+
+The core driver creates a new class device "stmcoredisplay", which appears
+in /sys/class. Under this a class device for each display pipeline available, 
+which appears as /sys/class/stmcoredisplay/displayN, is created. Each pipeline
+has an "info" attribute which, when read, produces a human readable description
+of the pipeline's capabilities. 
+
+If the pipeline has a HDMI output then a second class device appears as
+/sys/class/stmcoredisplay/displayN/hdmiN.0 . This contains a number of
+attributes which can be inspected to see the state of the device and the
+capabilities of a hotplugged sink device. Although most of these are intended
+as human readable for troubleshooting purposes, some including the pollable
+hotplug attribute may be of use to applications. The full list of attributes
+is:
+
+aspect:
+  The reported aspect ratio of a connected display, "4_3", "16_9" or "UNKNOWN".
+
+audio_capabilities:
+  A list of audio formats (newline separated) reported as supported by the sink,
+  including number of channels, sample frequencies, bitdepths, maximum bit
+  rates and WMA profile numbers where appropriate. The following example is
+  taken from a commercial AV receiver:
+
+ "1:LPCM:8ch:32KHz:44.1KHz:48KHz:88.2KHz:96KHz:176.4KHz:192KHz:16bit:20bit:24bit
+  2:AC3:6ch:32KHz:44.1KHz:48KHz:640kbps
+  7:DTS:7ch:32KHz:44.1KHz:48KHz:88.2KHz:96KHz:1536kbps
+  9:One Bit Audio:6ch:44.1KHz
+  10:Dolby Digital+:8ch:44.1KHz:48KHz
+  11:DTS-HD:8ch:48KHz:96KHz:192KHz
+  12:MLP:8ch:48KHz:96KHz:192KHz"
+
+av_latency:
+  A list of the AV latencies (newline separated) reported by the sink in the
+  form:
+   "V: progressive video latency
+    A: progressive audio latency
+    IV: interlaced video latency
+    IA: interlaced audio latency"
+    
+  Each entry after the colon is either "Unknown", "No output" or a numeric 
+  value in milliseconds.
+
+cea861_codes:
+  A list of CEA-861 mode numbers, one per line, supported by the connected
+  display that can be generated by the driver on this specific SoC. If a mode
+  is marked as "native" by the sink, an asterix will appear after the mode
+  number.
+
+cec_address:
+  the sink provided CEC address for this device in the form "a.b.c.d"
+
+color_format:
+  A list of colour formats and bitdepths supported by the sink. Each format
+  supported "RGB", "YUV422" and "YUV444" is listed on a new line, followed by a
+  colon separated list of the bitdepths available in that format, e.g:
+    "RGB:24:30:36
+     YUV422:24
+     YUV444:24"
+
+  would indicate a sink that support up to 36bit deepcolour in RGB but only
+  standard 24bit colour in YUV formats.
+
+colorgamut_profiles:
+  A colon separated numeric list of supported color gamut profile levels
+  supported by the sink or the string "none".
+
+colorspaces:
+  A colon separated list of strings indicating the colourspaces supported by
+  the sink. The full list of possible colorspaces is:
+
+    "sRGB:Ycc601:Ycc709:xvYcc601:xvYcc709:sYcc601:AdobeYcc601:AdobeRGB"
+
+  Please see CEA-861-E and the definition of the CEA extension block and
+  colorimetry data block for full details.
+
+dev:
+  The major and minor numbers of the /dev/hdmiN.0 device node, usually created
+  by udev. Note that this attribute is generated automatically by the Linux
+  device framework.
+
+hotplug:
+  Indicates if a device has been hotplugged, returning either "y" or "n". This
+  attribute is pollable, allowing an application thread to block waiting for
+  the hotplug status to change.
+
+name:
+  The sink's reported device name or:
+    - "UNKNOWN" if no device is connected;
+    - "SAFEMODE" if the sink's EDID could not be read or was corrupt.
+
+modes:
+  List the display modes (one per line) supported by the sink and that can be
+  generated by the driver on this specific SoC, in the form:
+
+   {S|U}:<Width>x<Height>{p|i}-<VerticalRefresh>
+
+  e.g. "S:1280x720p-59" indicates support for the CEA Standard (S) 720p@59.94HZ.
+  The vertical refresh rate is rounded down to the nearest integer.
+
+speaker_allocation:
+  Colon separated list of surround sound speaker channels supported, the full
+  list is:
+    "FL/FR:LFE:FC:RL/RR:RC:FLC/FRC:RLC/RRC:FLW/FRW:FLH/FRH:TC:FCH"
+
+supports_ai:
+  indicates if the sink has the "supports_ai" bit set in the HDMI VSDB
+  (See HDMI Specification v1.3a for details), returns "y" or "n".
+
+tmds_status:
+  either the string "Running" or "Stopped" to indicate if the TDMS PHY is
+  transmitting a signal or not.
+
+type:
+  The type of display connected, "DVI", "HDMI" or "INVALID" if no device is
+  connected.
+
+underscan:
+  indicates the CEA and VCDB scanmode behaviour of the sink, one line for each
+  in the form:
+    "CEA:CEAScan
+     VCDB:CEScan:ITScan:PTScan"
+
+     where CEAScan can be "Underscanned" or "Overscanned",
+
+     CEScan and ITScan can be:
+       "Unsupported","Overscanned","Underscanned" or "Selectable"
+     and PTScan can be:
+       "Undefined","Overscanned","Underscanned" or "Selectable"
+
+   Please see CEA-861-E and the definition of the CEA extension block
+   and VCDB for full details.
+
+quantization_control:
+  Indicates which if any of the AVI info frame quantization range flags are
+  supported by the sink, the possible results are:
+    "Unsupported", "RGB", "YCC" or "RGB:YCC".
+
+  Please see CEA-861-E and the definition of the VCDB for full details.
+
+
+HDMI Character Device
+=====================
+
+A character device is created for each display pipeline that has a HDMI 
+serializer. The device major/minor can be obtained from reading the
+/sys/class/stmcoredisplay/displayN/hdmiN.0/dev attribute. On a udev system
+the devices should appear automatically as /dev/hdmiN.0 . Reading from the
+device returns the full 32k extended EDID blocks read from a connected
+display. If no display is connected, a read will result in EOF. Displays are
+unlikely to use the full space available, in fact most TVs still only use the 
+first two blocks, in which case the unused blocks will contain all zeros.
+
+The device supports the following IOCTLS, whose definitions can be found in
+/usr/include/linux/stm/hdmi.h on the target filesystem if the 
+stlinux23-sh4-stmfb-headers RPM has been installed.
+
+STMHDMIIO_FLUSH_DATA_PACKET_QUEUE:
+  Flush data queued for transmission by STMHDMIIO_SEND_DATA_PACKET and
+  STMHDMIIO_SET_ISRC_DATA.
+
+STMHDMIIO_SEND_DATA_PACKET:
+  Queue a HDMI data packet for transmission; used to send ACP, profile 0 colour
+  gamut, vendor specific info frames and NTSC VBI info frames. See the type
+  definition of "struct stmhdmiio_data_packet" in the header file for full
+  details of how to use this interface.
+
+STMHDMIIO_SET_AUDIO_DATA:
+  Set the channel count, speaker configuration and downmix information for
+  audio info frames. See the definition of the parameter argument type
+  "struct stmhdmiio_audio" in the header file for full details.
+
+STMHDMIIO_SET_AUDIO_SOURCE:
+  Set which audio source should be routed to the HDMI output, 2ch PCM, 8ch PCM
+  or SPDIF. All options may not be available on every SoC depending on the
+  hardware configuration.
+
+STMHDMIIO_SET_AUDIO_TYPE:
+  Set the audio type being routed to the HDMI output, the options being:
+    - LPCM or IEC61937 compressed audio at <192KHz (e.g. AC3)
+    - 1-bit audio (SACD)
+    - Compressed DSD
+    - Double Rate DSD
+    - High bit rate (HBR) compressed audio (e.g. DTS-HD Master Audio)
+
+STMHDMIIO_SET_AVMUTE:
+  Send a General Control Packet (GCP) on the next frame to set or clear the
+  AVMUTE state in the sink. This takes a numeric argument which is treated as a
+  boolean, i.e. 0 sends a clear AVMute command and non-zero sends a set AVMute
+  command. Note that only one GCP is sent unless in a deepcolor configuration,
+  in which case due to a hardware limitation a GCP with the last configured
+  AVMute command will be sent every frame along with the deepcolor state.
+
+STMHDMIIO_SET_ISRC_DATA:
+  Queue ISRC data for transmission. See the type definition of
+  "struct stmhdmiio_isrc_data" in the header file for full details on how to
+  use this interface.
+
+STMHDMIIO_SET_CEA_MODE_SELECTION:
+  Each display mode has a CEA mode number which is sent in the AVI info frame.
+  However display timings that support different picture aspect ratios (16:9 or
+  4:3) simply by redefining the pixel aspect ratio, indicate which aspect ratio
+  is in use by changing the CEA mode number. The HDMI device can be configured
+  with this IOCTL to determines which CEA mode number to use in different ways.
+  See the type definition of "stmhdmiio_cea_mode_selection_t" in the header
+  file for full details.
+
+STMHDMIIO_SET_CONTENT_TYPE:
+  Set the type of content being displayed, i.e. CE, IT, graphics, photo etc.
+  See the type "stmhdmiio_content_type_t" in the header file for all options.
+  This is used to fill in the ITC and CN fields in the AVI info frame.
+
+STMHDMIIO_SET_EDID_MODE_HANDLING:
+  By default the HDMI device driver will not enable the TMDS output if the
+  current display standard is not supported by the sink (determined from its
+  EDID information). This prevents the driver from ever knowingly sending a
+  TMDS clock that is out of range, a behaviour which meets the various
+  specifications. However a lot of TVs support modes not advertised in their
+  EDID, e.g. they might advertise 720p@50Hz but not 720p@60Hz even though they
+  can actually support both refresh rates. By using this IOCTL an application
+  can bypass the default strict behaviour (see "stmhdmiio_edid_mode_t" in the
+  header file) and force the output of all display modes. However ST has no
+  liability if the use of this option damages your customer's equipment.
+
+STMHDMIIO_SET_HOTPLUG_MODE:
+  Change the HDMI device behaviour when a hotplug event is detected, while the
+  TMDS output is running. See the type definition for "stmhdmiio_hpd_mode_t"
+  in the header file for full details.
+
+STMHDMIIO_SET_OVERSCAN_MODE:
+  Select if the current display content is designed to be overscanned, 
+  underscanned or if this is unknown. This information is used to construct
+  the scan information in the AVI info frame.
+
+STMHDMIIO_SET_SAFE_MODE_PROTOCOL:
+  If the HDMI device is unable to read a valid EDID from a hotplugged sink,
+  it will fall back to a safemode as described in CEA-861-E Annex F.3.5. The
+  default behaviour is to assume the sink is DVI not HDMI capable. However this
+  IOCTL allow the application to override this and allow the HDMI protocols to
+  be sent, which includes data island packets, e.g. info frames and audio.
+
+STMHDMIIO_SET_SPD_DATA:
+  Set the Source Product Descriptor contents, which are sent to a connected sink
+  approximately once every half second automatically by the driver.
+  See CEA-861-E for details of the values to be sent. Also see the defintion of
+  the argument type "stmhdmiio_spd" in the header file.
+
+Note that a number of these parameters can be accessed using the "hdmi-control"
+application, installed by the stlinux23-sh4-stmfb-utils RPM.
+
+Driver Writers
+==============
+Driver writers should look at "linux/include/linux/stm/stmcoredisplay.h"
+and "include/stmdisplay*.h" for details of the platform device and core driver
+API respectively. However in brief a driver wishing to utilize a display
+pipeline has two options, firstly it can register a platform driver for the
+device id "stmcore-display". The driver will get probed once for each display
+pipeline available. The probe callback gets a platform device pointer passed
+to it, which contains platform data describing the pipeline, that can be
+retrieved as follows:
+
+#include <linux/stm/stmcoredisplay.h>
+
+...
+
+static int probe(struct platform_device *pdev)
+{
+    struct stmcore_display_pipeline_data *pd;
+
+    pd = *((struct stmcore_display_pipeline_data **)pdev->dev.platform_data);
+
+This is the mechanism currently used by the supplied framebuffer driver. If the
+framebuffer is used in your system (likely) then other clients of the core
+driver probably do not want to register as a platform driver as (a) the linux
+management is likely to get confused by having two drivers for the same platform
+device and (b) the framebuffer will have stored private data in the platform
+device structure which should not be changed.
+
+So there is a second, direct method to get hold of a display pipeline's
+platform data, using the exported function:
+
+int stmcore_get_display_pipeline(int pipeline,
+                                 struct stmcore_display_pipeline_data *data)
+                                 
+This returns a shallow copy of the platform data, into a buffer provided by the
+caller, for the requested pipeline (numbered starting from 0). If the requested
+pipeline does not exist then this function returns -ENODEV.
+
+In the platform driver case it is necessary to obtain a reference to the core
+driver module, using for example:
+
+  if(!try_module_get(pd->owner))
+    return -ENODEV;
+
+to prevent the core driver module from being unloaded while in use. If you
+use the exported module function then this isn't necessary, but it does no
+harm, as there is an explicit dependency generated by the use of the exported
+symbol. If a module reference is obtained then please remember to do a
+module_put(pd->owner) to release the reference once your driver has finished
+with the display pipeline.
+

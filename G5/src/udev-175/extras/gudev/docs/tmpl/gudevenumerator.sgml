@@ -1,0 +1,152 @@
+<!-- ##### SECTION Title ##### -->
+GUdevEnumerator
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### SECTION Image ##### -->
+
+
+<!-- ##### STRUCT GUdevEnumerator ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GUdevEnumerator:client ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GUdevEnumeratorClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+
+<!-- ##### FUNCTION g_udev_enumerator_new ##### -->
+<para>
+
+</para>
+
+@client: 
+@Returns: 
+
+
+<!-- ##### FUNCTION g_udev_enumerator_add_match_subsystem ##### -->
+<para>
+
+</para>
+
+@enumerator: 
+@subsystem: 
+@Returns: 
+
+
+<!-- ##### FUNCTION g_udev_enumerator_add_nomatch_subsystem ##### -->
+<para>
+
+</para>
+
+@enumerator: 
+@subsystem: 
+@Returns: 
+
+
+<!-- ##### FUNCTION g_udev_enumerator_add_match_sysfs_attr ##### -->
+<para>
+
+</para>
+
+@enumerator: 
+@name: 
+@value: 
+@Returns: 
+
+
+<!-- ##### FUNCTION g_udev_enumerator_add_nomatch_sysfs_attr ##### -->
+<para>
+
+</para>
+
+@enumerator: 
+@name: 
+@value: 
+@Returns: 
+
+
+<!-- ##### FUNCTION g_udev_enumerator_add_match_property ##### -->
+<para>
+
+</para>
+
+@enumerator: 
+@name: 
+@value: 
+@Returns: 
+
+
+<!-- ##### FUNCTION g_udev_enumerator_add_match_name ##### -->
+<para>
+
+</para>
+
+@enumerator: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION g_udev_enumerator_add_match_tag ##### -->
+<para>
+
+</para>
+
+@enumerator: 
+@tag: 
+@Returns: 
+
+
+<!-- ##### FUNCTION g_udev_enumerator_add_match_is_initialized ##### -->
+<para>
+
+</para>
+
+@enumerator: 
+@Returns: 
+
+
+<!-- ##### FUNCTION g_udev_enumerator_add_sysfs_path ##### -->
+<para>
+
+</para>
+
+@enumerator: 
+@sysfs_path: 
+@Returns: 
+
+
+<!-- ##### FUNCTION g_udev_enumerator_execute ##### -->
+<para>
+
+</para>
+
+@enumerator: 
+@Returns: 
+
+

@@ -1,0 +1,40 @@
+ST USB-PHY controllers
+
+The DWC3 port#2 can be used with a MiPHY2 to manage USB3 devices.
+
+This is to document the DT parameters to be passed from the blob in that case.
+
+Required properties:
+
+MiPHY2:
+- compatible : should be "st,stih407-usb3phy"
+- reg : base physical address of the phy registers and length of memory mapped
+	region.
+	It must have: "usb3-uport", "pipew";
+	So MiPHY and pipe wrapper.
+- st,syscfg: sysconfig register to manage the device.
+- resets: to reset the device.
+
+Optional property:
+- st,auto-calibration: boolean property to advice system to perform
+		       autocalibration on device disconnection.
+		       This will allow to setup the proper callback in the
+		       phy-st-usb3.c source. To setup only for those socs that
+		       support autocalibration.
+- st,no-ssc: boolean property to disable ssc modulation at miphy setup time.
+		       The are spare hard disks that don't support it and
+		       so they result unusable due to continuous electrical
+		       problems at runtime.
+
+Example:
+
+/* miPHY2 */
+usb3_phy: usb3_phy@0 {
+	compatible	= "st,stih407-usb3phy";
+	#phy-cells	= <0>;
+	resets		= <&softreset STIH407_MIPHY2_SOFTRESET>;
+	reg		= <0x08f90000 0xff>, <0x08f95000 0xff>;
+	reg-names	= "usb3-uport", "pipew";
+	st,syscfg	= <&syscfg_core>;
+	st,auto-calibration;
+};

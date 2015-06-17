@@ -1,0 +1,116 @@
+[PATCH] Add PM support to PnP drivers
+
+Add suspend/resume callback to pnp_driver and pnp_card_driver.
+
+Signed-off-by: Takashi Iwai <tiwai@suse.de>
+
+---
+--- linux-2.6.15-rc1/drivers/pnp/card.c	2005-11-12 02:43:36.000000000 +0100
++++ linux-2.6.15-rc1/drivers/pnp/card.c	2005-11-15 15:01:30.000000000 +0100
+@@ -69,6 +69,7 @@ static int card_probe(struct pnp_card * 
+ 			return 0;
+ 		clink->card = card;
+ 		clink->driver = drv;
++		clink->pm_state = PMSG_ON;
+ 		if (drv->probe) {
+ 			if (drv->probe(clink, id)>=0)
+ 				return 1;
+@@ -333,6 +334,28 @@ void pnp_release_card_device(struct pnp_
+ 	up_write(&dev->dev.bus->subsys.rwsem);
+ }
+ 
++/*
++ * suspend/resume callbacks
++ */
++static int card_suspend(struct pnp_dev *dev, pm_message_t state)
++{
++	struct pnp_card_link *link = dev->card_link;
++	if (link->pm_state.event == state.event)
++		return 0;
++	link->pm_state = state;
++	return link->driver->suspend(link, state);
++}
++
++static int card_resume(struct pnp_dev *dev)
++{
++	struct pnp_card_link *link = dev->card_link;
++	if (link->pm_state.event == PM_EVENT_ON)
++		return 0;
++	link->pm_state = PMSG_ON;
++	link->driver->resume(link);
++	return 0;
++}
++
+ /**
+  * pnp_register_card_driver - registers a PnP card driver with the PnP Layer
+  * @drv: pointer to the driver to register
+@@ -348,6 +371,8 @@ int pnp_register_card_driver(struct pnp_
+ 	drv->link.flags = drv->flags;
+ 	drv->link.probe = NULL;
+ 	drv->link.remove = &card_remove_first;
++	drv->link.suspend = drv->suspend ? card_suspend : NULL;
++	drv->link.resume = drv->resume ? card_resume : NULL;
+ 
+ 	spin_lock(&pnp_lock);
+ 	list_add_tail(&drv->global_list, &pnp_card_drivers);
+--- linux-2.6.15-rc1/drivers/pnp/driver.c	2005-11-12 02:43:36.000000000 +0100
++++ linux-2.6.15-rc1/drivers/pnp/driver.c	2005-11-15 14:45:37.000000000 +0100
+@@ -146,10 +146,30 @@ static int pnp_bus_match(struct device *
+ 	return 1;
+ }
+ 
++static int pnp_bus_suspend(struct device *dev, pm_message_t state)
++{
++	struct pnp_dev * pnp_dev = to_pnp_dev(dev);
++	struct pnp_driver * pnp_drv = pnp_dev->driver;
++
++	if (pnp_drv && pnp_drv->suspend)
++		return pnp_drv->suspend(pnp_dev, state);
++	return 0;
++}
++
++static void pnp_bus_resume(struct device *dev)
++{
++	struct pnp_dev * pnp_dev = to_pnp_dev(dev);
++	struct pnp_driver * pnp_drv = pnp_dev->driver;
++
++	if (pnp_drv && pnp_drv->resume)
++		pnp_drv->resume(pnp_dev);
++}
+ 
+ struct bus_type pnp_bus_type = {
+ 	.name	= "pnp",
+ 	.match	= pnp_bus_match,
++	.suspend = pnp_bus_suspend,
++	.resume = pnp_bus_resume,
+ };
+ 
+ 
+--- linux-2.6.15-rc1/include/linux/pnp.h	2005-11-12 02:43:36.000000000 +0100
++++ linux-2.6.15-rc1/include/linux/pnp.h	2005-11-15 14:45:37.000000000 +0100
+@@ -162,6 +162,7 @@ struct pnp_card_link {
+ 	struct pnp_card * card;
+ 	struct pnp_card_driver * driver;
+ 	void * driver_data;
++	pm_message_t pm_state;
+ };
+ 
+ static inline void *pnp_get_card_drvdata (struct pnp_card_link *pcard)
+@@ -294,6 +295,8 @@ struct pnp_driver {
+ 	unsigned int flags;
+ 	int  (*probe)  (struct pnp_dev *dev, const struct pnp_device_id *dev_id);
+ 	void (*remove) (struct pnp_dev *dev);
++	int  (*suspend) (struct pnp_dev *dev, pm_message_t state);
++	int  (*resume) (struct pnp_dev *dev);
+ 	struct device_driver driver;
+ };
+ 
+@@ -306,6 +309,8 @@ struct pnp_card_driver {
+ 	unsigned int flags;
+ 	int  (*probe)  (struct pnp_card_link *card, const struct pnp_card_device_id *card_id);
+ 	void (*remove) (struct pnp_card_link *card);
++	int  (*suspend) (struct pnp_card_link *card, pm_message_t state);
++	int  (*resume) (struct pnp_card_link *card);
+ 	struct pnp_driver link;
+ };
+ 

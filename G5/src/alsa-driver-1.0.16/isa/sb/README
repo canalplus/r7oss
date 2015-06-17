@@ -1,0 +1,121 @@
+================================================================
+	AWE64 midi synth driver v0.5.0 
+================================================================
+
+0. PREFACE
+----------
+
+This directory contains Emu8000 lowlevel driver.  This driver was
+originally developed by Steve Ratcliffe <steve@parabola.demon.co.uk>.
+After releasing the OSS sequencer emulation module, another version
+was developed based on his early version by Takashi Iwai
+<iwai@ww.uni-erlangen.de>.  These different versions are merged, and
+hereby released as ver.0.5.0.
+
+1. DRIVER DESIGN
+----------------
+
+In the current version, the driver contains three indepent parts:
+
+- Emu8000 lowlevel synth engine
+- Soundfont manager
+- MIDI emulation
+
+The latter two parts don't contain any hardward specific codes.  Other 
+drivers can use these routines.  The MIDI emulation will be
+independent module in the future release.
+
+The Emu8000 code contains the routines communicating with OSS
+sequencer emulator.  If the driver is compiled with OSS emulation
+option, the soundfont file can be loaded via OSS sequencer device
+using the normal sfxload program.  The sfxload program can be found
+at: 
+	http://bahamut.mm.t.u-tokyo.ac.jp/~iwai/awedrv
+Otherwise, you'll need to applay a patch to sfxload program.
+The patch can be found at:
+	http://dialspace.dial.pipex.com/town/park/adf89/alsa/awe64.shtml
+The sample loading routines will be replaced to the ALSA standard
+instrument layer routines in the future release.
+
+The current version was tested on both 2.2.9 and 2.0.36 systems.
+Please note that compiling with egcs may cause a fatal bug (see
+BUGS).
+
+
+3. MODULE OPTIONS
+-----------------
+
+The following module options are available for snd-emu8000.o:
+
+  - seqports
+	Number of sequencer ports to be created as MIDI ports.
+	Default value is 4.  The ports for OSS synth devices are not
+	included in this number.  They are created dynamically.
+  - emu8000_reset_addr
+	Specify that the DRAM addresss is reset at each time if
+	non-zero value is given. This makes sample loading time slow
+	down (about twice) but ensures the correct data loading (see
+	BUGS).  Default value is 1.
+
+
+4. CONTROLS
+-----------
+
+There are a few things that can be controlled temporarily via
+the patch interface. 
+      
+      dd if=/dev/asound/0/patch0 count=1 bs=2 
+
+Using a different block size will trigger a particular command.
+
+bs=2	Connect MIDI-in to the synth. After this command it will be
+	possible to play from a connected keyboard etc. 
+bs=3	Disconnects from MIDI-in. 
+bs=4	All notes off. This is now done automatically when the sequencer
+	disconnects, so this is not really needed any more.
+
+The triggering a test note using "dd bs=1" is removed.
+You might want to remove these features if you have no MIDI keyboard.
+In such a case, undefine HACK_MIDI_IN in emu8000_proc.c.
+
+
+5. BUGS
+-------
+
+- Compiling with egcs-1.1.1 (or 1.1.2-pre3) may cause kernel Oops
+  together with OSS sequencer emulator.
+  GCC-2.7.2.x has no problem.
+  (Using egcs-1.1.2 seems fine -- iwai)
+
+- The sample loading to RAM is much slower than it should be.
+  This is because of reliability to write the samples to RAM in the
+  former versions.  Some samples seem to have a large number of
+  missing sample points.  It is as if sometimes the write address
+  pointer does not increment properly.  Thus, the address are reset at
+  each time before writing the actual data.
+  This behavior can be disabled by module option
+  "emu8000_reset_addr=0".  In the current version, most of sample
+  downloading works fine without resetting address.  But this 
+  operation is remained for insurance as default.
+
+- You may get
+
+             snd: seq: snd_seq_pool_done() - pool isn't free!!
+
+  messages when a client disconnects from the synth (although I've
+  never seen this -- Iwai)  This is believed to be harmless, or at
+  least mostly harmless. 
+
+
+6. MAINTAINERS
+--------------
+
+- Emu8000 synth engine (emu8000_*.[ch])
+	Takashi Iwai <iwai@ww.uni-erlangen.de>
+
+- MIDI emulation (midi_emulate.c)
+	Steve Ratcliffe <steve@parabola.demon.co.uk>
+
+
+--
+Takashi Iwai <iwai@ww.uni-erlangen.de>

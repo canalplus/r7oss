@@ -1,0 +1,45 @@
+--- ../../alsa-kernel/pci/hda/hda_codec.c	2007-12-20 11:47:36.000000000 +0100
++++ hda_codec.c	2007-12-20 12:10:56.000000000 +0100
+@@ -1,3 +1,5 @@
++#define __NO_VERSION__
++#include "adriver.h"
+ /*
+  * Universal Interface for Intel High Definition Audio Codec
+  *
+@@ -277,7 +279,10 @@
+ 	unsol->queue[wp] = res;
+ 	unsol->queue[wp + 1] = res_ex;
+ 
++/* 2.4 kernels seem to have a problem with workq wrapper... */
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 0)
+ 	schedule_work(&unsol->work);
++#endif
+ 
+ 	return 0;
+ }
+@@ -312,6 +317,7 @@
+  */
+ static int __devinit init_unsol_queue(struct hda_bus *bus)
+ {
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 0)
+ 	struct hda_bus_unsolicited *unsol;
+ 
+ 	if (bus->unsol) /* already initialized */
+@@ -326,6 +332,7 @@
+ 	INIT_WORK(&unsol->work, process_unsol_events);
+ 	unsol->bus = bus;
+ 	bus->unsol = unsol;
++#endif
+ 	return 0;
+ }
+ 
+@@ -341,7 +348,9 @@
+ 	if (!bus)
+ 		return 0;
+ 	if (bus->unsol) {
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 0)
+ 		flush_scheduled_work();
++#endif
+ 		kfree(bus->unsol);
+ 	}
+ 	list_for_each_entry_safe(codec, n, &bus->codec_list, list) {

@@ -1,0 +1,170 @@
+#!/usr/bin/env bash
+#
+# Generate lcov code coverage exclusion annotated sources
+# from a file/line specific annotations file.
+#
+# Ref to -h or --help for usage
+#
+
+base=$(basename $0)
+dir=$(cd $(dirname $(readlink -e $0)) && pwd)
+set -e
+[ "$DEBUG" = "" ] || set -x
+
+# Globals
+declare tmpdir=""
+declare srcdir=""
+declare sources=""
+declare dstir=""
+declare notes=""
+declare -i keep=0
+declare -i quiet=0
+
+error() { echo "error: $*" >&2; exit 1; }
+msg() { [[ $quiet = 1 ]] || echo "$@"; }
+
+version()
+{
+    echo "$base version $(git hash-object $0)"
+}
+
+usage()
+{
+    cat <<EOF
+usage: $base --src <src_dir> --notes <annotations_files> --dst <dst_dir>
+EOF
+}
+
+help()
+{
+    local less=$(which less 2>/dev/null || true)
+    [[ -n $less ]] || less=more
+
+    cat | $less <<EOF
+Usage: $base --src <src_dir> --notes <annotations_files> --dst <dst_dir>
+EOF
+}
+
+cleanup()
+{
+    trap - INT QUIT TERM EXIT
+    #[[ -d $tmpdir && $keep = 0 ]] && rm -rf $tmpdir
+    true
+}
+
+lcov_trailing_annotation()
+{
+    local kind="$1"
+    local comment="$2"
+    local class=""
+    case $kind in
+        DEAD_CODE) annot=LCOV_EXCL_LINE ;;
+        DEAD_CODE_START) annot=LCOV_EXCL_START ;;
+        DEAD_CODE_STOP) annot=LCOV_EXCL_STOP ;;
+        UNTESTED) annot=LCOV_EXCL_LINE ;;
+        UNTESTED_START) annot=LCOV_EXCL_START ;;
+        UNTESTED_STOP) annot=LCOV_EXCL_STOP ;;
+        *) annot="" ;;
+    esac
+    [[ -z $annot ]] || echo " /* $annot: $comment. */"
+}
+
+generate_patch()
+{
+    rm -rf $tmpdir/fragments
+    mkdir -p $tmpdir/fragments
+    rm -f $tmpdir/sources.patch
+    cat $notes > $tmpdir/input.txt
+    local IFS=$'\n'
+    local line
+    cat $tmpdir/input.txt | while read -r line; do
+        [[ -n $line && ${line::1} != "#" ]] || continue
+        local ok=$(echo "$line" | cut -f1 -d:)
+        [[ $ok = "OK" ]] || continue
+        local kind=$(echo "$line" | cut -f2 -d:)
+        local file=$(echo "$line" | cut -f3 -d:)
+        local -i lnum=$(echo "$line" | cut -f4 -d:)
+        local comment=$(echo "$line" | cut -f5 -d:)
+        local content=$(echo "$line" | cut -f6- -d:)
+        [[ $file != "" && $lnum != 0 ]] || error "missing file and/or line in annotations files"
+        local annotation=$(lcov_trailing_annotation $kind $comment)
+        if [[ -n $annotation ]]; then
+            mkdir -p $(dirname $tmpdir/fragments/$file.frag)
+            echo "$lnum:$annotation" >> $tmpdir/fragments/$file.frag
+        fi
+    done
+
+    pushd $tmpdir/fragments >/dev/null
+    local files=$(find . -type f 2>/dev/null | sed 's|^./||')
+    [[ -n $files ]] || return 0
+    for file in $files; do
+        local base=$(basename $file .frag)
+        local dir=$(dirname $file)
+        sort -n -k1 <$file >$dir/$base.sorted
+        echo "diff -r a/$dir/$base b/$dir/$base"
+        echo "--- a/$dir/$base"
+        echo "+++ b/$dir/$base"
+        local -i offset=0
+        local -i last_lnum=0
+        while read -r line; do
+            local -i lnum_old=$(echo "$line" | cut -f1 -d:)
+            [[ $lnum_old != $last_lnum ]] || continue
+            last_lnum=$lnum_old
+            local annotation=$(echo "$line" | cut -f2- -d:)
+            local -i lnum_new=$(($lnum_old))
+            local line_old=$(head -$lnum_old $srcdir/$dir/$base | tail -1)
+            echo "@@ -${lnum_old},1 +${lnum_new},1 @@"
+            echo "-$line_old"
+            echo "+$line_old$annotation"
+        done  < $dir/$base.sorted
+    done > $tmpdir/sources.patch
+    popd >/dev/null
+}
+
+# Main processing
+trap cleanup INT QUIT TERM EXIT
+declare -a args=( ${1+"$@"} )
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --src) shift; srcdir="$1";;
+        --dst) shift; dstdir="$1";;
+        --notes) shift; notes="$notes $1";;
+        --sources) shift; sources="$sources $1";;
+        --keep) keep=1;;
+        -q|--quiet) quiet=1;;
+        --help) help; exit 0;;
+        -h) usage; exit 0;;
+        -v) version; exit 0;;
+        --) shift; break;;
+        -*) error "unknown option; $1";;
+        *) break;;
+    esac
+    shift || true
+done
+
+msg Running $base "${args[@]}"
+
+[[ -n $srcdir ]] || error "missing --src <src_dir> option"
+[[ -d $srcdir ]] || error "src dir does not exist"
+[[ -n $notes ]] || error "missing --notes <annotations_file> option"
+[[ -n $dstdir ]] || error "missing --dst <dst_dir> option"
+
+srcdir=$(cd $srcdir && pwd)
+
+tmpdir=`mktemp -d`
+msg "Generating patch in: $tmpdir/sources.patch"
+generate_patch
+
+msg "Copying sources to dst: $dstdir"
+[[ -d $dstdir ]] && rm -rf $dstdir
+[[ -n $sources ]] || sources=.
+(cd $srcdir && tar cf $tmpdir/srcdir_archive.tar $sources 2>/dev/null || true)
+mkdir -p $dstdir
+tar xf $tmpdir/srcdir_archive.tar -C $dstdir
+
+msg "Applying annotations patch in dst sources: $dstdir"
+[[ $quiet = 0 ]] || patch_quiet=-s
+patch $patch_quiet -d $dstdir -p1 -i $tmpdir/sources.patch
+
+true

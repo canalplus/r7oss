@@ -1,0 +1,7 @@
+          name : lockfile
+        author : Elan Ruusame <glen@pld-linux.org>
+  contributors : 
+      commands : 
+       options : lockfile
+   description : This plugins creates lockfiles in /var/lock/subsys for every
+                 service that has the lockfile option set.

@@ -1,0 +1,27 @@
+--- Makefile.old	Sun Dec 17 20:52:37 2000
++++ Makefile	Sun Dec 17 22:03:53 2000
+@@ -10,7 +10,7 @@
+ SUB_DIRS	:= 
+ MOD_SUB_DIRS	:=
+ MOD_IN_SUB_DIRS	:=
+-ALL_SUB_DIRS	:= $(SUB_DIRS) emu10k1
++ALL_SUB_DIRS	:= $(SUB_DIRS) emu10k1 alsa
+ 
+ # All of the (potential) objects that export symbols.
+ # This list comes from 'grep -l EXPORT_SYMBOL *.[hc]'.
+@@ -101,6 +101,15 @@
+   endif
+ endif
+ 
++ifeq ($(CONFIG_SND),y)
++  SUB_DIRS += alsa
++  MOD_IN_SUB_DIRS += alsa
++else
++  ifeq ($(CONFIG_SND),m)
++    MOD_SUB_DIRS += alsa
++    MOD_IN_SUB_DIRS += alsa
++  endif
++endif
+ 
+ # Declare multi-part drivers.
+ 

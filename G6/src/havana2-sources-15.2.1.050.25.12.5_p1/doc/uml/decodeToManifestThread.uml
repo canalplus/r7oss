@@ -1,0 +1,89 @@
+@startuml
+
+title Decode To Manifest Thread
+
+hide footbox
+
+participant "DecodedFrameRing" as decodedFrameRing
+participant "DecodeToManifest Thread" as decodeToManifestThread
+participant "OutputTimer" as outputTimer
+participant "OutputCoordinator" as outputCoordinator
+participant "ManifestationCoordinator" as manifestationCoordinator
+participant "Manifestor" as manifestor
+
+loop
+    activate decodeToManifestThread
+    decodedFrameRing <- decodeToManifestThread: ExtractNextDisplayFrame()
+    note left
+        The decodeToManifest thread first 
+        extracts a decoded buffer in display order
+    end note
+    activate decodedFrameRing
+    decodedFrameRing --> decodeToManifestThread: Buffer
+    deactivate decodedFrameRing
+
+    decodeToManifestThread -> outputTimer: GenerateFrameTiming(Buffer)
+    note left 
+        GenerateFrameTiming must fill the 
+        ExpectedPresentationTime of the frame
+    end note
+    activate outputTimer
+
+    outputTimer -> outputCoordinator: [MappingNotEstablished] SynchronizeStreams()
+    note left
+        If no time mapping is established
+        call SynchronizeStreams to establish one.
+    end note
+    activate outputCoordinator
+    outputCoordinator -> outputCoordinator: GenerateTimeMapping()
+    activate outputCoordinator
+    deactivate outputCoordinator
+    outputTimer <-- outputCoordinator
+    deactivate outputCoordinator
+
+    outputTimer -> outputCoordinator: TranslatePlaybackTimeToSystem(NormalizedPlaybackTime)
+    note left 
+        Translate the frame's normalized playback time 
+        to an expected presentation (local) time, using the 
+        SW implemented playback system clock.
+    end note
+    activate outputCoordinator
+    outputTimer <-- outputCoordinator: ExpectedPresentationTime
+    deactivate outputCoordinator
+
+
+    decodeToManifestThread <-- outputTimer: ExpectedPresentationTime
+    deactivate outputTimer
+
+    decodeToManifestThread -> manifestationCoordinator: QueueDecodeBuffer(Buffer)
+    note left
+        The Decoded Buffer is then queued to the
+        manifestation coordinator
+    end note
+    activate manifestationCoordinator
+
+    manifestationCoordinator -> manifestor: *: QueueDecodeBuffer(Buffer)
+    note left
+        The manifestation coordinator queues the
+        buffer to all its attached manifestors.
+        The manifestors must do their best to honor
+        the given expected presentation time. 
+        They must also update the buffer's timing records 
+        with the actual presentation time
+    end note
+    activate manifestor
+    ref over manifestor
+        Manifestor::QueueDecodeBuffer
+    end ref
+    manifestationCoordinator <-- manifestor
+    deactivate manifestor
+
+    decodeToManifestThread <-- manifestationCoordinator
+    deactivate manifestationCoordinator
+
+    deactivate decodeToManifestThread
+
+    
+end
+    
+@enduml

@@ -1,0 +1,48 @@
+--- ../../alsa-kernel/pci/ac97/ac97_codec.c	2007-12-20 11:47:36.000000000 +0100
++++ ac97_codec.c	2007-12-20 11:56:00.000000000 +0100
+@@ -1,3 +1,4 @@
++#include "adriver.h"
+ /*
+  *  Copyright (c) by Jaroslav Kysela <perex@perex.cz>
+  *  Universal interface for Audio Codec '97
+@@ -34,9 +35,9 @@
+ #include <sound/ac97_codec.h>
+ #include <sound/asoundef.h>
+ #include <sound/initval.h>
+-#include "ac97_id.h"
++#include "../../alsa-kernel/pci/ac97/ac97_id.h"
+ 
+-#include "ac97_patch.c"
++#include "../../alsa-kernel/pci/ac97/ac97_patch.c"
+ 
+ MODULE_AUTHOR("Jaroslav Kysela <perex@perex.cz>");
+ MODULE_DESCRIPTION("Universal interface for Audio Codec '97");
+@@ -1910,6 +1911,7 @@
+ 
+ EXPORT_SYMBOL(snd_ac97_bus);
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 0)
+ /* stop no dev release warning */
+ static void ac97_device_release(struct device * dev)
+ {
+@@ -1921,7 +1923,9 @@
+ 	struct snd_ac97 *ac97 = device->device_data;
+ 	int err;
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 14)
+ 	ac97->dev.bus = &ac97_bus_type;
++#endif
+ 	ac97->dev.parent = ac97->bus->card->dev;
+ 	ac97->dev.release = ac97_device_release;
+ 	snprintf(ac97->dev.bus_id, BUS_ID_SIZE, "%d-%d:%s",
+@@ -1943,6 +1947,10 @@
+ 		device_unregister(&ac97->dev);
+ 	return 0;
+ }
++#else /* <= 2.6.0 */
++#define snd_ac97_dev_register	NULL
++#define snd_ac97_dev_disconnect	NULL
++#endif
+ 
+ /* build_ops to do nothing */
+ static struct snd_ac97_build_ops null_build_ops;

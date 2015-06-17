@@ -1,0 +1,6 @@
+INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR}/src ${CMAKE_BINARY_DIR} )
+
+ADD_LIBRARY(critical MODULE initng_critical.c)
+TARGET_LINK_LIBRARIES(critical initng)
+INSTALL_TARGETS(${LIB_INSTALL_DIR}/initng critical)
+

@@ -1,0 +1,39 @@
+menu "PCI host controller drivers"
+	depends on PCI
+
+config PCI_MVEBU
+	bool "Marvell EBU PCIe controller"
+	depends on ARCH_MVEBU
+
+config PCIE_DW
+	bool
+
+config PCI_EXYNOS
+	bool "Samsung Exynos PCIe controller"
+	depends on SOC_EXYNOS5440
+	select PCIEPORTBUS
+	select PCIE_DW
+
+config PCI_TEGRA
+	bool "NVIDIA Tegra PCIe controller"
+	depends on ARCH_TEGRA
+
+config PCI_ST
+	bool "ST STiH41x PCIe controller"
+	depends on ARCH_STI
+
+config STM_PCIE_TRACKER_BUG
+	bool "ST PCIe: Workaround tracker bug"
+	depends on SMP && PCI_ST && SOC_STIH407
+	select NEED_MACH_IO_H
+	default n
+	---help---
+	  Enable workaround for tracker bug on Cannes STBUS->AXI convertor. The tracker
+	  fills in missing bits of information for the STBUS->AXI convertor. It cannot
+	  handle out of order traffic, which is a problem when the CPUs issue transactions
+	  to the PCIe cell at the same time. The PCIe cell is free to re-order these transactions,
+	  as they have different IDs. Unfortunately this confuses the tracker which expects in-order,
+	  and the interconnect dies. The workaround is to lock around each readl/writel to ensure that
+	  the read or write has completed before the other CPU starts its operation.
+
+endmenu

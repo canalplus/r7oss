@@ -1,0 +1,142 @@
+Source: ffmpegcvs
+Section: graphics
+Priority: optional
+Maintainer: Christian Marillat <marillat@debian.org>
+Homepage: http://ffmpeg.mplayerhq.hu/
+Bugs: mailto:marillat@debian.org
+Standards-Version: 3.7.2
+Build-Depends: debhelper (>> 5), liblame-dev, zlib1g-dev, libvorbis-dev,
+ libimlib2-dev, libfaad-dev, libsdl1.2-dev, libfaac-dev, dpatch, texi2html,
+ libxvidcore4-dev, libx264-dev (>= 0.svn20070128-0.0), libtheora-dev,
+ liba52-dev, libgsm1-dev, ccache, libxvmc-dev, libamrnb-dev, libamrwb-dev
+
+Package: libavcodeccvs51
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}
+Description: library to encode decode multimedia streams - runtime files
+ ffmpeg is a hyper fast real time audio/video encoder, a streaming server
+ and a generic audio and video file converter.
+ .
+ It can grab from a standard Video4Linux video source and convert it into
+ several file formats based on DCT/motion compensation encoding. Sound is
+ compressed in MPEG audio layer 2 or using an AC3 compatible stream.
+
+Package: ffmpeg
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: audio/video encoder, streaming server & audio/video file converter
+ ffmpeg is a hyper fast real time audio/video encoder, a streaming server
+ and a generic audio and video file converter.
+ .
+ It can grab from a standard Video4Linux video source and convert it into
+ several file formats based on DCT/motion compensation encoding. Sound is
+ compressed in MPEG audio layer 2 or using an AC3 compatible stream.
+
+Package: libpostproccvs51
+Architecture: any
+Section: libs
+Conflicts: libpostproc0
+Depends: ${shlibs:Depends}
+Description: postproc shared libraries
+ This package contains the ffmpeg video postprocessing shared library.
+
+Package: libpostproccvs-dev
+Architecture: any
+Section: libdevel
+Depends: libpostproccvs51 (>= ${source:Version})
+Replaces: libpostproccvs0 (<= 3:20050716-0.4), libpostproccvs51-dev (<= 3:20071129-0.0)
+Conflicts: libpostproc-dev, libpostproccvs51-dev (<= 3:20071129-0.0)
+Description: postproc devel files
+ This package contains the ffmpeg video postprocessing devel files.
+
+Package: libavutilcvs49
+Architecture: any
+Section: libs
+Conflicts: libpostproc0
+Depends: ${shlibs:Depends}
+Description: avutil shared libraries
+ This package contains the ffmpeg video utility shared library.
+
+Package: libavutilcvs-dev
+Architecture: any
+Section: libdevel
+Depends: libavutilcvs49 (>= ${source:Version})
+Replaces: libavcodeccvs-dev (<= 3:20050716-0.4), libavcodec-dev, libavcodeccvs51 (<= 3:20070312-0.0), libavcodeccvs51-dev (<= 3:20070528-0.0), libavutilcvs49-dev (<= 3:20071129-0.0)
+Conflicts: libpostproc-dev, libavcodec-dev, libavutilcvs-dev, libavutil-dev, libavutilcvs49-dev (<= 3:20071129-0.0)
+Description: avutil devel files
+ This package contains the ffmpeg video utility devel files.
+
+Package: libavcodeccvs-dev
+Architecture: any
+Section: libdevel
+Depends: libavcodeccvs51 (>= ${source:Version}), libvorbis-dev, libogg-dev, liba52-dev, zlib1g-dev, libtheora-dev (>> 0.0.0.alpha4), libgsm1-dev, libfaac-dev, libfaad-dev, libx264-dev, libavutilcvs-dev, libamrnb-dev, libamrwb-dev
+Replaces: libavcodeccvs51-dev (<= 3:20071129-0.0)
+Conflicts: libffmpeg0, libavcodec-dev, libavcodec1-dev, libavcodec2-dev, libavcodeccvs51-dev (<= 3:20071129-0.0)
+Description: library to encode decode multimedia streams - devel files
+ ffmpeg is a hyper fast real time audio/video encoder, a streaming server
+ and a generic audio and video file converter.
+ .
+ It can grab from a standard Video4Linux video source and convert it into
+ several file formats based on DCT/motion compensation encoding. Sound is
+ compressed in MPEG audio layer 2 or using an AC3 compatible stream.
+
+Package: libavformatcvs52
+Architecture: any
+Section: libs
+Conflicts: libavformatcvs
+Depends: ${shlibs:Depends}
+Replaces: libavcodeccvs51 (<= 3:20070106-0.1)
+Description: ffmpeg file format library
+ This is the demuxer library from the ffmpeg project. It supports most
+ existing file formats (AVI, MPEG, OGG, Matroska, ASF...).
+
+Package: libavformatcvs-dev
+Architecture: any
+Section: libdevel
+Depends: libavformatcvs52 (>= ${source:Version})
+Replaces: libavcodeccvs-dev (<= 3:20050716-0.4), libavcodec-dev, libavcodeccvs51-dev (<= 3:20070106-0.1), libavformatcvs51-dev (<= 3:20071112-0.0), libavformatcvs52-dev (<= 3:20071129-0.0)
+Conflicts: libavformat-dev, libavformatcvs52-dev (<= 3:20071129-0.0)
+Description: development files for libavformat
+ This is the demuxer library from the ffmpeg project. It supports most
+ existing file formats (AVI, MPEG, OGG, Matroska, ASF...).
+
+Package: libswscalecvs0
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}
+Description: ffmpeg video scaling library
+ This is the video scaling library from the ffmpeg project.
+ .
+ Please send me a better description.
+
+Package: libswscalecvs-dev
+Architecture: any
+Section: libdevel
+Depends: libswscalecvs0 (>= ${source:Version})
+Replaces: libavcodeccvs51 (<= 3:20070312-0.0), libavcodeccvs51-dev (<= 3:20070528-0.0), libswscalecvs0-dev (<= 3:20071129-0.0)
+Conflicts: libswscalecvs0-dev (<= 3:20071129-0.0)
+Description: development files for libswscale
+ This is the video scaling library from the ffmpeg project.
+ .
+ Please send me a better description.
+
+Package: libavdevicecvs52
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}
+Description: ffmpeg device handling library
+ ffmpeg device handling library
+ .
+ Please send me a better description.
+
+Package: libavdevicecvs-dev
+Architecture: any
+Section: libdevel
+Depends: libavdevicecvs52 (>= ${source:Version}), libavformatcvs-dev
+Replaces: libavdevicecvs52-dev (<= 3:20071129-0.0)
+Conflicts: libavdevicecvs52-dev (<= 3:20071129-0.0)
+Description: development files for libavdevice
+ development files for libavdevice.
+ .
+ Please send me a better description.

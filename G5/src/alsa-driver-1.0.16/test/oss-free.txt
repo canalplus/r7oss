@@ -1,0 +1,37 @@
+Sound Driver:3.5.4-960630 (Mon Jul 6 14:27:07 CEST 1998 root,
+Linux perlin.px.jcu.cz 2.0.34 #1 Fri Apr 24 22:13:38 CEST 1998 i586 unknown)
+Kernel: Linux perlin.px.jcu.cz 2.0.34 #1 Fri Apr 24 22:13:38 CEST 1998 i586
+Config options: 0
+
+Installed drivers: 
+Type 10: MS Sound System
+Type 24: MS Sound System (AXP)
+Type 27: Compaq Deskpro XL
+Type 1: OPL-2/OPL-3 FM
+Type 8: 6860 UART Midi
+Type 4: Gravis Ultrasound
+Type 25: GUS PnP
+
+Card config: 
+(MS Sound System at 0x530 irq 11 drq 3)
+6860 UART Midi irq 7 drq 0
+Gravis Ultrasound at 0x210 irq 5 drq 6,5
+(OPL-2/OPL-3 FM at 0x388 drq 0)
+
+Audio devices:
+0: GUS MAX (IWave) (DUPLEX)
+1: Gravis UltraSound (DUPLEX)
+
+Synth devices:
+0: Gravis UltraSound MAX (256k)
+
+Midi devices:
+0: 6850 UART
+1: Gravis UltraSound Midi
+
+Timers:
+0: System clock
+
+Mixers:
+0: GUS MAX (IWave)
+1: Gravis Ultrasound

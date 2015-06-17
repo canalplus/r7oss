@@ -1,0 +1,23 @@
+This is the README file for the AudioScience ALSA driver package.
+The version of ALSA that it applies to is encoded in the filename
+
+alsa-driver-<alsa version>asihpi-<asi alsa driver version>.tar.gz
+
+This is an alpha software release.
+
+It is in the form of a patch against alsa-driver-<alsa version>
+
+To install, unpack the archive in the same directory that you unpacked 
+alsa-driver-<alsa version>, then follow the instructions in INSTALL.asihpi-alsa
+
+This driver is only applicable to ASI87xx, ASI6xxx, ASI5xxx, ASI43xx cards
+(You may be able to access play and record streams on other cards, but no mixer controls will be available)
+
+Only PCM is currently supported.
+
+Volume, level, multiplexer and channel-mode controls are supported.
+Meter controls are partially supported.
+Other controls (aesebu, compander, parametric equalizer, vox, bitstream, microphone)
+are currently unsupported.
+
+

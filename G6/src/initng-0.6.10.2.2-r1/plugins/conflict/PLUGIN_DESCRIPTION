@@ -1,0 +1,8 @@
+          name : conflict
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : 
+      commands : 
+       options : conflict
+        states : FAILED_BY_CONFLICT
+   description : If a service specified by "conflict = service;" is up, start
+                 will fail with FAILED_BY_CONFLICT.

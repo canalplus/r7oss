@@ -1,0 +1,120 @@
+Purpose
+=======
+
+chk_luks_keyslots is a tool that searches the keyslot area of a
+LUKS container for positions where entropy is low and hence
+there is a high probability of damage from overwrites of parts
+of the key-slot with data such as a RAID superblock or a partition
+table.
+
+
+Installation
+============
+
+1. Install the version of cryptsetup the tool came with.
+2. Compile with "make"
+   
+Manual compile can be done with
+   gcc -lm -lcryptsetup chk_luks_keyslots.c -o chk_luks_keyslots
+
+Usage
+=====
+
+Call chk_luks_keyslots without arguments for an option summary.
+
+
+Example of a good keyslot area with keys 0 and 2 in use:
+--------------------------------------------------------
+
+root> ./chk_luks_keyslots /dev/loop0
+
+parameters (commandline and LUKS header):
+  sector size: 512
+  threshold:   0.900000
+
+- processing keyslot 0:  start: 0x001000   end: 0x020400
+- processing keyslot 1:  keyslot not in use
+- processing keyslot 2:  start: 0x041000   end: 0x060400
+- processing keyslot 3:  keyslot not in use
+- processing keyslot 4:  keyslot not in use
+- processing keyslot 5:  keyslot not in use
+- processing keyslot 6:  keyslot not in use
+- processing keyslot 7:  keyslot not in use
+
+
+Same example of a fault in slot 2 at offset 0x50000:
+----------------------------------------------------
+
+root>./chk_luks_keyslots /dev/loop2
+
+parameters (commandline and LUKS header):
+  sector size: 512
+  threshold:   0.900000
+
+- processing keyslot 0:  start: 0x001000   end: 0x020400
+- processing keyslot 1:  keyslot not in use
+- processing keyslot 2:  start: 0x041000   end: 0x060400
+  low entropy at: 0x050000    entropy: 0.549165
+- processing keyslot 3:  keyslot not in use
+- processing keyslot 4:  keyslot not in use
+- processing keyslot 5:  keyslot not in use
+- processing keyslot 6:  keyslot not in use
+- processing keyslot 7:  keyslot not in use
+
+
+Same as last, but verbose:
+--------------------------
+root>./chk_luks_keyslots  -v /dev/loop2
+
+parameters (commandline and LUKS header):
+  sector size: 512
+  threshold:   0.900000
+
+- processing keyslot 0:  start: 0x001000   end: 0x020400
+- processing keyslot 1:  keyslot not in use
+- processing keyslot 2:  start: 0x041000   end: 0x060400
+  low entropy at: 0x050000    entropy: 0.549165
+  Binary dump:
+  0x050000  54 68 69 73 20 69 73 20  61 20 74 65 73 74 2D 73  This is a test-s
+  0x050010  65 63 74 6F 72 20 66 6F  72 20 63 68 6B 5F 6C 75  ector for chk_lu
+  0x050020  6B 73 5F 6B 65 79 73 6C  6F 74 73 20 74 68 65 20  ks_keyslots the
+  0x050030  71 75 69 63 6B 20 62 72  6F 77 6E 20 66 6F 78 20  quick brown fox
+  0x050040  6A 75 6D 70 73 20 6F 76  65 72 20 74 68 65 20 6C  jumps over the l
+  0x050050  61 7A 79 20 64 6F 67 20  74 68 65 20 71 75 69 63  azy dog the quic
+  0x050060  6B 20 62 72 6F 77 6E 20  66 6F 78 20 6A 75 6D 70  k brown fox jump
+  0x050070  73 20 6F 76 65 72 20 74  68 65 20 6C 61 7A 79 20  s over the lazy
+  0x050080  64 6F 67 20 74 68 65 20  71 75 69 63 6B 20 62 72  dog the quick br
+  0x050090  6F 77 6E 20 66 6F 78 20  6A 75 6D 70 73 20 6F 76  own fox jumps ov
+  0x0500a0  65 72 20 74 68 65 20 6C  61 7A 79 20 64 6F 67 20  er the lazy dog
+  0x0500b0  74 68 65 20 71 75 69 63  6B 20 62 72 6F 77 6E 20  the quick brown
+  0x0500c0  66 6F 78 20 6A 75 6D 70  73 20 6F 76 65 72 20 74  fox jumps over t
+  0x0500d0  68 65 20 6C 61 7A 79 20  64 6F 67 20 74 68 65 20  he lazy dog the
+  0x0500e0  71 75 69 63 6B 20 62 72  6F 77 6E 20 66 6F 78 20  quick brown fox
+  0x0500f0  6A 75 6D 70 73 20 6F 76  65 72 20 74 68 65 20 6C  jumps over the l
+  0x050100  61 7A 79 20 64 6F 67 20  74 68 65 20 71 75 69 63  azy dog the quic
+  0x050110  6B 20 62 72 6F 77 6E 20  66 6F 78 20 6A 75 6D 70  k brown fox jump
+  0x050120  73 20 6F 76 65 72 20 74  68 65 20 6C 61 7A 79 20  s over the lazy
+  0x050130  64 6F 67 20 74 68 65 20  71 75 69 63 6B 20 62 72  dog the quick br
+  0x050140  6F 77 6E 20 66 6F 78 20  6A 75 6D 70 73 20 6F 76  own fox jumps ov
+  0x050150  65 72 20 74 68 65 20 6C  61 7A 79 20 64 6F 67 20  er the lazy dog
+  0x050160  74 68 65 20 71 75 69 63  6B 20 62 72 6F 77 6E 20  the quick brown
+  0x050170  66 6F 78 20 6A 75 6D 70  73 20 6F 76 65 72 20 74  fox jumps over t
+  0x050180  68 65 20 6C 61 7A 79 20  64 6F 67 20 74 68 65 20  he lazy dog the
+  0x050190  71 75 69 63 6B 20 62 72  6F 77 6E 20 66 6F 78 20  quick brown fox
+  0x0501a0  6A 75 6D 70 73 20 6F 76  65 72 20 74 68 65 20 6C  jumps over the l
+  0x0501b0  61 7A 79 20 64 6F 67 20  74 68 65 20 71 75 69 63  azy dog the quic
+  0x0501c0  6B 20 62 72 6F 77 6E 20  66 6F 78 20 6A 75 6D 70  k brown fox jump
+  0x0501d0  73 20 6F 76 65 72 20 74  68 65 20 6C 61 7A 79 20  s over the lazy
+  0x0501e0  64 6F 67 20 74 68 65 20  71 75 69 63 6B 20 62 72  dog the quick br
+  0x0501f0  6F 77 6E 20 66 6F 78 20  6A 75 6D 70 73 20 6F 76  own fox jumps ov
+
+- processing keyslot 3:  keyslot not in use
+- processing keyslot 4:  keyslot not in use
+- processing keyslot 5:  keyslot not in use
+- processing keyslot 6:  keyslot not in use
+- processing keyslot 7:  keyslot not in use
+
+----
+Copyright (C) 2012, Arno Wagner <arno@wagner.name>
+This file is free documentation; the author gives
+unlimited permission to copy, distribute and modify it.

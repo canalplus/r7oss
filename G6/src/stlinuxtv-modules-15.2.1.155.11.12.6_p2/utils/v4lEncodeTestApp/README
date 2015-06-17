@@ -1,0 +1,25 @@
+v4l Encode Test Application README
+
+(1) How to compile
+Edit the Makefile and comment/uncomment lines depending on which environment you are using.
+Then type 'make all' and 'make install'
+
+(2) How to run
+On the target after kernel is booted, enter the following commands to insert the generic modules and the encoder driver module:
+./framework_go.sh
+modprobe h264enchw
+
+You can then start an encoding test with the following command:
+For Video Encode:
+	/root/v4lEncodeTestApp <configuration file> <yuv input file> <h264 encoded bitstream>
+	example of configuration file: VBR1.Monaco_II_1024x576.ini
+For Video Audio:
+	/root/v4lEncodeTestApp <configuration file> <pcm input file> <AC3 encoded bitstream>
+	example of configuration file: ac3.ini
+
+(3) Run multiple encode applications at the same time
+Steps to launch many encode clients at the same time:
+  - use DirectFB libraries compiled with "multi applications" flag (default in SDK2 is "single application"). DirectFB RPM packages can be found at http://havana.bri.st.com/release/stlinux24/internal.
+  - open as many terminals as encode clients and launch the application in each terminal but be sure to set a different queue index parameter for each; the command for multi-client is as follows:
+/root/v4lEncodeTestApp <configuration file> <yuv input file> <h264 encoded bitstream> <input queue index (default=0)>
+

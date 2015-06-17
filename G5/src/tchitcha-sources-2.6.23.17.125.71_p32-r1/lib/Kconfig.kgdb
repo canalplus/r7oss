@@ -1,0 +1,109 @@
+
+config WANT_EXTRA_DEBUG_INFORMATION
+	bool
+	select DEBUG_INFO
+	select UNWIND_INFO
+	select FRAME_POINTER if SUPERH
+	default n
+
+config UNWIND_INFO
+	bool
+	default n
+
+config KGDB
+	bool "KGDB: kernel debugging with remote gdb"
+	select WANT_EXTRA_DEBUG_INFORMATION
+	depends on DEBUG_KERNEL
+	help
+	  If you say Y here, it will be possible to remotely debug the
+	  kernel using gdb.  Documentation of kernel debugger is available
+	  at http://kgdb.sourceforge.net as well as in DocBook form
+	  in Documentation/DocBook/.  If unsure, say N.
+
+config KGDB_ARCH_HAS_SHADOW_INFO
+	bool
+
+config KGDB_CONSOLE
+	bool "KGDB: Console messages through gdb"
+	depends on KGDB
+	help
+	  If you say Y here, console messages will appear through gdb.
+	  Other consoles such as tty or ttyS will continue to work as usual.
+	  Note that if you use this in conjunction with KGDBOE, if the
+	  ethernet driver runs into an error condition during use with KGDB,
+	  it is possible to hit an infinite recursion, causing the kernel
+	  to crash, and typically reboot.  For this reason, it is preferable
+	  to use NETCONSOLE in conjunction with KGDBOE instead of
+	  KGDB_CONSOLE.
+
+choice
+	prompt "Method for KGDB communication"
+	depends on KGDB
+	default KGDB_ST_ASC
+	help
+	  There are a number of different ways in which you can communicate
+	  with KGDB.  The most common is via serial.
+	  Another option is to use the NETPOLL framework and UDP, should
+	  your ethernet card support this.  Other options may exist.
+	  You can elect to have one core I/O driver that is built into the
+	  kernel for debugging as the kernel is booting, or using only
+	  kernel modules.
+
+config KGDB_ST_ASC
+	bool "KGDB: On STASC serial port"
+	depends on SUPERH
+	help
+	   Uses the STASC serial port to communicate with the host GDB.
+
+config KGDBOE
+	bool "KGDB: On ethernet"
+	depends on NET
+	select NETPOLL
+	select NETPOLL_TRAP
+	select NET_POLL_CONTROLLER
+	help
+	  Uses the NETPOLL API to communicate with the host GDB via UDP.
+	  In order for this to work, the ethernet interface specified must
+	  support the NETPOLL API, and this must be initialized at boot.
+	  See the documentation for syntax.
+
+endchoice
+
+config KGDB_SIMPLE_SERIAL
+	bool "Simple selection of KGDB serial port"
+	depends on KGDB_ST_ASC
+	default y
+	help
+	  If you say Y here, you will only have to pick the baud rate
+	  and port number that you wish to use for KGDB.  Note that this
+	  only works on architectures that register known serial ports
+	  early on.  If you say N, you will have to provide, either here
+	  or on the command line, the type (I/O or MMIO), IRQ and
+	  address to use.  If in doubt, say Y.
+
+config KGDB_BAUDRATE
+	int "Debug serial port baud rate"
+	depends on KGDB_SIMPLE_SERIAL
+	default "115200"
+	help
+	  gdb and the kernel stub need to agree on the baud rate to be
+	  used.  Standard rates from 9600 to 115200 are allowed, and this
+	  may be overridden via the commandline.
+
+config KGDB_PORT_NUM
+	int "Serial port number for KGDB"
+	depends on KGDB_SIMPLE_SERIAL
+	range 0 4
+	default "0"
+	help
+	  Pick the port number for KGDB to use.
+
+config KGDB_ATTACH_WAIT
+	depends on KGDB
+	bool "KGDB: Wait for debugger to attach on an unknown exception"
+	help
+	  If a panic occurs, or any kind of exception, the kgdb will
+	  stop and wait for a debugger to attach.  This sets the
+	  default behavior for waiting for the debugger to attach.  This
+	  value can also be changed at runtime through
+	  /sys/module/kgdb/parameters/attachwait

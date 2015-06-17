@@ -1,0 +1,139 @@
+--- ../alsa-kernel/core/info.c	2006-12-14 15:43:51.000000000 +0100
++++ info.c	2006-12-15 14:10:09.000000000 +0100
+@@ -1,3 +1,4 @@
++#include "info.inc"
+ /*
+  *  Information interface for ALSA driver
+  *  Copyright (c) by Jaroslav Kysela <perex@perex.cz>
+@@ -154,6 +157,7 @@
+ struct snd_info_entry *snd_oss_root;
+ #endif
+ 
++#ifndef LINUX_2_2
+ static inline void snd_info_entry_prepare(struct proc_dir_entry *de)
+ {
+ 	de->owner = THIS_MODULE;
+@@ -165,6 +169,7 @@
+ 	if (de)
+ 		remove_proc_entry(de->name, parent);
+ }
++#endif
+ 
+ static loff_t snd_info_entry_llseek(struct file *file, loff_t offset, int orig)
+ {
+@@ -174,7 +179,9 @@
+ 
+ 	data = file->private_data;
+ 	entry = data->entry;
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 3)
+ 	lock_kernel();
++#endif
+ 	switch (entry->content) {
+ 	case SNDRV_INFO_CONTENT_TEXT:
+ 		switch (orig) {
+@@ -203,7 +210,9 @@
+ 	}
+ 	ret = -ENXIO;
+ out:
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 3)
+ 	unlock_kernel();
++#endif
+ 	return ret;
+ }
+ 
+@@ -486,9 +495,26 @@
+ 	return -ENOTTY;
+ }
+ 
++#ifndef CONFIG_SND_HAVE_NEW_IOCTL
++/* need to unlock BKL to allow preemption */
++static int snd_info_entry_ioctl_old(struct inode *inode, struct file * file,
++				    unsigned int cmd, unsigned long arg)
++{
++	int err;
++	unlock_kernel();
++	err = snd_info_entry_ioctl(file, cmd, arg);
++	lock_kernel();
++	return err;
++}
++#endif
++
+ static int snd_info_entry_mmap(struct file *file, struct vm_area_struct *vma)
+ {
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20)
+ 	struct inode *inode = file->f_path.dentry->d_inode;
++#else
++	struct inode *inode = file->f_dentry->d_inode;
++#endif
+ 	struct snd_info_private_data *data;
+ 	struct snd_info_entry *entry;
+ 
+@@ -509,17 +535,30 @@
+ 
+ static struct file_operations snd_info_entry_operations =
+ {
++#ifndef LINUX_2_2
+ 	.owner =		THIS_MODULE,
++#endif
+ 	.llseek =		snd_info_entry_llseek,
+ 	.read =			snd_info_entry_read,
+ 	.write =		snd_info_entry_write,
+ 	.poll =			snd_info_entry_poll,
++#ifdef CONFIG_SND_HAVE_NEW_IOCTL
+ 	.unlocked_ioctl =	snd_info_entry_ioctl,
++#else
++	.ioctl =		snd_info_entry_ioctl_old,
++#endif
+ 	.mmap =			snd_info_entry_mmap,
+ 	.open =			snd_info_entry_open,
+ 	.release =		snd_info_entry_release,
+ };
+ 
++#ifdef LINUX_2_2
++static struct inode_operations snd_info_entry_inode_operations =
++{
++	&snd_info_entry_operations,     /* default sound info directory file-ops */
++};
++#endif
++
+ /**
+  * snd_create_proc_entry - create a procfs entry
+  * @name: the name of the proc file
+@@ -955,9 +994,16 @@
+ 		mutex_unlock(&info_mutex);
+ 		return -ENOMEM;
+ 	}
++#ifndef LINUX_2_2
+ 	p->owner = entry->module;
+-	if (!S_ISDIR(entry->mode))
++#endif
++	if (!S_ISDIR(entry->mode)) {
++#ifndef LINUX_2_2
+ 		p->proc_fops = &snd_info_entry_operations;
++#else
++		p->ops = &snd_info_entry_inode_operations;
++#endif
++	}
+ 	p->size = entry->size;
+ 	p->data = entry;
+ 	entry->p = p;
+@@ -977,9 +1023,19 @@
+ 
+ static void snd_info_version_read(struct snd_info_entry *entry, struct snd_info_buffer *buffer)
+ {
++	static char *kernel_version = UTS_RELEASE;
++
+ 	snd_iprintf(buffer,
+ 		    "Advanced Linux Sound Architecture Driver Version "
+ 		    CONFIG_SND_VERSION CONFIG_SND_DATE ".\n"
++		    "Compiled on " __DATE__ " for kernel %s"
++#ifdef CONFIG_SMP
++		    " (SMP)"
++#endif
++#ifdef MODVERSIONS
++		    " with versioned symbols"
++#endif
++		    ".\n", kernel_version
+ 		   );
+ }
+ 

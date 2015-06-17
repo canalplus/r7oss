@@ -1,0 +1,8 @@
+          name : daemon_clean
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : 
+      commands : 
+ process_types : daemon_clean
+       options : 
+   description : This plugin checks for daemons exiting, and runs aditional
+                 code if set.

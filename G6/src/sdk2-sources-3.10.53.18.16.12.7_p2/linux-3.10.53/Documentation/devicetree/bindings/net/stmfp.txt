@@ -1,0 +1,48 @@
+* STMicroelectronics 100/1000 Fastpath Ethernet driver (STMFP)
+
+Required properties:
+- compatible: Should be "st,fplite" or "st,fp"
+- reg: Address and length of the register set for the device
+- interrupts: Should contain the STMFP interrupts
+- interrupt-names: Should contain the interrupt names "fptxdmairq"
+  "fprxdma0irq", "fprxdma1irq" property
+- st,fp_clk_rate : fastpath clock rate (MHz)
+- reset : reset index information of sysconf
+- clocks  : clocks used in fastpath driver (CLK_FP, CLK_IFE_216_FP)
+- pinctrl-0 : PIO structure for FP, pinctrl_fp0 is for FP_RGMII0
+  and pinctrl_fp1 is for FP_RGMII1
+- phy-mode: String, operation mode of the PHY interface.
+  Supported value is: "rgmii"
+
+- fpdocsis : DOCSIS interface specific platform info (Interface node)
+- fpgige0 : FPGIGE0 interface specific platform info (Interface node)
+- fpgige1 : FPGIGE1 interface specific platform info (Interface node)
+
+
+
+Interface node(fpdocsis,fpgige0,fpgige1) specific Optional properties:
+- st,phy-bus-id : Mdio bus number to connect.
+- st,phy-addr : phy address to connect to.
+
+Examples:
+
+		fpethernet:stmfp@fee80000 {
+			compatible = "st,fplite";
+			status = "disabled";
+			device_type = "network";
+
+			reg = <0xfee80000 0x40000>;
+			interrupts = <0 101 0>, <0 102 0>, <0 103 0>;
+			interrupt-names = "fptxdmairq", "fprxdma0irq", "fprxdma1irq";
+
+			resets = <&softreset STID127_FP_SOFTRESET>;
+			reset-names = "stmfpeth";
+
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_fp0>, <&pinctrl_fp1>;
+
+			clocks = <&CLOCKGEN_DOC 0>, <&CLOCKGEN_DOC 2>;
+			clock-names = "CLK_FP", "CLK_IFE_216_FP";
+
+			st,fp_clk_rate = <200>;
+		};

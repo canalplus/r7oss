@@ -1,0 +1,136 @@
+From 798179eb74fbffc6a55f558fc32eaad3d475db5c Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:19:59 +0100
+Subject: [PATCH 02/36] patches/configurable-memory
+
+64MB LMI_VID default memory configuration
+---
+ Makefile                                           |   10 ++++++++++
+ linux/Makefile                                     |   10 ++++++++++
+ .../drivers/media/dvb/stm/backend/havana_display.h |   18 +++---------------
+ player/player/player_generic.h                     |    8 ++------
+ player/standards/h264.h                            |   15 ++++-----------
+ 5 files changed, 29 insertions(+), 32 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 8f34edf..6b46f21 100644
+--- a/Makefile
++++ b/Makefile
+@@ -7,6 +7,16 @@ TREE_ROOT=$(CDIR)/
+ 
+ export CONFIG_KERNEL_BUILD CONFIG_KERNEL_PATH CONFIG_STGFB_PATH CONFIG_MODULES_PATH TREE_ROOT
+ 
++export PLAYER2_PRIMARY_VIDEO_BUFFER_MEMORY
++export PLAYER2_SECONDARY_VIDEO_BUFFER_MEMORY
++export PLAYER2_AVR_VIDEO_BUFFER_MEMORY
++export PLAYER2_H264_MACROBLOCK_STRUCTURE_MEMORY
++export PLAYER2_H264_FRAME_MEMORY_SIZE
++export PLAYER2_H264_STREAM_PARAMETERS_COUNT
++export PLAYER2_H264_FRAME_PARAMETERS_COUNT
++export PLAYER2_AUDIO_DEFAULT_CODED_MEMORY_SIZE
++export PLAYER2_VIDEO_DEFAULT_CODED_MEMORY_SIZE
++
+ dir-y += player/
+ 
+ J?=-j 4
+diff --git a/linux/Makefile b/linux/Makefile
+index 053d334..d90f7e9 100644
+--- a/linux/Makefile
++++ b/linux/Makefile
+@@ -1,3 +1,13 @@
++CFLAGS+=-DPLAYER2_PRIMARY_VIDEO_BUFFER_MEMORY=$(PLAYER2_PRIMARY_VIDEO_BUFFER_MEMORY) \
++	-DPLAYER2_SECONDARY_VIDEO_BUFFER_MEMORY=$(PLAYER2_SECONDARY_VIDEO_BUFFER_MEMORY) \
++	-DPLAYER2_AVR_VIDEO_BUFFER_MEMORY=$(PLAYER2_AVR_VIDEO_BUFFER_MEMORY) \
++	-DPLAYER2_H264_MACROBLOCK_STRUCTURE_MEMORY=$(PLAYER2_H264_MACROBLOCK_STRUCTURE_MEMORY) \
++	-DPLAYER2_H264_FRAME_MEMORY_SIZE=$(PLAYER2_H264_FRAME_MEMORY_SIZE) \
++	-DPLAYER2_H264_STREAM_PARAMETERS_COUNT=$(PLAYER2_H264_STREAM_PARAMETERS_COUNT) \
++	-DPLAYER2_H264_FRAME_PARAMETERS_COUNT=$(PLAYER2_H264_FRAME_PARAMETERS_COUNT) \
++	-DPLAYER2_AUDIO_DEFAULT_CODED_MEMORY_SIZE=$(PLAYER2_AUDIO_DEFAULT_CODED_MEMORY_SIZE) \
++	-DPLAYER2_VIDEO_DEFAULT_CODED_MEMORY_SIZE=$(PLAYER2_VIDEO_DEFAULT_CODED_MEMORY_SIZE)
++
+ CFLAGS+=-I$(CONFIG_KERNEL_BUILD)/include2 \
+ 	-I$(CONFIG_KERNEL_BUILD)/include \
+ 	-include $(CONFIG_KERNEL_BUILD)/include/linux/autoconf.h \
+diff --git a/linux/drivers/media/dvb/stm/backend/havana_display.h b/linux/drivers/media/dvb/stm/backend/havana_display.h
+index 5141d32..d4c86c2 100644
+--- a/linux/drivers/media/dvb/stm/backend/havana_display.h
++++ b/linux/drivers/media/dvb/stm/backend/havana_display.h
+@@ -38,23 +38,11 @@ Date        Modification                                    Name
+ 
+ #define AUDIO_BUFFER_MEMORY                     0x00080000       // 1/2   mb
+ 
+-#if defined (CONFIG_CPU_SUBTYPE_STX7200) && defined (CONFIG_32BIT)
+-
+-/* This assumes a 128MB LMI1 as currently used on the MB519 and cb101 */
+-#define PRIMARY_VIDEO_BUFFER_MEMORY             0x01B00000       // 27 mb or enough for 9 full HD 4:2:0
+-#define SECONDARY_VIDEO_BUFFER_MEMORY           0x01B00000       // 22 mb or enough for  7 full HD 4:2:0
+-#define AVR_VIDEO_BUFFER_MEMORY                 0x06c00000       // 108 mb
+-#define MAX_VIDEO_DECODE_BUFFERS                32
+-#else
+-
+-#define PRIMARY_VIDEO_BUFFER_MEMORY             0x01B00000       // 27 mb or enough for 9 full HD 4:2:0
+-//#define PRIMARY_VIDEO_BUFFER_MEMORY             0x03000000       // 48 mb or enough for 16 full HD 4:2:0
+-#define SECONDARY_VIDEO_BUFFER_MEMORY           0x01300000       // 19 mb or enough for 6 full HD 4:2:0 
+-#define AVR_VIDEO_BUFFER_MEMORY                 0x02F00000
++#define PRIMARY_VIDEO_BUFFER_MEMORY             PLAYER2_PRIMARY_VIDEO_BUFFER_MEMORY       // ~3mb per full image HD 4:2:0, ~1.32mb in 720p
++#define SECONDARY_VIDEO_BUFFER_MEMORY           PLAYER2_SECONDARY_VIDEO_BUFFER_MEMORY
++#define AVR_VIDEO_BUFFER_MEMORY                 PLAYER2_AVR_VIDEO_BUFFER_MEMORY
+ #define MAX_VIDEO_DECODE_BUFFERS                32
+ 
+-#endif /* 7200 & 32Bit mode */
+-
+ /*      Debug printing macros   */
+ #ifndef ENABLE_DISPLAY_DEBUG
+ #define ENABLE_DISPLAY_DEBUG            0
+diff --git a/player/player/player_generic.h b/player/player/player_generic.h
+index 94bfddb..be91717 100644
+--- a/player/player/player_generic.h
++++ b/player/player/player_generic.h
+@@ -84,16 +84,12 @@ Date        Modification                                    Name
+ #define PLAYER_RETIMING_WAIT				5	// ms
+ 
+ #define PLAYER_AUDIO_DEFAULT_CODED_FRAME_COUNT		256	// These default values are derived from the maximum existing values in the specific codecs
+-#define PLAYER_AUDIO_DEFAULT_CODED_MEMORY_SIZE		0x400000
++#define PLAYER_AUDIO_DEFAULT_CODED_MEMORY_SIZE		PLAYER2_AUDIO_DEFAULT_CODED_MEMORY_SIZE /* 0x400000 */
+ #define PLAYER_AUDIO_DEFAULT_CODED_FRAME_MAXIMUM_SIZE	0x40000
+ #define PLAYER_AUDIO_DEFAULT_CODED_FRAME_PARTITION_NAME	"BPA2_Region0"
+ 
+ #define PLAYER_VIDEO_DEFAULT_CODED_FRAME_COUNT		1024
+-#ifdef CONFIG_32BIT
+-#define PLAYER_VIDEO_DEFAULT_CODED_MEMORY_SIZE		0x1000000
+-#else
+-#define PLAYER_VIDEO_DEFAULT_CODED_MEMORY_SIZE		0x1000000
+-#endif
++#define PLAYER_VIDEO_DEFAULT_CODED_MEMORY_SIZE		PLAYER2_VIDEO_DEFAULT_CODED_MEMORY_SIZE /* 0x1000000 */
+ #define PLAYER_VIDEO_DEFAULT_CODED_FRAME_MAXIMUM_SIZE	0x100000
+ #define PLAYER_VIDEO_DEFAULT_CODED_FRAME_PARTITION_NAME	"BPA2_Region0"
+ 
+diff --git a/player/standards/h264.h b/player/standards/h264.h
+index 58f9cfe..73104cd 100644
+--- a/player/standards/h264.h
++++ b/player/standards/h264.h
+@@ -47,17 +47,10 @@ Date        Modification                                    Name
+ #define H264_CODED_FRAME_COUNT                          1024
+ #define H264_MAXIMUM_FRAME_SIZE                         0x100000
+ 
+-#ifdef CONFIG_32BIT
+-#define H264_FRAME_MEMORY_SIZE                          0x1000000
+-#define H264_STREAM_PARAMETERS_COUNT			128
+-#define H264_FRAME_PARAMETERS_COUNT			128
+-#define H264_MACROBLOCK_STRUCTURE_MEMORY                0xa00000        /* 10 Mb handles 20 frames at 1920x1088 and all lower level cases */
+-#else
+-#define H264_FRAME_MEMORY_SIZE                          0x800000
+-#define H264_STREAM_PARAMETERS_COUNT			64
+-#define H264_FRAME_PARAMETERS_COUNT			64
+-#define H264_MACROBLOCK_STRUCTURE_MEMORY                0x480000        /* 4.5 Mb handles 9 frames at 1920x1088 and all lower level cases */
+-#endif
++#define H264_FRAME_MEMORY_SIZE                          PLAYER2_H264_FRAME_MEMORY_SIZE /* 0x800000 */
++#define H264_STREAM_PARAMETERS_COUNT			PLAYER2_H264_STREAM_PARAMETERS_COUNT /* 64 */
++#define H264_FRAME_PARAMETERS_COUNT			PLAYER2_H264_FRAME_PARAMETERS_COUNT /* 64 */
++#define H264_MACROBLOCK_STRUCTURE_MEMORY                PLAYER2_H264_MACROBLOCK_STRUCTURE_MEMORY        /* 0.5mb per 1920x1088 frame */
+ 
+ #define H264_STANDARD_MAX_SEQUENCE_PARAMETER_SETS       32
+ #define H264_MAX_SEQUENCE_PARAMETER_SETS                32              /* Standard says 32 */
+-- 
+1.7.9.5
+

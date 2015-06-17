@@ -1,0 +1,26 @@
+#!/bin/sh
+# 
+# copy a file from alsa-kernel tree and apply a patch
+#
+
+dst="$1"
+pat=`echo $dst | sed -e 's/.c$/.patch/'`
+
+case $dst in
+/*)
+	xtmp=`dirname $dst | sed -e s@/acore@/core@ -e s@alsa-driver/@alsa-driver/alsa-kernel/@`/`basename $dst`
+	echo copying file $xtmp
+	cp -v $xtmp $dst || exit 1
+	patch -p0 $dst $pat || exit 1
+	;;
+*)
+	curd=`/bin/pwd`
+	MODCURDIR=`echo $curd | sed -e s@$SND_TOPDIR/@@`
+	xtmp=`echo $MODCURDIR | sed -e 's/^acore/core/'`/$dst
+	echo copying file alsa-kernel/$xtmp
+	cp $SND_TOPDIR/alsa-kernel/$xtmp $@ || exit 1
+	patch -p0 -i $pat || exit 1
+	;;
+esac
+exit 0
+

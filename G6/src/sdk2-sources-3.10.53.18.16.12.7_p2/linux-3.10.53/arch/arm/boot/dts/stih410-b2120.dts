@@ -1,0 +1,63 @@
+/*
+ * Copyright (C) 2014 STMicroelectronics (R&D) Limited.
+ * Author: Giuseppe Cavallaro <peppe.cavallaro@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+/dts-v1/;
+#include "stih410.dtsi"
+#include "stihxxx-b2120.dtsi"
+/ {
+	model = "STiH410 B2120";
+	compatible = "st,stih410-b2120", "st,stih410";
+
+	aliases {
+		usb0 = &usb0;
+		usb1 = &usb1;
+	};
+
+	memory {
+		device_type = "memory";
+		reg = <0x40000000 0x80000000>;
+	};
+
+	pwm_regulator: pwm-regulator {
+		compatible = "st,b2120-pwm-regulator";
+		regulator-name = "CPU_1V0_AVS";
+		regulator-min-microvolt = <848000>;
+		regulator-max-microvolt = <1147000>;
+		regulator-always-on;
+		pwms = <&pwm1 3 8448>;
+		status = "okay";
+	};
+
+	soc {
+		vmmc_reg: voltage-regulator {
+			status = "okay";
+		};
+
+		mmc0: sdhci@09060000 {
+			max-frequency = <200000000>;
+			mmc-cap-uhs-sdr50;
+			mmc-cap-uhs-sdr104;
+			mmc-cap-uhs-ddr50;
+			mmc-cap-1p8;
+		};
+
+		pwm1: pwm@9510000 {
+			compatible = "st,pwm";
+			status = "okay";
+			pinctrl-0 = <&pinctrl_pwm1_chan3_default>;
+		};
+
+		usb0: usb@9A00000 {
+			status = "okay";
+		};
+
+		usb1: usb@9A80000 {
+			status = "okay";
+		};
+	};
+};

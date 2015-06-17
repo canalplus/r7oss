@@ -1,0 +1,24 @@
+diff -ur a/linux/drivers/media/dvb/stm/dvb/dvb_video.c b/linux/drivers/media/dvb/stm/dvb/dvb_video.c
+--- a/linux/drivers/media/dvb/stm/dvb/dvb_video.c	2013-09-03 12:02:44.604738768 +0200
++++ b/linux/drivers/media/dvb/stm/dvb/dvb_video.c	2013-09-03 13:19:17.680738065 +0200
+@@ -240,13 +240,13 @@
+ 
+     if (Context->VideoStream != NULL)
+         Result  = DvbStreamSetOutputWindow (Context->VideoStream, Left, Top, Width, Height);
+-    else
+-    {
+-        Context->VideoOutputWindow.X            = Left;
+-        Context->VideoOutputWindow.Y            = Top;
+-        Context->VideoOutputWindow.Width        = Width;
+-        Context->VideoOutputWindow.Height       = Height;
+-    }
++
++    /* Always update the Context and not only when there is no played media */
++    Context->VideoOutputWindow.X            = Left;
++    Context->VideoOutputWindow.Y            = Top;
++    Context->VideoOutputWindow.Width        = Width;
++    Context->VideoOutputWindow.Height       = Height;
++
+     mutex_unlock (&(DvbContext->Lock));
+ 
+     return Result;

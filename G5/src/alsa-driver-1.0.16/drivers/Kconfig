@@ -1,0 +1,39 @@
+# ALSA generic drivers
+
+config SND_SERIALMIDI
+	tristate "Generic driver for serial MIDI adapters"
+	depends on BROKEN
+	depends on SND
+	select SND_RAWMIDI
+	help
+	  If you want to use MIDI adapters connected to a standard
+	  serial port, say Y here and read
+	  <file:Documentation/sound/alsa/serialmidi.txt>.
+
+	  For multi-port devices, this driver supports port selection
+	  with the Roland SoundCanvas protocol and for Midiator
+	  MS-124T/W devices; many other devices are SoundCanvas
+	  compatible.
+
+	  To compile this driver as a module, choose M here: the module
+	  will be called snd-serialmidi.
+
+config SND_LOOPBACK
+	tristate "Generic loopback driver (PCM)"
+	depends on SND
+	select SND_PCM
+	help
+	  Say 'Y' or 'M' to include support for the PCM loopback device.
+
+config SND_PCSP
+	tristate "Internal PC speaker support"
+	depends on SND
+	depends on EXPERIMENTAL && X86_PC && HIGH_RES_TIMERS
+	help
+	  If you don't have a sound card in your computer, you can include a
+	  driver for the PC speaker which allows it to act like a primitive
+	  sound card.
+
+	  You can compile this as a module, which will be called snd-pcsp.
+
+	  You don't need this driver if you only want your computer to beep.

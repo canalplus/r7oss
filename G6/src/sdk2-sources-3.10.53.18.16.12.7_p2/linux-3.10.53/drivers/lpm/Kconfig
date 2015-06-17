@@ -1,0 +1,8 @@
+config ST_LPM
+	bool "LPM on STMicroelectronics STi series of SoCs"
+	depends on ARCH_STI
+	help
+	  Support for LPM driver on STMicroelectronics STi series
+	  of SoCs.
+	  Enable this config parameter for enabling ST LPM driver
+	  in the kernel.

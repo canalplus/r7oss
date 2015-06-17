@@ -1,0 +1,25 @@
+diff -ruN a/genbox/initng/engine.i b/genbox/initng/engine.i
+--- a/genbox/initng/engine.i	2013-11-19 11:27:54.910694905 +0100
++++ b/genbox/initng/engine.i	2013-11-19 11:28:17.372073222 +0100
+@@ -13,17 +13,10 @@
+         script start = {
+                 /sbin/modprobe player2 || exit 1
+ 
+-                /usr/bin/alsa_cset hw:MIXER0 \
+-			"Boost factor" 255 \
+-			"Cut   factor" 255 \
+-			"DRC Enable" 1 \
+-			"DRC Type  " 3 \
+-			"Analog Limiter Playback Switch" 0 \
+-			'Downmix Promotion Playback Switch' 1
+-		/usr/bin/toposet \
+-			channel_assignment[0] LT_RT \
+-		        channel_assignment[1] LT_RT \
+-		        channel_assignment[2] LT_RT
++                /usr/bin/toposet \
++                    channel_assignment[0] LT_RT \
++                    channel_assignment[1] LT_RT \
++                    channel_assignment[2] LT_RT
+         };
+ }
+ 

@@ -1,0 +1,8 @@
+SPEC=SPECS/stm-noarchtarget-player2.spec
+BUILDAREA?=$(PWD)/..
+
+include $(BUILDAREA)/Makefile.rpm
+
+rpmpackage:
+	mkdir -p SOURCES
+	(tar cvfj SOURCES/player2.tar.bz2 components COPYING Doxyfile firmware genbox INSTALL linux makefile* Makefile patches player README )

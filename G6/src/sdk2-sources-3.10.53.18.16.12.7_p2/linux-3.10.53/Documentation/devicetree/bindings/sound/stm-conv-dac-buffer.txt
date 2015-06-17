@@ -1,0 +1,34 @@
+===============================================================================
+			stm dac sysconf converter
+===============================================================================
+
+Required properties:
+- compatible	: Should be "st,snd_conv_dac_buf_<dac_buffer>".
+- source-bus-id	: Player device is attached to.
+- reg		: Dac buffer register address on I2C bus
+- st,buffer-gain : gain to be used
+
+The differents values that can be used for gain are :
+ 0 => 0db
+ 1 => +6dB
+ 2 => +12dB
+ 3 => +16dB
+ 4 => +20dB
+ 5 => +24dB
+ 6 => +26dB
+ 7 => +28dB
+
+Typical usage example:
+
+i2c@fed40000 {
+	status = "okay";
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	snd_dac_buffer@4a {
+		compatible = "st,snd_dac_buf_st6440";
+		reg = <0x4a>;
+		st,source-bus-id = <&snd_uni_player2>;
+		st,buffer-gain = <5>;
+	};
+};

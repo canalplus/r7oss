@@ -1,0 +1,6 @@
+<sttp:targetpack
+xmlns:sttp="http://www.st.com/XMLSchema/TargetPack">
+<sttp:directories>
+<sttp:directory sttp:path="$TARGETPACK_PATH"/>
+</sttp:directories>
+</sttp:targetpack>

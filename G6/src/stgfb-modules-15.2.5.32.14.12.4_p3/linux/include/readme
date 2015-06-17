@@ -1,0 +1,5 @@
+This repository contains some of the header files that must be available on
+target. Those file are copied into the target file system while installing
+modules in master makefile. The apropriate makefile rule (stmfb-linux-headers)
+is defined in .../build/build/sdk2-build-master/packages/stmfb.
+

@@ -1,0 +1,31 @@
+diff -ur linux-2.6.13/arch/i386/kernel/ptrace.c linux-2.6.13initng/arch/i386/kernel/ptrace.c
+--- linux-2.6.13/arch/i386/kernel/ptrace.c	2005-08-29 01:41:01.000000000 +0200
++++ linux-2.6.13initng/arch/i386/kernel/ptrace.c	2005-09-16 12:17:30.000000000 +0200
+@@ -383,9 +383,12 @@
+ 		goto out;
+ 
+ 	ret = -EPERM;
+-	if (pid == 1)		/* you may not mess with init */
+-		goto out_tsk;
+ 
++	/* we may wanna mess with initng
++	if (pid == 1)
++		goto out_tsk;
++	*/
++	
+ 	if (request == PTRACE_ATTACH) {
+ 		ret = ptrace_attach(child);
+ 		goto out_tsk;
+diff -ur linux-2.6.13/kernel/ptrace.c linux-2.6.13initng/kernel/ptrace.c
+--- linux-2.6.13/kernel/ptrace.c	2005-08-29 01:41:01.000000000 +0200
++++ linux-2.6.13initng/kernel/ptrace.c	2005-09-16 12:16:22.000000000 +0200
+@@ -123,7 +123,8 @@
+ 	int retval;
+ 	task_lock(task);
+ 	retval = -EPERM;
+-	if (task->pid <= 1)
++	/* We do wanna be able to attach pid 1 */
++	if (task->pid <= 0)
+ 		goto bad;
+ 	if (task == current)
+ 		goto bad;

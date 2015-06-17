@@ -1,0 +1,107 @@
+From 45bd17c07b206d5f596275ad2362ecdfb304b1f8 Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:19:59 +0100
+Subject: [PATCH 16/36] patches/crash-on-zap-bug10074
+
+---
+ .../output_coordinator/output_coordinator_base.cpp |   26 +++++++++++++++++---
+ .../output_coordinator/output_coordinator_base.h   |    1 +
+ player/player/player_playback.cpp                  |    5 ++++
+ 3 files changed, 28 insertions(+), 4 deletions(-)
+
+diff --git a/player/output_coordinator/output_coordinator_base.cpp b/player/output_coordinator/output_coordinator_base.cpp
+index aab6615..851f4bd 100644
+--- a/player/output_coordinator/output_coordinator_base.cpp
++++ b/player/output_coordinator/output_coordinator_base.cpp
+@@ -416,14 +416,26 @@ OutputCoordinatorContext_t      *PointerToContext;
+ OutputCoordinatorContext_t       ContextLoop;
+ 
+     //
++    // Make sure no one is trying to synchronize this stream
++    //
++
++    OS_LockMutex( &Lock );
++
++    while( Context->InStartupDelay || Context->InSynchronizeFn )
++    {
++	OS_UnLockMutex( &Lock );
++	report( severity_info, "OutputCoordinator_Base_c::DeRegisterStream - In Synchronize (%d %d)\n", Context->InStartupDelay, Context->InSynchronizeFn );
++	OS_SleepMilliSeconds( 5 );
++	OS_LockMutex( &Lock );
++    }
++
++    //
+     // Was this a master clock, if it was remove it, check for 
+     // an alternative and allow any established clock values to persist.
+     // we do not seek an 'alternative' master as the values obtained from
+     // the previous clock should persist.
+     //
+ 
+-    OS_LockMutex( &Lock );
+-
+     if( Context->ClockMaster )
+     {
+ 	GotAMasterClock                 = false;
+@@ -916,6 +928,8 @@ PlayerEventRecord_t             Event;
+ 
+ report( severity_info, "Sync In - %d - %016llx %016llx\n", Context->StreamType, NormalizedPlaybackTime, NormalizedDecodeTime );
+ 
++    Context->InStartupDelay                     = true;
++
+     OS_LockMutex( &Lock );
+ 
+     AlternateTimeMappingExists  = MasterTimeMappingEstablished &&
+@@ -941,9 +955,12 @@ report( severity_info, "Sync In - %d - %016llx %016llx\n", Context->StreamType,
+ 	    if( Context->StreamOffset < MinimumStreamOffset )
+ 		MinimumStreamOffset                                     = Context->StreamOffset;
+ 
+-	    OS_UnLockMutex( &Lock );
++	    Status	= TranslatePlaybackTimeToSystem( Context, NormalizedPlaybackTime, SystemTime );
++	    Context->InStartupDelay                     		= false;
++
+ report( severity_info, "Sync out0 - %d - %016llx %016llx (%6lld)\n", Context->StreamType, MasterBaseNormalizedPlaybackTime, MasterBaseSystemTime, Context->StreamOffset );
+-	    return TranslatePlaybackTimeToSystem( Context, NormalizedPlaybackTime, SystemTime );
++	    OS_UnLockMutex( &Lock );
++	    return Status;
+ 	}
+     }
+ 
+@@ -994,6 +1011,7 @@ report( severity_info, "Sync out0 - %d - %016llx %016llx (%6lld)\n", Context->St
+ 
+     OS_LockMutex( &Lock );
+ 
++    Context->InStartupDelay                     = false;
+     Context->InSynchronizeFn                    = true;
+     Context->SynchronizingAtPlaybackTime        = NormalizedPlaybackTime;
+     StreamsInSynchronize++;
+diff --git a/player/output_coordinator/output_coordinator_base.h b/player/output_coordinator/output_coordinator_base.h
+index a6b321d..3d1714b 100644
+--- a/player/output_coordinator/output_coordinator_base.h
++++ b/player/output_coordinator/output_coordinator_base.h
+@@ -73,6 +73,7 @@ struct OutputCoordinatorContext_s
+     unsigned long long	 		  ManifestorLatency;
+     VideoOutputSurfaceDescriptor_t	 *VideoSurfaceDescriptor;
+ 
++    bool				  InStartupDelay;
+     bool				  InSynchronizeFn;
+     unsigned long long			  SynchronizingAtPlaybackTime;
+ 
+diff --git a/player/player/player_playback.cpp b/player/player/player_playback.cpp
+index 0e26148..6b2a24b 100644
+--- a/player/player/player_playback.cpp
++++ b/player/player/player_playback.cpp
+@@ -713,6 +713,11 @@ Buffer_t                 Buffer;
+ 
+     OS_ResetEvent( &Stream->StartStopEvent );
+ 
++    Stream->DiscardingUntilMarkerFramePostM = true;
++    Stream->DiscardingUntilMarkerFrameDtoM  = true;
++    Stream->DiscardingUntilMarkerFramePtoD  = true;
++    Stream->DiscardingUntilMarkerFrameCtoP  = true;
++
+     Stream->Collator->DiscardAccumulatedData();
+     Stream->Collator->Halt();
+ 
+-- 
+1.7.9.5
+

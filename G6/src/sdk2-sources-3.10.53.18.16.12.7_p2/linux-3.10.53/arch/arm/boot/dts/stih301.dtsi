@@ -1,0 +1,22 @@
+/*
+ * Copyright (C) 2014 STMicroelectronics Limited.
+ * Author: Amelie Herault <amelie.herault@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+#include "stih301cut1.dtsi"
+
+/ {
+	cpus {
+		cpu@0 {
+			operating-points = <
+				/* kHz    ignored */
+				 1000000  1000000
+				  500000  1000000
+				  250000  1000000
+			>;
+		};
+	};
+};

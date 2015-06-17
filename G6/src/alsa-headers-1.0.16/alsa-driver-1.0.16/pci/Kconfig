@@ -1,0 +1,24 @@
+menu "PCI devices"
+	depends on SND!=n && PCI
+
+config SND_PDPLUS
+	tristate "Sek'D/Marian Prodif Plus"
+	depends on SND
+	select SND_PCM
+	help
+	  Say Y here to include support for Sek'D/Marian Prodif Plus
+	  soundcards.
+
+	  To compile this driver as a module, choose M here: the module
+	  will be called snd-pdplus.
+
+config SND_ASIHPI
+	tristate "AudioScience ASIxxxx"
+	depends on SND && X86
+	select FW_LOADER
+	select SND_PCM
+	help
+	  Say 'Y' or 'M' to include support for AudioScience ASIxxxx soundcards.
+
+endmenu
+

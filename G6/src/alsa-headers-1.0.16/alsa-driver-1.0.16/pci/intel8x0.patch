@@ -1,0 +1,43 @@
+--- ../alsa-kernel/pci/intel8x0.c	2007-12-20 11:47:37.000000000 +0100
++++ intel8x0.c	2007-12-20 12:13:15.000000000 +0100
+@@ -1,3 +1,4 @@
++#include "adriver.h"
+ /*
+  *   ALSA driver for Intel ICH (i8x0) chipsets
+  *
+@@ -40,7 +41,10 @@
+ #include <sound/initval.h>
+ /* for 440MX workaround */
+ #include <asm/pgtable.h>
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
+ #include <asm/cacheflush.h>
++#endif
++#include "pci_iomap_compat.c"
+ 
+ MODULE_AUTHOR("Jaroslav Kysela <perex@perex.cz>");
+ MODULE_DESCRIPTION("Intel 82801AA,82901AB,i810,i820,i830,i840,i845,MX440; SiS 7012; Ali 5455");
+@@ -703,7 +707,7 @@
+ 	iputbyte(chip, port + ichdev->roff_sr, ICH_FIFOE | ICH_BCIS | ICH_LVBCI);
+ }
+ 
+-#ifdef __i386__
++#if defined(__i386__) && LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,20)
+ /*
+  * Intel 82443MX running a 100MHz processor system bus has a hardware bug,
+  * which aborts PCI busmaster for audio transfer.  A workaround is to set
+@@ -714,7 +718,9 @@
+ {
+ 	size = (size + PAGE_SIZE - 1) >> PAGE_SHIFT;
+ 	change_page_attr(virt_to_page(buf), size, nocache ? PAGE_KERNEL_NOCACHE : PAGE_KERNEL);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
+ 	global_flush_tlb();
++#endif
+ }
+ #else
+ #define fill_nocache(buf,size,nocache)
+@@ -3082,3 +3088,5 @@
+ 
+ module_init(alsa_card_intel8x0_init)
+ module_exit(alsa_card_intel8x0_exit)
++
++EXPORT_NO_SYMBOLS;

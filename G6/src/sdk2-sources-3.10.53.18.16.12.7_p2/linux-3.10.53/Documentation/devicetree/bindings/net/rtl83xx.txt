@@ -1,0 +1,42 @@
+* Realtek RTL83xx switches
+
+Required properties:
+- compatible: Should be "realtek,rtl8367rb".
+
+  Just this device has been fully tested.
+
+- gpio-reset: gpio line to reset the switch
+- gpio-sck: gpio line to manage the SCL (i2c) for SMI
+- gpio-sda: gpio line to manage the SDA (i2c) for SMI
+- rtl8367rb,extif0; rtl8367rb,extif1; rtl8367rb,extif2;
+  different families have embedded just one or two or three extended mac
+  interface. So this parameter is to advice that this iface is available
+- rtl8367rb,extif1-mode: supported modes that can be:
+  0: disabled, 1: RGMII, 2: MII MAC, 3: MII PHY, 4/5: TMII MAC/PHY, 6: GMII
+- rtl8367rb,extif1-txdelay and rtl8367rb,extif1-rxdelay: set to 1 for adding
+  2ns of extra delay
+- rtl8367rb,extif1-force_mode: to disable ANE and force the link.
+- rtl8367rb,extif1-duplex: 1 to enable duplex
+- rtl8367rb,extif1-speed: 0: 10, 1: 100, 2: 1000
+
+Examples:
+
+	realtek: rtl8367rb {
+		compatible	= "realtek,rtl8367rb";
+		status		= "okay";
+
+		gpio-reset	= <&PIO0 7 0>;
+		gpio-sck	= <&PIO1 1 0>;
+		gpio-sda	= <&PIO1 0 0>;
+
+		rtl8367rb,extif1;
+		rtl8367rb,extif1-mode = <1>;	// RGMII
+		rtl8367rb,extif1-txdelay = <0>;
+		rtl8367rb,extif1-rxdelay = <1>;
+		rtl8367rb,extif1-force_mode = <1>;
+		rtl8367rb,extif1-txpause = <2>;
+		rtl8367rb,extif1-rxpause = <2>;
+		rtl8367rb,extif1-link = <1>;
+		rtl8367rb,extif1-duplex = <1>;
+		rtl8367rb,extif1-speed = <2>; // Giga speed
+	};

@@ -1,0 +1,39 @@
+# -*- makefile -*-
+#
+# arch/x86-64/MCONFIG
+#
+# Special rules for this architecture.  Note that this is actually
+# included from the main Makefile, and that pathnames should be
+# accordingly.
+#
+# Blatantly copied and modified from i386 version by Mats Petersson, AMD.
+#
+
+#
+# NOTE: -fno-asynchronous-unwind-tables produce significantly smaller
+# binaries (20% smaller), but makes the code completely useless for
+# debugging using gdb.
+#
+KLIBCARCHREQFLAGS = -m64
+ifeq ($(DEBUG),y)
+KLIBCOPTFLAGS     += -g -Os -fomit-frame-pointer \
+		-falign-functions=1 -falign-jumps=1 -falign-loops=1
+else
+KLIBCOPTFLAGS     += -Os -fno-asynchronous-unwind-tables -fomit-frame-pointer \
+		-falign-functions=1 -falign-jumps=1 -falign-loops=1
+endif
+KLIBCBITSIZE      = 64
+KLIBCLDFLAGS      = -m elf_x86_64
+
+# Extra linkflags when building the shared version of the library
+# This address needs to be reachable using normal inter-module
+# calls, and work on the memory models for this architecture
+# 2 MB - normal binaries start at 4 MB
+#
+# Recent binutils use max-page-size=0x200000 by default, which pushes
+# klibc.so data over the 4 MB mark, overlapping the executable.
+# Revert to the old max-page-size=0x100000 value.
+KLIBCSHAREDFLAGS     = -Ttext 0x00200200 -z max-page-size=0x100000
+
+# Additional asm- directories needed during installation
+ASMARCH = asm-i386

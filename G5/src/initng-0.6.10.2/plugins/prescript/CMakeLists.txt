@@ -1,0 +1,6 @@
+INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR}/src ${CMAKE_BINARY_DIR} )
+
+ADD_LIBRARY(prescript MODULE initng_prescript.c)
+TARGET_LINK_LIBRARIES(prescript initng)
+INSTALL_TARGETS(${LIB_INSTALL_DIR}/initng prescript)
+

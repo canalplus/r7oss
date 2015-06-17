@@ -1,0 +1,47 @@
+Streaming Engine Unitary tests
+
+Based on the Google's xUnit-like test framework: Google Test
+    - Homepage: https://code.google.com/p/googletest/
+    - Documentation: https://code.google.com/p/googletest/wiki/V1_6_Documentation
+
+Uses Google's Mocking framework: Google Mock
+    - Homepage: https://code.google.com/p/googlemock/
+    - Documentation: https://code.google.com/p/googlemock/wiki/ForDummies
+
+Build and test with:
+  $ make -j4 check
+
+Build and test more extensive tests with:
+  $ make -j4 check-full
+
+The unitary tests currently cover:
+- os abstraction layer: os_unittests
+- stream engine: se_unittests
+
+The unitary tests execute on the host workstation.
+
+Concerning the se_unittests testsuite,
+
+To run:
+recommanded way is through make targets.
+
+For specific testcase debugging you can also use following cmds:
+    ./se_unittests --gmock_verbose=error => will run all tests
+    ./se_unittests --help => display available options
+    ./se_unittests --gtest_list_tests => lists all available tests
+    ./se_unittests --gtest_filter=<regexp>  => run only the tests whose name match <regexp>
+
+    To change streaming engine activated trace groups or trace level, you must set environment variables SE_TRACE_GROUPS / SE_TRACE_LEVEL:
+    SE_TRACE_GROUPS=3,-1,-1,.. SE_TRACE_LEVEL=5 ./se_unittests 
+
+
+The unitary tests execute on the host workstation.
+Only the parts of streaming engine that have some tests and their dependencies are built.
+
+To add new unitary tests:
+    - create a directory where to store the tests for the object you want to test an 
+      put your new unitary tests there
+    - in the Makefile, add the new directory to the VPATH variable and add the list of test files to the
+      UNITTEST_OBJECTS variable 
+    - in the Makefile, add the missing files of the streaming engine that you want to compile to 
+      STREAMING_CPPOBJECTS /STREAMING_COBJECTS variables. If needed, also add missing directories to VPATH

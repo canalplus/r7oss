@@ -1,0 +1,26 @@
+#
+# This file defines the list of code analysis defects that should be
+# considered OK (i.e. not a defect).
+#
+# TODO: simplify the format, rationalise the generic classes
+# as analysis tools are added.
+#
+# The format is the same as for annotations.txt file (see comments there):
+# OK:<class>:<file>:<line_num>:<comment>:<line_content>
+#
+# With the exception of:
+# <file>         : can be a path wildcard (as per "find . -path <wildcard>")
+#                  or a regexp (as per "find -regex <regexp>")
+#                  relative to the root dir
+# <line_num>     : must be "*", i.e. not specified
+#
+# For instance a valid line looks like:
+# OK:DEAD_CODE:src/*.c:*:Dead code in macro:CIRCLEQ_FOREACH_
+#
+
+OK:DEAD_CODE:\(src\|include\)/.*\.\(h\|c\|cpp\):*:Unreachable code:UNREACHABLE
+OK:DEAD_CODE_START:\(src\|include\)/.*\.\(h\|c\|cpp\):*:Unreachable code:UNREACHABLE_START
+OK:DEAD_CODE_STOP:\(src\|include\)/.*\.\(h\|c\|cpp\):*:Unreachable code:UNREACHABLE_STOP
+OK:UNTESTED:\(src\|include\)/.*\.\(h\|c\|cpp\):*:Untested code:UNTESTED
+OK:UNTESTED_START:\(src\|include\)/.*\.\(h\|c\|cpp\):*:Untested code:UNTESTED_START
+OK:UNTESTED_STOP:\(src\|include\)/.*\.\(h\|c\|cpp\):*:Untested code:UNTESTED_STOP

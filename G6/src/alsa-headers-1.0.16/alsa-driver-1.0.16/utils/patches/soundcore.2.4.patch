@@ -1,0 +1,145 @@
+--- /home/src/linux/drivers/sound/sound_core.c	Thu Sep 19 10:36:04 2002
++++ out.txt	Fri Jan  3 10:51:26 2003
+@@ -17,7 +17,7 @@
+  *	plug into this. The fact they dont all go via OSS doesn't mean 
+  *	they don't have to implement the OSS API. There is a lot of logic
+  *	to keeping much of the OSS weight out of the code in a compatibility
+- *	module, but its up to the driver to rember to load it...
++ *	module, but it's up to the driver to remember to load it...
+  *
+  *	The code provides a set of functions for registration of devices
+  *	by type. This is done rather than providing a single call so that
+@@ -173,10 +173,10 @@
+ 		return r;
+ 	}
+ 	
+-	if (r == low)
++	if (r < SOUND_STEP)
+ 		sprintf (name_buf, "%s", name);
+ 	else
+-		sprintf (name_buf, "%s%d", name, (r - low) / SOUND_STEP);
++		sprintf (name_buf, "%s%d", name, r / SOUND_STEP);
+ 	s->de = devfs_register (devfs_handle, name_buf,
+ 				DEVFS_FL_NONE, SOUND_MAJOR, s->unit_minor,
+ 				S_IFCHR | mode, fops, NULL);
+@@ -217,7 +217,7 @@
+  *	15	*16		unused
+  */
+ 
+-static struct sound_unit *chains[16];
++static struct sound_unit *chains[SOUND_STEP];
+ 
+ /**
+  *	register_sound_special - register a special sound node
+@@ -231,73 +231,62 @@
+  
+ int register_sound_special(struct file_operations *fops, int unit)
+ {
+-	char *name, name_ext[32];
+-	int suffix = 0;
++	const int chain = unit % SOUND_STEP;
++	int max_unit = 128 + chain;
++	const char *name;
++	char _name[16];
+ 
+-	switch (unit & 15) {
++	switch (chain) {
+ 	    case 0:
+ 		name = "mixer";
+-		suffix = 1;
+ 		break;
+ 	    case 1:
+ 		name = "sequencer";
++		if (unit >= SOUND_STEP)
++			goto __unknown;
++		max_unit = unit + 1;
+ 		break;
+ 	    case 2:
+-		sprintf(name_ext, "midi0%d", unit / SOUND_STEP);
+-		name = name_ext;
++		name = "midi";
+ 		break;
+ 	    case 3:
+ 		name = "dsp";
+-		suffix = 1;
+ 		break;
+ 	    case 4:
+ 		name = "audio";
+-		suffix = 1;
+-		break;
+-	    case 5:
+-		name = "unknown5";
+-		break;
+-	    case 6:		/* Was once sndstat */
+-		name = "unknown6";
+-		break;
+-	    case 7:
+-		name = "unknown7";
+ 		break;
+ 	    case 8:
+ 		name = "sequencer2";
++		if (unit >= SOUND_STEP)
++			goto __unknown;
++		max_unit = unit + 1;
+ 		break;
+ 	    case 9:
+ 		name = "dmmidi";
+-		suffix = 1;
+ 		break;
+ 	    case 10:
+ 		name = "dmfm";
+-		suffix = 1;
+-		break;
+-	    case 11:
+-		name = "unknown11";
+ 		break;
+ 	    case 12:
+ 		name = "adsp";
+-		suffix = 1;
+ 		break;
+ 	    case 13:
+ 		name = "amidi";
+-		suffix = 1;
+ 		break;
+ 	    case 14:
+ 		name = "admmidi";
+-		suffix = 1;
+ 		break;
+ 	    default:
+-		name = "unknown";
++	    	{
++		    __unknown:
++			sprintf(_name, "unknown%d", chain);
++		    	if (unit >= SOUND_STEP)
++		    		strcat(_name, "-");
++		    	name = _name;
++		}
+ 		break;
+ 	}
+-	if (suffix && unit >= SOUND_STEP) {
+-	    sprintf(name_ext, "%s%d", name, unit / SOUND_STEP);
+-	    name = name_ext;
+-	}
+-	return sound_insert_unit(&chains[unit&15], fops, -1, unit, unit+1,
++	return sound_insert_unit(&chains[chain], fops, -1, unit, max_unit,
+ 				 name, S_IRUSR | S_IWUSR);
+ }
+  
+@@ -396,7 +385,7 @@
+ 
+ void unregister_sound_special(int unit)
+ {
+-	sound_remove_unit(&chains[unit&15], unit);
++	sound_remove_unit(&chains[unit % SOUND_STEP], unit);
+ }
+  
+ EXPORT_SYMBOL(unregister_sound_special);
+@@ -494,7 +483,7 @@
+ int soundcore_open(struct inode *inode, struct file *file)
+ {
+ 	int chain;
+-	int unit=MINOR(inode->i_rdev);
++	int unit = MINOR(inode->i_rdev);
+ 	struct sound_unit *s;
+ 	struct file_operations *new_fops = NULL;
+ 

@@ -1,0 +1,597 @@
+From 57b048548c24db26b9bc1402c53d8328fad18b66 Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:20:00 +0100
+Subject: [PATCH 27/36] patches/STbug-11178
+
+---
+ player/collator/collator_pes.cpp                   |   28 ++-
+ player/demultiplexor/demultiplexor_ts.cpp          |   12 +-
+ player/demultiplexor/demultiplexor_ts.h            |    1 +
+ player/frame_parser/frame_parser_video.cpp         |    2 +-
+ player/frame_parser/frame_parser_video_h264.cpp    |  217 ++++++++++++++++----
+ player/frame_parser/frame_parser_video_h264.h      |   25 +--
+ player/manifestor/manifestor_audio_ksound.cpp      |    5 +-
+ .../output_coordinator/output_coordinator_base.cpp |   22 +-
+ 8 files changed, 249 insertions(+), 63 deletions(-)
+
+diff --git a/player/collator/collator_pes.cpp b/player/collator/collator_pes.cpp
+index d677d21..85a428c 100644
+--- a/player/collator/collator_pes.cpp
++++ b/player/collator/collator_pes.cpp
+@@ -401,6 +401,19 @@ CollatorStatus_t   Collator_Pes_c::ReadPesHeader(               void )
+ unsigned int    Flags;
+ 
+     //
++    // Just check before we begin, that the stream identifier is the one we are interested in
++    //
++
++#if 0
++    // We really want to do this, but some audio codecs lie about the values and we los their audio. 
++    if( (StoredPesHeader[3] & Configuration.StreamIdentifierMask) != Configuration.StreamIdentifierCode )
++    {
++	report( severity_error, "Collator_Pes_c::ReadPesHeader - Wrong stream identifier %02x (%02x %02x).\n", StoredPesHeader[3], Configuration.StreamIdentifierCode, Configuration.StreamIdentifierMask );
++	return CollatorError;
++    }
++#endif
++
++    //
+     // Here we save the current pts state for use only in any
+     // picture start code that spans this pes packet header.
+     //
+@@ -480,6 +493,7 @@ unsigned int    Flags;
+ 	    MarkerBit( 1 );
+ 	    PlaybackTimeValid    = true;
+ #if 0
++if( !Configuration.GenerateStartCodeList )
+ {
+ unsigned long long Now;
+ unsigned int MilliSeconds;
+@@ -631,23 +645,23 @@ report( severity_info, "Collator PTS %d - %2d:%02d:%02d.%03d - %016llx - %c%lld
+ 	if( (Flags == 0x02) || (Flags == 0x03) )
+ 	{
+ 	    PlaybackTime         = (unsigned long long)(Bits.Get( 3 )) << 30;
+-	    Bits.FlushUnseen(1);
++	    MarkerBit( 1 );
+ 	    PlaybackTime        |= Bits.Get( 15 ) << 15;
+-	    Bits.FlushUnseen(1);
++	    MarkerBit( 1 );
+ 	    PlaybackTime        |= Bits.Get( 15 );
+-	    Bits.FlushUnseen(1);
++	    MarkerBit( 1 );
+ 
+ 	    PlaybackTimeValid    = true;
+ 	}
+ 	if( Flags == 0x03 )
+ 	{
+-	    Bits.FlushUnseen(4);
++	    MarkerBits( 4, 1 );
+ 	    DecodeTime           = (unsigned long long)(Bits.Get( 3 )) << 30;
+-	    Bits.FlushUnseen(1);
++	    MarkerBit( 1 );
+ 	    DecodeTime          |= Bits.Get( 15 ) << 15;
+-	    Bits.FlushUnseen(1);
++	    MarkerBit( 1 );
+ 	    DecodeTime          |= Bits.Get( 15 );
+-	    Bits.FlushUnseen(1);
++	    MarkerBit( 1 );
+ 
+ 	    DecodeTimeValid      = true;
+ 	}
+diff --git a/player/demultiplexor/demultiplexor_ts.cpp b/player/demultiplexor/demultiplexor_ts.cpp
+index 88f969c..6fc0e54 100644
+--- a/player/demultiplexor/demultiplexor_ts.cpp
++++ b/player/demultiplexor/demultiplexor_ts.cpp
+@@ -42,6 +42,8 @@ Date        Modification                                    Name
+ // Locally defined constants
+ //
+ 
++#define MINIMUM_TIME_BETWEEN_GLITCH_PRINTS	2000	// Milli seconds
++
+ // /////////////////////////////////////////////////////////////////////////
+ //
+ // Locally defined structures
+@@ -119,7 +121,9 @@ unsigned int PidTableIndex;
+ #endif
+     Context->Streams[Context->Base.LastStreamSet].SelectOnPriority              = ((StreamIdentifier & DEMULTIPLEXOR_SELECT_ON_PRIORITY) != 0);
+     Context->Streams[Context->Base.LastStreamSet].DesiredPriority               = ((StreamIdentifier & DEMULTIPLEXOR_PRIORITY_HIGH) != 0);
++    Context->Streams[Context->Base.LastStreamSet].TimeOfLastDiscontinuityPrint	= INVALID_TIME;
+     Context->AddedNewStream                                                     = true;
++
+ //
+ 
+     return DemultiplexorError;
+@@ -320,6 +324,8 @@ DemultiplexorBaseStreamContext_t *BaseStream;
+ 	if( Stream->ValidExpectedContinuityCount &&
+ 	    (DVB_CONTINUITY_COUNT(Header) != Stream->ExpectedContinuityCount) )
+ 	{
++	unsigned long long 	Now = OS_GetTimeInMilliSeconds();
++
+ 	    // 
+ 	    // Check for repeat packet - if so skip whole packet
+ 	    //
+@@ -327,7 +333,11 @@ DemultiplexorBaseStreamContext_t *BaseStream;
+ 	    if( ((DVB_CONTINUITY_COUNT(Header) + 1) & 0x0f) == Stream->ExpectedContinuityCount )
+ 		continue;
+ 
+-	    report( severity_error, "Demultiplexor_Ts_c::Demux - Noted a continuity count error, forcing a glitch.\n" );
++	    if( !ValidTime(Stream->TimeOfLastDiscontinuityPrint) || ((Now - Stream->TimeOfLastDiscontinuityPrint) > MINIMUM_TIME_BETWEEN_GLITCH_PRINTS) )
++	    {
++		report( severity_error, "Demultiplexor_Ts_c::Demux - Noted a continuity count error, forcing a glitch (sparse print).\n" );
++		Stream->TimeOfLastDiscontinuityPrint	= Now;
++	    }
+ 	    Player->InputGlitch( PlayerAllPlaybacks, BaseStream->Stream );
+ 	}
+ 
+diff --git a/player/demultiplexor/demultiplexor_ts.h b/player/demultiplexor/demultiplexor_ts.h
+index f0bf86c..1129374 100644
+--- a/player/demultiplexor/demultiplexor_ts.h
++++ b/player/demultiplexor/demultiplexor_ts.h
+@@ -60,6 +60,7 @@ typedef struct DemultiplexorStreamContext_s
+     unsigned char	ExpectedContinuityCount;
+     bool                SelectOnPriority;
+     bool                DesiredPriority;
++    unsigned long long	TimeOfLastDiscontinuityPrint;
+ } DemultiplexorStreamContext_t;
+ 
+ //
+diff --git a/player/frame_parser/frame_parser_video.cpp b/player/frame_parser/frame_parser_video.cpp
+index 2f66853..5496481 100644
+--- a/player/frame_parser/frame_parser_video.cpp
++++ b/player/frame_parser/frame_parser_video.cpp
+@@ -1359,7 +1359,7 @@ bool            ReasonableDecodeTime;
+     {
+ 	CodedFrameDecodeTimeValid                       = false;
+ 	ReasonableDecodeTime                            = (ParsedFrameParameters->NativePlaybackTime == INVALID_TIME) ||
+-							  ((CodedFramePlaybackTime - CodedFrameDecodeTime) < MAXIMUM_DECODE_TIME_OFFSET);
++							  (((CodedFramePlaybackTime - CodedFrameDecodeTime) & 0x1ffffffffull) < MAXIMUM_DECODE_TIME_OFFSET);
+ 
+ 	if( ReasonableDecodeTime )
+ 	{
+diff --git a/player/frame_parser/frame_parser_video_h264.cpp b/player/frame_parser/frame_parser_video_h264.cpp
+index bf03cd9..695a61b 100644
+--- a/player/frame_parser/frame_parser_video_h264.cpp
++++ b/player/frame_parser/frame_parser_video_h264.cpp
+@@ -3072,11 +3072,6 @@ unsigned int    TempPicOrderCnt;                // Used in type 2 calculation
+ 		else
+ 		   PicOrderCntMsb = PrevPicOrderCntMsb;
+ 
+-#if 0
+-if( PicOrderCntMsb != PrevPicOrderCntMsb )
+-    report( severity_info, "Boom !!! %08x => %08x (%04x)\n", PrevPicOrderCntMsb, PicOrderCntMsb, SliceHeader->pic_order_cnt_lsb );
+-#endif
+-
+ 		//
+ 		// And calculate the appropriate field order counts
+ 		//
+@@ -4227,28 +4222,6 @@ bool			ApplyTwoRefTestForBframes;
+     if( !ParsedFrameParameters->IndependentFrame )
+ 	memcpy( ParsedFrameParameters->ReferenceFrameList, ReferenceFrameList, H264_NUM_REF_FRAME_LISTS * sizeof(ReferenceFrameList_t) );
+ 
+-#if 0
+-if( ParsedVideoParameters->SliceType == SliceTypeB )
+-    report( severity_info, "B - %d {%3d %3d %3d %3d}, %d {%3d %3d %3d %3d} - %08x - %d %d\n", 
+-	ParsedFrameParameters->ReferenceFrameList[1].EntryCount, 
+-	ParsedFrameParameters->ReferenceFrameList[1].EntryIndicies[0], ParsedFrameParameters->ReferenceFrameList[1].EntryIndicies[1],
+-	ParsedFrameParameters->ReferenceFrameList[1].EntryIndicies[2], ParsedFrameParameters->ReferenceFrameList[1].EntryIndicies[3],
+-	ParsedFrameParameters->ReferenceFrameList[2].EntryCount, 
+-	ParsedFrameParameters->ReferenceFrameList[2].EntryIndicies[0], ParsedFrameParameters->ReferenceFrameList[2].EntryIndicies[1],
+-	ParsedFrameParameters->ReferenceFrameList[2].EntryIndicies[2], ParsedFrameParameters->ReferenceFrameList[2].EntryIndicies[3], Status, NumShortTerm, NumLongTerm );
+-
+-    report( severity_info, "Q264 (R = %d, K = %d, PS = %d, IF = %d, FSTV= %d, FPFP= %d, FS = %d, ST = %d, EC = %d)\n",
+-                ParsedFrameParameters->ReferenceFrame,
+-                ParsedFrameParameters->KeyFrame,
+-                ParsedVideoParameters->PictureStructure,
+-		ParsedFrameParameters->IndependentFrame,
+-		FrameSliceTypeVaries,
+-                ParsedFrameParameters->FirstParsedParametersForOutputFrame,
+-                ParsedVideoParameters->FirstSlice,
+-                SliceHeader->slice_type,
+-                ParsedFrameParameters->ReferenceFrameList[0].EntryCount );
+-#endif
+-
+ //
+ 
+     return Status;
+@@ -4475,6 +4448,7 @@ unsigned int		 LongTermIndexAssignedTo;
+ 	    {
+ 	    	CurrentEntry                            = i;
+ 	    	ReferenceFrames[i].Field		= Field;
++	    	ReferenceFrames[i].ParsedFrameParameters= ParsedFrameParameters;
+ 	    	ReferenceFrames[i].DecodeFrameIndex     = ParsedFrameParameters->DecodeFrameIndex;
+ 	    	ReferenceFrames[i].PicOrderCnt		= SliceHeader->PicOrderCnt;
+ 	    	ReferenceFrames[i].PicOrderCntTop	= SliceHeader->PicOrderCntTop;
+@@ -4808,12 +4782,19 @@ report( severity_info, "MMCO(%d %d %d) - %d - %3d %3d %3d %3d\n", Field, Top, Fr
+ 
+ 	if( (NumShortTerm + NumLongTerm) > NumReferenceFrames )
+ 	{
+-	    report( severity_error, "FrameParser_VideoH264_c::MarkReferencePictures - After MMCO operations, \n\t\tthere are more than the allowed number of reference frames.\n\t\tThe oldest will be discarded." );
++#if 0
++	    report( severity_error, "FrameParser_VideoH264_c::MarkReferencePictures - After MMCO operations, \n\t\tthere are more than the allowed number of reference frames.\n\t\tThe oldest will be discarded.\n" );
+ 	    for( i=0,j=1; j<(NumReferenceFrames+1); j++ )
+ 		if( ReferenceFrames[i].DecodeFrameIndex > ReferenceFrames[j].DecodeFrameIndex )
+ 		    i = j;
+ 
+ 	    ReleaseReference( true, i, ReferenceFrames[CurrentEntry].Usage );
++#else
++	    report( severity_error, "FrameParser_VideoH264_c::MarkReferencePictures - After MMCO operations, \n\t\tthere are more than the allowed number of reference frames.\n\t\tAll but the current will be discarded.\n" );
++	    for( j=0; j<(NumReferenceFrames+1); j++ )
++		if( j != CurrentEntry )
++		    ReleaseReference( ActuallyReleaseReferenceFrames, j, AnyUsedForReference );
++#endif
+ 	}
+ 
+ #ifdef DUMP_REFLISTS
+@@ -5858,6 +5839,7 @@ unsigned int	i;
+ unsigned int 	Index;
+ unsigned char   SpecialCaseDpb;
+ unsigned int	MaxDeferals;
++unsigned int    HeldReferenceFrames;
+ unsigned int	InvalidPTSSequence;
+ 
+     //
+@@ -5952,17 +5934,38 @@ unsigned int	InvalidPTSSequence;
+     //
+     // Limit the deferal process with respect to the number of available decode buffers
+     //
++    //	    Start with the basic buffer count,
++    //	    Subtract 2 for buffers committed to manifestor (display and de-interlace)
++    //	    Then for each reference frame already allocated a display index, but held
++    //	    as a reference subtract one more.
++    //
+ 
+     if( PlaybackDirection == PlayForward )
+ 	Manifestor->GetDecodeBufferCount( &MaxDeferals );
+     else
+ 	MaxDeferals	= H264_CODED_FRAME_COUNT;
+ 
++#if 0
++#define FRAMES_HELD_BY_MANIFESTOR	2
++    HeldReferenceFrames	 = 0;
++
++    for( i=0; i<(NumReferenceFrames+1); i++ )
++	if( ReferenceFrames[i].Usage != NotUsedForReference )
++	    if( (ReferenceFrames[i].ParsedFrameParameters->DisplayFrameIndex != INVALID_INDEX) &&
++		(ReferenceFrames[i].ParsedFrameParameters->DisplayFrameIndex < (NextDisplayFrameIndex-FRAMES_HELD_BY_MANIFESTOR)) )
++		HeldReferenceFrames++;
++#else
++#define FRAMES_HELD_BY_MANIFESTOR	0
++    HeldReferenceFrames	 = 0;
++#endif
++
+ //report( severity_info, "Defer - %4d, Max = %4d\n", DeferredListEntries, MaxDeferals );
+ 
+-    if( DeferredListEntries >= MaxDeferals )
++    if( (DeferredListEntries + FRAMES_HELD_BY_MANIFESTOR + HeldReferenceFrames) >= MaxDeferals )
+     {
+-	report( severity_error, "FrameParser_VideoH264_c::DeferDFIandPTSGeneration - Unable to defer, too many outstanding (%d, %d).\n", DeferredListEntries, MaxDeferals );
++	report( severity_error, "FrameParser_VideoH264_c::DeferDFIandPTSGeneration - Unable to defer, too many outstanding. \n\t\tThere may be too few decode buffers to handle this stream (%d + %d + %d >= %d).\n", 
++		DeferredListEntries, FRAMES_HELD_BY_MANIFESTOR, HeldReferenceFrames, MaxDeferals );
++
+ 	if( PlaybackDirection == PlayForward )
+ 	    ProcessDeferredDFIandPTSUpto( DeferredList[OrderedDeferredList[0]].ExtendedPicOrderCnt + 1 );
+ 	else
+@@ -5978,9 +5981,11 @@ unsigned int	InvalidPTSSequence;
+ 
+ void   FrameParser_VideoH264_c::ProcessDeferredDFIandPTSUpto( unsigned long long 	 ExtendedPicOrderCnt )
+ {
+-unsigned int	i;
+-unsigned int	Index;
+-bool		UsePTSFrameRate;
++unsigned int		i, j;
++unsigned int		Index;
++unsigned int		LeastPlaybackTimeIndex;
++unsigned long long	LeastPlaybackTime;
++bool			UsePTSFrameRate;
+ 
+     //
+     // Adjust pic order cnt for fields given same pic order cnt
+@@ -5992,6 +5997,75 @@ bool		UsePTSFrameRate;
+     // Process them
+     //
+ 
++#if 1
++//--------------------------------------------------------------
++
++    for( i=0;
++	 (i<DeferredListEntries) && (DeferredList[OrderedDeferredList[i]].ExtendedPicOrderCnt < ExtendedPicOrderCnt);
++	 )
++    {
++	if( OrderedDeferredList[i] == INVALID_INDEX )
++	{
++	    i++;
++	    continue;
++	}
++
++	//
++	// Check through the PTS values, is anyone earlier
++	//
++
++	LeastPlaybackTimeIndex	= i;
++	LeastPlaybackTime	= DeferredList[OrderedDeferredList[i]].ParsedFrameParameters->NormalizedPlaybackTime;
++
++	if( LeastPlaybackTime != INVALID_TIME )
++	{
++	    for( j=i+1; j<DeferredListEntries; j++ )
++		if( (OrderedDeferredList[j] != INVALID_INDEX) &&
++		    ValidTime(DeferredList[OrderedDeferredList[j]].ParsedFrameParameters->NormalizedPlaybackTime) && 
++		    (DeferredList[OrderedDeferredList[j]].ParsedFrameParameters->NormalizedPlaybackTime < LeastPlaybackTime) )
++		{
++		    LeastPlaybackTimeIndex	= j;
++		    LeastPlaybackTime		= DeferredList[OrderedDeferredList[j]].ParsedFrameParameters->NormalizedPlaybackTime;
++		}
++	}
++
++        //
++	// Process the appropriate one
++	//
++
++	Index		= OrderedDeferredList[LeastPlaybackTimeIndex];
++	CalculateFrameIndexAndPts( DeferredList[Index].ParsedFrameParameters, DeferredList[Index].ParsedVideoParameters );
++	SetupPanScanValues( DeferredList[Index].ParsedFrameParameters, DeferredList[Index].ParsedVideoParameters );
++	DeferredList[Index].Buffer->DecrementReferenceCount();
++	DeferredList[Index].Buffer	= NULL;
++
++	//
++	// Now move on if we did not find an earlier one, otherwise clear that entry in the list
++	//
++
++	if( LeastPlaybackTimeIndex == i )
++	    i++;
++	else
++	    OrderedDeferredList[LeastPlaybackTimeIndex]	= INVALID_INDEX;
++    }
++
++    //
++    // Shuffle up the ordered list
++    //
++
++    if( i != 0 )
++    {
++	for( j=0; i<DeferredListEntries; i++ )
++	    if( OrderedDeferredList[i] != INVALID_INDEX )
++		OrderedDeferredList[j++]	=  OrderedDeferredList[i];
++
++	DeferredListEntries	= j;
++    }
++
++
++//--------------------------------------------------------------
++
++#else
+     for( i=0;
+ 	 (i<DeferredListEntries) && (DeferredList[OrderedDeferredList[i]].ExtendedPicOrderCnt < ExtendedPicOrderCnt);
+ 	 i++ )
+@@ -6012,6 +6086,7 @@ bool		UsePTSFrameRate;
+ 	memmove( &OrderedDeferredList[0], &OrderedDeferredList[i], (DeferredListEntries - i) * sizeof(unsigned int) );
+ 	DeferredListEntries	-= i;
+     }
++#endif
+ 
+     //
+     // Do we need to update the default frame rate based on PTS values
+@@ -6033,8 +6108,11 @@ bool		UsePTSFrameRate;
+ 
+ void   FrameParser_VideoH264_c::ProcessDeferredDFIandPTSDownto( unsigned long long 	 ExtendedPicOrderCnt )
+ {
+-unsigned int	Index;
+-bool		UsePTSFrameRate;
++unsigned int		i, j;
++unsigned int		Index;
++unsigned int		GreatestPlaybackTimeIndex;
++unsigned long long	GreatestPlaybackTime;
++bool			UsePTSFrameRate;
+ 
+     //
+     // Adjust pic order cnt for fields given same pic order cnt
+@@ -6046,6 +6124,74 @@ bool		UsePTSFrameRate;
+     // Process them
+     //
+ 
++#if 1
++//--------------------------------------------------------------
++
++    for( ;
++	 (DeferredListEntries>0) && (DeferredList[OrderedDeferredList[DeferredListEntries-1]].ExtendedPicOrderCnt > ExtendedPicOrderCnt);
++	 )
++    {
++	if( OrderedDeferredList[DeferredListEntries-1] == INVALID_INDEX )
++	{
++	    DeferredListEntries--;
++	    continue;
++	}
++
++	//
++	// Check through the PTS values, is anyone later
++	//
++
++	GreatestPlaybackTimeIndex	= DeferredListEntries-1;
++	GreatestPlaybackTime		= DeferredList[OrderedDeferredList[DeferredListEntries-1]].ParsedFrameParameters->NormalizedPlaybackTime;
++
++	if( GreatestPlaybackTime != INVALID_TIME )
++	{
++	    for( i=0; i<(DeferredListEntries-1); i++ )
++		if( (OrderedDeferredList[i] != INVALID_INDEX) &&
++		    ValidTime(DeferredList[OrderedDeferredList[i]].ParsedFrameParameters->NormalizedPlaybackTime) && 
++		    (DeferredList[OrderedDeferredList[i]].ParsedFrameParameters->NormalizedPlaybackTime > GreatestPlaybackTime) )
++		{
++		    GreatestPlaybackTimeIndex	= i;
++		    GreatestPlaybackTime	= DeferredList[OrderedDeferredList[i]].ParsedFrameParameters->NormalizedPlaybackTime;
++		}
++	}
++
++        //
++	// Process the appropriate one
++	//
++
++	Index		= OrderedDeferredList[GreatestPlaybackTimeIndex];
++	CalculateFrameIndexAndPts( DeferredList[Index].ParsedFrameParameters, DeferredList[Index].ParsedVideoParameters );
++	SetupPanScanValues( DeferredList[Index].ParsedFrameParameters, DeferredList[Index].ParsedVideoParameters );
++	DeferredList[Index].Buffer->DecrementReferenceCount();
++	DeferredList[Index].Buffer	= NULL;
++
++	//
++	// Now move on if we did not find an earlier one, otherwise clear that entry in the list
++	//
++
++	if( GreatestPlaybackTimeIndex == (DeferredListEntries-1) )
++	    DeferredListEntries--;
++	else
++	    OrderedDeferredList[GreatestPlaybackTimeIndex]	= INVALID_INDEX;
++    }
++
++    //
++    // Shuffle down the ordered list (just closing any invalid indices up)
++    //
++
++    if( DeferredListEntries != 0 )
++    {
++	for( i=j=0; i<DeferredListEntries; i++ )
++	    if( OrderedDeferredList[i] != INVALID_INDEX )
++		OrderedDeferredList[j++]	=  OrderedDeferredList[i];
++
++	DeferredListEntries	= j;
++    }
++
++//--------------------------------------------------------------
++
++#else
+     while( (DeferredListEntries>0) && (DeferredList[OrderedDeferredList[DeferredListEntries-1]].ExtendedPicOrderCnt > ExtendedPicOrderCnt) )
+     {
+ 	DeferredListEntries--;
+@@ -6055,6 +6201,7 @@ bool		UsePTSFrameRate;
+ 	DeferredList[Index].Buffer->DecrementReferenceCount();
+ 	DeferredList[Index].Buffer	= NULL;
+     }
++#endif
+ 
+     //
+     // Do we need to update the default frame rate based on PTS values
+diff --git a/player/frame_parser/frame_parser_video_h264.h b/player/frame_parser/frame_parser_video_h264.h
+index 837ce3f..f4ae2a6 100644
+--- a/player/frame_parser/frame_parser_video_h264.h
++++ b/player/frame_parser/frame_parser_video_h264.h
+@@ -102,23 +102,24 @@ typedef struct PictureParameterSetEntry_s
+ 
+ typedef struct H264ReferenceFrameData_s
+ {
+-    unsigned int        DecodeFrameIndex;               // Player value
+-    bool                Field;                          // Allow us to distinguish between two fields and a frame - useful during a switch between frame/field decodes
+-    unsigned int        Usage;                          // Usage codes
++    ParsedFrameParameters_t    *ParsedFrameParameters;		// Player pointer, used in checking resource usage
++    unsigned int        	DecodeFrameIndex;               // Player value
++    bool                	Field;                          // Allow us to distinguish between two fields and a frame - useful during a switch between frame/field decodes
++    unsigned int        	Usage;                          // Usage codes
+ 
+-    unsigned int        LongTermFrameIdx;               // H264 value
+-    unsigned int        FrameNum;                       // H264 value
++    unsigned int        	LongTermFrameIdx;               // H264 value
++    unsigned int        	FrameNum;                       // H264 value
+ 
+-    int                 FrameNumWrap;                   // H264 derived every time we prepare a ref list
+-    int                 PicNum;                         // H264 
++    int                 	FrameNumWrap;                   // H264 derived every time we prepare a ref list
++    int                 	PicNum;                         // H264 
+ 
+-    unsigned int        LongTermPicNum;                 // H264 value
++    unsigned int        	LongTermPicNum;                 // H264 value
+ 
+-    int                 PicOrderCnt;                    // H264 value - both fields
+-    int                 PicOrderCntTop;
+-    int                 PicOrderCntBot;
++    int                 	PicOrderCnt;                    // H264 value - both fields
++    int                 	PicOrderCntTop;
++    int                 	PicOrderCntBot;
+ 
+-    unsigned long long  ExtendedPicOrderCnt;
++    unsigned long long  	ExtendedPicOrderCnt;
+ } H264ReferenceFrameData_t;
+ 
+ //
+diff --git a/player/manifestor/manifestor_audio_ksound.cpp b/player/manifestor/manifestor_audio_ksound.cpp
+index a877c57..66c9de9 100644
+--- a/player/manifestor/manifestor_audio_ksound.cpp
++++ b/player/manifestor/manifestor_audio_ksound.cpp
+@@ -1167,9 +1167,10 @@ int Manifestor_AudioKsound_c::HandleRequestedOutputTiming(unsigned int BufferInd
+         
+         if( TimeRequiredToHonourSystemPlaybackTime )
+         {
+-            if (TimeRequiredToHonourSystemPlaybackTime > 5000000ll)
++	    // Nick changed the following to 10 seconds - this is to match the maximum synchronization window in the output coordinator
++            if (TimeRequiredToHonourSystemPlaybackTime > 10000000ll)
+             {
+-                MANIFESTOR_ERROR("Playback time is more than 5 seconds in the future (%lld) - ignoring\n",
++                MANIFESTOR_ERROR("Playback time is more than 10 seconds in the future (%lld) - ignoring\n",
+                 	         TimeRequiredToHonourSystemPlaybackTime);
+                 TimeRequiredToHonourSystemPlaybackTime = 0;
+             }
+diff --git a/player/output_coordinator/output_coordinator_base.cpp b/player/output_coordinator/output_coordinator_base.cpp
+index 9358f67..d027fbd 100644
+--- a/player/output_coordinator/output_coordinator_base.cpp
++++ b/player/output_coordinator/output_coordinator_base.cpp
+@@ -189,7 +189,7 @@ OutputCoordinatorStatus_t   OutputCoordinator_Base_c::Reset(    void )
+     GotAVideoStream                     = false;
+ 
+     AccumulatedPlaybackTimeJumpsSinceSynchronization    = 0;
+-    JumpSeenAtPlaybackTime              = 0;
++    JumpSeenAtPlaybackTime              = INVALID_TIME;
+ 
+     Speed                               = 1;
+     Direction                           = PlayForward;
+@@ -632,7 +632,7 @@ PlayerEventRecord_t             Event;
+     {
+ 	MasterTimeMappingEstablished                            = false;
+ 	AccumulatedPlaybackTimeJumpsSinceSynchronization        = 0;
+-	JumpSeenAtPlaybackTime                                  = 0;
++	JumpSeenAtPlaybackTime                                  = INVALID_TIME;
+     }
+ 
+     //
+@@ -704,7 +704,7 @@ PlayerEventRecord_t             Event;
+     MasterBaseSystemTime                                = ValidTime(SystemTime) ? SystemTime : Now;
+ 
+     AccumulatedPlaybackTimeJumpsSinceSynchronization    = 0;
+-    JumpSeenAtPlaybackTime                              = 0;
++    JumpSeenAtPlaybackTime                              = INVALID_TIME;
+     MasterTimeMappingEstablished                        = true;
+     MasterTimeMappingVersion++;
+ 
+@@ -1143,7 +1143,7 @@ report( severity_info, "Sync out0 - %d - %016llx %016llx (%6lld)\n", Context->St
+ 	    MasterBaseNormalizedPlaybackTime                    = EarliestContext->SynchronizingAtPlaybackTime;
+ 	    MasterBaseSystemTime                                = EarliestStartTime + StartTimeJitter;
+ 	    AccumulatedPlaybackTimeJumpsSinceSynchronization    = 0;
+-	    JumpSeenAtPlaybackTime                              = 0;
++	    JumpSeenAtPlaybackTime                              = INVALID_TIME;
+ 	    MasterTimeMappingEstablished                        = true;
+ 	    MasterTimeMappingVersion++;
+ 
+@@ -1383,6 +1383,17 @@ report( severity_info, "Cascading a Jump(%s)\n", StreamType() );
+ 		Context->BaseSystemTimeAdjusted                                  = true;
+ 	    }
+ 	}
++
++	else if( ValidTime(JumpSeenAtPlaybackTime) && 
++	    inrange(DeltaPlaybackTime, 0, 2000000) &&
++	    inrange(ExpectedPlaybackTime - JumpSeenAtPlaybackTime, 0, 10000000) )
++	{
++	    report( severity_error, "OutputCoordinator_Base_c::HandlePlaybackTimeDeltas(%s) - Multiple jumps over short period.\n", StreamType() );
++	    OS_UnLockMutex( &Lock );
++	    ResetTimeMapping( PlaybackContext );
++	    OS_LockMutex( &Lock );
++	}
++
+ 	//
+ 	// Not part of a cascading change yet, we initiate a cascading change
+ 	//
+@@ -1405,7 +1416,8 @@ report( severity_info, "Initiating a Jump(%s)\n", StreamType() );
+     // then we have not reached a point when we really should have been part of it 
+     //
+ 
+-    if( AccumulatedPlaybackTimeJumpsSinceSynchronization != Context->AccumulatedPlaybackTimeJumpsSinceSynchronization )
++    if( ValidTime(JumpSeenAtPlaybackTime) &&
++	(AccumulatedPlaybackTimeJumpsSinceSynchronization != Context->AccumulatedPlaybackTimeJumpsSinceSynchronization) )
+     {
+ 	DeltaPlaybackTime       = (long long)(ActualPlaybackTime - JumpSeenAtPlaybackTime);
+ 	if( !inrange(DeltaPlaybackTime, -PlaybackTimeForwardJumpThreshold, OTHER_STREAMS_MUST_FOLLOW_JUMP_BY) )
+-- 
+1.7.9.5
+

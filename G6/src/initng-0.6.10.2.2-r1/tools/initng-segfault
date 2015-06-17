@@ -1,0 +1,17 @@
+#!/bin/sh
+
+echo "Initng seems to have segfaulted. Rebooting.."
+#echo "Initng seems to have segfaulted."
+#echo
+#echo "You have now a chance to sulogin for 60 seconds."
+#echo "When you exit from sulogin or after the timeout, "
+#echo "initng will restart and if /var/active_db_save exists"
+#echo "hopefully reload sucessfully."
+#echo
+#echo "Please report this segfault to the initng team."
+#echo " http://www.initng.org/newticket "
+#echo " initng@initng.org"
+#echo
+#/sbin/sulogin -t 60
+#exec /sbin/initng --hot_reload
+exec /sbin/initng --reboot

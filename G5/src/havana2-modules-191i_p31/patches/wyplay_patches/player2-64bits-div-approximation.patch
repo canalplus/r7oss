@@ -1,0 +1,40 @@
+diff --git a/linux/drivers/stm/platform/divdi3.c b/linux/drivers/stm/platform/divdi3.c
+index 8c432b3..1facc52 100644
+--- a/linux/drivers/stm/platform/divdi3.c
++++ b/linux/drivers/stm/platform/divdi3.c
+@@ -22,8 +22,13 @@ s64 __divdi3(s64 n, s64 d)
+ 		d = -d;
+ 	}
+ 
+-	if (unlikely(d & 0xffffffff00000000LL))
+-		panic("Need true 64-bit/64-bit division");
++	if (unlikely(d & 0xffffffff00000000LL)) {
++		printk("Approximating 64-bit/64-bit division : %llu / %llu\n", n, d);
++		while (d & 0xffffffff00000000ULL) {
++			n /= 2;
++			d /= 2;
++		}
++	}
+ 
+ 	res = __xdiv64_32(n, (u32)d);
+ 	if (c) {
+diff --git a/linux/drivers/stm/platform/udivdi3.c b/linux/drivers/stm/platform/udivdi3.c
+index 26951cd..3df22e6 100644
+--- a/linux/drivers/stm/platform/udivdi3.c
++++ b/linux/drivers/stm/platform/udivdi3.c
+@@ -10,8 +10,13 @@ extern u64 __xdiv64_32(u64 n, u32 d);
+ 
+ u64 __udivdi3(u64 n, u64 d)
+ {
+-	if (unlikely(d & 0xffffffff00000000ULL))
+-		panic("Need true 64-bit/64-bit division");
++	if (unlikely(d & 0xffffffff00000000ULL)) {
++		printk("Approximating 64-bit/64-bit division : %llu / %llu\n", n, d);
++		while (d & 0xffffffff00000000ULL) {
++			n /= 2;
++			d /= 2;
++		}
++	}
+ 	return __xdiv64_32(n, (u32)d);
+ }
+ 

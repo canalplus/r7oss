@@ -1,0 +1,145 @@
+--- ../../alsa-kernel/usb/usx2y/usbusx2yaudio.c	2007-12-20 11:47:37.000000000 +0100
++++ usbusx2yaudio.c	2007-12-20 12:34:05.000000000 +0100
+@@ -1,3 +1,4 @@
++#include "adriver.h"
+ /*
+  *   US-X2Y AUDIO
+  *   Copyright (c) 2002-2004 by Karsten Wiese
+@@ -66,6 +67,14 @@
+ #endif
+ 
+ 
++#define USB_2_6_18 (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 18))
++#if USB_2_6_18
++#define USX2Y_URB_FRAME_MASK -1
++#else
++#define USX2Y_URB_FRAME_MASK 0xffff
++#endif
++
++
+ static int usX2Y_urb_capt_retire(struct snd_usX2Y_substream *subs)
+ {
+ 	struct urb	*urb = subs->completed_urb;
+@@ -305,7 +314,11 @@
+ 	usX2Y_clients_stop(usX2Y);
+ }
+ 
++#if !defined(OLD_USB) && !defined(CONFIG_SND_NEW_IRQ_HANDLER)
++static void i_usX2Y_urb_complete(struct urb *urb, struct pt_regs *regs)
++#else
+ static void i_usX2Y_urb_complete(struct urb *urb)
++#endif
+ {
+ 	struct snd_usX2Y_substream *subs = urb->context;
+ 	struct usX2Ydev *usX2Y = subs->usX2Y;
+@@ -334,9 +347,15 @@
+ 		    atomic_read(&capsubs->state) >= state_PREPARED &&
+ 		    (playbacksubs->completed_urb ||
+ 		     atomic_read(&playbacksubs->state) < state_PREPARED)) {
+-			if (!usX2Y_usbframe_complete(capsubs, playbacksubs, urb->start_frame))
+-				usX2Y->wait_iso_frame += nr_of_packs();
+-			else {
++			if (!usX2Y_usbframe_complete(capsubs, playbacksubs, urb->start_frame)) {
++#if !USB_2_6_18
++				if (nr_of_packs() <= urb->start_frame &&
++				    urb->start_frame <= (2 * nr_of_packs() - 1))	// uhci and ohci
++					usX2Y->wait_iso_frame = urb->start_frame - nr_of_packs();
++				else
++#endif
++					usX2Y->wait_iso_frame +=  nr_of_packs();
++			} else {
+ 				snd_printdd("\n");
+ 				usX2Y_clients_stop(usX2Y);
+ 			}
+@@ -344,8 +363,13 @@
+ 	}
+ }
+ 
++#if !defined(OLD_USB) && !defined(CONFIG_SND_NEW_IRQ_HANDLER)
++static void usX2Y_urbs_set_complete(struct usX2Ydev * usX2Y,
++  				    void (*complete)(struct urb *, struct pt_regs *))
++#else
+ static void usX2Y_urbs_set_complete(struct usX2Ydev * usX2Y,
+ 				    void (*complete)(struct urb *))
++#endif
+ {
+ 	int s, u;
+ 	for (s = 0; s < 4; s++) {
+@@ -365,7 +389,11 @@
+ 	usX2Y->prepare_subs = NULL;
+ }
+ 
++#if !defined(OLD_USB) && !defined(CONFIG_SND_NEW_IRQ_HANDLER)
++static void i_usX2Y_subs_startup(struct urb *urb, struct pt_regs *regs)
++#else
+ static void i_usX2Y_subs_startup(struct urb *urb)
++#endif
+ {
+ 	struct snd_usX2Y_substream *subs = urb->context;
+ 	struct usX2Ydev *usX2Y = subs->usX2Y;
+@@ -377,7 +405,11 @@
+ 			wake_up(&usX2Y->prepare_wait_queue);
+ 		}
+ 
++#if !defined(OLD_USB) && !defined(CONFIG_SND_NEW_IRQ_HANDLER)
++	i_usX2Y_urb_complete(urb, regs);
++#else
+ 	i_usX2Y_urb_complete(urb);
++#endif
+ }
+ 
+ static void usX2Y_subs_prepare(struct snd_usX2Y_substream *subs)
+@@ -490,7 +522,9 @@
+ 		if (subs != NULL && atomic_read(&subs->state) >= state_PREPARED)
+ 			goto start;
+ 	}
+-
++#if !USB_2_6_18
++	usX2Y->wait_iso_frame = -1;
++#endif
+  start:
+ 	usX2Y_subs_startup(subs);
+ 	for (i = 0; i < NRURBS; i++) {
+@@ -511,7 +545,11 @@
+ 				err = -EPIPE;
+ 				goto cleanup;
+ 			} else
++#if USB_2_6_18
+ 				if (i == 0)
++#else
++				if (0 > usX2Y->wait_iso_frame)
++#endif
+ 					usX2Y->wait_iso_frame = urb->start_frame;
+ 			urb->transfer_flags = 0;
+ 		} else {
+@@ -656,7 +694,11 @@
+ };
+ #define NOOF_SETRATE_URBS ARRAY_SIZE(SetRate48000)
+ 
++#if !defined(OLD_USB) && !defined(CONFIG_SND_NEW_IRQ_HANDLER)
++static void i_usX2Y_04Int(struct urb *urb, struct pt_regs *regs)
++#else
+ static void i_usX2Y_04Int(struct urb *urb)
++#endif
+ {
+ 	struct usX2Ydev *usX2Y = urb->context;
+ 	
+@@ -1014,10 +1056,18 @@
+ 
+ 	if (0 > (err = usX2Y_audio_stream_new(card, 0xA, 0x8)))
+ 		return err;
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 11)
+ 	if (le16_to_cpu(usX2Y(card)->chip.dev->descriptor.idProduct) == USB_ID_US428)
++#else
++	if (usX2Y(card)->chip.dev->descriptor.idProduct == USB_ID_US428)
++#endif
+ 	     if (0 > (err = usX2Y_audio_stream_new(card, 0, 0xA)))
+ 		     return err;
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 11)
+ 	if (le16_to_cpu(usX2Y(card)->chip.dev->descriptor.idProduct) != USB_ID_US122)
++#else
++	if (usX2Y(card)->chip.dev->descriptor.idProduct != USB_ID_US122)
++#endif
+ 		err = usX2Y_rate_set(usX2Y(card), 44100);	// Lets us428 recognize output-volume settings, disturbs us122.
+ 	return err;
+ }

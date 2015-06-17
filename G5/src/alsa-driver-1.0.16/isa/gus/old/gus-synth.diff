@@ -1,0 +1,195 @@
+diff -ru alsa-kernel/include/gus.h new-kernel/include/gus.h
+--- alsa-kernel/include/gus.h	2007-10-30 12:01:55.000000000 +0100
++++ new-kernel/include/gus.h	2007-10-15 11:25:08.000000000 +0200
+@@ -27,8 +27,13 @@
+ #include "timer.h"
+ #include "seq_midi_emul.h"
+ #include "seq_device.h"
++#include "ainstr_iw.h"
++#include "ainstr_gf1.h"
++#include "ainstr_simple.h"
+ #include <asm/io.h>
+ 
++#define SNDRV_SEQ_DEV_ID_GUS			"gus-synth"
++
+ /* IO ports */
+ 
+ #define GUSP(gus, x)			((gus)->gf1.port + SNDRV_g_u_s_##x)
+@@ -229,6 +234,16 @@
+ 
+ struct snd_gus_voice;
+ 
++struct snd_gus_sample_ops {
++	void (*sample_start)(struct snd_gus_card *gus, struct snd_gus_voice *voice, snd_seq_position_t position);
++	void (*sample_stop)(struct snd_gus_card *gus, struct snd_gus_voice *voice, int mode);
++	void (*sample_freq)(struct snd_gus_card *gus, struct snd_gus_voice *voice, snd_seq_frequency_t freq);
++	void (*sample_volume)(struct snd_gus_card *gus, struct snd_gus_voice *voice, struct snd_seq_ev_volume *volume);
++	void (*sample_loop)(struct snd_gus_card *card, struct snd_gus_voice *voice, struct snd_seq_ev_loop *loop);
++	void (*sample_pos)(struct snd_gus_card *card, struct snd_gus_voice *voice, snd_seq_position_t position);
++	void (*sample_private1)(struct snd_gus_card *card, struct snd_gus_voice *voice, unsigned char *data);
++};
++
+ #define SNDRV_GF1_VOICE_TYPE_PCM	0
+ #define SNDRV_GF1_VOICE_TYPE_SYNTH 	1
+ #define SNDRV_GF1_VOICE_TYPE_MIDI	2
+@@ -269,8 +284,12 @@
+ 
+ 	struct snd_gus_sample_ops *sample_ops;
+ 
++	struct snd_seq_instr instr;
++
+ 	/* running status / registers */
+ 
++	struct snd_seq_ev_volume sample_volume;
++
+ 	unsigned short fc_register;
+ 	unsigned short fc_lfo;
+ 	unsigned short gf1_volume;
+@@ -363,6 +382,10 @@
+ 
+ 	int seq_client;
+ 	struct snd_gus_port seq_ports[4];
++	struct snd_seq_kinstr_list *ilist;
++	struct snd_iwffff_ops iwffff_ops;
++	struct snd_gf1_ops gf1_ops;
++	struct snd_simple_ops simple_ops;
+ 
+ 	/* timer */
+ 
+@@ -435,6 +458,8 @@
+ 	struct snd_rawmidi_substream *midi_substream_output;
+ 	struct snd_rawmidi_substream *midi_substream_input;
+ 
++	struct snd_seq_device *seq_dev;
++
+ 	spinlock_t reg_lock;
+ 	spinlock_t voice_alloc;
+ 	spinlock_t active_voice_lock;
+@@ -622,10 +647,48 @@
+ 
+ int snd_gf1_rawmidi_new(struct snd_gus_card * gus, int device, struct snd_rawmidi **rrawmidi);
+ 
++#if 0
++extern void snd_engine_instrument_register(unsigned short mode,
++		struct _SND_INSTRUMENT_VOICE_COMMANDS *voice_cmds,
++		struct _SND_INSTRUMENT_NOTE_COMMANDS *note_cmds,
++	      	struct _SND_INSTRUMENT_CHANNEL_COMMANDS *channel_cmds);
++extern int snd_engine_instrument_register_ask(unsigned short mode);
++#endif
++
+ /* gus_dram.c */
+ int snd_gus_dram_write(struct snd_gus_card *gus, char __user *ptr,
+ 		       unsigned int addr, unsigned int size);
+ int snd_gus_dram_read(struct snd_gus_card *gus, char __user *ptr,
+ 		      unsigned int addr, unsigned int size, int rom);
+ 
++#if defined(CONFIG_SND_SEQUENCER) || defined(CONFIG_SND_SEQUENCER_MODULE)
++
++/* gus_sample.c */
++void snd_gus_sample_event(struct snd_seq_event *ev, struct snd_gus_port *p);
++
++/* gus_simple.c */
++void snd_gf1_simple_init(struct snd_gus_voice *voice);
++
++/* gus_instr.c */
++int snd_gus_iwffff_put_sample(void *private_data, struct iwffff_wave *wave,
++			      char __user *data, long len, int atomic);
++int snd_gus_iwffff_get_sample(void *private_data, struct iwffff_wave *wave,
++			      char __user *data, long len, int atomic);
++int snd_gus_iwffff_remove_sample(void *private_data, struct iwffff_wave *wave,
++				 int atomic);
++int snd_gus_gf1_put_sample(void *private_data, struct gf1_wave *wave,
++			   char __user *data, long len, int atomic);
++int snd_gus_gf1_get_sample(void *private_data, struct gf1_wave *wave,
++			   char __user *data, long len, int atomic);
++int snd_gus_gf1_remove_sample(void *private_data, struct gf1_wave *wave,
++			      int atomic);
++int snd_gus_simple_put_sample(void *private_data, struct simple_instrument *instr,
++			      char __user *data, long len, int atomic);
++int snd_gus_simple_get_sample(void *private_data, struct simple_instrument *instr,
++			      char __user *data, long len, int atomic);
++int snd_gus_simple_remove_sample(void *private_data, struct simple_instrument *instr,
++				 int atomic);
++
++#endif /* CONFIG_SND_SEQUENCER */
++
+ #endif /* __SOUND_GUS_H */
+diff -ru alsa-kernel/isa/gus/gus_main.c new-kernel/isa/gus/gus_main.c
+--- alsa-kernel/isa/gus/gus_main.c	2007-10-30 12:01:55.000000000 +0100
++++ new-kernel/isa/gus/gus_main.c	2007-10-16 14:44:00.000000000 +0200
+@@ -104,6 +104,12 @@
+ {
+ 	if (gus->gf1.res_port2 == NULL)
+ 		goto __hw_end;
++#if defined(CONFIG_SND_SEQUENCER) || (defined(MODULE) && defined(CONFIG_SND_SEQUENCER_MODULE))
++	if (gus->seq_dev) {
++		snd_device_free(gus->card, gus->seq_dev);
++		gus->seq_dev = NULL;
++	}
++#endif
+ 	snd_gf1_stop(gus);
+ 	snd_gus_init_dma_irq(gus, 0);
+       __hw_end:
+@@ -402,6 +408,14 @@
+ 	return 0;
+ }
+ 
++#if defined(CONFIG_SND_SEQUENCER) || (defined(MODULE) && defined(CONFIG_SND_SEQUENCER_MODULE))
++static void snd_gus_seq_dev_free(struct snd_seq_device *seq_dev)
++{
++	struct snd_gus_card *gus = seq_dev->private_data;
++	gus->seq_dev = NULL;
++}
++#endif
++
+ int snd_gus_initialize(struct snd_gus_card *gus)
+ {
+ 	int err;
+@@ -416,6 +430,15 @@
+ 	}
+ 	if ((err = snd_gus_init_dma_irq(gus, 1)) < 0)
+ 		return err;
++#if defined(CONFIG_SND_SEQUENCER) || (defined(MODULE) && defined(CONFIG_SND_SEQUENCER_MODULE))
++	if (snd_seq_device_new(gus->card, 1, SNDRV_SEQ_DEV_ID_GUS,
++			       sizeof(struct snd_gus_card *), &gus->seq_dev) >= 0) {
++		strcpy(gus->seq_dev->name, "GUS");
++		*(struct snd_gus_card **)SNDRV_SEQ_DEVICE_ARGPTR(gus->seq_dev) = gus;
++		gus->seq_dev->private_data = gus;
++		gus->seq_dev->private_free = snd_gus_seq_dev_free;
++	}
++#endif
+ 	snd_gf1_start(gus);
+ 	gus->initialized = 1;
+ 	return 0;
+diff -ru alsa-kernel/isa/gus/Makefile new-kernel/isa/gus/Makefile
+--- alsa-kernel/isa/gus/Makefile	2007-10-30 12:01:55.000000000 +0100
++++ new-kernel/isa/gus/Makefile	2007-10-15 11:25:09.000000000 +0200
+@@ -9,6 +9,7 @@
+ 		    gus_pcm.o gus_mixer.o \
+ 		    gus_uart.o \
+ 		    gus_reset.o
++snd-gus-synth-objs := gus_synth.o gus_sample.o gus_simple.o gus_instr.o
+ 
+ snd-gusclassic-objs := gusclassic.o
+ snd-gusextreme-objs := gusextreme.o
+@@ -16,9 +17,20 @@
+ snd-interwave-objs := interwave.o
+ snd-interwave-stb-objs := interwave-stb.o
+ 
++#
++# this function returns:
++#   "m" - CONFIG_SND_SEQUENCER is m
++#   <empty string> - CONFIG_SND_SEQUENCER is undefined
++#   otherwise parameter #1 value
++#
++sequencer = $(if $(subst y,,$(CONFIG_SND_SEQUENCER)),$(if $(1),m),$(if $(CONFIG_SND_SEQUENCER),$(1)))
++
+ # Toplevel Module Dependency
+ obj-$(CONFIG_SND_GUSCLASSIC) += snd-gusclassic.o snd-gus-lib.o
+ obj-$(CONFIG_SND_GUSMAX) += snd-gusmax.o snd-gus-lib.o
+ obj-$(CONFIG_SND_GUSEXTREME) += snd-gusextreme.o snd-gus-lib.o
+ obj-$(CONFIG_SND_INTERWAVE) += snd-interwave.o snd-gus-lib.o
+ obj-$(CONFIG_SND_INTERWAVE_STB) += snd-interwave-stb.o snd-gus-lib.o
++obj-$(call sequencer,$(CONFIG_SND_GUS_SYNTH)) += snd-gus-synth.o
++
++obj-m := $(sort $(obj-m))

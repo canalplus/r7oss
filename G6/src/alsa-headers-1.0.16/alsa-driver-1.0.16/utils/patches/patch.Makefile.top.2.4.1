@@ -1,0 +1,10 @@
+--- Makefile.old	Wed Jan 31 16:08:33 2001
++++ Makefile	Wed Jan 31 16:08:52 2001
+@@ -151,6 +151,7 @@
+ endif
+ 
+ DRIVERS-$(CONFIG_SOUND) += drivers/sound/sounddrivers.o
++DRIVERS-$(CONFIG_SND) += drivers/sound/alsa/snd.o
+ DRIVERS-$(CONFIG_PCI) += drivers/pci/driver.o
+ DRIVERS-$(CONFIG_MTD) += drivers/mtd/mtdlink.o
+ DRIVERS-$(CONFIG_PCMCIA) += drivers/pcmcia/pcmcia.o

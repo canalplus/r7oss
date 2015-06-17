@@ -1,0 +1,52 @@
+From d6aedf62c80b154e78186e168a390095abad22ca Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:19:59 +0100
+Subject: [PATCH 14/36] patches/fix_unlicensed_dtsma_bypass-bug9908
+
+---
+ player/codec/codec_mme_audio_silence.cpp |   22 +++++++++++++++++++---
+ 1 file changed, 19 insertions(+), 3 deletions(-)
+
+diff --git a/player/codec/codec_mme_audio_silence.cpp b/player/codec/codec_mme_audio_silence.cpp
+index 77746ae..5d570ca 100644
+--- a/player/codec/codec_mme_audio_silence.cpp
++++ b/player/codec/codec_mme_audio_silence.cpp
+@@ -242,8 +242,24 @@ CodecStatus_t   Codec_MmeAudioSilence_c::FillOutTransformerInitializationParamet
+ CodecStatus_t   Codec_MmeAudioSilence_c::FillOutSetStreamParametersCommand( void )
+ {
+ 
+-    // if the stream is dtshd, then the "transcoding" is required
+-    TranscodeEnable = (ParsedAudioParameters->OriginalEncoding == AudioOriginalEncodingDtshd);
++    // if the stream is dtshd, then the "transcoding" might be required
++    if ( (ParsedAudioParameters->OriginalEncoding == AudioOriginalEncodingDtshdMA) || 
++         (ParsedAudioParameters->OriginalEncoding == AudioOriginalEncodingDtshd) )
++    {
++        if (ParsedAudioParameters->BackwardCompatibleProperties.SampleRateHz && ParsedAudioParameters->BackwardCompatibleProperties.SampleCount)
++        {
++            // a core is present, so transcode is possible
++            TranscodeEnable = true;
++        }
++        else
++        {
++            TranscodeEnable = false;
++        }
++    }
++    else
++    {
++        TranscodeEnable = false;
++    }
+ 
+     //
+     // Fillout the actual command
+@@ -300,7 +316,7 @@ CodecStatus_t   Codec_MmeAudioSilence_c::ValidateDecodeContext( CodecBaseDecodeC
+ 
+     memset( &AudioDecoderStatus, 0, sizeof(AudioDecoderStatus));    // SYSFS
+     
+-    if (TranscodeEnable && (ParsedAudioParameters->OriginalEncoding == AudioOriginalEncodingDtshd))
++    if (TranscodeEnable)
+     {
+         Codec_MmeAudioDtshd_c::TranscodeDtshdToDts(&LocalDecodeContext->BaseContext,
+                                                    LocalDecodeContext->TranscodeBufferIndex,
+-- 
+1.7.9.5
+

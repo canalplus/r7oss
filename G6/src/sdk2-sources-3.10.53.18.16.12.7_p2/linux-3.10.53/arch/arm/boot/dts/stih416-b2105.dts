@@ -1,0 +1,69 @@
+/*
+ * Copyright (C) 2013 STMicroelectronics (R&D) Limited.
+ * Author: Srinivas Kandagatla <srinivas.kandagatla@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * publishhed by the Free Software Foundation.
+ */
+/dts-v1/;
+#include "stih416.dtsi"
+#include "stih41x-b2105.dtsi"
+/ {
+	compatible = "st,stih416-b2105";
+	model = "STiH416 B2105";
+
+	memory{
+		device_type = "memory";
+		reg = <0x40000000 0x80000000>;
+	};
+
+	chosen {
+		bootargs = "console=ttyAS0,115200";
+		linux,stdout-path = &serial2;
+	};
+
+	aliases {
+		ttyAS0 = &serial2;
+		ethernet0 = &ethernet0;
+	};
+
+	soc {
+		serial2: serial@fed32000 {
+			status = "okay";
+		};
+
+		leds {
+			compatible = "gpio-leds";
+			fp_led {
+				#gpio-cells = <1>;
+				label = "Front Panel LED";
+				gpios = <&PIO0 4>;
+				linux,default-trigger = "heartbeat";
+			};
+		};
+
+		ethernet0:dwmac@fe810000 {
+			status = "okay";
+			st,tx-retime-src = "clkgen";
+
+			phy-mode = "rgmii-id";
+			snps,phy-addr = <0x1>;
+			max-speed = <100>;
+			pinctrl-0 = <&pinctrl_rgmii0>;
+
+			snps,reset-gpio = <&PIO13 6>;
+			snps,reset-active-low;
+			snps,reset-delays-us = <0 10000 10000>;
+		};
+
+		miphy365x_phy: miphy365x@0 {
+			st,pcie_tx_pol_inv = <1>;
+			st,sata_gen = "gen3";
+		};
+
+		sata0: sata@fe380000{
+			status = "okay";
+		};
+	};
+};

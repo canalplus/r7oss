@@ -1,0 +1,20 @@
+--- ../../alsa-kernel/pci/au88x0/au88x0.c	2007-07-19 16:36:25.000000000 +0200
++++ au88x0.c	2007-07-20 12:42:47.000000000 +0200
+@@ -14,7 +14,7 @@
+  * Now at least i can play Legacy DOOM with MIDI music :-)
+  */
+ 
+-#include "au88x0.h"
++#include "../../alsa-kernel/pci/au88x0/au88x0.h"
+ #include <linux/init.h>
+ #include <linux/pci.h>
+ #include <linux/slab.h>
+@@ -341,7 +341,7 @@
+ 		snd_card_free(card);
+ 		return err;
+ 	}
+-	chip->rev = pci->revision;
++	chip->rev = snd_pci_revision(pci);
+ #ifdef CHIP_AU8830
+ 	if ((chip->rev) != 0xfe && (chip->rev) != 0xfa) {
+ 		printk(KERN_ALERT

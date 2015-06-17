@@ -1,0 +1,15 @@
+# -*- makefile -*-
+#
+# arch/mips/MCONFIG
+#
+# Special rules for this architecture.  Note that this is actually
+# included from the main Makefile, and that pathnames should be
+# accordingly.
+#
+
+KLIBCARCHREQFLAGS = -fno-pic -mno-abicalls -G 0
+KLIBCOPTFLAGS     += -Os
+KLIBCBITSIZE      = 32
+
+# Extra linkflags when building the shared version of the library
+KLIBCSHAREDFLAGS	= -T $(src)/arch/$(KLIBCARCH)/klibc.ld

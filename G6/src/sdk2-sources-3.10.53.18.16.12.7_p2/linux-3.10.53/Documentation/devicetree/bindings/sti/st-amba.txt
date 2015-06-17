@@ -1,0 +1,62 @@
+* ST AMBA bus config
+
+- bridge_type2 : Bridge type new generation.
+		 else
+		 Bridge type older version.
+
+Type of transaction to generate on stbus side
+- max_opcode_LD4_ST4
+- max_opcode_LD8_ST8
+- max_opcode_LD16_ST16
+- max_opcode_LD32_ST32
+- max_opcode_LD64_ST64
+
+- chunks_in_msg : Integer value, defines the maximum number of chunk an STBus
+  message may be built of at any time.
+- packets_in_chunk : Integer value, defines the maximum number of chunk an STBus
+  message may be built of at any time.
+
+- write_posting	: To enable write-posting.
+
+Fields unique to v1
+- req_timeout
+
+Fields unique to v2
+- sd_config_missing : Some of the bridges do not have sd_config register.
+
+- threshold : Integer value specifies the minimum number of data bytes to be stored
+  at consecutive addresses which must be available in the
+  Request FIFO in order to start issuing an STBus burst.
+
+- req_notify_cell_based	: Specifies when an AHB transaction is to be started.
+  Cell based transaction is started as soon as one STBus cell is received.
+  If this property is not specified it selects "burst-based".
+  When burst based is selected, transaction is started as soon as an
+  AHB burst is ready in the Request FIFOs.
+
+- complete_on_error : Specifies what the behaviour the bridge has to be when an
+  error response is encountered on the AHB side.
+  The current transaction is carried on to its completion if property specified,
+  else the current transaction is aborted.
+
+- merge_msg : Message merge feature enable/disable.
+
+- cell_based_trigger : Specifies whether the generation of STBus transactions
+  has to be cell-based.if the property is not specified,
+  the trigger defaults to be threshold-based.
+
+- read_ahead : Read ahead feature enable/disable.
+
+Example:
+
+	ethernet-bus-config: st-eth-amba-bridge {
+		reg-offset = <0x1FFC>;
+		bridge_type2;
+		chunks_in_msg = <1>;
+		packets_in_chunk = <2>;
+		write_posting;
+		max_opcode_LD64_ST64;
+		threshold = <512>;
+		sd_config_missing;
+		read_ahead;
+	};

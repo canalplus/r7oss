@@ -1,0 +1,64 @@
+--- ../../alsa-kernel/core/seq/seq_clientmgr.c	2007-12-20 10:19:43.000000000 +0100
++++ seq_clientmgr.c	2007-12-20 10:51:34.000000000 +0100
+@@ -1,3 +1,5 @@
++#define __NO_VERSION__
++#include "adriver.h"
+ /*
+  *  ALSA sequencer Client Manager
+  *  Copyright (c) 1998-2001 by Frank van de Pol <fvdpol@coil.demon.nl>
+@@ -22,6 +24,7 @@
+  */
+ 
+ #include <linux/init.h>
++#include <linux/smp_lock.h>
+ #include <linux/slab.h>
+ #include <sound/core.h>
+ #include <sound/minors.h>
+@@ -2200,12 +2203,25 @@
+ 	return snd_seq_do_ioctl(client, cmd, (void __user *) arg);
+ }
+ 
+-#ifdef CONFIG_COMPAT
++#if defined(CONFIG_COMPAT) && defined(CONFIG_SND_HAVE_NEW_IOCTL)
+ #include "seq_compat.c"
+ #else
+ #define snd_seq_ioctl_compat	NULL
+ #endif
+ 
++#ifndef CONFIG_SND_HAVE_NEW_IOCTL
++/* need to unlock BKL to allow preemption */
++static int snd_seq_ioctl_old(struct inode *inode, struct file * file,
++			     unsigned int cmd, unsigned long arg)
++{
++	int err;
++	unlock_kernel();
++	err = snd_seq_ioctl(file, cmd, arg);
++	lock_kernel();
++	return err;
++}
++#endif
++
+ /* -------------------------------------------------------- */
+ 
+ 
+@@ -2535,14 +2551,20 @@
+ 
+ static const struct file_operations snd_seq_f_ops =
+ {
++#ifndef LINUX_2_2
+ 	.owner =	THIS_MODULE,
++#endif
+ 	.read =		snd_seq_read,
+ 	.write =	snd_seq_write,
+ 	.open =		snd_seq_open,
+ 	.release =	snd_seq_release,
+ 	.poll =		snd_seq_poll,
++#ifdef CONFIG_SND_HAVE_NEW_IOCTL
+ 	.unlocked_ioctl =	snd_seq_ioctl,
+ 	.compat_ioctl =	snd_seq_ioctl_compat,
++#else
++	.ioctl =	snd_seq_ioctl_old,
++#endif
+ };
+ 
+ /* 

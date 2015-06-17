@@ -1,0 +1,9 @@
+          name : reload
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : 
+      commands : hot_reaload
+  cmd_line_opt : --hot_reload
+       options : 
+   description : This plugin will reload initng from the hard drive without the
+                 need to restart your computer.  Will prevent any problems due
+                 to files replaced during an initng upgrade, for example.

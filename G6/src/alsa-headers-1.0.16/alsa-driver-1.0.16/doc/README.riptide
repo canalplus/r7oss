@@ -1,0 +1,15 @@
+Working:
+- Playback/Capture (up to 3 playbackstreams)/Pause
+- Mixer (AC97)
+- OPL3/MPU/Joysick (? not testet)
+
+Not working:
+- I2S play/capture
+
+TODO:
+- get docs about i2s paths/channels etc.
+- add more/other playbackpaths
+- test opl3/modem/mpu
+- verify firmware version readout for different chips
+- make command interface irq driven
+- investigate: sometimes hangs in heavy load condition (and continues after some repeated blocks)

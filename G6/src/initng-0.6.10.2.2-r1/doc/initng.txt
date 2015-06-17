@@ -1,0 +1,228 @@
+An overview of initng:
+
+On boot, initng will be started as the first process (PID 1) by the
+kernel. At first, initng will parse configuration files located in
+/etc/initng for critical information such as runlevel and service data.
+After that, all services required by the default runlevel will be started as
+soon as their dependencies are met, allowing services to run in parallel.
+This asynchronous execution can dramatically improve boot time by better
+utilizing the system resources (especially in the case of multiprocessor
+systems).
+
+Features:
+
+* Automatic restarting of services that crash
+* Easy starting, stopping, listing services through ngc
+* Easy adding/removing services from a runlevel through ng-update
+* SPEED!
+
+
+
+Installing initng:
+
+NOTE: a considerable amount of this information is outdated, see the
+README and INSTALLATION files for the most up to date information
+
+
+For those of you that would like to use portage:
+
+    ACCEPT_KEYWORDS="~ARCH" emerge initng 
+
+(Please note you need to replace ~ARCH with your architecture ex: ~x86 ~ppc and
+others).
+
+If you want the latest version and have subversion installed:
+
+    # svn checkout http://jw.dyndns.org/initng/svn/initng/trunk initng
+    # cd initng 
+    # ./autogen.sh
+    # ./configure
+    # make install
+
+You can also install initng from the source
+
+    # tar -zxvf initng*.tar.gz
+    # cd initng*
+    # ./configure
+    # make install
+
+
+
+Configuring Grub:
+
+Basically all you need to do here is add "init=/sbin/initng" to the line
+that starts with "kernel"
+
+Before:
+
+    title=Gentoo Linux 2.6.12
+    root (hd0,0)
+    kernel /kernel-2.6.12-2  root=/dev/hdc3
+
+After:
+
+    title=Gentoo Linux 2.6.12
+    root (hd0,0)
+    kernel /kernel-2.6.12-2  root=/dev/hdc3 init=/sbin/initng
+
+
+
+Configuring Lilo:
+
+ADD LATER
+
+
+
+
+Configuring and using initng:
+
+First off you need to reboot your linux install inorder to do the following
+(Please remember to boot into the one that uses initng). On the first
+console you will notice that you cannot log in and that you see 100% (If you
+do not please don't panic).
+
+Now hit alt+F2 and proceed to login
+
+If you didn't see 100%, then type
+
+    # ngc -s | less
+
+If you see anything that did not start up or has a waiting for dependency
+next to it please make note of it. Somethings are trivial and can just be
+removed (ex: keymaps and consolefont).
+
+To remove the failed application:
+
+    # ng-update del failedapplication
+
+
+
+Adding or removing services from a run level:
+
+First: Figure out the name of your service you can do this by looking
+through the /etc/initng folder (files ending in .i are services)
+
+To add a service to a runlevel:
+
+    ng-update add service runlevel
+
+Examples:
+
+    # ng-update add daemon/sshd default
+    # ng-update add system/alsasound default
+
+To remove a service from a runlevel:
+
+    ng-update del service runlevel
+
+The runlevel part is optional but if you leave it out it removes it from all
+the runlevels its on.
+
+Examples:
+
+    # ng-update del daemon/sshd
+    # ng-update del system/alsasound default
+    # ng-update del daemon/sshd
+    # ng-update del system/alsasound
+
+
+
+Starting or Stopping a service:
+
+First: Figure out the name of your service you can do this by looking
+through the /etc/initng folder (files ending in .i are services)
+
+Starting a service:
+
+    ngc -u service
+
+Example:
+
+    # ngc -u daemon/sshd
+
+Stopping a service:
+
+    ngc -d service
+
+Example:
+
+    # ngc -d daemon/sshd
+
+
+
+Listing all services:
+
+This lets you list all the services that are running which is particularly
+useful for troubleshooting and such matters.
+
+    # ngc -s
+
+
+
+To flush service data:
+
+This lets you flush memory service data, and reload from disc.
+
+    ngc -r service
+
+Example:
+
+    # ngc -r daemon/sshd
+
+
+
+Zapping a service
+
+This lets you kill a service especially if stopping it won't work
+
+    ngc -z service
+
+Example:
+
+    # ngc -z daemon/sshd
+
+
+
+Troubleshooting
+
+Mouse problems with X.org:
+
+As of this time /dev/mouse does not exist. Inorder to get around this please
+change the path the mouse is on in your xorg.conf file from /dev/mouse to
+/dev/psaux.
+
+Before:
+
+    Section "InputDevice"
+        Identifier "Mouse1"
+        Driver	"mouse"
+        Option "Protocol"     "IMPS/2"
+        Option "Device"       "/dev/mouse"
+        Option "ZAxisMapping" "4 5"
+    EndSection
+
+After:
+
+    Section "InputDevice"
+        Identifier "Mouse1"
+        Driver	"mouse"
+        Option "Protocol"     "IMPS/2"
+        Option "Device"       "/dev/psaux"
+        Option "ZAxisMapping" "4 5"
+    EndSection
+
+
+Nvidia Troubles:
+
+At this point in time I have not been able to get the nvidia drivers that
+are in portage to work on initng. So the solution is to download the drivers
+from the nvidia website and install them.
+
+    # modprobe -r nvidia
+    # sh NVIDIA*
+    # modprobe nvidia
+
+After you have done those things you should just be able to start xorg by
+doing:
+
+    # startx

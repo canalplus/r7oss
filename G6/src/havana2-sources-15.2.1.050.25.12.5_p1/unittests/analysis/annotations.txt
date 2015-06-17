@@ -1,0 +1,30 @@
+#
+# This file defines the list of code analysis defects that should be
+# considered OK (i.e. not a defect).
+#
+# TODO: simplify the format, rationalise the generic classes
+# as analysis tools are added.
+#
+# The format is:
+# - empty lines or lines tarting with '#' are ignored
+# - each line represent a defect to be ignored and must be written:
+# OK:<class>:<file>:<line_num>:<comment>:<line_content>
+# where:
+# OK             : mandatory
+# <class>        : class of the defect, one of
+#           - ALL (any issue is ignored)
+#           - DEAD_CODE
+#           - UNTESTED
+#           - USELESS_WRITE
+#           - DEACTIVATED_CODE
+#           - SIGN_CHANGE
+#           - ASSERT
+# <file>         : file path relative to the root dir
+# <line_num>     : line num in the <file>
+# <comment>      : any comment (must not contain a colon ':')
+# <line_content> : any content identifying the line
+#                  (matched at word boundary as per "fgrep -w")
+#
+# For instance a valid line looks like:
+# OK:DEAD_CODE:src/path/binding.c:128:Dead code in macro:CIRCLEQ_FOREACH_
+#

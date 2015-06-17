@@ -1,0 +1,8 @@
+          name : provide
+        author : Ismael Luceno <ismael.luceno@gmail.com>
+  contributors : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+      commands : 
+       options : provide
+   description : When a service is starting, virtual services put in
+                 provide are created and started, then when the
+                 service is stopping the virtual services are stopped.

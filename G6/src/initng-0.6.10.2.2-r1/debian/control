@@ -1,0 +1,51 @@
+Source: initng
+Section: admin
+Priority: optional
+Maintainer: Armin Berres <a.berres@onlinehome.de>
+Uploaders: Bartosz Fenski <fenio@debian.org>
+Build-Depends: debhelper (>= 5), dpatch, cmake (>=2.2), libncurses5-dev
+Standards-Version: 3.6.2.1
+
+Package: initng
+Section: admin
+Architecture: any
+Depends: ${shlibs:Depends}, udev
+Recommends: initng-ifiles
+Suggests: dash 
+Description: Full replacement of the old sysvinit tool
+ Initng is a full replacement of the old and in many ways deprecated sysvinit
+ tool. It is designed with speed in mind, doing as much as possible
+ asynchronously. In other words: It will boot your Unix-system much faster, 
+ and  give you more control and statistics over your system.
+ .
+ The basic premise is that startup commands can be launched as soon as their
+ dependencies are met. This limits the effect of bottlenecks like I/O 
+ operations; while one program is performing I/O, another can be utilizing
+ the processor. Initng tracks the individual service dependencies in its 
+ configuration files.
+ .
+ It is designed to use a minimum of system resources and to boot your system
+ quickly and safely.
+ .  
+  Homepage: http://www.initng.org
+
+Package: initng-dev
+Section: libdevel
+Architecture: any
+Depends: initng (= ${Source-Version})
+Description: Full replacement of the old sysvinit tool - development files
+ Initng is a full replacement of the old and in many ways deprecated sysvinit
+ tool. It is designed with speed in mind, doing as much as possible
+ asynchronously. In other words: It will boot your Unix-system much faster, 
+ and  give you more control and statistics over your system.
+ .
+ The basic premise is that startup commands can be launched as soon as their
+ dependencies are met. This limits the effect of bottlenecks like I/O 
+ operations; while one program is performing I/O, another can be utilizing
+ the processor. Initng tracks the individual service dependencies in its 
+ configuration files.
+ .
+ It is designed to use a minimum of system resources and to boot your system
+ quickly and safely.
+ .  
+  Homepage: http://www.initng.org

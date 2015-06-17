@@ -1,0 +1,647 @@
+* Fri Sep 26 2014 Amit Kumar Pathak <amit.pathak@st.com> - int1.87.10
+- [Bugzilla: 59192] Fixed coverity error in MXL214 code
+- [Bugzilla: 58286] Corrected LNA power status
+
+* Mon Sep 15 2014 Deepak Goyal <deepak.goyal@st.com> - int1.87.9
+- [Bugzilla: 58399] Removed compilation error in case CONFIG_PM_RUNTIME is disabled
+
+* Mon Sep 15 2014 Deepak Goyal <deepak.goyal@st.com> - int1.87.8
+- [Bugzilla: 49911] Improved Low Power Framework for demod,lnb,diseqc.
+
+* Wed Aug 27 2014 Amit Kumar Pathak <amit.pathak@st.com> - int1.87.7
+- [Bugzilla: 57172] Removed compilation error/warning in FE code
+
+* Mon Aug 25 2014 Amit Kumar Pathak <amit.pathak@st.com> - int1.87.6
+- [Bugzilla: 56643] Corrected Dynamic Power management trigger points in FE code
+- [Change log] Bugzilla number corrected for int1.87.3
+
+* Thu Aug 14 2014 Amit Kumar Pathak <amit.pathak@st.com> - int1.87.5
+- [Bugzilla: 55347] Separate low power functions defined for lnb
+- [Bugzilla: 54578] Fixed Illegal detection of demod_pio_reset when PIO value is NULL
+
+* Fri Aug 08 2014 Amit Kumar Pathak <amit.pathak@st.com> - int1.87.4
+- [Bugzilla: 56272] mxl214: handled error incase no firmware present on the target
+
+* Fri Aug 08 2014 Amit Kumar Pathak <amit.pathak@st.com> - int1.87.3
+- [Bugzilla: 55866] Modified FEC deletion logic for runtime FEC ON/OFF support
+- [Bugzilla: 54594] Handled fe_ip_nethhook register/unregister for multiple start/term calls
+- [Bugzilla: 49102] MxL214 supported on B2196
+
+* Thu Jul 17 2014 Amit Kumar Pathak <amit.pathak@st.com> - int1.87.2
+- [Bugzilla: 54564] Fixed AV issue in B2193 (mxl582 ) introduced due to RUN_TIME_PM
+- [Bugzilla: 52566] Fixed display issue if play HD & SD satellite channels simultaneously on dual tuner
+
+* Tue Jul 15 2014 Amit Kumar Pathak <amit.pathak@st.com> - int1.87.1
+- [Bugzilla: 53735] Removed Hardcoding for decoding DVB-S2 signal in B2193 by using sysconf setting
+- [Bugzilla: 51856] Reduced AV resync time while zapping during HEVC IP live playback
+
+* Tue Jul 08 2014 Amit Kumar Pathak <amit.pathak@st.com> - int1.87.0
+- [Bugzilla: 54039] dummy frontend(packet injector)started working
+- [Bugzilla: 52587] Fixed Memory leak during STRTP IP zap
+- [Bugzilla: 51676] Fixed Memory leak during UDP playback at each lost packet
+
+* Tue Jul 01 2014 Deepak Goyal <deepak.goyal@st.com> - int1.86.0
+- [Bugzilla: 52027] Fix AV sync issue for UDP streams with IP frontend
+
+* Fri Jun 27 2014 Amit Kumar Pathak <amit.pathak@st.com> - int1.85.0
+- [Bugzilla: 53279] Fixed syntax error in stm_fe_setup.c MODULE_DESCRIPTION
+- [Bugzilla: 52640] Lnb and DiseqC supported for MxL582/B2193
+- [Bugzilla: 52042] For IPFEC, injection rate is twice of the matrix size of FEC scheme used
+- [Bugzilla: 51373] Removed coverity error in IP FE code
+- [Bugzilla: 39071] Removed checkpatch error in tsclient_util.c file
+
+* Tue May 27 2014 Deepak Goyal <deepak.goyal@st.com> - int1.84.0
+- [Bugzilla: 50441] Wall build flag enabled in FE
+- [Bugzilla: 51090] IPFEC should not get enabled until it is called by application
+- [Bugzilla: 32170] Reduced initial macro blocks observed at different bit rates with jitter.
+- [Bugzilla: 50865] NO A/V on B2193(MXL582)
+
+* Wed May 21 2014 Rupesh Srivastava <rupesh.srivastava@st.com> - int1.83.0
+- [Bugzilla: 46695] Sysconf register value restored after CPS wakeup
+- [Bugzilla: 48405] Resolved issue in suspend/resume iteration of CPS
+- [Bugzilla: 50033] Spin lock handling refined to avoid deadlock
+
+* Wed May 07 2014 Amit Kumar Pathak <amit.pathak@st.com> - int1.82.0
+- [Bugzilla: 49362] Fixed all klockwork issues in ML and Replaced sprintf with snprintf
+- [Bugzilla: 49103] Corrected Audio/Video jerks in IPFE with FEC observed during long hour testing
+- [Bugzilla: 48846] Added support of mxl582
+- [Bugzilla: 48827] Removed compilation warning and enable Werror option
+- [Bugzilla: 48755] Supported dynamic FEC ON/OFF switching
+- [Bugzilla: 48385] Corrected the kernel memory leak caused by improper deletion of ip_inst
+
+* Tue Apr 22 2014 Amit Kumar Pathak <amit.pathak@st.com> - int1.81.0
+- [Bugzilla: 48234] sti3.10 port: MxL584 driver including TSMux and PID filtering
+- [Bugzilla: 48084] Removed coverity errors in SDK2-13
+- [Bugzilla: 48023] sti3.10 port: adapted new sysconf config for correct TS PIO mapping for TSIN4 (NIMA-path2)
+- [Bugzilla: 46169] Thread priorities made tuneable using module parameters
+- [Bugzilla: 44497] Retransmission mechanism implemented in PCPD LLA/TS Server LLA
+
+* Mon Mar 31 2014 Amit Kumar Pathak <amit.pathak@st.com> - int1.80.0
+- [Bugzilla: 46578] Sti kernelv3.10: Disabled auto repeater stop feature for stv0910
+- [Bugzilla: 46151] Reduced thread priority of stm_fe_ip.x from 99 to 50
+- [Bugzilla: 45993] Removed SPEC file and added sdk2pkg dir structure
+- [Bugzilla: 45916] Frontend PIOs restored properly after CPS wakeup
+- [Bugzilla: 45627] Ported frontend low power implementation into sti kernel v3.10
+- [Bugzilla: 39964] Reset packet counts implemented under STM_FE_IP_CTRL_RESET_STATS
+
+* Fri Feb 28 2014 Amit Kumar Pathak <amit.pathak@st.com> - int79-1
+- [Bugzilla: 45703] sti kernelv3.10: stv0367 auto repeater stop feature disabled
+
+* Fri Feb 21 2014 Amit Kumar Pathak <amit.pathak@st.com> - int78-1
+- [Bugzilla: 45185] Removed defects in RF and IPFE detected with Coverity 6.6.2
+- [Bugzilla: 45105] Removed the functions not used at all to improve gcov performance
+- [Bugzilla: 43894] sti3.10 port: Used pin ctrl apis, avoid using I2C_M_NOREPSTART
+- [Bugzilla: 39710] MXl584: add TS tag and TS MUX support
+
+* Wed Feb 19 2014 Amit Kumar Pathak <amit.pathak@st.com> - int77-1
+- [Bugzilla: 45086] device-config supported in stm_fe_demod
+- [Bugzilla: 43378] stm_fe_ip: FE_IP_STOP/START cleans FEC buffers during zap
+- [Bugzilla: 27056] stm_fe_ip: Instance specific hard coding removed from the IPFE module
+
+* Wed Feb 12 2014 Amit Kumar Pathak <amit.pathak@st.com> - int76-1
+- [Bugzilla: 41479] pm: correct use of dev_pm_info structure elements with CONFIG_PM_RUNTIME
+- [Bugzilla: 39139] stm_fe_ip: Split nethook function for IPFE
+- [Bugzilla: 32169] stm_fe_ip: Improve IPFE & FEC performance
+
+* Wed Jan 22 2014 Amit Kumar Pathak <amit.pathak@st.com> - int75-1
+- [Bugzilla: 41983] Fix DiSEqC and Tone differentiation in lnbh26
+- [Bugzilla: 41664] Remove print in demod_state_tune
+- [Bugzilla: 41074] Correction for Tone enable when select Ku high band
+- [Bugzilla: 40518] STV0910 Path 2 failure lock case fixed
+- [Bugzilla: 13836] Support for debugfs RF frontend engine
+
+* Wed Nov 27 2013 Ashish Gandhi <ashish.gandhi@st.com> - int74-1
+- [Bugzilla: 40893] Module load/unload fix
+
+* Wed Nov 20 2013 Amit Kumar Pathak <amit.pathak@st.com> - int73-1
+- [Bugzilla: 40258] MXL584 demod support
+- [Bugzilla: 40244] Removed dependency of STM_FE_TOPDIR on build package file
+- [Bugzilla: 39936] Issues found with Coverity tool v6.0.3 fixed
+- [Bugzilla: 31243] Corrected error handling across driver
+- [Bugzilla: 30065] Support for AUTO MODULATION feature in STV0367C scan
+- [Bugzilla: 17938] Code made uniform throughout driver
+
+* Thu Nov 07 2013 Amit Kumar Pathak <amit.pathak@st.com> - int72-1
+- [Bugzilla: 31815] Added stv0913 demod support
+- [Bugzilla: 30854] Added stv6111 tuner support
+
+* Thu Oct 31 2013 Rupesh Srivastava <rupesh.srivastava@st.com> - int71-1
+- [Bugzilla: 30508] NIM3 support for linearTV
+- [Bugzilla: 31059] Usage of pr_x instead of printk(KERN_x)
+
+* Mon Oct 21 2013 Amit Kumar Pathak <amit.pathak@st.com> - int70-1
+- [Bugzilla: 33726] stm_fe_ip: IPv6 support
+- [Bugzilla: 31809] stm_fe_ip: updated buffer handling logic
+
+* Thu Oct 15 2013 Rupesh Srivastava <rupesh.srivastava@st.com> - int69-2
+- [Bugzilla: 38251] SPEC file reference directory updated for stm_fe_version.h
+
+* Thu Oct 10 2013 Rupesh Srivastava <rupesh.srivastava@st.com> - int69-1
+- [Bugzilla: 36948] IP structure modifications for char arrays
+- [Bugzilla: 36074] Debug ability support for stv0367 lla wrapper increased
+- [Bugzilla: 35092] Frontend build changed to respect INSTALL_MOD_DIR
+- [Bugzilla: 34438] TREE_ROOT changed to STM_FE_TOPDIR
+- [Bugzilla: 31058] Error handling is taken care during registration of platform drivers for frontend
+
+* Tue Oct 08 2013 Amit Kumar Pathak <amit.pathak@st.com> - int68-1
+- [Bugzilla: 32524] DT related improvements
+- [Bugzilla: 32327] IPFE: nethook register/unregister on start/stop
+
+* Mon Sep 30 2013 Sanket Parmar <sanket.parmar-ext@st.com> - int67-1
+- [Bugzilla: 36887] Fixed standby issue for stv0900 P1/P2
+- [Bugzilla: 36027] Fixed checkpatch issues throughout FE code
+
+* Mon Sep 16 2013 Deepak Goyal <deepak.goyal@st.com> - int66-1
+- [Bugzilla: 36019] Multiple calls to stm_fe_ip_stop need to be handled in STM_FE driver
+- [Bugzilla: 35900] [DT]Default frontend device IO type should be of i2c type
+- [Bugzilla: 27576] ip_stat variable required or redundant in stm_fe_ip_s structure
+- [Bugzilla: 24065] stm_fe_ip: using kernel in-built function for multicast
+
+* Tue Aug 27 2013 Sanket Parmar <sanket.parmar-ext@st.com> - int65-1
+- [Bugzilla: 35544] Fixed coverity errors/warnings in i2c wrapper and stm_fe_dt_install.c
+- [Bugzilla: 35523] Fixed coverity error/warnings in stv0367 lla
+- [Bugzilla: 35509] Fixed coverity error/warnings in stv0903 lla
+- [Bugzilla: 35507] Fixed coverity error/warnings in stv0900 lla
+- [Bugzilla: 35422] Added more parameters to measure zap time with granularity
+- [Bugzilla: 35297] Fixed coverity errors/warnings in FE driver code
+- [Bugzilla: 33488] Increased debugability for stv0910 lla wrapper
+- [Bugzilla: 33486] Increased debugability for stv0900 lla wrapper
+- [Bugzilla: 31054] Added stm_fe_rf_matrix support
+
+* Mon Aug 26 2013 Sanket Parmar <sanket.parmar-ext@st.com> - int64-1
+- [Bugzilla: 35303] Fixed event params memleak during module unload
+- [Bugzilla: 35291] Added header re-inclusion check
+- [Bugzilla: 32931] Added frontend support of b2116 in DT
+- [Bugzilla: 32928] Added frontend support of b2112 cut1 in DT
+- [Bugzilla: 30941] Provided support to disable cable card routing using sysfs
+- [Bugzilla: 30121] Supported of TS timer tag for b2105
+- [Bugzilla: 26805] Updated 367qam LLAv2.0
+
+* Thu Aug 22 2013 Sanket Parmar <sanket.parmar-ext@st.com> - int63-1
+- [Bugzilla: 35175] Removed checkpatch.pl warning for usage of EXTRA_CFLAGS
+- [Bugzilla: 35053] Updated prevstate in stop() to avoid resuming in wrong state
+- [Bugzilla: 33666] Renamed all threads to facilitate CPU usage measurements report
+- [Bugzilla: 33005] Updated STV0910 LLAv2.6
+- [Bugzilla: 30777] Removed checkpatch.pl errors and warnings from IPFE
+
+* Tue Aug 13 2013 Amit Kumar Pathak <amit.pathak@st.com> - int62-1
+- [Bugzilla: 34984] B2020 and B2000 : stm_fe_conf.h removed
+- [Bugzilla: 34897] Notification in case of lock lost in tracking
+- [Bugzilla: 32929] DT support added for b2105
+- [Bugzilla: 30682] Partial Fix of Checkpatch.pl issues in stm_fe
+- [Bugzilla: 30636] Partial Fix of Checkpatch.pl issues in stm_fe
+- [Bugzilla: 30558] Fix of Checkpatch.pl issues in some folders
+- [Bugzilla: 30287] DVBC support for Remote Tuner Added
+- [Bugzilla: 29266] STV0900-STV6120 INVERSION reporting updated
+
+* Tue Aug 06 2013 Deepak Goyal <deepak.goyal@st.com> - int61-1
+- [Bugzilla: 33146] Fixed high cpu utilization if FE statistical ioctls called
+		    before demod lock
+- [Bugzilla: 33009] Improving debug capability for stm_fe_os_wrapper
+- [Bugzilla: 30708] Fix of Checkpatch.pl Errors of type:
+		    "use of parenthesis for complex Macros"
+- [Bugzilla: 30688] Undo allocated memory in case of thread failure and check all return
+- [Bugzilla: 30631] Fix of Checkpatch.pl Errors of type:
+		    "space prohibited before/after ': & ( ['"
+
+* Fri Jul 26 2013 Rupesh Srivastava <rupesh.srivastava@st.com> - int60-1
+- [Bugzilla: 34098] Correction in diseqc device sequence in DT
+- [Bugzilla: 33732] Bypass stm_fe_platform.ko in DT enable boards
+- [Bugzilla: 33643] Fixed random frontend engine build failure
+- [Bugzilla: 33639] Fixed memory leak suspect in frontend code
+- [Bugzilla: 33482] Frontend child nodes defined under correct i2c node
+- [Bugzilla: 33057] Adds NIM_STV0367_TDA18212 for b2116 & b2105 stm_fe_conf.h
+- [Bugzilla: 32124] Prevents blocking of gst-apps while quitting
+- [Bugzilla: 31954] stm_fe_tuner_model_to_lla usage instead of stv0367_tunermodelmap
+- [Bugzilla: 31792] Deprecated fli7610 board support from frontend_engine
+- [Bugzilla: 31057] stm_fe.h refined and split into object specific sub headers
+- [Bugzilla: 29574] Hard coding removed from stm_fe_malloc
+
+* Fri Jul 12 2013 Ashish Gandhi <ashish.gandhi@st.com> - int59-1
+- [Bugzilla: 33572] Added demod_restore FP for stv0910 & Corrected print in demod_restore
+- [Bugzilla: 32656] Fixed crash in case of 'assoc_priv' NULL with stv0910 and stv0900
+- [Bugzilla: 32490] Flag 'low_power_state' renamed to 'rpm_suspended'
+- [Bugzilla: 31494] Fixed Checkpatch Warnings of type:
+		    "EXPORT_SYMBOL(foo); should immediately follow its function/variable"
+- [Bugzilla: 30717] Fixed Checkpatch Errors of type:
+		    "avoid use of assignment in if condition"
+- [Bugzilla: 30652] Fixed Checkpatch Errors of type:
+		    "switch and case indentation"
+- [Bugzilla: 30584] Fixed Checkpatch Errors of type:
+		    "return is not a function, parentheses are not required"
+
+* Mon Jul 01 2013 Sanket Parmar <sanket.parmar-ext@st.com> - int58-1
+- [Bugzilla: 32622] Corrected null name in stm_fe_conf.h files
+- [Bugzilla: 32534] STV6120 standby path P1/P2 correction
+- [Bugzilla: 32491] Added standby support for native kernel FE drivers
+- [Bugzilla: 32390] Removed printk from stm_fe_external_attach()
+- [Bugzilla: 32146] STV0910 Path P1/P2 Standby correction
+- [Bugzilla: 32120] Fixed stm_fe driver bypass for native kernel fe driver usage
+- [Bugzilla: 32078] Added dummy function in remote tuning for standby
+- [Bugzilla: 31626] Improvement in the method of installation in DT model
+- [Bugzilla: 31623] Deallocated resources created in ip_probe
+- [Bugzilla: 27245] Few coverity related issues fixed (Step 2)
+- [Bugzilla: 24534] STV0900 Path P1/P2 Standby correction
+
+* Tue Jun 25 2013 Subrata Chatterjee <subrata.chatterjee@st.com> - int57-1
+- [Bugzilla: 31625] Removed MODULE_DEVICE_TABLE() to avoid auto module load in DT
+
+* Wed Jun 19 2013 Ashish Gandhi <ashish.gandhi@st.com> - int56-1
+- [Bugzilla: 32171] HPS/CPS fix in suspend/freeze
+- [Bugzilla: 32163] stm_fe PM state machine fixed
+- [Bugzilla: 32106] Return value in absence of stm_fe device updated for PM
+
+* Thu Jun 13 2013 Sanket Parmar <sanket.parmar-ext@st.com> - int55-1
+- [Bugzilla: 32040] Added demod resume in stm_fe_diseqc_transfer()
+
+* Thu Jun 13 2013 Shobhit Kumar Singh <shobhit.singh@st.com> - int54-1
+- [Bugzilla: 31955] Added board related option to load stm_fe_platform.ko in
+		    case of frontend configuration not present in dts file
+
+* Wed Jun 12 2013 Sanket Parmar <sanket.parmar-ext@st.com> - int53-1
+- [Bugzilla: 31826] stm_fe_<DEVICE>_data device id updated in DT model of
+		    stm_fe_ip
+
+* Fri Jun 07 2013 Ashish Gandhi <ashish.gandhi@st.com> - int52-2
+- Conflicts in merging PM from bug 30868 fixed
+
+* Fri Jun 07 2013 Ashish Gandhi <ashish.gandhi@st.com> - int52-1
+- [Bugzilla: 31687] stm_fe_platform disabled in DT model
+- [Bugzilla: 30868] PM state machine updated
+
+* Fri Jun 07 2013 Ashish Gandhi <ashish.gandhi@st.com> - int51-2
+- Corrected Spec file changelog to include the integrated bugs
+
+* Thu Jun 06 2013 Sanket Parmar <sanket.parmar-ext@st.com> - int51-1
+- [Bugzilla: 31722] dummy demod added in DT model of stm_fe and <device>_install
+		    updated for custom frontend
+- [Bugzilla: 31675] stm_fe_<DEVICE>_data device id updated in DT model of stm_fe
+- [Bugzilla: 31548] stm_fe_ip: DT support added
+- [Bugzilla: 31185] Conditional compilation support added in stm_fe
+- [Bugzilla: 30693] stm_fe_ip: Event monitor feature added
+- [Bugzilla: 30613] Third party device framework support added in stm_fe
+- [Bugzilla: 24586] Added dummy demod lla in stm_fe
+
+* Wed Jun 05 2013 Sanket Parmar <sanket.parmar-ext@st.com> - int50-1
+- [Bugzilla: 30174] Added support of eight RF instances
+- [Bugzilla: 30107] Added device tree support for RF stm_fe
+- [Bugzilla: 29542] Reset ipfe stats in ip_start
+- [Bugzilla: 28499] CPS support added for stm_fe
+
+* Fri May 31 2013 Sanket Parmar <sanket.parmar-ext@st.com> - int49-1
+- [Bugzilla: 31292] Made NIM STV0910 STV6120 default in frontend configuration
+- [Bugzilla: 30762] Fixed checkpatch errors of type:
+		    "open brace { following struct go on the same line"
+		    "open brace { following function declarations go on next line"
+		    "else should follow close brace }"
+- [Bugzilla: 30627] Fixed checkpatch errors of type:
+		    "do not initialise statics to 0 or NULL"
+- [Bugzilla: 30622] Removed checkpatch warnings of type:
+		    "plain inline is preferred over __inline"
+- [Bugzilla: 29215] stm_fe_ip: six instances made default
+
+* Thu May 23 2013 Sanket Parmar <sanket.parmar-ext@st.com> - int48-1
+- [Bugzilla: 30547] Fixed checkpatch errors of type:
+		    "foo * bar" should be "foo *bar" and
+		    "(foo*)" should be "(foo *)"
+- [Bugzilla: 30514] Used wait_event_interruptible_timeout in remote tuner
+- [Bugzilla: 20871] stm_fe_ip: Improved concurrency and lock management
+
+* Mon May 13 2013 Sanket Parmar <sanket.parmar-ext@st.com> - int47-1
+- [Bugzilla: 29653] Added support for B2112 board
+- [Bugzilla: 28711] Fixed low level issue in stv0367qam to check ID register
+
+* Thu May 09 2013 Sanket Parmar <sanket.parmar-ext@st.com> - int46-1
+- [Bugzilla: 30045] Implemented lnb handle check in stm_fe_diseqc_transfer
+- [Bugzilla: 29481] Remote fronend modified to return error in case of empty Frontend list
+- [Bugzilla: 29237] stm_fe_conf.h updated for h416 gpio reset
+- [Bugzilla: 29128] TV0900_STV6120 P2 Demod Customization(IQ WIRING) updated
+		    according to schematics
+- [Bugzilla: 27897] Sequential tuning approach in PCPD LLA avoided
+
+* Wed Apr 17 2013 Sanket Parmar <sanket.parmar-ext@st.com> - int45-1
+- [Bugzilla: 29270] stm_fe_ip: updated sink_obj idx in stm_fe_ip_attach
+- [Bugzilla: 28710] Improved tsserver_lla implementation code
+- [Bugzilla: 28422] Implemented PCPD close insight remote term
+- [Bugzilla: 26375] stm_fe_ip: Added sysfs support for ipfec
+
+* Fri Apr 05 2013 Sanket Parmar <sanket.parmar-ext@st.com> - int44-2
+- [Bugzilla: 29105] sh4 compilation fix
+
+* Fri Apr 05 2013 Ashish Gandhi <ashish.gandhi@st.com> - int44-1
+- [Bugzilla: 29040] stm_fe_ip: A/V decode with memsink functional for LBR
+- [Bugzilla: 28909] stm_fe_ip: fixed kernel crash with FEC(RTP)
+- [Bugzilla: 27245] Few coverity related issues fixed
+- [Bugzilla: 17815] Issue with scan with single frequency fixed
+
+* Tue Mar 26 2013 Ashish Gandhi <ashish.gandhi@st.com> - int43-1
+- [Bugzilla: 28541] stm_fe_ip: corrected mutiple detach of sink objects of single instance
+- [Bugzilla: 28536] Fixed low level issue in stv0367
+- [Bugzilla: 28496] Updated conf for six dummy instances for b2044
+- [Bugzilla: 24148] Updated STV0910 DiSEqC handling
+
+* Thu Mar 14 2013 Sanket Parmar <sanket.parmar-ext@st.com> - int42-1
+- [Bugzilla: 28080] Support provided for 6 tuners for b2020
+- [Bugzilla: 28013] stm_fe_ip: moved ip/fe_ip_fec.c into ip/ipfec/ directory
+- [Bugzilla: 26373] stm_fe_ip : global to private optimization done for ipfec
+- [Bugzilla: 26279] Implemented TS server LLA for remote configuration
+- [Bugzilla: 23105] stm_fe_ip: implemented pull data for for IPFE
+
+* Wed Mar 13 2013 Sanket Parmar <sanket.parmar-ext@st.com> - int41-1
+- [Bugzilla: 27793] Fix for sh4 based hdk7108, adi7108 boards compilation
+- [Bugzilla: 27650] stm_fe_ip: updated clean_bklog
+- [Bugzilla: 27194] Applied mutex protection for sequential tuning
+- [Bugzilla: 27052] Added support for H315/B2116 Platform in SDK2
+- [Bugzilla: 26955] stm_fe_ip: array sizes cheching to prevent stack corruption
+- [Bugzilla: 26810] stm_fe_ip: moved 'inj_rate' into private structure
+
+* Mon Feb 25 2013 Ashish Gandhi <ashish.gandhi@st.com> - int40-1
+- [Bugzilla: 27471] Warning removal in stats
+- [Bugzilla: 27120] I2C adapter number changed for NIM A on b2020
+- [Bugzilla: 26723] stm_fe_ip: rtp_source struct made private
+- [Bugzilla: 26654] stm_fe_ip: overflow indication moved to sysfs
+- [Bugzilla: 26388] Lock time improved for STV0367 qam/ofdm
+- [Bugzilla: 22797] stm_fe_ip: three instances made default
+
+* Tue Feb 05 2013 Ashish Gandhi <ashish.gandhi@st.com> - int39-1
+- [Bugzilla: 26605] I2C adapter number changed for NIM A on b2105
+- [Bugzilla: 26568] __must_check attribute for FEC kpi calls
+
+* Fri Jan 25 2013 Ashish Gandhi <ashish.gandhi@st.com> - int38-1
+- [Bugzilla: 26195] Demod naming made uniform throughout stm_fe
+- [Bugzilla: 26134] Configuration update for b2105
+- [Bugzilla: 21909] Added sysfs support for stm_fe platform configuration
+
+* Mon Jan 21 2013 Ashish Gandhi <ashish.gandhi@st.com> - int37-1
+- [Bugzilla: 25068] Added B2105 frontend_engine compilation support
+
+* Fri Jan 18 2013 Ashish Gandhi <ashish.gandhi@st.com> - int36-1
+- [Bugzilla: 25759] stm_fe_ip: global parameters migrated to private data
+		    structures
+- [Bugzilla: 25098] stm_fe_ip: support enhanced for multiple interface
+		    injection support from single instance
+- [Bugzilla: 23100] Support added for SASC1 remote tuner
+- [Bugzilla: 22560] stm_fe_ip: single thread per instance modification
+- [Bugzilla: 21684] Signal info handling updated for dvbs and dvbs2
+- [Bugzilla: 21419] stm_fe_ip: sysfs data reporting updated
+- [Bugzilla: 17812] Crash fix for STM_FE_DEMOD_FEATURE_AUTO_SR
+
+* Mon Dec 10 2012 Ashish Gandhi <ashish.gandhi@st.com> - int35-1
+- [Bugzilla: 24972] Single buffer implementation corrected
+- [Bugzilla: 24561] Incorrectly included FEC Support removed from stv0903_caps
+
+* Fri Nov 30 2012 Ashish Gandhi <ashish.gandhi@st.com> - int34-1
+- [Bugzilla: 24835] Added B2092 support to frontend engine
+- [Bugzilla: 24676] Fixed the issue of driver not getting unregister on rmmod
+- [Bugzilla: 24263] Updated stm_fe_conf.h for NIM_STV0367_DTT7546
+
+* Thu Nov 08 2012 Ashish Gandhi <ashish.gandhi@st.com> - int33-1
+- [Bugzilla: 23951] stm_fe_ip: fec support made functional
+- [Bugzilla: 23450] Added B2044 support to frontend engine
+- [Bugzilla: 22718] Default FE configuration for b2020, b2000 changed
+- [Bugzilla: 20222] New params : CC routing and tag value added to FE config
+
+* Mon Nov 05 2012 Ashish Gandhi <ashish.gandhi@st.com> - int32-1
+- [Bugzilla: 23952] stm_fe_ip: multicast channel zap support for RTP
+- [Bugzilla: 23414] stm_fe_ip: internal buffer made common for insertion/deletion
+- [Bugzilla: 21896] STV0900 Path 2 failure lock case fixed
+- [Bugzilla: 20664] stm_fe_ip: multicast support added without turning "promisc" ON
+
+* Tue Oct 16 2012 Ashish Gandhi <ashish.gandhi@st.com> - int31-1
+- [Bugzilla: 22641] stm_fe_ip: Updated overflow condition in fe_ip_v4_nethook
+- [Bugzilla: 22419] STV0367 OFDM Inverted Spectrum support with INVERSTION_AUTO mode
+
+* Fri Oct 05 2012 Ashish Gandhi <ashish.gandhi@st.com> - int30-1
+- [Bugzilla: 22708] Fix for STV0367 HPS mode without tune - OFDM and QAM
+- [Bugzilla: 21254] Moved info mem allocation from init to discover
+
+* Tue Sep 25 2012 Ashish Gandhi <ashish.gandhi@st.com> - int29-1
+- [Bugzilla: 22554] Fix for various includes with kernel 3.4
+- [Bugzilla: 21322] Fix for HPS resume: removed pm_runtime_get_sync() from lnb,
+		    diseqc and demod probe
+
+* Fri Sep 21 2012 Ashish Gandhi <ashish.gandhi@st.com> - int28-1
+- [Bugzilla: 22614] Warning removal in frontend_engine stats, introduced due to
+		    changes made in bug 17931 (INFRASTRUCTURE)
+- [Bugzilla: 22545] Structure (stm_te_tsinhw_conig_t) passed to TE on Attach
+		    initialized to zero
+- [Bugzilla: 22357] Fix for crash in IPFE start/stop with semaphore usage changed
+		    to mutex in ip_list_s structure
+- [Bugzilla: 20241] Updated error conditions in suspend and resume functions
+		    to support for low power mode without tuner connected
+
+* Wed Sep 05 2012 Subrata Chatterjee <subrata.chatterjee@st.com> - int27-1
+- [Bugzilla: 21061] stm_fe_ip: FEC support (code only) keeping backward
+		    compatibility.
+
+* Tue Sep 04 2012 Subrata Chatterjee <subrata.chatterjee@st.com> - int26-1
+- [Bugzilla: 21989] tuner IF value  updated in stm_fe_conf.h for stv0367 demod
+- [Bugzilla: 21414] stm_fe_ip: RTP header structure and RTP local index derivation
+		    corrected
+- [Bugzilla: 21174] stm_fe_ip: readability improvement with managing indentation
+- [Bugzilla: 20567] stm_fe_ip: performance improvement of RTP packet reordering
+		    for wider jitter range
+
+* Fri Aug 24 2012 Subrata Chatterjee <subrata.chatterjee@st.com> - int25-1
+- [Bugzilla: 21576] Support added to setup pure IP FE board
+- [Bugzilla: 19104] Improvement in stm_fe diseqc transfer api and low level
+		    function implementation
+
+* Fri Aug 17 2012 Subrata Chatterjee <subrata.chatterjee@st.com> - int24-1
+- [Bugzilla: 21601] Typo correction in stm_fe_setup.h
+- [Bugzilla: 21358] Corrected demod(stv0910,stv0900) and lnbh26(stv0910) dual
+		    path (P1 and P2) associativity
+- [Bugzilla: 21046] Add support for DVB-S/S2 frontend daughter boards for Newman
+- [Spec]            supported platform list updated
+
+* Tue Aug 07 2012 Subrata Chatterjee <subrata.chatterjee@st.com> - int23-1
+- [Bugzilla: 21183] Change in STV0367QAM-LLA_REL_1.9 for signal strength reporting
+- [Bugzilla: 20913] B2020: Update stm_fe_conh.h to match I2C workaround and b2000
+- [Bugzilla: 20854] [SDK2-05.94] Terrestrial live is crashing:stv0367_status,
+		    standby, abort and tracking fix
+- [Bugzilla: 17986] stm_fe: unit test module for api robustness needs improvement
+- [Bugzilla: 17320] Internal demod support for fli7610
+
+* Thu Jul 12 2012 Ashish Gandhi <ashish.gandhi@st.com> - int22-1
+- [Bugzilla: 20251] Front-end - Resolve gaps between STKPI document and code
+- [Bugzilla: 19744] Compilation error in Android: stm_fe_os.h is included twice
+		    without protection
+- [Bugzilla: 19727] stm_fe_ip: code modification needed according to coding guidelines
+- [Bugzilla: 19576] stm_fe_ip:stm_fe_ip_get_stats:api should be functional
+- [Bugzilla: 19574] stm_fe_ip:event should be implemented as per api doc
+- [Bugzilla: 19573] stm_fe_ip:basic sysfs implementation needed for quicker debugging
+- [Bugzilla: 19461] stv0367 LLA upgrade OFDM v3.5 and QAM v1.9
+- [Bugzilla: 19436] B2020/STiH415: Add board support to frontend engine
+- [Bugzilla: 19311] white space error removal in stm_fe source --step3
+- [Bugzilla: 18206] stm_fe_ip: implement RTP packet reordering along with
+		    modularized packet injection thread
+- [Bugzilla: 17999] header inclusion protection for different internal header
+		    files in stm_fe
+
+* Thu Jun 07 2012 Subrata Chatterjee <subrata.chatterjee@st.com> - int21-2
+- Corrected Month name 'June' to 'Jun' in spec file to avoid rpm build error
+
+* Wed Jun 06 2012 Subrata Chatterjee <subrata.chatterjee@st.com> - int21-1
+- [Bugzilla: 18193] Add second demod instance support for single NIM with stv900
+- [Bugzilla: 17932] Introduce __must_check for all Frontend-Engine STKPI functions
+- [Bugzilla: 18726] include export.h instead of module.h in source files which
+		    are not built as modules
+- [Bugzilla: 19081] NULL assignment in stm_fe_lnb_new and stm_fe_diseqc_new
+- [Bugzilla: 19092] stm_fe stat status update takes long time on feed disconnect
+		    for terrestrial
+- [Bugzilla: 19235] build cleanup
+
+* Wed May 16 2012 Subrata Chatterjee <subrata.chatterjee@st.com> - int20-1
+- [Bugzilla: 17775] Event STM_FE_DEMOD_EVENT_TUNE_FAILED is reported continuosly
+- [Bugzilla: 17822] Event STM_FE_DEMOD_EVENT_SCAN_COMPLETE generated after stm_fe_demod_stop
+- [Bugzilla: 18404] Add support for STV0910 device
+- [Bugzilla: 18270] stm_fe version should be available for git code base also
+- [Bugzilla: 18725] few white space error still left in stm_fe source code
+- [Bugzilla: 18749] Issues in different tuner(stv4100,stv6110,dtt7546,stv6120) wrapper functions
+- [Bugzilla: 18840] few os_wrapper related modifications in frontend_engine code
+- [Bugzilla: 18403] Add support for LNBH26 device
+- [Bugzilla: 18008] stm_fe_ip.c:module reload test needs inspection
+- [Bugzilla: 18791] stm_fe_ip:ip_get_control() should not have a case for STM_FE_IP_CTRL_SET_CONFIG
+- [Spec] 	    fix change log syntax
+
+* Tue May 01 2012 Subrata Chatterjee <subrata.chatterjee@st.com> - int19-1
+- [Bugzilla: 15346] Low power support in stm_fe
+- [Bugzilla: 18286] Use cold start algo for better performance
+- [Bugzilla: 18016] SI2173 tuner support for fli7610 platform
+- [Bugzilla: 18535] stm_fe_ip: does not compile for b2000_a9 and b2000_a9-smp
+- [Bugzilla: 18271] header inclusion syntax is not uniform across stm_fe source code
+- [Bugzilla: 18453] incorrect reporting of bandwidth for terrestrial in stv367
+
+* Fri Apr 13 2012 Subrata Chatterjee <subrata.chatterjee@st.com> - int18-1
+- [Bugzilla: 18073] stm_fe does not compile with NIM_STV0900_STV6120_LNBH24_NO_VGLNA
+- [Bugzilla: 17896] wrong return value from ChipSetRegistersI2C() in stm_fe
+- [Bugzilla: 17897] lnb_lnbh24_init() function does not free allocated
+                    resources incase of error
+- [Bugzilla: 18107] frontend_engine spec file needs correction
+- [Bugzilla: 18159] Trailing whitespace removal in frontend_engine code
+
+* Fri Mar 30 2012 Subrata Chatterjee <subrata.chatterjee@st.com> - int17-1
+- [Bugzilla: 17637] semaphore not released in case error occurs in stm_fe_demod_tune()
+		    and stm_fe_demod_stop()
+- [Bugzilla: 17732] export version of stm_fe via sysfs
+- [Bugzilla: 17733] improvement needed in stm_fe stats
+- [Bugzilla: 17734] stm_fe_ip: testing IP FE multi instance with changed
+		    dvb adaptation arch (for ip fe)
+- [Bugzilla: 17891] stm_fe_ip: the return value of "push_data" function inside
+		    ip_thread needs proper placing
+- [Bugzilla: 17869] stm_fe_free needs to be corrected
+- [Bugzilla: 17550] stm_fe_<object>_<controlfunc>() should not be allowed to
+		    proceed after stm_fe_<object>_delete()
+- [Bugzilla: 16965] one of the error cases in stm_fe_demod_new() is not
+		    handled correctly
+- [Bugzilla: 16963] stm_fe_<object>_new() does not have check for already alredy
+		    created object
+- [Bugzilla: 17968] stm_fe_ip:NULL pointer derefernce due to wrong freeing of memory
+
+* Fri Mar 16 2012 Subrata Chatterjee <subrata.chatterjee@st.com> - int16-1
+- [Bugzilla: 17360] code crashes while doing 'modprobe -r dvb_adaptation' if
+		    native kernel is used
+- [Bugzilla: 16617] stm_fe_demod_new() should return error in case demod task
+		    creation fails
+- [Bugzilla: 16654] frontend_engine to include board config for ADI7108
+- [Bugzilla: 17600] frontend-engine: compilation fails for adi7108
+- [Bugzilla: 17581] Trivial:coding guideline/indentation related corrections in
+		    stm_fe code
+
+* Wed Mar 07 2012 Subrata Chatterjee <subrata.chatterjee@st.com> - int15-1
+- [Bugzilla: 16380] need to support sysfs for stm_fe statistics
+- [Bugzilla: 16954] Status is not updated in stvxxx_status
+- [Bugzilla: 16959] Optimise demod_task() delay
+- [Bugzilla: 16960] Set inversion also auto for automatic acquisition (Sat)
+- [Bugzilla: 16822] MODULE_DESCRIPTION() for kernel modules in stm_fe refinement
+- [Bugzilla: 16847] Capabilities of STV0903 not correctly reported
+- [Bugzilla: 17069] Unify setup files across platforms
+- [Bugzilla: 16596] stm_fe_ip:IP FE multi instance support
+- [Bugzilla: 16962] IP Frontend : following coding guidelines need to be improved
+- [Bugzilla: 17273] frontend_engine does not compile against linux-3.2 headers
+- [Bugzilla: 15717] frontend_engine build system is sub optimal
+
+* Wed Jan 25 2012 Subrata Chatterjee <subrata.chatterjee@st.com> - int14-1
+- [Bugzilla: 16249] Reference to "Shark" or "Havana" to be removed from the code
+                     for SDK2-04: Front-end
+- [Bugzilla: 15811] Remove redundancy of stm_fe_demod_s et al
+- [Bugzilla: 15833] Remove redundant tuner_ops in demod chip handle
+- [Bugzilla: 16309] not able to set tone with ioctl SET_TONE
+- [Bugzilla: 16148] Bug in internal os-wrapper function stm_fe_thread_create()
+                    implementation
+- [Bugzilla: 14133] stm_fe IP basic implementation in frontend_engine
+
+* Mon Dec 12 2011 Subrata Chatterjee <subrata.chatterjee@st.com> - int13-1
+- [Bugzilla: 15410] Linux-3.1: Frontend Engine updates
+- [Bugzilla: 15347] incorrect reporting of snr in terrestrial and cable
+- [Bugzilla: 15349] stm_fe_demod_delete() after scan operation gives error
+			in demod_unlock().
+- [Bugzilla: 15456] 367 stm_fe LLA(ter) update with latest 3.3 version
+- [Bugzilla: 15747] Delayed update of signal statistics after lock
+- [Bugzilla: 15775] stm_fe_thread_create should rename argument 'demod_handle'
+		    as 'object_handle'
+
+* Fri Nov 18 2011 Stuart Hodgson <stuart.hodgson@st.com> - int12-1
+- [Bugzilla: 13518] ste_fe demod scan api implementation
+- [Bugzilla: 13883] Stv 367 multi instance support
+- [Bugzilla: 13913] terrestrial cables capabilities seperation
+- [Bugzilla: 14313] Reduce cpu load of driver thread
+- [Bugzilla: 14575] stm_fe demod detach needs a tuple
+- [Bugzilla: 14823] remove 367 redundancy in config
+- [Bugzilla: 15220] multi instance support
+
+* Tue Oct 25 2011 André Draszik <andre.draszik@st.com> - int11-1
+- [Bugzilla: 14047] Correction in variable used to store pointer
+- [Bugzilla: 14109] Add aquisition time measurement to unitary tests
+- [Bugzilla: 14822] Minor issues in stm_fe_unit test
+- [Spec; Bugzilla: 14901] spec file update needed
+
+* Thu Oct 13 2011 Stuart H <hodgsons@st.com> - int10-1
+- [Bugzilla: 14101] "PLL" Not a device specific name for tuner
+- [Bugzilla: 14087] Addition of DTT7546 support
+- [Bugzilla: 14153] Roll Off is being reported as ZERO
+- [Bugzilla: 14296] NIM-TS board support
+
+* Wed Sep 21 2011 Stuart H <hodgsons@st.com> - int9-1
+- [Bugzilla: 13926] Remove direct use of stm_fe_engine from demod/lnb/diseqc
+- [Bugzilla: 13980] Bug in removing stm_fe_demod_new in stm_fe
+- [Bugzilla: 14081] Default demod/tuner device support in stm_fe
+- [Bugzilla: 14113] Alogorithm for STV903 wrongly used blind in normal search
+- [Bugzilla: 14220] stv0367 driver does not work with 7 bit i2c address
+- [Bugzilla: 14227] First tune fails if channel has horizontal polarisation
+- [Bugzilla: 14273] Added header guard to stm_fe.h
+
+* Thu Sep 08 2011 Stuart H <hodgsons@st.com> - int8-1
+- [Bugzilla: 14081] Set Default tuners to STV900-6110
+
+* Wed Sep 07 2011 Stuart H <hodgsons@st.com> - int7-1
+- [Bugzilla: 13653] I2C address's are no longer shifted in configuration
+- [Bugzilla: 13723] Default module selection matches configuration file
+- [Bugzilla: 13890] stm_os_wrapper.ko changed to stm_fe_os_wrapper.ko
+- [Bugzilla: 13903] NULL pointer checks on demod_object
+
+* Fri Aug 19 2011 Stuart H <hodgsons@st.com> - int6-1
+- [Bugzilla: 13524] FE platform device support for Orly
+- [Bugzilla: 13595] Supprt for STV367/4100 LLA
+- [Bugzilla: 13711] Platform Module cannot be reloaded
+- [Bugzilla: 13755] Fixup private pointers for native fe's
+- [Bugzilla: 13784] bypass_control module param reset fix
+
+* Mon Aug 08 2011 Stuart H <hodgsons@st.com> - int5-1
+- [Bugzilla: 13561] Real implementation of demod_detach and demod_attach
+
+* Fri Jul 29 2011 Shobhit Kumar Singh <shobhit.singh@st.com> - int4-1
+- [Bugzilla: 13431] Need change in stm_fe due to infra registry api change
+
+* Thu Jul 28 2011 Shobhit Kumar Singh <shobhit.singh@st.com> - int3-1
+- [New] First release with full KPI implementation
+- [Bugzilla: 13172] coding error in stmfe
+
+* Wed Jul 20 2011 André Draszik <andre.draszik@st.com> - int2-1
+- [Bugzilla: 13224] frontend_engine source rpm does not build for non-sh4 arches
+- [Spec] heavy cleanup
+- [Bugzilla: 13277] frontend engine build system does not work for non-sh
+  cpu type or sh4-glibc ARCH
+
+* Tue Jun 21 2011 Subrata Chatterjee <subrata.chatterjee@st.com> - int1-1
+- [New] First rpm version

@@ -1,0 +1,14 @@
+# TSMux devices
+
+#
+# Provide TSMux devices in one folder
+#
+KERNEL=="tsmux/*",			MODE="0660"
+KERNEL=="tsmux*",			NAME="tsmux/%k", SYMLINK="%k"
+
+#
+# Provide TSMux devices under /dev/
+# This rule doesn't actually work:
+# It seems to lose out to the ts* rule for touch screens
+# and the resulting dev nodes end up in /dev/input/*
+# KERNEL=="tsmux*",			NAME="%k", MODE="0660",

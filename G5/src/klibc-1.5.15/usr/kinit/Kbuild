@@ -1,0 +1,37 @@
+#
+# Kbuild file for kinit
+#
+
+# library part of kinit. Is used by programs in sub-directories (resume et al)
+lib-y   := name_to_dev.o devname.o getarg.o
+# use lib for kinit
+kinit-y  := lib.a
+
+kinit-y  += kinit.o do_mounts.o ramdisk_load.o initrd.o
+kinit-y  += getintfile.o readfile.o xpio.o
+kinit-y  += do_mounts_md.o do_mounts_mtd.o nfsroot.o
+
+kinit-y  += ipconfig/
+kinit-y  += nfsmount/
+kinit-y  += run-init/
+kinit-y  += fstype/
+kinit-y  += resume/
+
+static-y := kinit
+shared-y := kinit.shared
+kinit.shared-y := $(kinit-y)
+
+# Additional include paths files
+KLIBCCFLAGS += -I$(srctree)/$(src)/fstype \
+	       -I$(srctree)/$(src)/ipconfig \
+  	       -I$(srctree)/$(src)/nfsmount \
+  	       -I$(srctree)/$(src)/resume \
+ 	       -I$(srctree)/$(src)/run-init
+
+# Cleaning
+targets += kinit kinit.g kinit.shared kinit.shared.g
+subdir- := fstype ipconfig nfsmount resume run-init
+
+
+# install binary
+install-y := kinit kinit.shared

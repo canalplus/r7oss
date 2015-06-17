@@ -1,0 +1,26 @@
+From f857ff0cb7755969438281e585085315120b75e5 Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:19:59 +0100
+Subject: [PATCH 11/36] patches/h264_insufficient_memory_crash
+
+---
+ player/codec/codec_mme_video.cpp |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/player/codec/codec_mme_video.cpp b/player/codec/codec_mme_video.cpp
+index a383e03..d8af9d6 100644
+--- a/player/codec/codec_mme_video.cpp
++++ b/player/codec/codec_mme_video.cpp
+@@ -336,8 +336,7 @@ CodecBufferState_t	 *State;
+     Status	= FillOutDecodeCommand();
+     if( Status != CodecNoError )
+     {
+-	// Nick changed to fatal, because if this happens we are heading for deadlock anyway
+-	report( severity_fatal, "Codec_MmeVideo_c::Input(%s) - Failed to fill out a decode command.\n", Configuration.CodecName );
++	report( severity_error, "Codec_MmeVideo_c::Input(%s) - Failed to fill out a decode command.\n", Configuration.CodecName );
+ 	ReleaseDecodeContext( DecodeContext );
+ 
+ 	return Status;
+-- 
+1.7.9.5
+

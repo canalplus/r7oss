@@ -1,0 +1,22 @@
+STMicroelectronics STIH41x USB PHY binding
+------------------------------------------
+
+Required properties:
+- compatible : should be "st,stih416-usb-phy" or "st,stih415-usb-phy";
+- st,syscfg : should be a phandle of the syscfg node.
+- clock-names : Must contain "osc_phy".
+- clocks : Must contain an entry for each name in clock-names. See the common
+  clock bindings.
+- #phy-cells : from the generic phy bindings, must be 0 for this phy;
+
+Example:
+usb2_phy: usb2phy@0 {
+	compatible = "st,stih416-usb-phy";
+	#phy-cells = <0>;
+
+	st,syscfg	= <&syscfg_rear>;
+
+	clocks		= <&CLK_SYSIN>;
+	clock-names	= "osc_phy";
+};
+

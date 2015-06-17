@@ -1,0 +1,728 @@
+<title>DVB CA Device</title>
+
+<para>STMicroelectronics: The implementation of this section of the
+API is specific to chip, board, and environment in which the system is
+to be run. In a simple system there is no CA functionality. In other
+systems the interface is specific to the CA provider, and may require
+a Non-Disclosure Agreement to be signed, with that CA provider, to
+gain information of the interface.</para>
+
+
+<para>The DVB CA device controls the conditional access hardware. It can be accessed through
+<emphasis role="tt">/dev/dvb/adapter0/ca0</emphasis>. Data types and and ioctl definitions can be accessed by
+including <emphasis role="tt">linux/dvb/ca.h</emphasis> in your application.
+</para>
+
+<section id="ca_data_types">
+<title>CA Data Types</title>
+
+
+<section id="ca-slot-info">
+<title>ca_slot_info_t</title>
+ <programlisting>
+typedef struct ca_slot_info {
+	int num;               /&#x22C6; slot number &#x22C6;/
+
+	int type;              /&#x22C6; CA interface this slot supports &#x22C6;/
+#define CA_CI            1     /&#x22C6; CI high level interface &#x22C6;/
+#define CA_CI_LINK       2     /&#x22C6; CI link layer level interface &#x22C6;/
+#define CA_CI_PHYS       4     /&#x22C6; CI physical layer level interface &#x22C6;/
+#define CA_DESCR         8     /&#x22C6; built-in descrambler &#x22C6;/
+#define CA_SC          128     /&#x22C6; simple smart card interface &#x22C6;/
+
+	unsigned int flags;
+#define CA_CI_MODULE_PRESENT 1 /&#x22C6; module (or card) inserted &#x22C6;/
+#define CA_CI_MODULE_READY   2
+} ca_slot_info_t;
+</programlisting>
+
+</section>
+<section id="ca-descr-info">
+<title>ca_descr_info_t</title>
+<programlisting>
+typedef struct ca_descr_info {
+	unsigned int num;  /&#x22C6; number of available descramblers (keys) &#x22C6;/
+	unsigned int type; /&#x22C6; type of supported scrambling system &#x22C6;/
+#define CA_ECD           1
+#define CA_NDS           2
+#define CA_DSS           4
+} ca_descr_info_t;
+</programlisting>
+
+</section>
+<section id="ca-caps">
+<title>ca_caps_t</title>
+<programlisting>
+typedef struct ca_caps {
+	unsigned int slot_num;  /&#x22C6; total number of CA card and module slots &#x22C6;/
+	unsigned int slot_type; /&#x22C6; OR of all supported types &#x22C6;/
+	unsigned int descr_num; /&#x22C6; total number of descrambler slots (keys) &#x22C6;/
+	unsigned int descr_type;/&#x22C6; OR of all supported types &#x22C6;/
+ } ca_cap_t;
+</programlisting>
+
+</section>
+<section id="ca-msg">
+<title>ca_msg_t</title>
+<programlisting>
+/&#x22C6; a message to/from a CI-CAM &#x22C6;/
+typedef struct ca_msg {
+	unsigned int index;
+	unsigned int type;
+	unsigned int length;
+	unsigned char msg[256];
+} ca_msg_t;
+</programlisting>
+
+</section>
+<section id="ca-descr">
+<title>ca_descr_t</title>
+<programlisting>
+typedef struct ca_descr {
+	unsigned int index;
+	unsigned int parity;
+	unsigned char cw[8];
+} ca_descr_t;
+</programlisting>
+</section>
+
+<section id="ca-pid">
+<title>ca-pid</title>
+<programlisting>
+typedef struct ca_pid {
+	unsigned int pid;
+	int index;		/&#x22C6; -1 == disable&#x22C6;/
+} ca_pid_t;
+</programlisting>
+</section>
+
+
+<section id="dvb_ca_cipher_t">
+<title>dvb_ca_cipher_t [STMicroelectronics extension]</title>
+<programlisting>
+typedef enum {
+	DVB_CA_CIPHER_NONE,
+	DVB_CA_CIPHER_DVB_CSA,
+	DVB_CA_CIPHER_DVB_CSA3,
+	DVB_CA_CIPHER_AES,
+	DVB_CA_CIPHER_TDES,
+	DVB_CA_CIPHER_MULTI2,
+} dvb_ca_cipher_t;
+</programlisting>
+</section>
+
+<section id="dvb_ca_chaining_t">
+<title>dvb_ca_chaining_t [STMicroelectronics extension]</title>
+<programlisting>
+typedef enum {
+	DVB_CA_CHAINING_NONE,
+	DVB_CA_CHAINING_CBC,
+	DVB_CA_CHAINING_CTR,
+	DVB_CA_CHAINING_OFB,
+	DVB_CA_CHAINING_RCBC,
+	DVB_CA_CHAINING_DVB_LSA_CBC,
+	DVB_CA_CHAINING_DVB_LSA_RCBC,
+} dvb_ca_chaining_t;
+</programlisting>
+</section>
+
+<section id="dvb_ca_residue_t">
+<title>dvb_ca_residue_t [STMicroelectronics extension]</title>
+<programlisting>
+typedef enum {
+	DVB_CA_RESIDUE_NONE,
+	DVB_CA_RESIDUE_DVS042,
+	DVB_CA_RESIDUE_CTS,
+	DVB_CA_RESIDUE_SA_CTS,
+	DVB_CA_RESIDUE_IPTV,
+	DVB_CA_RESIDUE_PLAIN_LR,
+} dvb_ca_residue_t;
+</programlisting>
+</section>
+
+
+<section id="dvb_ca_fuse_op_t">
+<title>dvb_ca_fuse_op_t [STMicroelectronics extension]</title>
+<programlisting>
+typedef enum {
+	DVB_CA_FUSE_READ,
+	DVB_CA_FUSE_WRITE,
+	DVB_CA_FUSE_WRITE_AND_LOCK,
+	DVB_CA_FUSE_LOCK,
+} dvb_ca_fuse_op_t;
+</programlisting>
+</section>
+
+
+<section id="dvbca_commands">
+<title>ST Specific CA commands [STMicroelectronics extension]</title>
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>Command</para>
+        </entry>
+        <entry align="char">
+          <para>Description</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>DVB_CA_SET_PROFILE</para>
+        </entry>
+        <entry align="char">
+          <para>Set the CA profile name for this device. This will cause profile
+		data to be loaded, which defines the set of available key rules/ladders.
+		This command should be called immediately after opening the CA
+		device, otherwise the platform's default profile will be assume</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>DVB_CA_RESET</para>
+        </entry>
+        <entry align="char">
+          <para>Resets the CA device, clearing all profile and key data</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>DVB_CA_SET_LADDER_DATA</para>
+        </entry>
+        <entry align="char">
+          <para>Sets protected key ladder data. The data will be specific to
+		the ladders available in the selected CA profile</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>DVB_CA_SET_DSC_CONFIG</para>
+        </entry>
+        <entry align="char">
+          <para>Sets the descrambling configuration for as single index on a CA device</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>DVB_CA_SET_DSC_KEY</para>
+        </entry>
+        <entry align="char">
+          <para>Sets the descrambling key for as single index on a CA device</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>DVB_CA_SET_DSC_IV</para>
+        </entry>
+        <entry align="char">
+          <para>Sets the descrambling IV or initial counter value for a single index on a CA device</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>DVB_CA_SET_SCR_CONFIG</para>
+        </entry>
+        <entry align="char">
+          <para>Sets the re-scrambling configuration for as single index on a CA device</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>DVB_CA_SET_SCR_KEY</para>
+        </entry>
+        <entry align="char">
+          <para>Sets the re-scrambling key for as single index on a CA device</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>DVB_CA_SET_SCR_IV</para>
+        </entry>
+        <entry align="char">
+          <para>Sets the re-scrambling IV or initial counter value for a single index on a CA device</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>DVB_CA_SET_RAW_DSC_CONFIG</para>
+        </entry>
+        <entry align="char">
+          <para>Sets the de-scrambling configuration for block-based encryption</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>DVB_CA_SET_RAW_SCR_CONFIG</para>
+        </entry>
+        <entry align="char">
+          <para>Sets the scrambling configuration for block-based encryption</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>DVB_CA_FUSE_OP</para>
+        </entry>
+        <entry align="char">
+          <para>Sets or gets a fuse value. The available operations are read, write, write and lock, lock a named fuse</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+</section>
+
+<section id="dvb_ca_key_t">
+<title>dvb_ca_key_t [STMicroelectronics extension]</title>
+<para>The structure used to represents a single key buffer.</para>
+<programlisting>
+#define DVB_CA_MAX_KEY_DATA 32
+#define DVB_CA_POLARITY_NONE = -1
+#define DVB_CA_POLARITY_EVEN = 0
+#define DVB_CA_POLARITY_ODD = 1
+typedef struct {
+	unsigned char size;
+	unsigned int polarity;
+	unsigned char data[DVB_CA_MAX_KEY_DATA];
+} dvb_ca_key_t;
+</programlisting>
+</section>
+
+<section id="dvb_ca_ladder_t">
+<title>dvb_ca_ladder_t [STMicroelectronics extension]</title>
+<para>The structure used to send ladder data with DVB_CA_SET_LADDER_DATA command.</para>
+<programlisting>
+#define DVB_CA_MAX_LADDER_KEYS 6
+typedef struct {
+	int id;
+	unsigned char n_keys;
+	dvb_ca_key_t keys[DVB_CA_MAX_LADDER_KEYS];
+} dvb_ca_ladder_t;
+</programlisting>
+<para>Structure contents is:</para>
+<para>   id: Identifier of ladder to set</para>
+<para>   n_keys: Number of keys in array keys</para>
+<para>   keys: Array of key data to set</para>
+</section>
+
+<section id="dvb_ca_config_t">
+<title>dvb_ca_config_t [STMicroelectronics extension]</title>
+<para>Structure used to send cipher configuration data with command DVB_CA_SET_DSC_CONFIG and DVB_CA_SET_SCR_CONFIG </para>
+<programlisting>
+typedef struct {
+	dvb_ca_cipher_t cipher;
+	dvb_ca_chaining_t chaining;
+	dvb_ca_residue_t residue;
+	unsigned int key_ladder_id;
+	unsigned int iv_ladder_id;
+	unsigned int msc;
+} dvb_ca_config_t;
+</programlisting>
+</section>
+
+<section id="dvb_ca_fuse_t">
+<title>dvb_ca_fuse_t [STMicroelectronics extension]</title>
+<para>The structure used to read/write fuse DVB_CA_FUSE_OP command.</para>
+<programlisting>
+#define DVB_CA_MAX_FUSE_NAME 40
+#define DVB_CA_MAX_FUSE_DATA  4
+typedef struct {
+	dvb_ca_fuse_op_t  op;
+	char name[DVB_CA_MAX_FUSE_NAME];
+	unsigned int value[DVB_CA_MAX_FUSE_DATA];
+} dvb_ca_fuse_t;
+</programlisting>
+<para>Structure contents is:</para>
+<para>   op: Operation to do on fuse (read, write, write_and_lock, lock) </para>
+<para>   name: Name of the fuse (null terminated string)</para>
+<para>   value: value read or to write. (128bits is max size of a fuse value, less can be use). </para>
+</section>
+
+
+<section id="dvb_ca_msg_t">
+<title>dvb_ca_msg_t [STMicroelectronics extension]</title>
+<programlisting>
+#define DVB_CA_PROFILE_SIZE 32
+#define CA_STM 0x53544D00
+typedef struct {
+	unsigned int index;
+	unsigned int type;
+	unsigned int length;
+	unsigned int command;
+	union {
+		char profile[DVB_CA_PROFILE_SIZE];
+		dvb_ca_ladder_t ladder;
+		dvb_ca_config_t config;
+		dvb_ca_key_t key;
+		dvb_ca_fuse_t fuse;
+	} u;
+} dvb_ca_msg_t;
+<para>Structure contents is:</para>
+<para>   type: Should be set to CA_STM for use with this CA api</para>
+<para>   length: </para>
+<para>   command: STM_CA command</para>
+</programlisting>
+ </section>
+ 
+<section id="dvb_ca_msg_t">
+<title>dvb_ca_msg_u [STMicroelectronics extension]</title>
+<para>Union combining stm ca message struct with standard LDVB-CA message</para>
+<programlisting>
+#define DVB_CA_PROFILE_SIZE 32
+typedef union {
+	struct ca_msg msg;
+	dvb_ca_msg_t dvb_ca_msg;
+} dvb_ca_msg_u;</programlisting>
+</section>
+
+</section>
+
+
+<section id="ca_function_calls">
+<title>CA Function Calls</title>
+
+
+<section id="ca_fopen">
+<title>open()</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This system call opens a named ca device (e.g. /dev/ost/ca) for subsequent use.</para>
+<para>When an open() call has succeeded, the device will be ready for use.
+ The significance of blocking or non-blocking mode is described in the
+ documentation for functions where there is a difference. It does not affect the
+ semantics of the open() call itself. A device opened in blocking mode can later
+ be put into non-blocking mode (and vice versa) using the F_SETFL command
+ of the fcntl system call. This is a standard system call, documented in the Linux
+ manual page for fcntl. Only one user can open the CA Device in O_RDWR
+ mode. All other attempts to open the device in this mode will fail, and an error
+ code will be returned.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int open(const char &#x22C6;deviceName, int flags);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>const char
+ *deviceName</para>
+</entry><entry
+ align="char">
+<para>Name of specific video device.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int flags</para>
+</entry><entry
+ align="char">
+<para>A bit-wise OR of the following flags:</para>
+</entry>
+ </row><row><entry
+ align="char">
+</entry><entry
+ align="char">
+<para>O_RDONLY read-only access</para>
+</entry>
+ </row><row><entry
+ align="char">
+</entry><entry
+ align="char">
+<para>O_RDWR read/write access</para>
+</entry>
+ </row><row><entry
+ align="char">
+</entry><entry
+ align="char">
+<para>O_NONBLOCK open in non-blocking mode</para>
+</entry>
+ </row><row><entry
+ align="char">
+</entry><entry
+ align="char">
+<para>(blocking mode is the default)</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>RETURN VALUE</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>ENODEV</para>
+</entry><entry
+ align="char">
+<para>Device driver not loaded/available.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>EINTERNAL</para>
+</entry><entry
+ align="char">
+<para>Internal error.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>EBUSY</para>
+</entry><entry
+ align="char">
+<para>Device or resource busy.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>EINVAL</para>
+</entry><entry
+ align="char">
+<para>Invalid argument.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+
+</section>
+<section id="ca_fclose">
+<title>close()</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This system call closes a previously opened audio device.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int close(int fd);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>RETURN VALUE</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>EBADF</para>
+</entry><entry
+ align="char">
+<para>fd is not a valid open file descriptor.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+ </section>
+
+<section id="CA_SEND_MSG" role="subsection">
+
+<title>CA_SEND_MSG</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl is used to perform ST specific CA device configurations. For example:
+				Set CA profile, Reset CA device, Set protected key ladder data, Set Descrambling config.
+				Set re-scrambling config.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = CA_SEND_MSG, struct ca_msg_t *param);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals CA_SEND_MSG for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>struct ca_msg_t *param</para>
+        </entry>
+        <entry align="char">
+          <para>Pointer to the structure.</para>
+        </entry>
+      </row>
+      
+    </tbody>
+  </tgroup>
+</informaltable>
+&return-value-dvb;
+</section>
+
+<section id="CA_SET_DESCR" role="subsection">
+
+<title>CA_SET_DESCR</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl call is to configure the CA channel associated with index. If no channel already exists for this index, it will create a new channel</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = CA_SET_DESCR, struct ca_descr_t *param);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals CA_SET_DESCR for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>struct ca_descr_t *param</para>
+        </entry>
+        <entry align="char">
+          <para>Pointer to the structure.</para>
+        </entry>
+      </row>
+      
+    </tbody>
+  </tgroup>
+</informaltable>
+&return-value-dvb;
+</section>
+
+<section id="CA_SET_PID" role="subsection">
+
+<title>CA_SET_PID</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl call is to associate a given CA channel with a given PID on corresponding demux. This makes a connection between TE PID filter and the CA channel transform object</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = CA_SET_PID, struct ca_pid_t *param);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals CA_SET_PID for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>struct ca_descr_t *param</para>
+        </entry>
+        <entry align="char">
+          <para>Pointer to the structure.</para>
+        </entry>
+      </row>
+      
+    </tbody>
+  </tgroup>
+</informaltable>
+&return-value-dvb;
+</section>
+
+
+</section>

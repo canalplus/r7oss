@@ -1,0 +1,33 @@
+--- a/linux/drivers/media/dvb/stm/h264_preprocessor/h264pp.c
++++ b/linux/drivers/media/dvb/stm/h264_preprocessor/h264pp.c
+@@ -71,7 +71,7 @@ typedef struct H264ppState_s
+ 
+     boolean			 ForceWorkAroundGNBvd42331;
+     unsigned int		 last_mb_adaptive_frame_field_flag;		// Copy of h264 variable
+-
++    unsigned int                 last_entropy_coding_mode_flag;
+     unsigned int		 Accumulated_ITS;
+ } H264ppState_t;
+ 
+@@ -624,6 +624,7 @@ int		Status;
+ 
+ 	DeviceContext.PPState[N].ForceWorkAroundGNBvd42331		= true;
+ 	DeviceContext.PPState[N].last_mb_adaptive_frame_field_flag	= 0;	// Doesn't matter, will be initialized on first frame
++	DeviceContext.PPState[N].last_entropy_coding_mode_flag	        = 0;	// Doesn't matter, will be initialized on first frame
+ 
+ 	//
+ 	// Perform soft reset
+@@ -826,10 +827,12 @@ unsigned int	IntermediateEndAddress;
+ 
+     State->last_mb_adaptive_frame_field_flag	= mb_adaptive_frame_field_flag;
+ 
+-    if( !PerformWorkaround && !State->ForceWorkAroundGNBvd42331 )
++    if( !PerformWorkaround && !State->ForceWorkAroundGNBvd42331 && entropy_coding_mode_flag == State->last_entropy_coding_mode_flag)
+ 	return;
+ 
+ //OSDEV_Print( "H264ppWorkAroundGNBvd42331 - Deploying GNBvd42331 workaround block to PP %d - %08x.\n", N, State->BufferState->Parameters.Cfg );
++    //last entropy coding mode is the new one
++    State->last_entropy_coding_mode_flag = entropy_coding_mode_flag;
+ 
+     State->ForceWorkAroundGNBvd42331	= 0;
+ 

@@ -1,0 +1,2846 @@
+dnl Process this file with autoconf to produce a configure script.
+dnl
+dnl Copyright (c) by Jaroslav Kysela <perex@perex.cz>
+
+AC_PREREQ(2.59)
+AC_INIT(acore/sound.patch)
+AC_PREFIX_DEFAULT(/usr)
+CONFIG_SND_VERSION="1.0.16"
+
+dnl Checks for programs.
+AC_PROG_CC
+AC_PROG_RANLIB
+AC_PROG_INSTALL
+
+dnl the following should be checked, but they are not used...
+AR=ar
+AS=as
+AC_SUBST(AR)
+AC_SUBST(AS)
+
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_CONFIG_HEADER(include/config.h include/config1.h include/version.h include/autoconf-extra.h)
+dnl AC_CHECK_HEADERS(linux/fs.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_C_INLINE
+AC_HEADER_TIME
+
+dnl Checks for library functions.
+AC_PROG_GCC_TRADITIONAL
+
+dnl Check for current directory
+AC_MSG_CHECKING(for current directory)
+SRCDIR=`/bin/pwd`
+AC_SUBST(SRCDIR)
+AC_MSG_RESULT($SRCDIR)
+
+ALSA_TOPLEVEL_INIT
+
+dnl Check for cross compile...
+AC_MSG_CHECKING(cross compile)
+AC_ARG_WITH(cross,
+  [  --with-cross=dir        give the cross-compile prefix],
+  crossprefix="$withval",
+  crossprefix="")
+CROSS_COMPILE="$crossprefix"
+AC_SUBST(CROSS_COMPILE)
+AC_MSG_RESULT($CROSS_COMPILE)
+
+if test "$crossprefix"; then
+# modify CC, CPP and maybe some other variables. CC is set to
+# e.g. /usr/local/bin/gcc by autoconf - this is then modified 
+# to arm-linux-/usr/local/bin/gcc in Makefile.conf - that is bad - so
+# cut the path out (but save optional params - e.g. gcc -E for CPP) 
+echo $CC | grep ' ' >/dev/null && CC_save=`echo "$CC" | cut -d' ' -f2-` 
+CC="`basename $CC` $CC_save"
+
+echo $CPP | grep ' ' >/dev/null && CPP_save=`echo "$CPP" | cut -d' ' -f2-`
+CPP="`basename $CPP` $CPP_save"
+fi
+
+dnl Check for directory with kernel source...
+AC_MSG_CHECKING(for directory with kernel source)
+if test -d "/lib/modules/`uname -r`/source" -o -L "/lib/modules/`uname -r`/source"; then
+  DEFAULT_KERNEL_DIR="/lib/modules/`uname -r`/source"
+  DEFAULT_KERNEL_BUILD="/lib/modules/`uname -r`/build"
+elif test -d "/lib/modules/`uname -r`/build" -o -L "/lib/modules/`uname -r`/build"; then
+  DEFAULT_KERNEL_DIR="/lib/modules/`uname -r`/build"
+else
+  DEFAULT_KERNEL_DIR="/usr/src/linux"
+fi
+AC_ARG_WITH(kernel,
+  [  --with-kernel=dir       give the directory with kernel sources]
+  [                        [[/usr/src/linux]]],
+  [kerneldir="$withval"
+   DEFAULT_KERNEL_BUILD=""],
+  [kerneldir="$DEFAULT_KERNEL_DIR"]
+)
+CONFIG_SND_KERNELDIR="$kerneldir"
+AC_MSG_RESULT($kerneldir)
+
+dnl Check for directory with kernel build tree...
+AC_MSG_CHECKING(for directory with kernel build)
+AC_ARG_WITH(build,
+  [  --with-build=dir        give the directory with kernel build tree],
+  kernelbuild="$withval",
+  kernelbuild="$DEFAULT_KERNEL_BUILD"
+)
+CONFIG_SND_KERNELBUILD="$kernelbuild"
+AC_MSG_RESULT($kernelbuild)
+
+AC_DEFUN([CHECK_REQUIRED_KERNEL_HEADER], [
+  AC_MSG_CHECKING(for kernel $1)
+  if ! test -r $CONFIG_SND_KERNELDIR/include/$1; then
+    if test -z "$kernelbuild" -o ! -f $kernelbuild/include/$1; then
+      AC_MSG_RESULT(no)
+      cat << EOF
+The file $CONFIG_SND_KERNELDIR/include/$1 does not exist.
+Please install the package with full kernel sources for your distribution
+or use --with-kernel=dir option to specify another directory with kernel
+sources (default is $DEFAULT_KERNEL_DIR).
+EOF
+      exit 1
+    fi
+  fi
+  AC_MSG_RESULT(yes)
+])
+CHECK_REQUIRED_KERNEL_HEADER([linux/version.h])
+CHECK_REQUIRED_KERNEL_HEADER([linux/autoconf.h])
+
+dnl Check for kernel version...
+AC_MSG_CHECKING(for kernel version)
+KERNEL_INC="-I$CONFIG_SND_KERNELDIR/include"
+MAKE_ADDS=""
+if test -n "$kernelbuild"; then
+  kpath=""
+  if test -d "$kernelbuild/include"; then
+    kpath="-I$kernelbuild/include"
+  fi
+  if test -d "$kernelbuild/include2"; then
+    kpath="$kpath -I$kernelbuild/include2"
+    MAKE_ADDS="O=$kernelbuild"
+  fi
+  KERNEL_INC="$kpath $KERNEL_INC"
+fi
+HACK_KERNEL_INC=""
+ac_save_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS $KERNEL_INC $HACK_KERNEL_INC"
+if test -n "$kernelbuild" -a -f $kernelbuild/include/linux/version.h; then
+  KERNDIR=$kernelbuild
+else
+  KERNDIR=$CONFIG_SND_KERNELDIR
+fi
+AC_CACHE_VAL(kaversion,
+[AC_TRY_RUN([
+#include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include "$KERNDIR/include/linux/version.h"
+#ifndef UTS_RELEASE
+#include "$KERNDIR/include/linux/utsrelease.h"
+#endif
+int main()
+{
+ FILE *f;
+ char kversion[128];
+ char kpatchlevel[128];
+ char ksublevel[128];
+ char kextra[128];
+ char *ptr, *dptr;
+#ifdef UTS_RELEASE
+ f=fopen("./conftestdata","w");
+ if (f) {
+   for (ptr = UTS_RELEASE, dptr = kversion; *ptr != '\0' && isdigit(*ptr); ptr++, dptr++)
+     *dptr = *ptr;
+   *dptr = '\0';
+   if (*ptr == '.')
+     ptr++;
+   for (dptr = kpatchlevel; *ptr != '\0' && isdigit(*ptr); ptr++, dptr++)
+     *dptr = *ptr;
+   *dptr = '\0';
+   if (*ptr == '.')
+     ptr++;
+   for (dptr = ksublevel; *ptr != '\0' && isdigit(*ptr); ptr++, dptr++)
+     *dptr = *ptr;
+   *dptr = '\0';
+   for (dptr = kextra; *ptr != '\0'; ptr++, dptr++)
+     *dptr = *ptr;
+   *dptr = '\0';   
+   fprintf(f,"%s:%s:%s:%s\n",kversion,kpatchlevel,ksublevel,kextra);
+   fclose(f);
+   }
+ exit(0);
+#else
+ exit(1);
+#endif
+}],kaversion=`cat conftestdata`,
+kaversion="",
+kaversion="")])
+CFLAGS="$ac_save_CFLAGS"
+kversion=`echo $kaversion | cut -d : -f 1`
+kpatchlevel=`echo $kaversion | cut -d : -f 2`
+ksublevel=`echo $kaversion | cut -d : -f 3`
+kextraversion=`echo $kaversion | cut -d : -f 4`
+kversion=`expr $kversion + 0`
+kpatchlevel=`expr $kpatchlevel + 0`
+ksublevel=`expr $ksublevel + 0`
+if test -z "$kversion" || test -z "$kpatchlevel" || test -z "$ksublevel"; then
+  echo "failed (probably missing $CONFIG_SND_KERNELDIR/include/linux/version.h)"
+  exit 1
+fi
+kaversion="$kversion.$kpatchlevel.$ksublevel$kextraversion"
+AC_SUBST(kaversion)
+AC_SUBST(kversion)
+AC_SUBST(kpatchlevel)
+AC_SUBST(ksublevel)
+AC_SUBST(kextraversion)
+AC_MSG_RESULT($kaversion)
+
+dnl Check for GCC version...
+AC_MSG_CHECKING(for GCC version)
+ac_save_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS $KERNEL_INC $HACK_KERNEL_INC"
+if test -n "$kernelbuild" -a -f $kernelbuild/include/linux/compile.h; then
+  KERNDIR=$kernelbuild
+else
+  KERNDIR=$CONFIG_SND_KERNELDIR
+fi
+AC_CACHE_VAL(kernel_gcc,
+[AC_TRY_RUN([
+#include <stdio.h>
+#include <ctype.h>
+#include <string.h>
+#include "$KERNDIR/include/linux/compile.h"
+int main()
+{
+ FILE *f;
+ char compiler[128];
+ char *ptr, *dptr;
+#ifdef LINUX_COMPILER
+ f=fopen("./conftestdata","w");
+ if (f) {
+   for (ptr = LINUX_COMPILER, dptr = compiler; *ptr != '\0' && *ptr != ' ' && *ptr != '\t'; ptr++, dptr++)
+     *dptr = *ptr;
+   if (*ptr != '\0' && (*ptr == ' ' || *ptr == '\t'))
+     ptr++;
+   if (!strncmp(ptr, "version", 7))
+	ptr += 7;
+   if (*ptr != '\0' && (*ptr == ' ' || *ptr == '\t'))
+     ptr++;
+   *dptr++ = ' ';
+   for (; *ptr != '\0' && *ptr != '\n'; ptr++, dptr++)
+     *dptr = *ptr;
+   *dptr = '\t';
+   *dptr = '\0';
+   if (!strcmp(compiler, " "))
+	compiler[0] = '\0';
+   fprintf(f,"%s\n",compiler);
+   fclose(f);
+   }
+ exit(0);
+#else
+ exit(1);
+#endif
+}],kernel_compiler=`cat conftestdata`,
+kernel_compiler="",
+kernel_compiler="")])
+CFLAGS="$ac_save_CFLAGS"
+my_compiler=`$CROSS_COMPILE$CC --version | head -n 1`
+dnl
+dnl Test section, uncomment any of these double lines to verify the bellow code:
+dnl
+dnl kernel_compiler="gcc-Version 3.3"
+dnl my_compiler="gcc (GCC) 3.3"
+dnl 
+dnl kernel_compiler="gcc 3.2"
+dnl my_compiler="gcc (GCC) 3.2"
+dnl
+dnl kernel_compiler="gcc 3.2.2 (Mandrake Linux 9.1 3.2.2-3mdk)"
+dnl my_compiler="gcc-3.2.2 (GCC) 3.2.2 (Mandrake Linux 9.1 3.2.2-3mdk)"
+dnl
+dnl kernel_compiler="gcc egcs-2.91.66 19990314/Linux (egcs-1.1.2 release)"
+dnl my_compiler="egcs-2.91.66"
+dnl
+dnl kernel_compiler="gcc 2.95.3 20010315 (release)"
+dnl my_compiler="2.95.3"
+dnl
+
+AC_DEFUN([CHECK_COMPILER], [
+  typevar=$2
+  versionvar=$3
+  ac_compiler_type=""
+  ac_compiler_version=""
+  for i in $1; do
+    case $i in
+    gcc-[[0-9]]*|*-gcc-[[0-9]]*)
+      if test -z "$ac_compiler_type"; then
+        ac_compiler_type=gcc
+      fi
+      if test -z "$ac_compiler_version"; then
+        ac_compiler_version=`echo $i | sed -e 's/^.*gcc-\([[0-9.]]\+\).*$/\1/'`
+      fi
+      ;;
+    *gcc*|*GCC*)
+      if test -z "$ac_compiler_type"; then
+        ac_compiler_type=gcc
+      fi
+      ;;
+    egcs-*)
+      ac_compiler_type=egcs
+      if test -z "$ac_compiler_version"; then
+        ac_compiler_version=`echo $i | sed -e 's/egcs-\(.\+\)$/\1/'`
+      fi
+      ;;
+    *cc*)
+      if test -z "$ac_compiler_type"; then
+        ac_compiler_type=cc
+      fi
+      ;;
+    [[0-9]].[[0-9]]*)
+      if test -z "$ac_compiler_version"; then
+        ac_compiler_version="$i"
+      fi
+      ;;
+    esac
+  done
+  eval $typevar="$ac_compiler_type"
+  eval $versionvar="$ac_compiler_version"
+])
+
+CHECK_COMPILER($kernel_compiler, kernel_compiler_type, kernel_compiler_version)
+CHECK_COMPILER($my_compiler, my_compiler_type, my_compiler_version)
+if test -z "$my_compiler_type"; then
+  my_compiler_type="gcc"
+fi
+AC_MSG_RESULT(Kernel compiler: $kernel_compiler Used compiler: $my_compiler);
+if test -z "$kernel_compiler"; then
+  echo
+  echo "*** NO PREDEFINED KERNEL COMPILER IS DETECTED"
+  echo "*** Assuming the same compiler is used with the current system compiler."
+  echo
+  echo "*** Please make sure that the same compiler version was used for building kernel."
+  echo
+else
+if test "$my_compiler_type" != "$kernel_compiler_type"; then
+  echo "Fatal error: Compiler type does not match"
+  echo "Decoded kernel compiler: type=$kernel_compiler_type version=$kernel_compiler_version"
+  echo "Decoded used compiler: type=$my_compiler_type version=$my_compiler_version"
+  echo "Please, send ./configure output to <alsa-devel@alsa-project.org>"
+  exit 1
+fi
+if test "$my_compiler_type" = "gcc" ; then
+  kernel_major=`echo $kernel_compiler_version | cut -d '.' -f 1`
+  my_major=`echo $my_compiler_version | cut -d '.' -f 1`
+  if test $kernel_major -eq 2 -a $my_major -eq 3 ; then
+    echo "Fatal error: Kernel is compiled with GCC 2.x and you are trying to use GCC 3.x."
+    echo "             These two version of GCC are incompatible for binary code."
+    exit 1
+  fi
+  if test $kernel_major -eq 3 -a $my_major -eq 2 ; then
+    echo "Fatal error: Kernel is compiled with GCC 3.x and you are trying to use GCC 2.x."
+    echo "             These two version of GCC are incompatible for binary code."
+    exit 1
+  fi
+fi
+fi
+dnl compiler version check
+
+AC_DEFUN([CHECK_KERNEL_HEADER], [
+  AC_MSG_CHECKING(for kernel $1)
+  if test -n "$kernelbuild" -a \( -f "$kernelbuild/include/$1" -o -f "$kernelbuild/include2/$1" \) ; then
+    KERNDIR=$kernelbuild
+  else
+    KERNDIR=$CONFIG_SND_KERNELDIR
+  fi
+  if test -n "$3"; then
+    eval $3=""
+  fi
+  if test -f "$KERNDIR/include/$1" -o -f "$KERNDIR/include2/$1"; then
+    AC_MSG_RESULT(yes)
+    if test -f include/$1; then
+      echo "Removing a dummy $1."
+      rm -f include/$1
+    fi
+    if test -n "$3"; then
+      eval $3="y"
+    fi
+  else
+    AC_MSG_RESULT(no)
+    if test ! -f include/$1; then
+      if test -z "$2" ; then
+        echo "Creating a dummy <$1>..."
+        mkdir -p include/linux include/asm include/media
+        touch include/$1
+      else
+        echo "Creating <$1>..."
+        mkdir -p include/linux include/asm include/media
+        echo "$2" > include/$1
+      fi
+    fi
+  fi
+])
+
+AC_DEFUN([MODIFY_KERNEL_HEADER], [
+  AC_MSG_CHECKING(to modify of kernel $1)
+  if test -n "$kernelbuild" -a \( -f "$kernelbuild/include/$1" -o -f "$kernelbuild/include2/$1" \) ; then
+    KERNDIR=$kernelbuild
+  else
+    KERNDIR=$CONFIG_SND_KERNELDIR
+  fi
+  if grep -q $2 "$KERNDIR/include/$1" "$KERNDIR/include2/$1" > /dev/null 2>&1; then
+    AC_MSG_RESULT(no)
+    if test -f include/$1; then
+      echo "Removing a dummy $1."
+      rm -f include/$1
+    fi
+  else
+    AC_MSG_RESULT(yes)
+    mkdir -p include/linux include/asm include/media
+    echo "#ifndef $2" > include/$1
+    echo "#define $2" >> include/$1
+    cat "$KERNDIR/include/$1" >> include/$1
+    echo "#endif /* $2 */" >> include/$1
+  fi
+])
+
+dnl Check kernel configurations
+AC_DEFUN([CHECK_KERNEL_CONFIG_BUILTIN], [
+  boolvar="$1"
+  AC_MSG_CHECKING(for $2)
+  ac_save_CFLAGS="$CFLAGS"
+  CFLAGS="$CFLAGS $KERNEL_INC $HACK_KERNEL_INC"
+  if test -n "$kernelbuild" -a -f "$kernelbuild/include/linux/autoconf.h"; then
+    KERNDIR=$kernelbuild
+  else
+    KERNDIR=$CONFIG_SND_KERNELDIR
+  fi
+  boolchk=""
+  AC_TRY_RUN([
+#include "$KERNDIR/include/linux/autoconf.h"
+int main( void ) {
+#ifndef $boolvar
+  exit(1);
+#else
+  exit(0);
+#endif
+}
+],
+    AC_MSG_RESULT(yes);boolchk="y",
+    AC_MSG_RESULT(no);boolchk="",
+    AC_MSG_RESULT(unknown);boolchk=""
+  )
+  CFLAGS="$ac_save_CFLAGS"
+  eval $boolvar="$boolchk"
+])
+
+dnl Check kernel configurations
+AC_DEFUN([CHECK_KERNEL_CONFIG], [
+  boolvar="$1"
+  boolvar1="$1_MODULE"
+  AC_MSG_CHECKING(for $2)
+  ac_save_CFLAGS="$CFLAGS"
+  CFLAGS="$CFLAGS $KERNEL_INC $HACK_KERNEL_INC"
+  if test -n "$kernelbuild" -a -f "$kernelbuild/include/linux/autoconf.h"; then
+    KERNDIR=$kernelbuild
+  else
+    KERNDIR=$CONFIG_SND_KERNELDIR
+  fi
+  boolchk=""
+  AC_TRY_RUN([
+#include "$KERNDIR/include/linux/autoconf.h"
+int main( void ) {
+#if !defined($boolvar) && !defined($boolvar1)
+  exit(1);
+#else
+  exit(0);
+#endif
+}
+],
+    AC_MSG_RESULT(yes);boolchk="y",
+    AC_MSG_RESULT(no);boolchk="",
+    AC_MSG_RESULT(unknown);boolchk=""
+  )
+  CFLAGS="$ac_save_CFLAGS"
+  eval $boolvar="$boolchk"
+])
+
+dnl Check kernel configurations
+AC_DEFUN([CHECK_KERNEL_TRISTATE_CONFIG], [
+  tristatevar="$1"
+  tristatevar1="$1_MODULE"
+  AC_MSG_CHECKING(for $2)
+  ac_save_CFLAGS="$CFLAGS"
+  CFLAGS="$CFLAGS $KERNEL_INC $HACK_KERNEL_INC"
+  if test -n "$kernelbuild" -a -f "$kernelbuild/include/linux/autoconf.h"; then
+    KERNDIR=$kernelbuild
+  else
+    KERNDIR=$CONFIG_SND_KERNELDIR
+  fi
+  tristatechk=""
+  AC_TRY_RUN([
+#include "$KERNDIR/include/linux/autoconf.h"
+#include <stdio.h>
+int main(void) {
+	FILE *file = fopen("tristate.result", "w+");
+	if (file == NULL)
+		exit(1);
+#if defined($tristatevar)
+	fprintf(file, "y");
+#endif
+#if defined(${tristatevar}_MODULE)
+	fprintf(file, "m");
+#endif
+	fclose(file);
+	exit(0);
+}
+],
+    tristatechk="`cat tristate.result`",
+    tristatechk="",
+    tristatechk=""
+  )
+  case $tristatechk in
+  y)
+	tristateres="yes"
+	;;
+  m)
+	tristateres="module"
+	;;
+  *)
+	tristateres="unknown"
+	;;
+  esac
+  AC_MSG_RESULT($tristateres)
+  CFLAGS="$ac_save_CFLAGS"
+  rm -f tristate.result
+  eval $tristatevar="$tristatechk"
+])
+
+dnl Check if symbol is exported
+AC_DEFUN([CHECK_EXPORTED], [
+  AC_MSG_CHECKING(for exported symbol $2)
+  ac_save_CFLAGS="$CFLAGS"
+  boolchk=""
+  if grep EXPORT_SYMBOL "$CONFIG_SND_KERNELDIR/kernel/ksyms.c" | grep "$2" > /dev/null; then
+    AC_MSG_RESULT(yes);boolchk="y"
+    AC_DEFINE($1)
+  else
+    AC_MSG_RESULT(no);boolchk="",
+  fi
+  eval $boolvar="$boolchk"
+])
+
+if test "$kversion.$kpatchlevel" = "2.6"; then
+  NEW_KBUILD=y
+  AC_SUBST(NEW_KBUILD)
+fi
+
+dnl Check builtin ALSA on 2.6 kernel
+CHECK_KERNEL_CONFIG_BUILTIN(CONFIG_SND, [built-in ALSA])
+if test "$CONFIG_SND" = "y"; then
+  AC_MSG_ERROR(You have built-in ALSA in your kernel.)
+fi
+CHECK_KERNEL_CONFIG(CONFIG_SND_MODULE, [existing ALSA module])
+test "$CONFIG_SND_MODULE" = "y" && AC_DEFINE(CONFIG_SND_MODULE)
+
+dnl Check for forced Red Hat kernels
+AC_MSG_CHECKING(for Red Hat kernel)
+AC_ARG_WITH(redhat,
+  [  --with-redhat=no,yes,auto  specify Red Hat kernel build],
+  redhat_kernel="$withval", redhat_kernel="auto")
+RED_HAT_LINUX_KERNEL="auto"
+if test "$redhat_kernel" = "yes"; then
+  RED_HAT_LINUX_KERNEL="y"
+  AC_MSG_RESULT(yes)
+else
+  if test "$redhat_kernel" = "no"; then
+    RED_HAT_LINUX_KERNEL="n"
+    AC_MSG_RESULT(no)
+  else
+    AC_MSG_RESULT(auto)
+    CHECK_KERNEL_CONFIG(RED_HAT_LINUX_KERNEL, [Red Hat kernel])
+  fi
+fi
+
+dnl Check for forced SUSE kernels
+AC_MSG_CHECKING(for SUSE kernel)
+AC_ARG_WITH(suse,
+  [  --with-suse=no,yes,auto  specify SUSE kernel build],
+  suse_kernel="$withval", suse_kernel="auto")
+CONFIG_SUSE_KERNEL="auto"
+if test "$suse_kernel" = "yes"; then
+  CONFIG_SUSE_KERNEL="y"
+  AC_MSG_RESULT(yes)
+else
+  if test "$suse_kernel" = "no"; then
+    CONFIG_SUSE_KERNEL=""
+    AC_MSG_RESULT(no)
+  else
+    AC_MSG_RESULT(auto)
+    CHECK_KERNEL_CONFIG(CONFIG_SUSE_KERNEL, [SUSE kernel])
+  fi
+fi
+
+dnl define kernel directory now
+AC_DEFINE_UNQUOTED(CONFIG_SND_KERNELDIR, "$CONFIG_SND_KERNELDIR")
+AC_SUBST(CONFIG_SND_KERNELDIR)
+AC_SUBST(MAKE_ADDS)
+
+dnl Check experimental drivers...
+AC_MSG_CHECKING(for CONFIG_EXPERIMENTAL)
+AC_ARG_ENABLE(experimental,
+  AS_HELP_STRING([--disable-experimental], [disable CONFIG_EXPERIMENTAL]),
+  config_experimental="$enableval", config_experimental="yes")
+if test "$config_experimental" = "yes"; then
+  CONFIG_EXPERIMENTAL=y 
+  AC_MSG_RESULT(yes)
+else
+  CONFIG_EXPERIMENTAL=
+  AC_MSG_RESULT(no)
+fi
+AC_SUBST(CONFIG_EXPERIMENTAL)
+
+dnl Remove header hacks
+rm -f include/linux/*.h
+rm -f include/asm/*.h
+
+dnl Check linux/config.h
+CHECK_KERNEL_HEADER(linux/config.h, [#ifndef _LINUX_CONFIG_H
+#define _LINUX_CONFIG_H
+#ifndef AUTOCONF_INCLUDED
+#include <linux/autoconf.h>
+#endif
+#endif
+])
+
+dnl Check kernel headers for 2.2
+MODIFY_KERNEL_HEADER(linux/kmod.h, __LINUX_KMOD_H__)
+CHECK_KERNEL_HEADER(linux/utsrelease.h)
+CHECK_KERNEL_HEADER(linux/compiler.h)
+CHECK_KERNEL_HEADER(linux/pm.h)
+CHECK_KERNEL_HEADER(linux/spinlock.h)
+CHECK_KERNEL_HEADER(linux/irq.h)
+CHECK_KERNEL_HEADER(linux/threads.h)
+CHECK_KERNEL_HEADER(linux/rwsem.h)
+CHECK_KERNEL_HEADER(linux/gameport.h)
+CHECK_KERNEL_HEADER(media/v4l2-dev.h)
+CHECK_KERNEL_HEADER(linux/devfs_fs_kernel.h)
+CHECK_KERNEL_HEADER(linux/highmem.h)
+CHECK_KERNEL_HEADER(linux/workqueue.h)
+if test ! -f include/linux/workqueue.h; then
+  if test "x$kversion.$kpatchlevel" = "x2.4" -a \
+          "x$RED_HAT_LINUX_KERNEL" = "xy"; then
+    echo "It looks like you're using a RedHat 9 kernel."
+    echo "Disabling their incomplete workqueue.h modification."
+    mkdir -p include/linux
+    touch include/linux/workqueue.h
+  fi
+fi
+CHECK_KERNEL_HEADER(linux/dma-mapping.h)
+CHECK_KERNEL_HEADER(asm/hw_irq.h)
+CHECK_KERNEL_HEADER(linux/device.h, [#include \"device_compat.h\"
+])
+CHECK_KERNEL_HEADER(linux/platform_device.h, [#include \"platform_device_compat.h\"
+])
+CHECK_KERNEL_HEADER(linux/isa.h, [#include \"isa_compat.h\"
+])
+CHECK_KERNEL_HEADER(linux/jiffies.h, [#include <linux/sched.h>
+#include <linux/delay.h>
+])
+CHECK_KERNEL_HEADER(linux/compat.h, [#include \"compat_64.h\"
+])
+CHECK_KERNEL_HEADER(linux/log2.h)
+dnl PPC headers (for 2.2 kernels)
+CHECK_KERNEL_HEADER(linux/adb.h, [#include <asm/adb.h>
+])
+CHECK_KERNEL_HEADER(linux/cuda.h, [#include <asm/cuda.h>
+])
+CHECK_KERNEL_HEADER(linux/pmu.h, [#include <asm/pmu.h>
+])
+CHECK_KERNEL_HEADER(linux/moduleparam.h)
+CHECK_KERNEL_HEADER(linux/syscalls.h, [#include \"syscalls_26.h\"
+])
+CHECK_KERNEL_HEADER(linux/firmware.h, [#include \"firmware_compat.h\"
+], HAVE_FIRMWARE_H)
+CHECK_KERNEL_HEADER(linux/err.h, [#include \"err_compat.h\"
+])
+CHECK_KERNEL_HEADER(linux/bitmap.h, [#include \"bitmap_compat.h\"
+])
+CHECK_KERNEL_HEADER(linux/mutex.h, [#include \"mutex_compat.h\"
+])
+CHECK_KERNEL_HEADER(linux/latency.h, [#include \"latency_compat.h\"
+])
+CHECK_KERNEL_HEADER(linux/kthread.h, [#include \"kthread_compat.h\"
+])
+CHECK_KERNEL_HEADER(asm/irq_regs.h)
+CHECK_KERNEL_HEADER(linux/seq_file.h)
+
+dnl Check for dump_stack
+if test "$kversion.$kpatchlevel" = "2.6"; then
+  AC_DEFINE(CONFIG_HAVE_DUMP_STACK)
+else
+  CHECK_EXPORTED(CONFIG_HAVE_DUMP_STACK, dump_stack)
+fi
+
+dnl Check for modversions...
+CHECK_KERNEL_CONFIG(CONFIG_MODVERSIONS, [kernel module symbol versions])
+CONFIG_SND_MVERSION=$CONFIG_MODVERSIONS
+AC_SUBST(CONFIG_SND_MVERSION)
+GENKSYMS="/sbin/genksyms -k $kversion.$kpatchlevel.$ksublevel"
+
+dnl Check for ioport support...
+CHECK_KERNEL_CONFIG(CONFIG_HAS_IOPORT, [has ioport support])
+test "$CONFIG_HAS_IOPORT" = "y" && AC_DEFINE(CONFIG_HAS_IOPORT)
+
+dnl Check for PCI support...
+CHECK_KERNEL_CONFIG(CONFIG_PCI, [PCI support in kernel])
+AC_SUBST(CONFIG_PCI)
+
+dnl Check for I2C drivers...
+CHECK_KERNEL_TRISTATE_CONFIG(CONFIG_I2C, [I2C driver in kernel])
+AC_SUBST(CONFIG_I2C)
+
+if test "$CONFIG_I2C" != ""; then
+CHECK_KERNEL_TRISTATE_CONFIG(CONFIG_I2C_POWERMAC, [I2C_POWERMAC in kernel])
+# AC_SUBST(CONFIG_I2C_POWERMAC)
+fi
+
+dnl Check for firmware loader...
+if test -n "$HAVE_FIRMWARE_H"; then
+  CHECK_KERNEL_TRISTATE_CONFIG(CONFIG_FW_LOADER, [firmware loader])
+else
+  AC_MSG_CHECKING(for firmware loader)
+  CONFIG_FW_LOADER="y"
+  AC_MSG_RESULT(emulated)
+fi
+AC_SUBST(CONFIG_FW_LOADER)
+
+dnl Check for input subsystem...
+if test $kpatchlevel -le 2; then
+CONFIG_INPUT="y"
+else
+CHECK_KERNEL_TRISTATE_CONFIG(CONFIG_INPUT, [input subsystem in kernel])
+fi
+AC_SUBST(CONFIG_INPUT)
+
+
+dnl Directory for modules
+AC_MSG_CHECKING(for directory to store kernel modules)
+AC_ARG_WITH(moddir,
+  [  --with-moddir=/path     give the path for the alsa driver kernel modules]
+  [                        [[/lib/modules/<KVER>/misc]]],
+  moddir="$withval", 
+  moddir_tree=
+  modsubdir="misc"
+# Special test for RH 5.1
+  if test -d /lib/modules/preferred; then
+    moddir="/lib/modules/preferred/misc"
+  else
+    if test -d /lib/modules/$kaversion/kernel; then
+      modsubdir="kernel/sound"
+      moddir="/lib/modules/$kaversion/$modsubdir"
+      moddir_tree=y
+    else
+      moddir="/lib/modules/$kaversion/misc"
+    fi
+  fi
+)
+AC_SUBST(moddir)
+AC_SUBST(modsubdir)
+AC_SUBST(moddir_tree)
+AC_MSG_RESULT($moddir)
+
+dnl Verbose procfs
+AC_MSG_CHECKING(for verbose procfs)
+AC_ARG_ENABLE(verbose-procfs,
+  AS_HELP_STRING([--disable-verbose-procfs], [disable verbose procfs]),
+  verbose_procfs="$enableval", verbose_procfs="yes")
+case "$verbose_procfs" in
+  yes)
+    CONFIG_SND_VERBOSE_PROCFS=y
+    AC_DEFINE(CONFIG_SND_VERBOSE_PROCFS)
+    AC_MSG_RESULT(on)
+    ;;
+  *)
+    AC_MSG_RESULT(off)
+    ;;
+esac
+
+dnl Verbose printk
+AC_MSG_CHECKING(for verbose printk)
+AC_ARG_ENABLE(verbose-printk,
+  AS_HELP_STRING([--disable-verbose-printk],[disable verbose printk (file + line number)]),
+  verbose_printk="$enableval", verbose_printk="yes")
+case "$verbose_printk" in
+  yes)
+    CONFIG_SND_VERBOSE_PRINTK=y
+    AC_DEFINE(CONFIG_SND_VERBOSE_PRINTK)
+    AC_MSG_RESULT(on)
+    ;;
+  *)
+    AC_MSG_RESULT(off)
+    ;;
+esac
+
+
+dnl Debug level
+AC_MSG_CHECKING(for debug level)
+AC_ARG_WITH(debug,
+  [  --with-debug=level      give the debug level (none,basic,full,detect)],
+  debug="$withval", debug="none")
+case "$debug" in
+  basic)
+    AC_MSG_RESULT(basic)
+    CONFIG_SND_DEBUG=y
+    AC_DEFINE(CONFIG_SND_DEBUG)
+    ;;
+  memory|full)
+    AC_MSG_RESULT(full)
+    CONFIG_SND_DEBUG=y
+    AC_DEFINE(CONFIG_SND_DEBUG)
+    CONFIG_SND_DEBUG_MEMORY=y
+    AC_DEFINE(CONFIG_SND_DEBUG_MEMORY)
+    ;;
+  detect)
+    AC_MSG_RESULT(detect)
+    CONFIG_SND_DEBUG=y
+    AC_DEFINE(CONFIG_SND_DEBUG)
+    CONFIG_SND_DEBUG_MEMORY=y
+    AC_DEFINE(CONFIG_SND_DEBUG_MEMORY)
+    CONFIG_SND_DEBUG_DETECT=y
+    AC_DEFINE(CONFIG_SND_DEBUG_DETECT)
+    ;;
+  *)
+    AC_MSG_RESULT(none)
+    ;;
+esac
+
+dnl Check for PCI support (for 2.4 kernel)...
+if test $kpatchlevel -ge 3; then
+CHECK_KERNEL_CONFIG(CONFIG_ISA, [ISA support in kernel])
+else
+CONFIG_ISA=probe
+fi
+
+dnl Check processor type...
+AC_MSG_CHECKING(for processor type)
+CONFIG_X86=
+CONFIG_ALPHA=
+CONFIG_L3=
+CONFIG_ARM=
+CONFIG_ARCH_SA1100=
+CONFIG_ARCH_PXA=
+CONFIG_PPC=
+CONFIG_SPARC32=
+CONFIG_SPARC64=
+CONFIG_SBUS=
+CONFIG_MIPS=
+CONFIG_SND_BIT32_EMUL=
+processor=""
+KCC=$CROSS_COMPILE$CC
+rm -f processor.id
+ac_save_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS $KERNEL_INC $HACK_KERNEL_INC"
+if test -n "$kernelbuild" -a -f "$kernelbuild/include/linux/autoconf.h"; then
+  KERNDIR=$kernelbuild
+else
+  KERNDIR=$CONFIG_SND_KERNELDIR
+fi
+AC_TRY_RUN([
+#include <stdio.h>
+#include "$KERNDIR/include/linux/autoconf.h"
+int main(void) {
+	FILE *file = fopen("processor.id", "w+");
+	if (file == NULL)
+		exit(1);
+#if defined(CONFIG_M386)
+	fprintf(file, "i386");
+#elif defined(CONFIG_M486)
+	fprintf(file, "i486");
+#elif defined(CONFIG_M586)
+	fprintf(file, "i586");
+#elif defined(CONFIG_X86_64) /* this needs to be chcked before K8 */
+	fprintf(file, "x86_64");
+#elif defined(CONFIG_M586TSC)
+	fprintf(file, "i586tsc");
+#elif defined(CONFIG_M586MMX)
+	fprintf(file, "i586mmx");
+#elif defined(CONFIG_MCORE2)
+	fprintf(file, "mcore2");
+#elif defined(CONFIG_M686) || defined(CONFIG_MPENTIUMII) || defined(CONFIG_MPENTIUMIII) || defined(CONFIG_MPENTIUM4) || defined(CONFIG_MPENTIUMM)
+	fprintf(file, "i686");
+#elif defined(CONFIG_MK6)
+	fprintf(file, "k6");
+#elif defined(CONFIG_MK7)
+	fprintf(file, "k7");
+#elif defined(CONFIG_MK8)
+	fprintf(file, "k8");
+#elif defined(CONFIG_MGEODEGX1)
+	fprintf(file, "geodegx1");
+#elif defined(CONFIG_MCRUSOE)
+	fprintf(file, "crusoe");
+#elif defined(CONFIG_MWINCHIPC6) || defined(CONFIG_MWINCHIP2) || defined(CONFIG_MWINCHIP3D)
+	fprintf(file, "mwinchip");
+#elif defined(CONFIG_MCYRIXIII)
+	fprintf(file, "mcyrixiii");
+#elif defined(CONFIG_X86_32)
+	fprintf(file, "x86_32");
+#elif defined(CONFIG_IA64)
+	fprintf(file, "ia64");
+#elif defined(CONFIG_ALPHA_GENERIC)
+	fprintf(file, "alpha_generic");
+#elif defined(CONFIG_ALPHA_SX164)
+	fprintf(file, "alpha_sx164");
+#elif defined(CONFIG_ALPHA_PYXIS)
+	fprintf(file, "alpha_pyxis");
+#elif defined(CONFIG_ALPHA_POLARIS)
+	fprintf(file, "alpha_polaris");
+#elif defined(CONFIG_EV4) || defined(CONFIG_ALPHA_EV4)
+	fprintf(file, "alpha_ev4");
+#elif defined(CONFIG_EV5) || defined(CONFIG_ALPHA_EV5)
+	fprintf(file, "alpha_ev5");
+#elif defined(CONFIG_EV6) || defined(CONFIG_ALPHA_EV6)
+	fprintf(file, "alpha_ev6");
+#elif defined(CONFIG_ALPHA_NONAME) || defined(CONFIG_ALPHA)
+	fprintf(file, "alpha_noname");
+#elif defined(CONFIG_PPC64)
+	fprintf(file, "ppc64");
+#elif defined(CONFIG_PPC)
+	fprintf(file, "ppc");
+#elif defined(CONFIG_CPU_R3000) || defined(CONFIG_CPU_R6000)
+	fprintf(file, "mips");
+#elif defined(CONFIG_CPU_R4300) || defined(CONFIG_CPU_R4X00)
+	fprintf(file, "mips");
+#elif defined(CONFIG_CPU_R5000) || defined(CONFIG_CPU_NEVADA)
+	fprintf(file, "mips");
+#elif defined(CONFIG_CPU_R8000) || defined(CONFIG_CPU_R10000)
+	fprintf(file, "mips");
+#elif defined(CONFIG_SPARC32)
+	fprintf(file, "sparc");
+#elif defined(CONFIG_SPARC64)
+	fprintf(file, "sparc64");
+#elif defined(CONFIG_ARCH_SA1100)
+	fprintf(file, "sa1100");
+#elif defined(CONFIG_ARCH_PXA)
+	fprintf(file, "pxa");
+#elif defined(CONFIG_ARM_AMBA)
+	fprintf(file, "amba");
+#elif defined(CONFIG_PARISC)
+	fprintf(file, "parisc");
+#elif defined(CONFIG_MVIAC3_2)
+	fprintf(file, "viac3_2");
+#elif defined(CONFIG_SUPERH64)
+	fprintf(file, "sh64");
+#elif defined(CONFIG_SUPERH)
+	fprintf(file, "sh");
+#else
+	fclose(file);
+	exit(1);
+#endif
+	fclose(file);
+	exit(0);
+}
+],
+  processor=`cat processor.id`;AC_MSG_RESULT($processor),
+  AC_MSG_RESULT(unknown);processor="",
+  AC_MSG_RESULT(unknown);processor=""
+)
+CFLAGS="$ac_save_CFLAGS"
+rm -f processor.id
+c_opts=""
+KLD=ld
+ARCH=
+case "$processor" in
+  x86_32)
+    ARCH=i386
+    c_opts="-march=i386"
+    ;;
+  i386*)
+    ARCH=i386
+    c_opts="-march=i386"
+    ;;
+  i486*)
+    ARCH=i386
+    c_opts="-march=i486"
+    ;;
+  i586* | mwinchip)
+    ARCH=i386
+    c_opts="-march=i586"
+    ;;
+  i686*)
+    ARCH=i386
+    c_opts="-march=i686"
+    ;;
+  mcore2)
+    ARCH=i386
+    c_opts="-march=i686"
+    if $KCC -mtune=core2 -S -o /dev/null -xc /dev/null >/dev/null 2>&1; then
+      c_opts="$c_opts -mtune=core2"
+    fi
+    ;;
+  k6)
+    ARCH=i386
+    if $KCC -march=k6  -S -o /dev/null -xc /dev/null >/dev/null 2>&1; then
+      c_opts="-march=k6"
+    else
+      c_opts="-march=i586"
+    fi
+    ;;
+  k7|k8)
+    ARCH=i386
+    if $KCC -march=athlon -S -o /dev/null -xc /dev/null >/dev/null 2>&1; then
+      c_opts="-march=athlon"
+    else
+      if $KCC -falign-functions=0 -S -o /dev/null -xc /dev/null >/dev/null 2>&1; then
+        c_opts="-march=i686 -falign-functions=4"
+      else
+	c_opts="-march=i686 -malign-functions=4"
+      fi
+    fi
+    ;;
+  crusoe)
+    ARCH=i386
+    if $KCC -falign-functions=0 -S -o /dev/null -xc /dev/null >/dev/null 2>&1; then
+      c_opts="-march=i686 -falign-functions=0 -falign-jumps=0 -falign-loops=0"
+    else
+      c_opts="-march=i686 -malign-functions=0 -malign-jumps=0 -malign-loops=0"
+    fi
+    ;;
+  mcyrixiii)
+    ARCH=i386
+    if $KCC -march=c3 -S -o /dev/null -xc /dev/null >/dev/null 2>&1; then
+      c_opts="-march=c3"
+    else
+      c_opts="-march=i486"
+    fi
+    if $KCC -falign-functions=0 -falign-jumps=0 -falign-loops=0 -S -o /dev/null -xc /dev/null >/dev/null 2>&1; then
+      c_opts="$c_opts -falign-functions=0 -falign-jumps=0 -falign-loops=0"
+    else
+      c_opts="$c_opts -malign-functions=0 -malign-jumps=0 -malign-loops=0"
+    fi
+    ;;
+  geodegx1)
+    ARCH=i386
+    c_opts="-march=pentium-mmx"
+    ;;
+  ia64)
+    ARCH=ia64
+    c_opts="-Wa,-x -ffixed-r13 -mfixed-range=f10-f15,f32-f127 -funwind-tables -falign-functions=32"
+    test "$CONFIG_ISA" = "probe" && CONFIG_ISA=
+    CONFIG_IA64=y
+    ;;
+  alpha*)
+    ARCH=alpha
+    c_opts="-mno-fp-regs -ffixed-8"
+    if $KCC -mcpu=pca56 -S -o /dev/null -xc /dev/null > /dev/null 2>&1; then
+      have_pca56=yes
+    fi
+    if $KCC -mcpu=ev5 -S -o /dev/null -xc /dev/null > /dev/null 2>&1; then
+      case "$processor" in
+      alpha_generic)
+        c_opts="$c_opts -mcpu=ev5"
+        ;;
+      alpha_sx164|alpha_polaris)
+	if test x$have_pca56 = xyes; then
+          c_opts="$c_opts -mcpu=pca56"
+	else
+          c_opts="$c_opts -mcpu=ev56"
+        fi
+	;;
+      alpha_pyxis)
+        c_opts="$c_opts -mcpu=ev56"
+        ;;
+      alpha_ev4)
+        c_opts="$c_opts -mcpu=ev4"
+        ;;
+      alpha_ev6)
+        if $KCC -mcpu=ev6 -S -o /dev/null -xc /dev/null > /dev/null 2>&1; then
+	  c_opts="$c_opts -mcpu=ev6"
+	elif test x$have_pca56 = xyes; then
+	  c_opts="$c_opts -mcpu=pca56"
+        else
+	  c_opts="$c_opts -mcpu=ev56"
+        fi
+        ;;
+      esac
+    fi
+    c_opts="$c_opts -Wa,-mev6"
+    processor="alpha"
+    CONFIG_ALPHA=y
+  cat > $SRCDIR/include/asm/hack-current.h << EOF
+#ifndef _ALPHA_CURRENT_H
+#define _ALPHA_CURRENT_H
+
+extern struct task_struct *current;
+
+#endif /* !(_ALPHA_CURRENT_H) */
+EOF
+    HACK_KERNEL_INC="$HACK_KERNEL_INC --include $SRCDIR/include/asm/hack-current.h"
+    ;;
+  ppc)
+    ARCH=ppc
+    c_opts="-D__powerpc__ -fsigned-char -fno-builtin -msoft-float -ffixed-r2 -Wno-uninitialized -mmultiple -mstring"
+    if test -d $CONFIG_SND_KERNELDIR/arch/ppc/include; then
+      KERNEL_INC="$KERNEL_INC -I$CONFIG_SND_KERNELDIR/arch/ppc/include"
+    fi
+    CONFIG_PPC=y
+    dnl FIXME: it should be checked?
+    CONFIG_PPC_PMAC=y
+    test "$CONFIG_ISA" = "probe" && CONFIG_ISA=
+    ;;
+  ppc64)
+    if test "$kversion.$kpatchlevel" = "2.6"; then
+	if test $ksublevel -gt 14; then
+	    ARCH=powerpc
+	else
+	    ARCH=ppc64
+	fi
+    fi
+    c_opts="-D__powerpc__ -fsigned-char -msoft-float -Wno-uninitialized -mminimal-toc -fno-builtin"
+    CONFIG_SND_BIT32_EMUL=m
+    CONFIG_PPC=y
+    CHECK_KERNEL_CONFIG(CONFIG_PPC_PMAC, [PPC PowerMac])
+    test "$CONFIG_ISA" = "probe" && CONFIG_ISA=
+    ;;
+  mips*)
+    ARCH=mips
+    if $KCC -mtune=mips32 -S -o /dev/null -xc /dev/null > /dev/null 2>&1; then
+      c_opts="-mtune=mips32"
+    else
+      c_opts="-mcpu=r4600"
+    fi
+    if $KCC -mips32 -mabi=32 -S -o /dev/null -xc /dev/null > /dev/null 2>&1; then
+      c_opts="$c_opts -mips32 -mabi=32"
+    else
+      c_opts="$_opts -mips2"
+    fi
+    c_opts="$c_opts -G 0 -fno-pic -mno-abicalls -mlong-calls"
+    processor="mips"
+    CONFIG_MIPS=y
+    test "$CONFIG_ISA" = "probe" && CONFIG_ISA=
+    ;;
+  sparc)
+    ARCH=sparc
+    CONFIG_SPARC=y
+    CONFIG_SPARC32=y
+    IS_EGCS=n
+    NEW_GAS=n
+    $KCC -m32 -S -o /dev/null -xc /dev/null >/dev/null 2>&1 || IS_EGCS=y
+    $CROSS_COMPILE$KLD -V 2>&1 | grep 'elf64_sparc' > /dev/null && NEW_GAS=y
+    if test $NEW_GAS = y; then
+      KLD="$KLD -m elf32_sparc"
+    fi
+    if test $IS_EGCS = y; then
+      c_opts="-mno-fpu -fcall-used-g5 -fcall-used-g7"
+    else
+      c_opts="-m32 -mno-fpu -fcall-used-g5 -fcall-used-g7"
+    fi
+    processor="sparc";
+    test "$CONFIG_ISA" = "probe" && CONFIG_ISA=
+    ;;
+  sparc64)
+    ARCH=sparc64
+    CONFIG_SPARC=y
+    CONFIG_SPARC64=y
+    $KCC -m64 -S -o /dev/null -xc /dev/null >/dev/null 2>&1 || KCC=sparc64-linux-gcc
+    NEW_GCC=n
+    NEW_GAS=n
+    CC_UNDECL=""
+    $KCC -m64 -mcmodel=medlow -S -o /dev/null -xc /dev/null >/dev/null 2>&1 && NEW_GCC=y
+    $CROSS_COMPILE$KLD -V 2>&1 | grep 'elf64_sparc' > /dev/null && NEW_GAS=y
+    $KCC -c -x assembler /dev/null -Wa,--help | grep undeclared-regs > /dev/null || CC_UNDECL="-Wa,--undeclared-regs"
+    if test $NEW_GAS != y; then
+      KLD=sparc64-linux-ld
+    else
+      KLD="$KLD -m elf64_sparc"
+    fi
+    if test $NEW_GCC=y; then
+      c_opts="-m64 -mno-fpu -mcpu=ultrasparc -mcmodel=medlow -ffixed-g4 -fcall-used-g5 -fcall-used-g7 -Wno-sign-compare $CC_UNDECL"
+    else
+      c_opts="-mno-fpu -mtune=ultrasparc -mmedlow -ffixed-g4 -fcall-used-g5 -fcall-used-g7 -Wno-sign-compare"
+    fi
+    processor="sparc64"
+    CONFIG_SND_BIT32_EMUL=m
+    CFLAGS="$CFLAGS -ffixed-g4"
+    test "$CONFIG_ISA" = "probe" && CONFIG_ISA=
+    ;;
+  x86_64)
+    ARCH=x86_64
+    KLD="ld -m elf_x86_64 -e stext"
+    c_opts="-mno-red-zone -mcmodel=kernel -fno-reorder-blocks -fno-strength-reduce -finline-limit=2000"
+    CONFIG_SND_BIT32_EMUL=m
+    CONFIG_X86_64=y
+    CONFIG_X86=y
+    test "$CONFIG_ISA" = "probe" && CONFIG_ISA=
+    ;;
+  sa1100)
+    ARCH=arm
+    c_opts="-march=armv4 -mtune=strongarm1100 -msoft-float"
+    CONFIG_ARM=y
+    CONFIG_L3=y
+    CONFIG_ARCH_SA1100=y
+    test "$CONFIG_ISA" = "probe" && CONFIG_ISA=
+    ;;
+  pxa)
+    ARCH=arm
+    c_opts="-O2 -mapcs-32 -march=armv4 -Wa,-mxscale -mtune=strongarm -mshort-load-bytes -msoft-float"
+    CONFIG_ARM=y
+    # CONFIG_L3=y
+    CONFIG_ARCH_PXA=y
+    test "$CONFIG_ISA" = "probe" && CONFIG_ISA=
+    ;;
+  amba)
+    ARCH=arm
+    c_opts="-O2 -mapcs-32 -march=armv4 -Wa,-mxscale -mshort-load-bytes -msoft-float"
+    CONFIG_ARM=y
+    # CONFIG_L3=y
+    CONFIG_ARM_AMBA=y
+    test "$CONFIG_ISA" = "probe" && CONFIG_ISA=
+    ;;
+  parisc)
+    ARCH=parisc
+    c_opts="-mno-space-regs -mfast-indirect-calls -mschedule=7200 -mdisable-fpregs"
+    test "$CONFIG_ISA" = "probe" && CONFIG_ISA=
+    ;;
+  viac3_2)
+    ARCH=i386
+    if $KCC -march=c3-2 -S -o /dev/null -xc /dev/null >/dev/null 2>&1; then
+      c_opts="-march=c3-2"
+    else
+      c_opts="-march=i686"
+    fi
+    ;;
+  sh)
+    ARCH=sh
+    CONFIG_SUPERH=y
+    CONFIG_ISA=
+    ;;
+  sh64)
+    ARCH=sh64
+    CONFIG_SUPERH64=y
+    CONFIG_SUPERH=y
+    CONFIG_ISA=
+    ;;
+  *)
+    processor="unknown"
+    test "$CONFIG_ISA" = "probe" && CONFIG_ISA=
+    ;;
+esac
+
+dnl set ia32 (X86)
+case "$processor" in
+  i?86*|k?|crusoe|mcyrixiii|mwinchip|viac3_2|mcore2|geodegx*|x86_32)
+    if $KCC -mpreferred-stack-boundary=2 -S -o /dev/null -xc /dev/null >/dev/null 2>&1; then
+      c_opts="-mpreferred-stack-boundary=2 $c_opts"
+      CONFIG_X86=y
+      CONFIG_X86_32=y
+    fi
+    mach_dir=""
+    for i in include/asm-x86 include/asm-i386 include2/asm-x86 include2/asm-i386; do
+      if test -d $CONFIG_SND_KERNELDIR/$i/mach-default; then
+        mach_dir="$CONFIG_SND_KERNELDIR/$i"
+	break
+      fi  
+      if test -n "$kernelbuild" -a -d $kernelbuild/$i/mach-default; then
+	mach_dir="$kernelbuild/$i"
+	break
+      fi  
+    done
+    if test -n "$mach_dir"; then
+	AC_MSG_CHECKING(for i386 machine type)
+	machine="default"
+	ac_save_CFLAGS="$CFLAGS"
+	CFLAGS="$CFLAGS $KERNEL_INC $HACK_KERNEL_INC"
+	rm -f machine.id
+	if test -n "$kernelbuild" -a -f "$kernelbuild/include/linux/autoconf.h"; then
+	  KERNDIR=$kernelbuild
+	else
+	  KERNDIR=$CONFIG_SND_KERNELDIR
+	fi
+	AC_TRY_RUN([
+#include <stdio.h>
+#include "$KERNDIR/include/linux/autoconf.h"
+int main(void) {
+	FILE *file = fopen("machine.id", "w+");
+	if (file == NULL)
+		exit(1);
+#if defined(CONFIG_X86_VOYAGER)
+	fprintf(file, "voyager");
+#elif defined(CONFIG_X86_VISWS)
+	fprintf(file, "visws");
+#elif defined(CONFIG_X86_NUMAQ)
+	fprintf(file, "numaq");
+#elif defined(CONFIG_X86_BIGSMP)
+	fprintf(file, "bigsmp");
+#elif defined(CONFIG_X86_SUMMIT)
+	fprintf(file, "summit");
+#elif defined(CONFIG_X86_PC9800)
+	fprintf(file, "pc9800");
+#else
+	fprintf(file, "default");
+#endif
+	fclose(file);
+	exit(0);
+}
+],      
+	machine=`cat machine.id`;AC_MSG_RESULT($machine))
+	CFLAGS="$ac_save_CFLAGS"
+	rm -f machine.id
+	KERNEL_INC="$KERNEL_INC -I$mach_dir/mach-$machine"
+    fi
+    ;;
+esac
+
+dnl ia32 and alpha
+test "$CONFIG_ISA" = "probe" && CONFIG_ISA=y
+
+dnl 2.6.12 or newer
+if test "$kpatchlevel" = 6 -a "$ksublevel" -ge 12; then
+  CHECK_KERNEL_CONFIG(CONFIG_ISA_DMA_API, [ISA DMA API])
+else
+  if test "$CONFIG_ISA" = "y"; then
+    CONFIG_ISA_DMA_API=y
+  fi
+fi
+
+dnl Check for SBUS support for sparc...
+if test -n "$CONFIG_SPARC32" -o -n "$CONFIG_SPARC64"; then
+  CHECK_KERNEL_CONFIG(CONFIG_SBUS, [SBUS support in kernel])
+fi
+
+if test -n "$CONFIG_SND_BIT32_EMUL"; then
+  if test "$kversion.$kpatchlevel" = "2.6"; then
+    CHECK_KERNEL_CONFIG(CONFIG_COMPAT, [32bit compat support])
+    if test -z "$CONFIG_COMPAT"; then
+      CONFIG_SND_BIT32_EMUL=
+    fi
+  fi
+fi
+
+dnl Check for SGI/MIPS (HAL2) support...
+CONFIG_SGI=""
+if test "$CONFIG_MIPS" = "y"; then
+  AC_MSG_CHECKING(for SGI/MIPS (HAL2) architecture)
+  if test -r "$CONFIG_SND_KERNELDIR/include/asm/sgi/sgihpc.h"; then
+    CONFIG_SGI="y"
+  fi
+  if test "$CONFIG_SGI" = "y"; then
+    AC_MSG_RESULT(yes)
+  else
+    AC_MSG_RESULT(no)
+  fi
+fi
+AC_SUBST(CONFIG_SGI)
+
+dnl Check options for warnings
+if $KCC -Wdeclaration-after-statement -S -o /dev/null -xc /dev/null >/dev/null 2>&1; then
+  c_opts="$c_opts -Wdeclaration-after-statement"
+fi
+if $KCC -Wno-pointer-sign -S -o /dev/null -xc /dev/null >/dev/null 2>&1; then
+  c_opts="$c_opts -Wno-pointer-sign"
+fi
+
+c_opts="-O2 $c_opts"
+
+AC_SUBST(processor)
+AC_SUBST(ARCH)
+AC_SUBST(KLD)
+AC_SUBST(CONFIG_X86)
+AC_SUBST(CONFIG_X86_32)
+AC_SUBST(CONFIG_X86_64)
+AC_SUBST(CONFIG_ALPHA)
+AC_SUBST(CONFIG_L3)
+AC_SUBST(CONFIG_ARM)
+AC_SUBST(CONFIG_ARCH_SA1100)
+AC_SUBST(CONFIG_ARCH_PXA)
+AC_SUBST(CONFIG_PPC)
+AC_SUBST(CONFIG_SPARC32)
+AC_SUBST(CONFIG_SPARC64)
+AC_SUBST(CONFIG_SBUS)
+AC_SUBST(CONFIG_MIPS)
+AC_SUBST(CONFIG_ISA)
+AC_SUBST(CONFIG_ISA_DMA_API)
+AC_SUBST(CONFIG_PARISC)
+AC_SUBST(CONFIG_SUPERH)
+AC_SUBST(CONFIG_SUPERH64)
+test "$CONFIG_ISA" = "y" && AC_DEFINE(CONFIG_SND_ISA)
+
+dnl Check for SMP...
+CHECK_KERNEL_CONFIG(CONFIG_SMP, [SMP])
+if test "$CONFIG_SMP" = "y"; then
+  GENKSYMS="$GENKSYMS -p smp_"
+  c_opts="$c_opts -D__SMP__ -DCONFIG_SMP"
+  msmp=1
+else
+  msmp=""
+fi
+AC_SUBST(msmp)
+
+KERNEL_CHECK_CFLAGS="-Wall -fno-strict-aliasing $CFLAGS $KERNEL_INC $HACK_KERNEL_INC -Iinclude -nostdinc -iwithprefix include"
+if test "$NEW_KBUILD" = "y"; then
+  KERNEL_CHECK_CFLAGS="$KERNEL_CHECK_CFLAGS -DKBUILD_STR(s)=#s -DKBUILD_BASENAME=KBUILD_STR(dummy) -DKBUILD_MODNAME=KBUILD_BASENAME"
+fi
+
+dnl Check for video device support... (2.2 kernels excluded due to API incompatibility)
+if test $kpatchlevel -gt 2; then
+CHECK_KERNEL_CONFIG(CONFIG_VIDEO_DEV, [Video device support in kernel])
+AC_SUBST(CONFIG_VIDEO_DEV)
+fi
+
+dnl Check for ISA PnP driver in kernel...
+AC_MSG_CHECKING(for ISA PnP driver in kernel)
+CONFIG_ISAPNP_KERNEL=
+if test -r $CONFIG_SND_KERNELDIR/include/linux/isapnp.h; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(CONFIG_ISAPNP_KERNEL)
+  CONFIG_ISAPNP_KERNEL=y
+else
+  AC_MSG_RESULT(no)  
+fi
+AC_SUBST(CONFIG_ISAPNP_KERNEL)
+
+dnl Check for PnP layer (2.5+) in kernel...
+AC_MSG_CHECKING(for PnP driver in kernel)
+CONFIG_PNP_KERNEL=
+if test -r $CONFIG_SND_KERNELDIR/include/linux/pnp.h; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(CONFIG_PNP_KERNEL)
+  CONFIG_PNP_KERNEL=y
+else
+  AC_MSG_RESULT(no)  
+fi
+AC_SUBST(CONFIG_PNP_KERNEL)
+
+dnl Check for ISA PnP support...
+if test "$CONFIG_ISAPNP_KERNEL" = y; then
+  CHECK_KERNEL_CONFIG(CONFIG_ISAPNP, [Kernel ISA-PnP support])
+  if test "$CONFIG_ISAPNP" != "y"; then
+    CHECK_KERNEL_CONFIG(CONFIG_ISAPNP_MODULE, [Kernel ISA-PnP module support])
+  fi
+fi
+
+dnl Check for ALSA's own isapnp support
+dnl available only when pnp is not built in the kernel
+if test "$CONFIG_PNP_KERNEL" != y; then
+  if test "$CONFIG_ISAPNP_KERNEL" != y; then
+    isapnp_choose=y
+  elif test "$CONFIG_ISAPNP" = y -o "$CONFIG_ISAPNP_MODULE" = y; then
+    isapnp_choose=y
+  fi
+  if test "$isapnp_choose" = y; then
+    AC_MSG_CHECKING(for ISA PnP support)
+    AC_ARG_WITH(isapnp,
+      [  --with-isapnp=yes,no,auto  driver will (not) be compiled with ISA PnP support],
+      pnp="$withval", pnp="yes")
+    if test "$pnp" = "auto"; then
+      if test -f /proc/isapnp; then
+        pnp=yes
+      fi
+    fi
+  fi
+  if test "$pnp" = "yes"; then
+    CONFIG_ISAPNP=y
+    AC_MSG_RESULT(yes)
+  else
+    CONFIG_ISAPNP=
+    AC_MSG_RESULT(no)
+  fi
+fi
+
+AC_SUBST(CONFIG_ISAPNP)
+if test "$CONFIG_ISAPNP" = "y"; then
+  AC_DEFINE(CONFIG_SND_ISAPNP)
+  CONFIG_PNP=$CONFIG_ISAPNP
+  AC_DEFINE(CONFIG_SND_PNP)
+else
+  CONFIG_PNP=""
+fi
+AC_SUBST(CONFIG_PNP)
+
+dnl Check for strlcpy...
+AC_MSG_CHECKING(for strlcpy)
+strlcpy="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$KERNEL_CHECK_CFLAGS -Werror"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/kernel.h>
+#include <linux/string.h>
+],[
+  char buf[128];
+  strlcpy(buf, "abcd", sizeof(buf));
+],
+    AC_MSG_RESULT(yes);strlcpy="1",
+    AC_MSG_RESULT(no);strlcpy="0",
+    AC_MSG_RESULT(unknown);strlcpy="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+CONFIG_HAVE_STRLCPY=$strlcpy
+dnl AC_SUBST(CONFIG_HAVE_STRLCPY)
+if test "$CONFIG_HAVE_STRLCPY" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_STRLCPY)
+fi
+
+dnl Check for snprintf...
+AC_MSG_CHECKING(for snprintf)
+snprintf="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$KERNEL_CHECK_CFLAGS -Werror"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/kernel.h>
+],[
+  char buf[128];
+  snprintf(buf, sizeof(buf), "abcd");
+],
+    AC_MSG_RESULT(yes);snprintf="1",
+    AC_MSG_RESULT(no);snprintf="0",
+    AC_MSG_RESULT(unknown);snprintf="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+CONFIG_HAVE_SNPRINTF=$snprintf
+dnl AC_SUBST(CONFIG_HAVE_SNPRINTF)
+if test "$CONFIG_HAVE_SNPRINTF" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_SNPRINTF)
+fi
+
+dnl Check for vsnprintf...
+AC_MSG_CHECKING(for vsnprintf)
+vsnprintf="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$KERNEL_CHECK_CFLAGS -Werror"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/kernel.h>
+void f(const char *fmt, ...)
+{
+  char buf[128];
+  va_list ap;
+  va_start(ap, fmt);
+  vsnprintf(buf, sizeof(buf), fmt, ap);
+  va_end(ap);
+}
+],[
+  f("abcd");
+],
+    AC_MSG_RESULT(yes);vsnprintf="1",
+    AC_MSG_RESULT(no);vsnprintf="0",
+    AC_MSG_RESULT(unknown);vsnprintf="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+CONFIG_HAVE_VSNPRINTF=$vsnprintf
+dnl AC_SUBST(CONFIG_HAVE_VSNPRINTF)
+if test "$CONFIG_HAVE_VSNPRINTF" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_VSNPRINTF)
+fi
+
+dnl Check for scnprintf...
+AC_MSG_CHECKING(for scnprintf)
+scnprintf="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$KERNEL_CHECK_CFLAGS -Werror"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/kernel.h>
+],[
+  char buf[128];
+  scnprintf(buf, sizeof(buf), "abcd");
+],
+    AC_MSG_RESULT(yes);scnprintf="1",
+    AC_MSG_RESULT(no);scnprintf="0",
+    AC_MSG_RESULT(unknown);scnprintf="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+CONFIG_HAVE_SCNPRINTF=$scnprintf
+dnl AC_SUBST(CONFIG_HAVE_SCNPRINTF)
+if test "$CONFIG_HAVE_SCNPRINTF" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_SCNPRINTF)
+fi
+
+dnl Check for sscanf...
+AC_MSG_CHECKING(for sscanf)
+sscanf="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$KERNEL_CHECK_CFLAGS -Werror"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/kernel.h>
+],[
+  unsigned int i;
+  sscanf("2a", "%x", &i);
+],
+    AC_MSG_RESULT(yes);sscanf="1",
+    AC_MSG_RESULT(no);sscanf="0",
+    AC_MSG_RESULT(unknown);sscanf="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+CONFIG_HAVE_SSCANF=$sscanf
+dnl AC_SUBST(CONFIG_HAVE_SSCANF)
+if test "$CONFIG_HAVE_SSCANF" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_SSCANF)
+fi
+
+dnl Check for vmalloc_to_page...
+AC_MSG_CHECKING(for vmalloc_to_page)
+vmalloc_to_page="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$KERNEL_CHECK_CFLAGS"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/time.h>
+#include <linux/sched.h>
+#include <linux/interrupt.h>
+#include <linux/mm.h>
+],[
+  struct page * (*func)(void*);
+  func = vmalloc_to_page;
+],
+    AC_MSG_RESULT(yes);vmalloc_to_page="1",
+    AC_MSG_RESULT(no);vmalloc_to_page="0",
+    AC_MSG_RESULT(unknown);vmalloc_to_page="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+CONFIG_HAVE_VMALLOC_TO_PAGE=$vmalloc_to_page
+dnl AC_SUBST(CONFIG_HAVE_VMALLOC_TO_PAGE)
+if test "$CONFIG_HAVE_VMALLOC_TO_PAGE" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_VMALLOC_TO_PAGE)
+fi
+
+dnl Check for old kmod...
+AC_MSG_CHECKING(for old kmod)
+old_kmod="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$KERNEL_CHECK_CFLAGS"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/kmod.h>
+],[
+	request_module("abcd", "def", "ixj");
+],
+    AC_MSG_RESULT(no);old_kmod="0",
+    AC_MSG_RESULT(yes);old_kmod="1",
+    AC_MSG_RESULT(unknown);old_kmod="1"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+CONFIG_HAVE_OLD_REQUEST_MODULE=$old_kmod
+dnl AC_SUBST(CONFIG_HAVE_OLD_REQUEST_MODULE)
+if test "$CONFIG_HAVE_OLD_REQUEST_MODULE" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_OLD_REQUEST_MODULE)
+fi
+
+dnl Check for PDE...
+AC_MSG_CHECKING(for PDE)
+pde_defined="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$KERNEL_CHECK_CFLAGS"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/fs.h>
+#include <linux/proc_fs.h>
+],[
+	struct proc_dir_entry * (*func)();
+	func = PDE;
+],
+    AC_MSG_RESULT(yes);pde_defined="1",
+    AC_MSG_RESULT(no);pde_defined="0",
+    AC_MSG_RESULT(unknown);pde_defined="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+CONFIG_HAVE_PDE=$pde_defined
+dnl AC_SUBST(CONFIG_HAVE_PDE)
+if test "$CONFIG_HAVE_PDE" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_PDE)
+fi
+
+dnl Check for pci_consistent_set_dma_mask()
+AC_MSG_CHECKING(for pci_set_consistent_dma_mask)
+pci_consistent_defined="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$KERNEL_CHECK_CFLAGS"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/pci.h>
+],[
+	int (*func)();
+	func = pci_set_consistent_dma_mask;
+],
+    AC_MSG_RESULT(yes);pci_consistent_defined="1",
+    AC_MSG_RESULT(no);pci_consistent_defined="0",
+    AC_MSG_RESULT(unknown);pci_consistent_defined="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+CONFIG_HAVE_PCI_CONSISTENT_DMA_MASK=$pci_consistent_defined
+if test "$CONFIG_HAVE_PCI_CONSISTENT_DMA_MASK" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_PCI_CONSISTENT_DMA_MASK)
+fi
+
+dnl Check for pci_set_dev_present()
+AC_MSG_CHECKING(for pci_dev_present)
+pci_consistent_defined="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$KERNEL_CHECK_CFLAGS"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/pci.h>
+],[
+	int (*func)();
+	func = pci_dev_present;
+],
+    AC_MSG_RESULT(yes);pci_dev_present_defined="1",
+    AC_MSG_RESULT(no);pci_dev_present_defined="0",
+    AC_MSG_RESULT(unknown);pci_dev_present_defined="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+CONFIG_HAVE_PCI_DEV_PRESENT=$pci_dev_present_defined
+if test "$CONFIG_HAVE_PCI_DEV_PRESENT" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_PCI_DEV_PRESENT)
+fi
+
+dnl Check for msleep
+AC_MSG_CHECKING(for msleep)
+msleep="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$KERNEL_CHECK_CFLAGS"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/delay.h>
+],[
+  void (*func)(unsigned int);
+  func = msleep;
+],
+    AC_MSG_RESULT(yes);msleep="1",
+    AC_MSG_RESULT(no);msleep="0",
+    AC_MSG_RESULT(unknown);msleep="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+CONFIG_HAVE_MSLEEP=$msleep
+dnl AC_SUBST(CONFIG_HAVE_MSLEEP)
+if test "$CONFIG_HAVE_MSLEEP" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_MSLEEP)
+fi
+
+dnl Check for msleep_interrupt
+if test "$CONFIG_HAVE_MSLEEP" = "1"; then
+AC_MSG_CHECKING(for msleep_interrupt)
+msleep_interrupt="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$KERNEL_CHECK_CFLAGS"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/delay.h>
+],[
+  unsigned long (*func)(unsigned int);
+  func = msleep_interruptible;
+],
+    AC_MSG_RESULT(yes);msleep_interruptible="1",
+    AC_MSG_RESULT(no);msleep_interruptible="0",
+    AC_MSG_RESULT(unknown);msleep_interruptible="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+CONFIG_HAVE_MSLEEP_INTERRUPTIBLE=$msleep_interruptible
+dnl AC_SUBST(CONFIG_HAVE_MSLEEP_INTERRUPTIBLE)
+if test "$CONFIG_HAVE_MSLEEP_INTERRUPTIBLE" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_MSLEEP_INTERRUPTIBLE)
+fi
+fi
+
+dnl Check for msecs_to_jiffies
+AC_MSG_CHECKING(for msecs_to_jiffies)
+msecs_to_jiffies="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$KERNEL_CHECK_CFLAGS -Iinclude"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/jiffies.h>
+#include <linux/time.h>
+],[
+  unsigned int (*func)(const unsigned long);
+  func = msecs_to_jiffies;
+],
+    AC_MSG_RESULT(yes);msecs_to_jiffies="1",
+    AC_MSG_RESULT(no);msecs_to_jiffies="0",
+    AC_MSG_RESULT(unknown);msecs_to_jiffies="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+CONFIG_HAVE_MSECS_TO_JIFFIES=$msecs_to_jiffies
+dnl AC_SUBST(CONFIG_HAVE_MSECS_TO_JIFFIES)
+if test "$CONFIG_HAVE_MSECS_TO_JIFFIES" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_MSECS_TO_JIFFIES)
+fi
+
+dnl Check for tty->count is the atomic type
+AC_MSG_CHECKING(for tty->count is the atomic type)
+tty_count_atomic="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$KERNEL_CHECK_CFLAGS"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/tty.h>
+],[
+	struct tty_struct tty;
+	atomic_read(&tty.count);
+],
+    AC_MSG_RESULT(yes);tty_count_atomic="1",
+    AC_MSG_RESULT(no);tty_count_atomic="0",
+    AC_MSG_RESULT(unknown);tty_count_atomic="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+CONFIG_HAVE_TTY_COUNT_ATOMIC=$tty_count_atomic
+if test "$CONFIG_HAVE_TTY_COUNT_ATOMIC" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_TTY_COUNT_ATOMIC)
+fi
+
+dnl Check for video_get_drvdata()
+if test "$CONFIG_VIDEO_DEV" = "y"; then
+AC_MSG_CHECKING(for video_get_drvdata)
+video_get_drvdata="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$KERNEL_CHECK_CFLAGS -Iinclude"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/videodev.h>
+#include "media/v4l2-dev.h"
+],[
+  void *(*func)(struct video_device *);
+  func = video_get_drvdata;
+],
+    AC_MSG_RESULT(yes);video_get_drvdata="1",
+    AC_MSG_RESULT(no);video_get_drvdata="0",
+    AC_MSG_RESULT(unknown);video_get_drvdata="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+CONFIG_HAVE_VIDEO_GET_DRVDATA=$video_get_drvdata
+dnl AC_SUBST(CONFIG_HAVE_VIDEO_GET_DRVDATA)
+if test "$CONFIG_HAVE_VIDEO_GET_DRVDATA" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_VIDEO_GET_DRVDATA)
+fi
+fi
+
+dnl Check for CONFIG_VIDEO_V4L1
+if test "$CONFIG_VIDEO_DEV" = "y"; then
+if test "$kversion.$kpatchlevel" = "2.6" -a "$ksublevel" -gt 17; then
+CHECK_KERNEL_CONFIG(CONFIG_VIDEO_V4L1, [V4L1 layer])
+else
+CONFIG_VIDEO_V4L1="y"
+fi
+fi
+
+dnl Check for old io_remap_page_range()
+AC_MSG_CHECKING(for io_remap_pfn_range)
+io_remap_pfn_range="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$KERNEL_CHECK_CFLAGS -Werror-implicit-function-declaration"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/mm.h>
+],[
+  static pgprot_t p;
+  io_remap_pfn_range(NULL, 0, 0, 0, p);
+],
+    AC_MSG_RESULT(yes);io_remap_pfn_range="1",
+    AC_MSG_RESULT(no);io_remap_pfn_range="0",
+    AC_MSG_RESULT(unknown);io_remap_pfn_range="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+if test "$io_remap_pfn_range" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_IO_REMAP_PFN_RANGE)
+fi
+
+if test "$io_remap_pfn_range" != "1"; then
+AC_MSG_CHECKING(for new io_remap_page_range)
+new_io_remap="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$KERNEL_CHECK_CFLAGS -Werror-implicit-function-declaration"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/mm.h>
+],[
+  static pgprot_t p;
+  io_remap_page_range(NULL, 0, 0, 0, p);
+],
+    AC_MSG_RESULT(yes);new_io_remap="1",
+    AC_MSG_RESULT(no);new_io_remap="0",
+    AC_MSG_RESULT(unknown);new_io_remap="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+if test "$new_io_remap" != "1"; then
+  AC_DEFINE(CONFIG_OLD_IO_REMAP_PAGE_RANGE)
+fi
+fi
+
+dnl Check for kcalloc()
+AC_MSG_CHECKING(for kcalloc)
+kcalloc="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$KERNEL_CHECK_CFLAGS"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/slab.h>
+],[
+  void * (*func)(size_t, size_t, int);
+  func = kcalloc;
+],
+    AC_MSG_RESULT(yes);kcalloc="1",
+    AC_MSG_RESULT(no);kcalloc="0",
+    AC_MSG_RESULT(unknown);kcalloc="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+CONFIG_HAVE_KCALLOC=$kcalloc
+dnl AC_SUBST(CONFIG_HAVE_KCALLOC)
+if test "$CONFIG_HAVE_KCALLOC" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_KCALLOC)
+fi
+
+dnl Check for kstrdup()
+AC_MSG_CHECKING(for kstrdup)
+kstrdup="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$KERNEL_CHECK_CFLAGS"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/string.h>
+],[
+  char * (*func)(const char *, int);
+  func = kstrdup;
+],
+    AC_MSG_RESULT(yes);kstrdup="1",
+    AC_MSG_RESULT(no);kstrdup="0",
+    AC_MSG_RESULT(unknown);kstrdup="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+CONFIG_HAVE_KSTRDUP=$kstrdup
+dnl AC_SUBST(CONFIG_HAVE_KSTRDUP)
+if test "$CONFIG_HAVE_KSTRDUP" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_KSTRDUP)
+fi
+
+dnl Check for kzalloc()
+AC_MSG_CHECKING(for kzalloc)
+kzalloc="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$KERNEL_CHECK_CFLAGS"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/slab.h>
+],[
+  void * (*func)(size_t, int);
+  func = kzalloc;
+],
+    AC_MSG_RESULT(yes);kzalloc="1",
+    AC_MSG_RESULT(no);kzalloc="0",
+    AC_MSG_RESULT(unknown);kzalloc="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+CONFIG_HAVE_KZALLOC=$kzalloc
+dnl AC_SUBST(CONFIG_HAVE_KZALLOC)
+if test "$CONFIG_HAVE_KZALLOC" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_KZALLOC)
+fi
+
+dnl Check for create_workqueue() with flags
+if test "$kversion.$kpatchlevel" = "2.6"; then
+AC_MSG_CHECKING(for create_workqueue with flags)
+workqueue2="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$KERNEL_CHECK_CFLAGS"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/workqueue.h>
+],[
+    create_workqueue("abcd", 0);
+],
+    AC_MSG_RESULT(yes);workqueue2="1",
+    AC_MSG_RESULT(no);workqueue2="0",
+    AC_MSG_RESULT(unknown);workqueue2="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+CONFIG_CREATE_WORKQUEUE_FLAGS=$workqueue2
+dnl AC_SUBST(CONFIG_CREATE_WORKQUEUE_FLAGS)
+if test "$CONFIG_CREATE_WORKQUEUE_FLAGS" = "1"; then
+  AC_DEFINE(CONFIG_CREATE_WORKQUEUE_FLAGS)
+fi
+fi
+
+dnl Check for saved_config_space in pci_dev
+AC_MSG_CHECKING(for saved_config_space in pci_dev)
+pci_saved_config="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$KERNEL_CHECK_CFLAGS"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/pci.h>
+],[
+  struct pci_dev dev;
+  dev.saved_config_space[0] = 0;
+],
+    AC_MSG_RESULT(yes);pci_saved_config="1",
+    AC_MSG_RESULT(no);pci_saved_config="0",
+    AC_MSG_RESULT(unknown);pci_saved_config="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+CONFIG_HAVE_PCI_SAVED_CONFIG=$pci_saved_config
+dnl AC_SUBST(CONFIG_HAVE_PCI_SAVED_CONFIG)
+if test "$CONFIG_HAVE_PCI_SAVED_CONFIG" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_PCI_SAVED_CONFIG)
+fi
+
+if test "$CONFIG_HAVE_PCI_SAVED_CONFIG" = "1"; then
+dnl Check for new pci_save_state()
+AC_MSG_CHECKING(for new pci_save_state)
+new_pci_save_state="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$KERNEL_CHECK_CFLAGS"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/pci.h>
+],[
+  struct pci_dev *pci;
+  pci_save_state(pci);
+],
+    AC_MSG_RESULT(yes);new_pci_save_state="1",
+    AC_MSG_RESULT(no);new_pci_save_state="0",
+    AC_MSG_RESULT(unknown);new_pci_save_state="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+if test "$new_pci_save_state" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_NEW_PCI_SAVE_STATE)
+fi
+fi
+
+dnl Check for register_sound_special_device
+AC_MSG_CHECKING(for register_sound_special_device)
+msleep="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$KERNEL_CHECK_CFLAGS"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/sound.h>
+],[
+  void (*func)(struct file_operations *, int, struct device *);
+  func = register_sound_special_device;
+],
+    AC_MSG_RESULT(yes);reg_sp="1",
+    AC_MSG_RESULT(no);reg_sp="0",
+    AC_MSG_RESULT(unknown);reg_sp="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+CONFIG_HAVE_REGISTER_SOUND_SPECIAL_DEVICE=$reg_sp
+dnl AC_SUBST(CONFIG_HAVE_REGISTER_SOUND_SPECIAL_DEVICE)
+if test "$CONFIG_HAVE_REGISTER_SOUND_SPECIAL_DEVICE" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_REGISTER_SOUND_SPECIAL_DEVICE)
+fi
+
+dnl check only on 2.2 kernel..
+if test $kpatchlevel -le 2; then
+
+dnl Check for old kill_fasync...
+AC_MSG_CHECKING(for old kill_fasync)
+oldkfasync="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$CFLAGS $KERNEL_INC $HACK_KERNEL_INC"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include "$CONFIG_SND_KERNELDIR/include/linux/config.h"
+#ifdef __alpha__ /* it's required (at least for 2.2.18) */
+#include "$CONFIG_SND_KERNELDIR/include/asm/current.h"
+#endif
+#include "$CONFIG_SND_KERNELDIR/include/linux/fs.h"
+],[
+ struct fasync_struct *fa;
+ int sig;
+ kill_fasync(fa, sig);
+],
+    AC_MSG_RESULT(yes);oldkfasync="1",
+    AC_MSG_RESULT(no);oldkfasync="0",
+    AC_MSG_RESULT(unknown);oldkfasync="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+CONFIG_OLD_KILL_FASYNC=$oldkfasync
+dnl AC_SUBST(CONFIG_OLD_KILL_FASYNC)
+if test "$CONFIG_OLD_KILL_FASYNC" = "1"; then
+  AC_DEFINE(CONFIG_OLD_KILL_FASYNC)
+fi
+
+dnl Check for dma_addr_t
+AC_MSG_CHECKING(for dma_addr_t)
+dma_addr_t="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$CFLAGS $KERNEL_INC $HACK_KERNEL_INC"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include "$CONFIG_SND_KERNELDIR/include/linux/config.h"
+#include "$CONFIG_SND_KERNELDIR/include/asm/types.h"
+],[
+ dma_addr_t addr;
+],
+    AC_MSG_RESULT(yes);dma_addr_t="1",
+    AC_MSG_RESULT(no);dma_addr_t="0",
+    AC_MSG_RESULT(unknown);dma_addr_t="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+CONFIG_HAVE_DMA_ADDR_T=$dma_addr_t
+dnl AC_SUBST(CONFIG_HAVE_DMA_ADDR_T)
+if test "$CONFIG_HAVE_DMA_ADDR_T" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_DMA_ADDR_T)
+fi
+
+dnl Check for MUTEX macros
+AC_MSG_CHECKING(for MUTEX macros)
+have_mutex_macros="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$CFLAGS $KERNEL_INC $HACK_KERNEL_INC"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include "$CONFIG_SND_KERNELDIR/include/linux/config.h"
+#include "$CONFIG_SND_KERNELDIR/include/asm/semaphore.h"
+],[
+#ifndef init_MUTEX
+#error not defined
+#endif
+exit(0);
+],
+    AC_MSG_RESULT(yes);have_mutex_macros="1",
+    AC_MSG_RESULT(no);have_mutex_macros="0",
+    AC_MSG_RESULT(unknown);have_mutex_macros="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+CONFIG_HAVE_MUTEX_MACROS=$have_mutex_macros
+dnl AC_SUBST(CONFIG_HAVE_MUTEX_MACROS)
+if test "$CONFIG_HAVE_MUTEX_MACROS" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_MUTEX_MACROS)
+fi
+
+fi
+dnl 2.2 kernel
+
+if test "$CONFIG_ISAPNP_KERNEL" = "y"; then
+  if test -f include/linux/isapnp.h; then
+    echo "Removing local linux/isapnp.h."
+    rm include/linux/isapnp.h
+  fi
+else
+  if test ! -f include/linux/isapnp.h; then
+    echo "Symlinking <linux/isapnp.h>..."
+    mkdir -p include/linux
+    ln -sf ../../support/isapnp/isapnp.h include/linux/isapnp.h
+  fi
+fi
+
+if test "$CONFIG_PNP_KERNEL" = "y"; then
+  if test -f include/linux/pnp.h; then
+    echo "Removing local linux/pnp.h."
+    rm include/linux/pnp.h
+  fi
+else
+  if test ! -f include/linux/pnp.h; then
+    echo "Symlinking <linux/pnp.h>..."
+    mkdir -p include/linux
+    ln -sf ../../support/pnp/pnp.h include/linux/pnp.h
+  fi
+fi
+
+dnl Check for version...
+AC_MSG_CHECKING(for driver version)
+AC_DEFINE_UNQUOTED(CONFIG_SND_VERSION, "$CONFIG_SND_VERSION")
+AC_SUBST(CONFIG_SND_VERSION)
+CONFIG_SND_DATE=""
+AC_DEFINE_UNQUOTED(CONFIG_SND_DATE, "$CONFIG_SND_DATE")
+AC_SUBST(CONFIG_SND_DATE)
+AC_MSG_RESULT($CONFIG_SND_VERSION)
+
+dnl Check for sequencer support...
+AC_MSG_CHECKING(for sequencer support)
+AC_ARG_WITH(sequencer,
+  [  --with-sequencer=yes,no  driver will (not) be compiled with sequencer support],
+  sequencer="$withval", sequencer="yes")
+CONFIG_SND_SEQUENCER=""
+if test "$sequencer" = "yes"; then
+  CONFIG_SND_SEQUENCER="m"
+fi
+AC_SUBST(CONFIG_SND_SEQUENCER)
+if test "$CONFIG_SND_SEQUENCER" = "m"; then
+  AC_DEFINE(CONFIG_SND_SEQUENCER_MODULE)
+  AC_DEFINE(CONFIG_SND_SEQ_DUMMY_MODULE)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+
+dnl Check for OSS/Free emulation...
+AC_MSG_CHECKING(for OSS/Free emulation)
+AC_ARG_WITH(oss,
+  [  --with-oss=no,yes       driver will (not) be compiled with OSS/Free emulation],
+  ossemul="$withval", ossemul="yes")
+CONFIG_SND_OSSEMUL=""
+if test "$ossemul" = "yes"; then
+  CONFIG_SND_OSSEMUL="y"
+fi
+if test "$CONFIG_SND_OSSEMUL" = "y"; then
+  AC_DEFINE(CONFIG_SND_OSSEMUL)
+  AC_DEFINE(CONFIG_SND_MIXER_OSS_MODULE)
+  AC_DEFINE(CONFIG_SND_PCM_OSS_MODULE)
+  if test "$CONFIG_SND_SEQUENCER" = "m"; then
+    AC_DEFINE(CONFIG_SND_SEQUENCER_OSS)
+  fi
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+
+if test "$CONFIG_SND_OSSEMUL" = "y"; then
+
+dnl Check for OSS PCM plugin system inclusion...
+AC_MSG_CHECKING(for OSS PCM plugin system inclusion)
+AC_ARG_WITH(pcm-oss-plugins,
+  [  --with-pcm-oss-plugins=no,yes       driver will (not) be compiled with OSS PCM plugins],
+  ossemulplugins="$withval", ossemulplugins="yes")
+CONFIG_SND_PCM_OSS_PLUGINS=""
+if test "$ossemulplugins" = "yes"; then
+  CONFIG_SND_PCM_OSS_PLUGINS="y"
+fi
+if test "$CONFIG_SND_PCM_OSS_PLUGINS" = "y"; then
+  AC_DEFINE(CONFIG_SND_PCM_OSS_PLUGINS)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+
+fi
+
+dnl Check for RTC timer support...
+AC_MSG_CHECKING(for RTC callback support in kernel)
+rtcsup=""
+if test "$kversion.$kpatchlevel" = "2.6" -a "$ksublevel" -ge 15; then
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC=$CC
+CFLAGS="$KERNEL_CHECK_CFLAGS"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/version.h>
+#include <linux/rtc.h>
+#include <linux/mc146818rtc.h>
+],[
+#ifdef RTC_IRQ
+  rtc_task_t *cb = 0;
+#else
+#error
+#endif
+],
+  AC_MSG_RESULT(yes);rtcsup="m",
+  AC_MSG_RESULT(no);rtcsup="",
+  AC_MSG_RESULT(unknown);rtcsup=""
+)
+CFLAGS="$ac_save_CFLAGS"
+CC=$ac_save_CC
+else
+AC_MSG_RESULT([may be buggy, skipped])
+fi
+CONFIG_SND_RTCTIMER=$rtcsup
+AC_SUBST(CONFIG_SND_RTCTIMER)
+test "$CONFIG_SND_RTCTIMER" = "m" && AC_DEFINE(CONFIG_SND_RTCTIMER_MODULE)
+CONFIG_RTC=$CONFIG_SND_RTCTIMER
+AC_SUBST(CONFIG_RTC)
+
+dnl Check for HPET support
+CHECK_KERNEL_CONFIG(CONFIG_HPET, [HPET support])
+CONFIG_SND_HPET=""
+AC_SUBST(CONFIG_SND_HPET)
+AC_SUBST(CONFIG_HPET)
+
+dnl Check for dynamic minors...
+AC_MSG_CHECKING(for dynamic minor numbers)
+AC_ARG_ENABLE(dynamic-minors,
+  AS_HELP_STRING([--enable-dynamic-minors],
+		 [enable dynamic minor numbers for device files (requires udev or devfs)]),
+  [dynamic_minors="$enableval"], [dynamic_minors="no"])
+if test "$dynamic_minors" = "yes"; then
+  CONFIG_SND_DYNAMIC_MINORS=y
+  AC_DEFINE(CONFIG_SND_DYNAMIC_MINORS)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+
+dnl Check for support of old API...
+AC_MSG_CHECKING(for support of old API)
+AC_ARG_ENABLE(old-api,
+  AS_HELP_STRING([--disable-old-api],
+		 [Disable the support old ALSA PCM API (ver.0.9.0rc3 or older)]),
+  [support_old_api="$enableval"], [support_old_api="yes"])
+if test "$support_old_api" = "yes"; then
+  AC_DEFINE(CONFIG_SND_SUPPORT_OLD_API)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+
+dnl Check for procfs
+CHECK_KERNEL_CONFIG(CONFIG_PROC_FS, [Procfs support])
+AC_SUBST(CONFIG_PROC_FS)
+
+dnl Check for USB
+CHECK_KERNEL_CONFIG(CONFIG_USB, [USB support])
+if test "$CONFIG_USB" != "y"; then
+  CHECK_KERNEL_CONFIG(CONFIG_USB_MODULE, [USB module support])
+  CONFIG_USB=$CONFIG_USB_MODULE
+fi
+AC_SUBST(CONFIG_USB)
+
+dnl class_simple for old 2.6 kernels
+if test "$kversion.$kpatchlevel" = "2.6"; then
+  AC_MSG_CHECKING(for class_simple)
+  class_simple="0"
+  ac_save_CFLAGS="$CFLAGS"
+  ac_save_CC="$CC"
+  CFLAGS="$KERNEL_CHECK_CFLAGS"
+  CC=$KCC
+  AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/device.h>
+],[
+  struct class_simple *(*foo)(struct module *, char *) = class_simple_create;
+  foo(NULL,NULL);
+],
+    AC_MSG_RESULT(yes);class_simple="1",
+    AC_MSG_RESULT(no);class_simple="0",
+    AC_MSG_RESULT(unknown);class_simple="0"
+)
+  CFLAGS=$ac_save_CFLAGS
+  CC=$ac_save_CC
+  CONFIG_SND_HAVE_CLASS_SIMPLE=$class_simple
+  dnl AC_SUBST(CONFIG_SND_HAVE_CLASS_SIMPLE)
+  if test "$CONFIG_SND_HAVE_CLASS_SIMPLE" = "1"; then
+    AC_DEFINE(CONFIG_SND_HAVE_CLASS_SIMPLE)
+  fi
+fi
+
+dnl simplified suspend/resume for 2.6.14+
+if test "$kversion.$kpatchlevel" = "2.6"; then
+  AC_MSG_CHECKING(for old driver suspend/resume callbacks)
+  old_driver_suspend="0"
+  ac_save_CFLAGS="$CFLAGS"
+  ac_save_CC="$CC"
+  CFLAGS="$KERNEL_CHECK_CFLAGS"
+  CC=$KCC
+  AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/device.h>
+],[
+  static struct device_driver driver;
+  driver.resume(NULL, 0);
+],
+    AC_MSG_RESULT(yes);old_driver_suspend="1",
+    AC_MSG_RESULT(no);old_driver_suspend="0",
+    AC_MSG_RESULT(unknown);old_driver_suspend="0"
+)
+  CFLAGS=$ac_save_CFLAGS
+  CC=$ac_save_CC
+  CONFIG_SND_OLD_DRIVER_SUSPEND=$old_driver_suspend
+  dnl AC_SUBST(CONFIG_SND_OLD_DRIVER_SUSPEND)
+  if test "$CONFIG_SND_OLD_DRIVER_SUSPEND" = "1"; then
+    AC_DEFINE(CONFIG_SND_OLD_DRIVER_SUSPEND)
+  fi
+fi
+
+dnl removal of page-reservation for nopage/mmap (for 2.6.14+)
+if test "$kversion.$kpatchlevel" = "2.6"; then
+  AC_MSG_CHECKING(for removal of page-reservation for nopage/mmap)
+  remove_page_reserve="0"
+  ac_save_CFLAGS="$CFLAGS"
+  ac_save_CC="$CC"
+  CFLAGS="$KERNEL_CHECK_CFLAGS"
+  CC=$KCC
+  AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/mm.h>
+],[
+  void (*func)(struct vm_area_struct *, pte_t, unsigned long) = print_bad_pte;
+],
+    AC_MSG_RESULT(yes);remove_page_reserve="1",
+    AC_MSG_RESULT(no);remove_page_reserve="0",
+    AC_MSG_RESULT(unknown);remove_page_reserve="0"
+)
+  CFLAGS=$ac_save_CFLAGS
+  CC=$ac_save_CC
+  CONFIG_SND_REMOVE_PAGE_RESERVE=$remove_page_reserve
+  dnl AC_SUBST(CONFIG_SND_REMOVE_PAGE_RESERVE)
+  if test "$CONFIG_SND_REMOVE_PAGE_RESERVE" = "1"; then
+    AC_DEFINE(CONFIG_SND_REMOVE_PAGE_RESERVE)
+  fi
+fi
+
+dnl nested class_device for 2.6.14+
+if test "$kversion.$kpatchlevel" = "2.6"; then
+  AC_MSG_CHECKING(for nested class_device)
+  nested_class_device="0"
+  ac_save_CFLAGS="$CFLAGS"
+  ac_save_CC="$CC"
+  CFLAGS="$KERNEL_CHECK_CFLAGS"
+  CC=$KCC
+  AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/device.h>
+],[
+  struct class_device dev;
+  dev.parent = 0;
+],
+    AC_MSG_RESULT(yes);nested_class_device="1",
+    AC_MSG_RESULT(no);nested_class_device="0",
+    AC_MSG_RESULT(unknown);nested_class_device="0"
+)
+  CFLAGS=$ac_save_CFLAGS
+  CC=$ac_save_CC
+  CONFIG_SND_NESTED_CLASS_DEVICE=$nested_class_device
+  dnl AC_SUBST(CONFIG_SND_NESTED_CLASS_DEVICE)
+  if test "$CONFIG_SND_NESTED_CLASS_DEVICE" = "1"; then
+    AC_DEFINE(CONFIG_SND_NESTED_CLASS_DEVICE)
+  fi
+fi
+
+dnl new IRQ handler (2.6.19-rc2)
+if test "$kversion.$kpatchlevel" = "2.6"; then
+  AC_MSG_CHECKING(for new IRQ handler)
+  new_irq_handler="0"
+  ac_save_CFLAGS="$CFLAGS"
+  ac_save_CC="$CC"
+  CFLAGS="$KERNEL_CHECK_CFLAGS"
+  CC=$KCC
+  AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/interrupt.h>
+],[
+  irq_handler_t handle = 0;
+  handle(0, 0);
+],
+    AC_MSG_RESULT(yes);new_irq_handler="1",
+    AC_MSG_RESULT(no);new_irq_handler="0",
+    AC_MSG_RESULT(unknown);new_irq_handler="0"
+)
+  CFLAGS=$ac_save_CFLAGS
+  CC=$ac_save_CC
+  CONFIG_SND_NEW_IRQ_HANDLER=$new_irq_handler
+  dnl AC_SUBST(CONFIG_SND_NEW_IRQ_HANDLER)
+  if test "$CONFIG_SND_NEW_IRQ_HANDLER" = "1"; then
+    AC_DEFINE(CONFIG_SND_NEW_IRQ_HANDLER)
+  fi
+fi
+
+dnl Check for gfp_t...
+AC_MSG_CHECKING(for gfp_t)
+gfp_t="0"
+ac_save_CFLAGS="$CFLAGS"
+ac_save_CC="$CC"
+CFLAGS="$KERNEL_CHECK_CFLAGS"
+CC=$KCC
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/types.h>
+#include <linux/gfp.h>
+],[
+  gfp_t flags = 0;
+],
+    AC_MSG_RESULT(yes);gfp_t="1",
+    AC_MSG_RESULT(no);gfp_t="0",
+    AC_MSG_RESULT(unknown);gfp_t="0"
+)
+CFLAGS=$ac_save_CFLAGS
+CC=$ac_save_CC
+CONFIG_HAVE_GFP_T=$gfp_t
+dnl AC_SUBST(CONFIG_HAVE_GFP_T)
+if test "$CONFIG_HAVE_GFP_T" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_GFP_T)
+fi
+
+dnl Check for init_utsname...
+if test "$kversion.$kpatchlevel" = "2.6" -a $ksublevel -ge 19; then
+  CONFIG_HAVE_INIT_UTSNAME=1
+else
+AC_MSG_CHECKING(for init_utsname)
+  init_utsname="0"
+  ac_save_CFLAGS="$CFLAGS"
+  ac_save_CC="$CC"
+  CFLAGS="$KERNEL_CHECK_CFLAGS -Werror"
+  CC=$KCC
+  AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/utsname.h>
+],[
+  int *x = (int *)init_utsname();
+  *x = 0;
+],
+    AC_MSG_RESULT(yes);init_utsname="1",
+    AC_MSG_RESULT(no);init_utsname="0",
+    AC_MSG_RESULT(unknown);init_utsname="0"
+)
+  CFLAGS=$ac_save_CFLAGS
+  CC=$ac_save_CC
+  CONFIG_HAVE_INIT_UTSNAME=$init_utsname
+fi
+dnl AC_SUBST(CONFIG_HAVE_INIT_UTSNAME)
+if test "$CONFIG_HAVE_INIT_UTSNAME" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_INIT_UTSNAME)
+fi
+
+dnl __ffs support?
+if test "$kversion.$kpatchlevel" = "2.6"; then
+  CONFIG_HAVE_FFS=1
+else
+  AC_MSG_CHECKING(for __ffs)
+  init_utsname="0"
+  ac_save_CFLAGS="$CFLAGS"
+  ac_save_CC="$CC"
+  CFLAGS="$KERNEL_CHECK_CFLAGS"
+  CC=$KCC
+  AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/bitops.h>
+],[
+  unsigned long (*x)(unsigned long);
+  x = __ffs;
+],
+    AC_MSG_RESULT(yes);have_ffs="1",
+    AC_MSG_RESULT(no);have_ffs="0",
+    AC_MSG_RESULT(unknown);have_ffs="0"
+)
+  CFLAGS=$ac_save_CFLAGS
+  CC=$ac_save_CC
+  CONFIG_HAVE_FFS=$have_ffs
+fi
+dnl AC_SUBST(CONFIG_HAVE_FFS)
+if test "$CONFIG_HAVE_FFS" = "1"; then
+  AC_DEFINE(CONFIG_HAVE_FFS)
+fi
+
+dnl PnP supports suspend/resume?
+if test "$CONFIG_PNP_KERNEL" = "y"; then
+  AC_MSG_CHECKING(for PnP suspend/resume)
+  pnp_suspend="0"
+  ac_save_CFLAGS="$CFLAGS"
+  ac_save_CC="$CC"
+  CFLAGS="$KERNEL_CHECK_CFLAGS"
+  CC=$KCC
+  AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/pnp.h>
+],[
+  struct pnp_driver pnp;
+  pnp.suspend = 0;
+],
+    AC_MSG_RESULT(yes);pnp_suspend="1",
+    AC_MSG_RESULT(no);pnp_suspend="0",
+    AC_MSG_RESULT(unknown);pnp_suspend="0"
+)
+  CFLAGS=$ac_save_CFLAGS
+  CC=$ac_save_CC
+  CONFIG_HAVE_PNP_SUSPEND=$pnp_suspend
+  dnl AC_SUBST(CONFIG_HAVE_PNP_SUSPEND)
+  if test "$CONFIG_HAVE_PNP_SUSPEND" = "1"; then
+    AC_DEFINE(CONFIG_HAVE_PNP_SUSPEND)
+  fi
+fi
+
+
+dnl New unlocked/compat_ioctl
+if test "$kversion.$kpatchlevel" = "2.6"; then
+  AC_MSG_CHECKING(for new unlocked/compat_ioctl)
+  new_ioctl="0"
+  ac_save_CFLAGS="$CFLAGS"
+  ac_save_CC="$CC"
+  CFLAGS="$KERNEL_CHECK_CFLAGS"
+  CC=$KCC
+  AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/config.h>
+#include <linux/fs.h>
+],[
+  struct file_operations ops;
+  ops.unlocked_ioctl = NULL;
+  ops.compat_ioctl = NULL;
+],
+    AC_MSG_RESULT(yes);new_ioctl="1",
+    AC_MSG_RESULT(no);new_ioctl="0",
+    AC_MSG_RESULT(unknown);new_ioctl="0"
+)
+  CFLAGS=$ac_save_CFLAGS
+  CC=$ac_save_CC
+  CONFIG_SND_HAVE_NEW_IOCTL=$new_ioctl
+  dnl AC_SUBST(CONFIG_SND_HAVE_NEW_IOCTL)
+  if test "$CONFIG_SND_HAVE_NEW_IOCTL" = "1"; then
+    AC_DEFINE(CONFIG_SND_HAVE_NEW_IOCTL)
+    CONFIG_SND_BIT32_EMUL=    
+  fi
+fi
+
+AC_SUBST(CONFIG_SND_BIT32_EMUL)
+test "$CONFIG_SND_BIT32_EMUL" = "m" && AC_DEFINE(CONFIG_SND_BIT32_EMUL_MODULE)
+
+CHECK_KERNEL_CONFIG(CONFIG_X86_PC, [x86-compatible PC])
+AC_SUBST(CONFIG_X86_PC)
+dnl need kernel version >= 2.6.22 for the proper high-res timers support
+if test "$kversion" -ge 2 -a "$kpatchlevel" -ge 6 -a "$ksublevel" -ge 22; then
+    CHECK_KERNEL_CONFIG(CONFIG_HIGH_RES_TIMERS, [High-Res timers])
+    AC_SUBST(CONFIG_HIGH_RES_TIMERS)
+fi
+
+dnl PCMCIA stuff
+AC_ARG_WITH(pcmcia,
+  [  --with-pcmcia=kernel,external   support kernel PCMCIA driver or external PCMCIA driver],
+  pcmcia="$withval", pcmcia="kernel")
+AC_ARG_WITH(pcmcia_root,
+  [  --with-pcmcia-root=dir  specify the root directory of external PCMCIA source-tree],
+  pcmciaroot="$withval", pcmciaroot="")
+EXTRA_INCLUDES=""
+if test "$pcmcia" = "kernel"; then
+  echo "checking for kernel PCMCIA"
+  CHECK_KERNEL_CONFIG(CONFIG_PCMCIA, [PCMCIA support])
+  if test "$CONFIG_PCMCIA" != "y"; then
+    CHECK_KERNEL_CONFIG(CONFIG_PCMCIA_MODULE, [PCMCIA module support])
+    CONFIG_PCMCIA=$CONFIG_PCMCIA_MODULE
+  fi
+else
+  echo "checking for external PCMCIA"
+  if test "$pcmciaroot" = ""; then
+    AC_MSG_ERROR(Please set the PCMCIA root directory via --with-pcmcia-root option)
+  fi
+  if test ! -d "$pcmciaroot"; then
+    AC_MSG_ERROR(PCMCIA root $pcmciaroot is not a directory)
+  fi
+  echo "PCMCIA root directory is $pcmciaroot"
+  EXTRA_INCLUDES="-I$pcmciaroot/include"
+  CONFIG_PCMCIA=y
+fi
+  
+AC_SUBST(CONFIG_PCMCIA)
+
+dnl Check for PC98 architecture support...
+CHECK_KERNEL_CONFIG(CONFIG_X86_PC9800, [PC9800 support in kernel])
+AC_SUBST(CONFIG_X86_PC9800)
+
+dnl Check for parallel port support
+if test "$kversion.$kpatchlevel" = "2.2"; then
+  CONFIG_PARPORT=""
+else
+  CHECK_KERNEL_CONFIG(CONFIG_PARPORT, [parallel port support])
+  if test "$CONFIG_PARPORT" != "y"; then
+    CHECK_KERNEL_CONFIG(CONFIG_PARPORT_MODULE, [parallel port module support])
+    CONFIG_PARPORT=$CONFIG_PARPORT_MODULE
+  fi
+fi
+AC_SUBST(CONFIG_PARPORT)
+
+dnl Check for PM
+if test "$kversion.$kpatchlevel" = "2.2"; then
+  CONFIG_PM="y"
+else
+  CHECK_KERNEL_CONFIG(CONFIG_PM, [power management])
+fi
+AC_SUBST(CONFIG_PM)
+
+dnl Check for CONFIG_HAS_DMA
+if test $kpatchlevel -ge 6 -a $ksublevel -ge 23; then
+  CHECK_KERNEL_CONFIG(CONFIG_HAS_DMA, [CONFIG_HAS_DMA])
+else
+  CONFIG_HAS_DMA=y
+fi
+AC_SUBST(CONFIG_HAS_DMA)
+
+dnl Check for which cards to compile driver for...
+CONFIG_SOUND=m
+ALSA_TOPLEVEL_SELECT
+
+dnl Workaround for a module -> option dependency that isn't correctly
+dnl handled by ALSA_TOPLEVEL_SELECT
+if ( test "$CONFIG_SND_FM801_TEA575X_BOOL" = "y" ) &&
+   ( test "$CONFIG_VIDEO_V4L1" = "y" ); then
+  CONFIG_SND_FM801_TEA575X="m"
+else
+  CONFIG_SND_FM801_TEA575X_BOOL=""
+fi
+
+dnl HPI driver doesn't support 2.2
+if test "$kversion.$kpatchlevel" = "2.2"; then
+  CONFIG_SND_ASIHPI=""
+fi
+
+dnl Define our config symbols
+ALSA_TOPLEVEL_DEFINES
+
+dnl OSS emulations
+if test "$CONFIG_SND_OSSEMUL" = "y"; then
+  CONFIG_SND_MIXER_OSS="$CONFIG_SND"
+  CONFIG_SND_PCM_OSS="$CONFIG_SND_PCM"
+  if test -n "$CONFIG_SND_SEQUENCER"; then
+    CONFIG_SND_SEQUENCER_OSS="y"
+  fi
+fi
+
+dnl Output all stuffs
+ALSA_TOPLEVEL_OUTPUT
+
+dnl Some late substitutes...
+c_opts="$c_opts -DLINUX"
+m_opts=""
+if test -r /etc/asound/make_opts; then
+  m_opts="$m_opts `cat /etc/asound/make_opts`"
+fi
+AC_SUBST(c_opts)
+AC_SUBST(m_opts)
+AC_SUBST(GENKSYMS)
+AC_SUBST(EXTRA_INCLUDES)
+AC_SUBST(KERNEL_INC)
+
+dnl Output files...
+AC_OUTPUT(version Makefile.conf snddevices \
+	  utils/alsa-driver.spec utils/buildrpm toplevel.config \
+	  utils/alsasound utils/alsasound.posix \
+	  include/pci_ids_compat.h include/i2c-id_compat.h)
+
+dnl Make right rights for scripts
+chmod 755 $srcdir/snddevices
+
+dnl Hack pci_ids.h and i2c-id.h if necessary
+mkdir -p include/linux
+ln -sf ../pci_ids_compat.h include/linux/pci_ids.h
+ln -sf ../i2c-id_compat.h include/linux/i2c-id.h
+
+dnl Hack autoconf.h if necessary
+if test "$CONFIG_SND_MODULE" = y; then
+  echo "Hacking autoconf.h..."
+  rm -f include/linux/autoconf.h
+  mkdir -p include/linux
+  if test -n "$kernelbuild" -a -r $kernelbuild/include/linux/autoconf.h ; then
+    kernconf="$kernelbuild/include/linux/autoconf.h"
+  elif test -r  $CONFIG_SND_KERNELDIR/include/linux/autoconf.h ; then
+    kernconf="$CONFIG_SND_KERNELDIR/include/linux/autoconf.h"
+  else
+      cat << EOF
+File include/linux/autoconf.h does not exist in kernel tree.
+Fatal error - aborting...
+EOF
+      exit 1
+  fi
+  grep -v CONFIG_SND_ $kernconf > include/linux/autoconf.h
+  cat include/autoconf-extra.h include/config1.h | grep CONFIG_SND \
+    | sed -e's@/\* #undef \([A-Za-z0-9_]\+\) .*$@#undef \1@g' \
+      >> include/linux/autoconf.h
+else
+  rm -f include/linux/autoconf.h
+fi

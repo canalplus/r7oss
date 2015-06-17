@@ -1,0 +1,43 @@
+From 68b4e10474fc326a63a1a70fba3553c3fe708438 Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:19:59 +0100
+Subject: [PATCH 08/36] patches/tolerant-h264
+
+---
+ player/frame_parser/frame_parser_video_h264.cpp |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/player/frame_parser/frame_parser_video_h264.cpp b/player/frame_parser/frame_parser_video_h264.cpp
+index 314c803..e90c767 100644
+--- a/player/frame_parser/frame_parser_video_h264.cpp
++++ b/player/frame_parser/frame_parser_video_h264.cpp
+@@ -108,7 +108,7 @@ static SliceType_t SliceTypeTranslation[]  = { SliceTypeP, SliceTypeB, SliceType
+ #define Assert(L)		if( !(L) )											 	\
+ 				{													\
+ 				    report( severity_error, "Assertion fail %s %d\n", __FUNCTION__, __LINE__ );	\
+-				    Player->MarkStreamUnPlayable( Stream );								\
++				    /*Player->MarkStreamUnPlayable( Stream );*/								\
+ 				    return FrameParserError;										\
+ 				}
+ 
+@@ -119,7 +119,7 @@ static SliceType_t SliceTypeTranslation[]  = { SliceTypeP, SliceTypeB, SliceType
+ 				    if( Status != FrameParserNoError )						\
+ 				    {										\
+ 				        report( severity_error, "FrameParser_VideoH264_c::%s - Anti Emulation Test fail.\n", Text );	\
+-					Player->MarkStreamUnPlayable( Stream );					\
++					/*Player->MarkStreamUnPlayable( Stream );*/					\
+ 					return FrameParserError;						\
+ 				    }										\
+ 				}
+@@ -1254,7 +1254,7 @@ unsigned int				*FallbackScalingList[8];
+     {
+ 	report( severity_error, "FrameParser_VideoH264_c::ReadNalSequenceParameterSet - seq_parameter_set_id exceeds our soft restriction (%d,%d).\n", Header->seq_parameter_set_id, H264_MAX_SEQUENCE_PARAMETER_SETS-1 );
+ 	SPSBuffer->DecrementReferenceCount();
+-	Player->MarkStreamUnPlayable( Stream );
++	//Player->MarkStreamUnPlayable( Stream );
+ 	return FrameParserError;
+     }
+ 
+-- 
+1.7.9.5
+

@@ -1,0 +1,439 @@
+--- a/player/class_definitions/manifestor.h	
++++ a/player/class_definitions/manifestor.h	
+@@ -48,8 +48,7 @@ enum
+ 
+     ManifestorUnplayable                       = BASE_MANIFESTOR,
+     ManifestorWouldBlock,
+-    ManifestorNullQueued,
+-    ManifestorDecodeError,
++    ManifestorNullQueued
+ };
+ 
+ typedef PlayerStatus_t  ManifestorStatus_t;
+--- a/player/class_definitions/predefined_metadata_types.h	
++++ a/player/class_definitions/predefined_metadata_types.h	
+@@ -341,7 +341,7 @@ typedef struct ParsedAudioParameters_s
+ {
+     AudioSurfaceParameters_t       Source;
+     unsigned int                   SampleCount;
+-    int                            decErrorStatus;
++    bool                           decErrorStatus;
+     int                            Organisation;     ///< Indicates the organisation of the channels (e.g. 5.1, 2.0)
+     AudioOriginalEncoding_t        OriginalEncoding;
+     StreamMetadata_t               StreamMetadata;   ///< Stream metadata mainly used by fatpipe 
+--- a/player/codec/codec_mme_audio_eac3.cpp	
++++ a/player/codec/codec_mme_audio_eac3.cpp	
+@@ -427,6 +427,7 @@ EAc3AudioCodecDecodeContext_t *DecodeContext = (EAc3AudioCodecDecodeContext_t *)
+ MME_LxAudioDecoderFrameStatus_t &Status      = DecodeContext->DecodeStatus.DecStatus;
+ ParsedAudioParameters_t *AudioParameters;
+ int TranscodedBufferSize = 0;
++bool decode_error = false;
+ 
+     CODEC_DEBUG(">><<\n");
+ 
+@@ -436,10 +437,11 @@ int TranscodedBufferSize = 0;
+     }
+ 
+     if ( (Status.DecStatus != ACC_DDPLUS_OK) && ((Status.DecStatus >> EAC3_TRANSCODING_DEC_STATUS_SHIFT) != ACC_DDPLUS_OK) )
+-    {
++    {    
+         CODEC_ERROR("Decode error (muted frame): 0x%x\n", Status.DecStatus);
+         //DumpCommand(bufferIndex);
+         // don't report an error to the higher levels (because the frame is muted)
++        decode_error = true;
+     }
+ 
+     // if transcoding is required, check the transcoded buffer size...
+@@ -476,7 +478,7 @@ int TranscodedBufferSize = 0;
+     AudioParameters->Organisation = Status.AudioMode;
+ 
+     AudioParameters->SampleCount = Status.NbOutSamples;
+-    AudioParameters->decErrorStatus = Status.DecStatus;
++    AudioParameters->decErrorStatus = decode_error;
+ 
+     int SamplingFreqCode = Status.SamplingFreq;
+ 
+--- a/player/manifestor/manifestor_audio.cpp	
++++ a/player/manifestor/manifestor_audio.cpp	
+@@ -383,10 +383,7 @@ ManifestorStatus_t      Manifestor_Audio_c::QueueDecodeBuffer   (class Buffer_c*
+     Status = QueueBuffer (BufferIndex);
+     if (Status != ManifestorNoError)
+     {
+-        if (Status != ManifestorDecodeError)
+-        {
+-            MANIFESTOR_ERROR("Unable to queue buffer %x.\n", Status);
+-        }
++        MANIFESTOR_ERROR("Unable to queue buffer %x.\n", Status);
+         return Status;
+     }
+ 
+--- a/player/manifestor/manifestor_audio_ksound.cpp	
++++ a/player/manifestor/manifestor_audio_ksound.cpp	
+@@ -61,7 +61,22 @@ extern "C" unsigned int player_sysfs_get_err_threshold();
+ //
+ // static definitions
+ //
++static const char *LookupMixerInputState(unsigned int x)
++{
++    switch( x )
++    {
++#define X(y) case y: return #y
++    X(MIXER_INPUT_NOT_RUNNING);
++    X(MIXER_INPUT_RUNNING);
++    X(MIXER_INPUT_FADING_OUT);
++    X(MIXER_INPUT_MUTED);
++    X(MIXER_INPUT_PAUSED);
++    X(MIXER_INPUT_FADING_IN);
++#undef X
++    }
+ 
++    return "UNKNOWN STATE";
++}
+ ////////////////////////////////////////////////////////////////////////////
+ ///
+ /// Initialize and reset the ksound manifestor.
+@@ -92,7 +107,6 @@ Manifestor_AudioKsound_c::Manifestor_AudioKsound_c  ()
+     Reset ();
+ }
+ 
+-
+ ////////////////////////////////////////////////////////////////////////////
+ ///
+ /// Trivial destruction of the ksound manifestor.
+@@ -203,7 +217,11 @@ ManifestorStatus_t Manifestor_AudioKsound_c::Reset (void)
+     IsTranscoded = false;
+ 
+     CodedFrameSampleCount = 0;
+-    
++
++    errorFrameSeen = false;
++    numGoodFrames = 0;
++    digitalFlag = false;
++
+ //
+     
+     return Manifestor_Audio_c::Reset ();
+@@ -479,9 +497,6 @@ unsigned long long WallTime;
+ ManifestorStatus_t Manifestor_AudioKsound_c::QueueBuffer        (unsigned int                    BufferIndex)
+ {
+     ManifestorStatus_t Status;
+-    static uint32_t    numGoodFrames = 0;
+-    bool               errorFrameSeen = 0;
+-
+     ParsedFrameParameters_t *FrameParameters = StreamBuffer[BufferIndex].FrameParameters;
+ 
+     /* Hysterisis:
+@@ -489,24 +504,30 @@ ManifestorStatus_t Manifestor_AudioKsound_c::QueueBuffer        (unsigned int
+      * 2. Keep counting good frames on no decode error.
+      * 3. When the good frame count reaches threshold start queuing.
+      */
+-    ParsedAudioParameters_t *AudioParameters = StreamBuffer[BufferIndex].AudioParameters;
+-    if ( AudioParameters->decErrorStatus )
+-    {
+-        errorFrameSeen = true;
+-        numGoodFrames = 0;
+-        return ManifestorDecodeError;
+-    }
+-    else
++
++    if ( !digitalFlag )
+     {
+-       numGoodFrames++;
+-       if ( numGoodFrames > 5 )
+-       {
+-           errorFrameSeen = false;
+-       }
+-       else if (errorFrameSeen)
+-       {
+-           return ManifestorDecodeError;
+-       }
++        ParsedAudioParameters_t *AudioParameters = StreamBuffer[BufferIndex].AudioParameters;
++        if ( AudioParameters->decErrorStatus )
++        {
++            MANIFESTOR_ERROR( "Skipping bad frame\n");
++            errorFrameSeen = true;
++            numGoodFrames  = 0;
++            return ManifestorError;
++        }
++        else
++        {
++            ++numGoodFrames;
++            if ( numGoodFrames > player_sysfs_get_err_threshold())
++            {
++                errorFrameSeen = false;
++            }
++            else if (errorFrameSeen)
++            {
++                MANIFESTOR_ERROR( "Skipping good frames %d \n", numGoodFrames );
++                return ManifestorError;
++            }
++        }
+     }
+ 
+     //
+@@ -891,7 +912,7 @@ ManifestorStatus_t Manifestor_AudioKsound_c::FillOutInputBuffer(
+         MixerFrameParams->StartOffset = 0;
+         OutputState = PLAYING;
+     }
+-    
++
+     if( Status == ManifestorNoError )
+         return FillOutCodedDataBuffer( DataBuffer, MixerFrameParams,
+                                        CodedDataBuffer, CodedMixerFrameParams, 
+@@ -929,10 +950,10 @@ ManifestorStatus_t Manifestor_AudioKsound_c::UpdateInputBuffer( MME_DataBuffer_t
+     if( ReleaseAllInputBuffersDuringUpdate )
+     {
+         ReleaseAllInputBuffersDuringUpdate = false;
+-        
++
+         return FlushInputBuffer( DataBuffer, InputStatus, CodedDataBuffer, CodedInputStatus );
+     }
+-    
++
+     //
+     // Work out which buffers can be marked as completed (and do so)
+     //
+@@ -956,6 +977,7 @@ ManifestorStatus_t Manifestor_AudioKsound_c::UpdateInputBuffer( MME_DataBuffer_t
+             OS_LockMutex(&BufferQueueLock);
+             NotQueuedBufferCount--;
+             OS_UnLockMutex(&BufferQueueLock);
++
+ 	    BufferIndex = INVALID_BUFFER_ID;
+ 	}
+ 	else
+@@ -1008,8 +1030,8 @@ ManifestorStatus_t Manifestor_AudioKsound_c::UpdateInputBuffer( MME_DataBuffer_t
+     {
+         if( InputStatus->State != MIXER_INPUT_RUNNING )
+         {
+-            MANIFESTOR_ERROR( "Unexpected mixer mode %d whilst %s\n",
+-                              InputStatus->State, LookupState() );
++            MANIFESTOR_ERROR( "Unexpected mixer mode %s whilst %s\n",
++                              LookupMixerInputState(InputStatus->State), LookupState() );
+         }
+ 
+         if( DataBuffer->TotalSize < SamplesToBytes( SamplesNeededForFadeOutBeforeResampling ) )
+@@ -1022,7 +1044,8 @@ ManifestorStatus_t Manifestor_AudioKsound_c::UpdateInputBuffer( MME_DataBuffer_t
+     { 
+         if( InputStatus->State == MIXER_INPUT_RUNNING )
+         {
+-            MANIFESTOR_ERROR( "Unexpected mixer mode MIXER_INPUT_RUNNING whilst %s\n", LookupState() );
++            MANIFESTOR_ERROR( "Unexpected mixer mode %s whilst %s\n", 
++                              LookupMixerInputState(InputStatus->State), LookupState() );
+         }        
+     }
+ 
+@@ -1814,8 +1837,6 @@ ManifestorStatus_t Manifestor_AudioKsound_c::FillOutCodedDataBuffer( MME_DataBuf
+ {
+ BufferStatus_t Status;
+ bool MuteRequestAsserted = false;
+-bool  errorFrameSeen = false;
+-static unsigned int  numGoodFrames = 0;
+ 
+     //
+     // Locate any new buffers in the PCM queue and append them to the coded queue.
+@@ -1913,38 +1934,33 @@ static unsigned int  numGoodFrames = 0;
+                     break;
+                 }
+             }
+-            
++           
++            digitalFlag = true; 
+             if( !PcmPlayer_c::IsOutputBypassed( CurrentCodedDataEncoding ) )
+             {
+                 // there is no point whatsoever in queuing up data we can't play...
+                 break;
+             }
+ 
+-            /* Hysterisis:
+-             * 1. Stop queuing samples on decode error.
+-             * 2. Keep counting good frames on no decode error.
+-             * 3. When the good frame count reaches threshold start queuing.
+-             */
++            ParsedAudioParameters_t *AudioParameters = StreamBuffer[BufferIndex].AudioParameters;
++            if ( AudioParameters->decErrorStatus )
+             {
+-                ParsedAudioParameters_t *AudioParameters = StreamBuffer[BufferIndex].AudioParameters;
+-                if ( AudioParameters->decErrorStatus )
++                MANIFESTOR_ERROR( "Skipping bad frame");
++                errorFrameSeen = true;
++                numGoodFrames  = 0;
++                continue;
++            }
++            else
++            {
++                ++numGoodFrames;
++                if ( numGoodFrames > player_sysfs_get_err_threshold())
+                 {
+-                    errorFrameSeen = true;
+-                    numGoodFrames  = 0;
+-                    return ManifestorDecodeError;
++                    errorFrameSeen = false;
+                 }
+-                else
++                else if (errorFrameSeen)
+                 {
+-                    numGoodFrames++;
+-                    if ( numGoodFrames > player_sysfs_get_err_threshold())
+-                    {
+-                        errorFrameSeen = false;
+-                    }
+-                    else if (errorFrameSeen)
+-                    {
+-                        MANIFESTOR_ERROR( "Skipping Buffer goodFrames = %d \n", numGoodFrames );
+-                        break;
+-                    }
++                    MANIFESTOR_ERROR( "Skipping good frame %d \n", numGoodFrames );
++                    continue;
+                 }
+             }
+ 
+@@ -2080,23 +2096,6 @@ static unsigned int  numGoodFrames = 0;
+     return ManifestorNoError;
+ }
+ 
+-static const char *LookupMixerInputState(unsigned int x)
+-{
+-    switch( x )
+-    {
+-#define X(y) case y: return #y
+-    X(MIXER_INPUT_NOT_RUNNING);
+-    X(MIXER_INPUT_RUNNING);
+-    X(MIXER_INPUT_FADING_OUT);
+-    X(MIXER_INPUT_MUTED);
+-    X(MIXER_INPUT_PAUSED);
+-    X(MIXER_INPUT_FADING_IN);
+-#undef X
+-    }
+-
+-    return "UNKNOWN STATE";
+-}
+-
+ ////////////////////////////////////////////////////////////////////////////
+ /// 
+ /// Retire any already played buffers.
+--- a/player/manifestor/manifestor_audio_ksound.h	
++++ a/player/manifestor/manifestor_audio_ksound.h	
+@@ -59,7 +59,6 @@ class Mixer_Mme_c;
+ class Manifestor_AudioKsound_c : public Manifestor_Audio_c
+ {
+ public:
+-
+     enum BypassPhysicalChannel_t
+     {
+         /// The bypass is done over SPDIF
+@@ -71,37 +70,18 @@ public:
+         /// number of possible values
+         BypassPhysicalChannelCount
+     };
+-
+-private:
+-
+-    enum OutputState_t
+-    {
+-        /// There is no manifestor connected to this input.
+-        DISCONNECTED,
++    
+         
+-        /// Neither the input nor the output side are running.
+-        STOPPED,
+-
+-        /// The output side is primed and ready but might not be sending (muted)
+-        /// samples to the speakers yet.
+-        STARTING,
+-
+-        /// The output side is running but no connected to a input.
+-        /// This state is effictively a soft mute state during which it is safe to (hard)
+-        /// unmute anything connected downstream.
+-        MUTED,
+-
+-        /// The output side is running ahead of the input.
+-        STARVED,
++private:
+ 
+-        /// The output side is running and consuming input.
+-        PLAYING,
+-    };
++    bool digitalFlag;
++    bool errorFrameSeen;
++    unsigned int numGoodFrames;
+ 
+     Mixer_Mme_c *Mixer;
+     bool RegisteredWithMixer;
+     bool EnabledWithMixer;
+-    
++
+     /// Held when any of the DisplayTimeOfNextCommit family of variables are accessed.
+     OS_Mutex_t DisplayTimeOfNextCommitMutex;
+     
+@@ -132,7 +112,6 @@ private:
+     unsigned int SamplesNeededForFadeOutBeforeResampling;
+     
+     OutputState_t OutputState;
+-
+     bool                                 IsTranscoded; ///< keeps track of whether the Coded Buffer has an attached Transcoded Buffer
+ 
+     int HandleRequestedOutputTiming(unsigned int BufferIndex);
+@@ -207,6 +186,15 @@ private:
+ 
+ public:
+ 
++    /*
++     * Accessor methods for Mixer SW to access the 
++     * TranscodedFrameBuffer outside the Manifestor.
++     * And to update the input after mix completion.
++     */ 
++    ManifestorStatus_t getTranscodedMmeDataBuffer( MME_DataBuffer_t *CodedMmeDataBuffer);
++    
++    OutputState_t getOutputState();
++
+     /* Constructor / Destructor */
+     Manifestor_AudioKsound_c                            (void);
+     ~Manifestor_AudioKsound_c                           (void);
+--- a/player/manifestor/mixer.h	
++++ a/player/manifestor/mixer.h	
+@@ -60,6 +60,29 @@ Date        Modification                                    Name
+ #define MIXER_ASSERT(x) do if(!(x)) report(severity_error, "%s: Assertion '%s' failed at %s:%d\n", \
+ 					       MIXER_FUNCTION, #x, __FILE__, __LINE__); while(0)
+ 
++enum OutputState_t
++{
++    /// There is no manifestor connected to this input.
++    DISCONNECTED,
++
++    /// Neither the input nor the output side are running.
++    STOPPED,
++
++    /// The output side is primed and ready but might not be sending (muted)
++    /// samples to the speakers yet.
++    STARTING,
++
++    /// The output side is running but no connected to a input.
++    /// This state is effictively a soft mute state during which it is safe to (hard)
++    /// unmute anything connected downstream.
++    MUTED,
++
++    /// The output side is running ahead of the input.
++    STARVED,
++
++    /// The output side is running and consuming input.
++    PLAYING,
++};
+ 
+ class Mixer_c:public BaseComponentClass_c
+ {
+--- a/player/manifestor/mixer_mme.cpp	
++++ a/player/manifestor/mixer_mme.cpp	
+@@ -4288,7 +4288,11 @@ unsigned int Mixer_Mme_c::LookupIec60958FrameRate( PcmPlayer_c::OutputEncoding E
+     
+     unsigned int Iec60958FrameRate;
+ 
+-    if ( Encoding <= PcmPlayer_c::BYPASS_DTSHD_LBR )
++    if ( Encoding == PcmPlayer_c::BYPASS_AC3 )
++    {
++        Iec60958FrameRate = PrimaryAudioParameters->Source.SampleRateHz;
++    }
++    else if ( Encoding <= PcmPlayer_c::BYPASS_DTSHD_LBR )
+     {
+         Iec60958FrameRate = OriginalSamplingFreq;
+     }
+-- 

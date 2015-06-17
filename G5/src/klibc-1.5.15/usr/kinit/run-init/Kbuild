@@ -1,0 +1,29 @@
+#
+# Kbuild file for run-init
+#
+
+static-y := static/run-init
+shared-y := shared/run-init
+
+# common .o files
+objs := run-init.o runinitlib.o
+
+# TODO - do we want a stripped version
+# TODO - do we want the static.g + shared.g directories?
+
+# Create built-in.o with all object files (used by kinit)
+lib-y := $(objs)
+
+# force run-init to not have an executable stack (to keep READ_IMPLIES_EXEC
+# personality(2) flag from getting set and passed to init).
+EXTRA_KLIBCLDFLAGS += -z noexecstack
+
+# .o files used to built executables
+static/run-init-y := $(objs)
+shared/run-init-y := $(objs)
+
+# Cleaning
+clean-dirs := static shared
+
+# install binary
+install-y := $(shared-y)

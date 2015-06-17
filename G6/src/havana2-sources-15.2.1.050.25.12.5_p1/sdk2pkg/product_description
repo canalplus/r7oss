@@ -1,0 +1,37 @@
+Streaming Engine sources: multimedia playback and encode engine,
+with hw acceleration, avsync, trickmodes, ..
+
+######StreamingEngine is made up of the following linux kernel modules:
+###feature modules
+-'player2'      (streaming engine platform sw device driver 'stm-se')
+                    [EXPORT_SYMBOLs: stm_se_X]
+-'osdev_abs'    (abstraction functions to use the char SE devices from player2)
+                    [EXPORT_SYMBOLs: OSDEV_DeviceList, OSDEV_DeviceDescriptors, OSDEV_Open/_Ioctl/_Close]
+-'stmalloc'     (memory allocator char device driver)
+                    [char dev - manual MAJOR:245]
+-'sth264pp'     (h264_preprocessor platform device driver 'h264pp')
+                    [also exposes char dev - manual MAJOR:246]
+-'sthevcpp'     (hevc_preprocessor platform device driver 'hevcpp')
+                    [also exposes char dev - manual MAJOR:247]
+-'hades'        (hevc_hard_host_transformer platform device driver 'hades')
+                    [also exposes char dev (tbc)]
+-'vp8hw'        (vp8_hard_host_transformer platform device driver 'vp8')
+-'h264enchw'    (h264_encode_hard_host_transformer platform device driver 'h264encoder')
+-'ksound'       (ALSA core wrapper functions)
+                    [EXPORT_SYMBOLs: ksnd_pcm_X, ksnd_ctl_X, ksnd_hctl_X, ksnd_substream_X]
+###shared relayfs based tracing modules: (active if CONFIG_RELAY and CONFIG_DEBUG_FS set)
+-'strelayfs'    (strelay client functions)
+                    [EXPORT_SYMBOLs: st_relayfs_X]
+-'strelaycore'  (strelay core functionsset)
+                    [EXPORT_SYMBOLs: st_relaycore_X]
+###internal utility modules:
+-'mmelog'       (MME logging utility functions)
+                    [EXPORT_SYMBOLs: acc_MME_X]
+-'mmestub'      (MME userspace char device driver)
+                    [char dev]
+###internal test modules: (active if CONFIG_DEBUG_FS set)
+-'ktone'            (ktones generation (on spawned thread) test module for ksound)
+-'encoderstkpi'     (encoder stkpi standalone test module)
+-'encoderdbgfs'     (encoder debugfs test module)
+-'KTM_ControlData'  (collator test module)
+

@@ -1,0 +1,22 @@
+# for backward compatibility
+config SND_BIT32_EMUL
+	tristate
+
+config SND_DEBUG_MEMORY
+	bool "Debug memory"
+	depends on SND_DEBUG
+	help
+	  Say Y here to enable debugging of memory allocations.
+
+config SND_HPET
+	tristate "High Precision Event Timer support"
+	depends on SND && HPET
+	select SND_TIMER
+	help
+	  Say Y here to enable HPET support for ALSA.  ALSA uses the
+	  HPE timers as a precise timing source and maps the HPE
+	  timers to ALSA's timer interface.  The ALSA sequencer code
+	  also can use this timing source.
+
+	  To compile this driver as a module, choose M here: the module
+	  will be called snd-hpet.

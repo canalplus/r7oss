@@ -1,0 +1,17 @@
+config VIDEO_STI
+	bool "STMicroelectronics Video driver setup"
+	depends on VIDEO_DEV && ARCH_STI
+	select VIDEOBUF2_VMALLOC
+	select V4L2_MEM2MEM_DEV
+	select VIDEOBUF2_BPA2_CONTIG
+	help
+	  Enables proper configuration of VIDEO subsystem for STi platforms.
+	  It mainly consists in setting following kernel features:
+	  VIDEOBUF2 / V4L2_MEM2MEM_DEV.
+	  In addition it provides BPA2 driver to support video operations.
+
+config VIDEOBUF2_BPA2_CONTIG
+	depends on VIDEO_STI
+	select VIDEOBUF2_CORE
+	select VIDEOBUF2_MEMOPS
+	tristate

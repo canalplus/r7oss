@@ -1,0 +1,107 @@
+/*
+ * Copyright (C) 2013 STMicroelectronics (R&D) Limited.
+ * Author: Patrice Chotard <patrice.chotard@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * publishhed by the Free Software Foundation.
+ */
+/ {
+	soc {
+		/* FSM */
+		spifsm:	spifsm@fe902000 {
+			status = "okay";
+			flash-name = "n25q256";
+			partitions = <&b2105_fsm_partitions>;
+
+			b2105_fsm_partitions: partitions-b2105 {
+				#address-cells = <1>;
+				#size-cells = <1>;
+				partition@0 {
+					label = "boot";
+					reg = <0x00000000 0x00500000>;
+				};
+				partition@500000 {
+					label = "rest";
+					reg = <0x00500000 0x01b00000>;
+				};
+			};
+		};
+
+		nandbch: nand-bch {
+			status = "okay";
+			st,nand-banks = <&nand_banks>;
+		};
+
+		nand_banks: nand-banks {
+			bank0 {
+				/* NAND_BBT_USE_FLASH (4Gbit) */
+				nand-on-flash-bbt;
+				nand-no-autoincr;
+				st,nand-csn = <0>;
+				st,nand-timing-data = <&nand_timing0>;
+				partitions {
+					#address-cells = <1>;
+					#size-cells = <1>;
+					partition@0 {
+						label = "NAND Flash 1";
+						reg = <0x00000000 0x01000000>;
+					};
+					partition@1000000 {
+						label = "NAND Flash 2";
+						reg = <0x01000000 0x01000000>;
+					};
+					partition@2000000 {
+						label = "NAND Flash 3";
+						reg = <0x02000000 0x1e000000>;
+					};
+				};
+			};
+		};
+
+		nand_timing0: nand-timing {
+			sig-setup = <10>;
+			sig-hold = <10>;
+			CE-deassert = <0>;
+			WE-to-RBn = <100>;
+			wr-on = <10>;
+			wr-off = <30>;
+			rd-on = <10>;
+			rd-off = <30>;
+			chip-delay = <30>;		/* delay in us */
+		};
+
+		/* Uniperipheral */
+		snd_uni_player0: snd-uni-player@0xfe002000 {
+			status = "okay";
+		};
+
+		snd_uni_player1: snd-uni-player@0xfe003000 {
+			status = "okay";
+		};
+
+		snd_uni_player2: snd-uni-player@0xfe004000 {
+			status = "okay";
+		};
+
+		snd_uni_player3: snd-uni-player@0xfe006000 {
+			status = "okay";
+		};
+
+		snd_uni_reader0: snd-uni-reader@0xfe005000 {
+			status = "disabled";
+		};
+
+		snd_uni_reader1: snd-uni-reader@0xfe007000 {
+			status = "disabled";
+		};
+
+		snd_conv_dac_sc: snd-conv-dac-sc {
+			status = "okay";
+		};
+
+		snd_conv_biphase: snd-conv-biphase {
+			status = "okay";
+		};
+	};
+};

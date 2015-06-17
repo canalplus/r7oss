@@ -1,0 +1,33 @@
+* Fri May 09 2014 Alain Volmat <alain.volmat@st.com> - 1.4.11
+- [Bugzilla: 48778] Crypto dev header file package has to be removed from SDK2
+
+* Wed Mar 12 2014 Alain Volmat <alain.volmat@st.com> - 1.4-10
+- [Bugzilla: 46463] Date format error in change log
+
+* Thu Mar 03 2014 Philippe GUERRI <philippe.guerri@st.com> - 1.4-9
+- [Bugzilla: 45938] new files needed to produce RPM
+
+* Thu Sep 12 2013 Jonathan Brett <jonathan.brett@st.com> - 1.4-8
+- Update SPEC for 1.4-8 
+
+* Thu May 16 2013 Jonathan Brett <jonathan.brett@st.com> - 1.4-7
+- [Bugzilla: 30274] Import additional block cipher tests based on customer usage
+
+* Thu Apr 18 2013 Jonathan Brett <jonathan.brett@st.com> - 1.4-6
+- [Bugzilla: 28995] Add Android-compatible makefile
+
+* Mon Mar 25 2013 Jonathan Brett <jonathan.brett@st.com> - 1.4-5
+- [Bugzilla: 28653] v1.4-4 cannot build headers rpm
+
+* Fri Mar 22 2013 Jonathan Brett <jonathan.brett@st.com> 1.4-4
+- [Bugzilla: 28587] CIOCGSESSION ioctl copies-back key data (used by stm_cipher)
+
+* Wed Mar 13 2013 Jonathan Brett <jonathan.brett@st.com> 1.4-3
+- [Bugzilla: 26573] Fix compilation warnings and introduce -Werror
+
+* Thu Feb 28 2013 Jonathan Brett <jonathan.brett@st.com> 1.4-2
+- [Bugzilla: 26879] Add support for STM custom cipher
+
+* Mon Jul 09 2012 Jonathan Brett <jonathan.brett@st.com> 1.4-1
+- [New] Create cryptodev-linux package
+

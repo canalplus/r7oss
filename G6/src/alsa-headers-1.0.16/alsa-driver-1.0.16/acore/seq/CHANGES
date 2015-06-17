@@ -1,0 +1,100 @@
+19990604	Takashi Iwai <iwai@ww.uni-erlangen.de>
+ - Event pool is assigned to each client instead of each queue.
+ - Input FIFO is allocated only for user client.
+ - Write select and blocking mode are implemented.
+ - Events with subscription and broadcast queue are dispatched
+   immediately.  Scheduled subscription events should contain
+   SND_SEQ_ADDRESS_SUBSCRIBERS in client number with the proper
+   queue number.
+
+19990609	Takashi Iwai <iwai@ww.uni-erlangen.de>
+ - EVENT_NOTE is decomposed to NOTEON and NOTEOFF events before
+   queued.  seq_midi.c and seq_midi_emul.c don't need to process
+   this event.
+
+19990615	Jaroslav Kysela <perex@perex.cz>
+ - Changed threshold_output name to output_room.
+
+19990616	Steve Ratcliffe <steve@parabola.demon.co.uk>
+ - Spinlock bugs are fixed.
+
+199906017	Takashi Iwai <iwai@ww.uni-erlangen.de>
+ - Write pool is allocated on demand.  As default, no pool is assigned
+   to kernel clients.  They need to be allocated explicitly by using
+   SET_CLIENT_POOL ioctl.
+ - GET_CLIENT_POOL ioctl refers client field in the record.
+
+19990701	Takashi Iwai <iwai@ww.uni-erlangen.de>
+ - Add snd-seq-device module.  This module supports for plug-in table
+   of sequencer devices.
+
+19990815	Takashi Iwai <iwai@ww.uni-erlangen.de>
+ - Allow subscription from the "third client".  You only need to call
+   SUBSCRIBE_PORT ioctl with two connecting port addresses.  The
+   sender and receiver queues must be valid and identical, although
+   the client doesn't have to own or use specified queues.
+   If PORT_CAP_NO_EXPORT_ROUTE is set in one of subscribed ports,
+   the subscription is refused.
+ - The port which receives any events must have CAP_OUT flag.
+   Otherwise events are ignored.
+ - PORT_CAP_SUBSCRIPTION is divided to CAP_SUBS_IN and CAP_SUBS_OUT
+   for input and output, respectively.  PORT_CAP_SUBSCRIPTION defines
+   both input and output.
+ - Add GET_SUBSCRIPTION ioctl.  This checks the presence of the given
+   subscription (connection).
+ - Event dispatcher checks the number of events delivered.
+   snd_seq_dispatch_event() returns the number of delivered events
+   (in the case of broadcast or subscribers, this may be more than
+   one!).
+ - ADDRESS_BROADCAST can be set as port address.  Events are delivered
+   to all ports in the specified client.
+ - QUERY_NEXT_CLIENT and QUERY_NEXT_PORT ioctls  (hey, not tested!)
+   The query scheme should be more discussed..
+
+19990820	Takashi Iwai <iwai@ww.uni-erlangen.de>
+ - Add group and group permissions to ports:
+   group (string) is added to client_info and port_info.
+   The standard group names are defined in asequencer.h.
+   A group name is used to help the query of clients/ports and
+   restrict access permissions to ports.
+   The access to a port from ports of the same group is checked by
+   looking at permissions in cap_group field in port_info_t.   
+ - Add num_ports in client_info_t.
+ - Bug fix of QUERY_NEXT_PORT ioctl.
+
+19990824	Takashi Iwai <iwai@ww.uni-erlangen.de>
+ - Delivery path is checked.  It avoids hang up when a kernel client
+   dispatches events in an infinite loop.  Two arguments (atomic and
+   path_len) are added to event_input callback.  path_len argument
+   is added to snd_seq_kerne_client_dispatch() and _enqueue().
+ - QUERY_SUBSCRIPTION ioctl is added.
+
+19990826	Takashi Iwai <iwai@ww.uni-erlangen.de>
+ - Add convert_time field in snd_seq_port_subscribe_t.
+   The timestamp is no longer converted unless this flag is true.
+ - Simplify subscription code; subscribe and use callbacks are invoked 
+   always for both sender and receiver ports (even to the client
+   itself that is calling ioctl).  However, NOTIFY events are not sent
+   to the calling client.
+   READ_TRACK and WRITE_TRACK were removed from query_subscription.
+ - Event from non-existing port is also accepted, but client group is
+   checked for security.
+ - Event priority is checked (seq_prioq.c).
+   The event is inserted at the head of the same time slice if
+   SND_SEQ_EVENT_PRIORITY_HIGH is specified.
+
+19990827	Takashi Iwai <iwai@ww.uni-erlangen.de>
+ - Fix: auto-loading bugs in seq_device.c.
+ - Add a dummy sequencer client module: snd-seq-dummy.o.
+
+19991113	Takashi Iwai <iwai@ww.uni-erlangen.de>
+ - Queue are allocated dynamically; see seq_queue.c for details.
+
+19991116	Takashi Iwai <iwai@ww.uni-erlangen.de>
+ - active_list in seq_queue.c is removed.
+
+19991127	Takashi Iwai <iwai@ww.uni-erlangen.de>
+ - Use reference counter for copying buffers allocated via
+   snd_seq_ext_malloc to avoid unnecessary malloc/copy/free.
+   snd_seq_ext_ref() simply increases the counter.
+

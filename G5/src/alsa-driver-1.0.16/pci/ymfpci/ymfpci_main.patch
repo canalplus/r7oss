@@ -1,0 +1,45 @@
+--- ../../alsa-kernel/pci/ymfpci/ymfpci_main.c	2007-12-20 11:47:37.000000000 +0100
++++ ymfpci_main.c	2007-12-20 12:19:02.000000000 +0100
+@@ -1,3 +1,5 @@
++#define __NO_VERSION__
++#include "adriver.h"
+ /*
+  *  Copyright (c) by Jaroslav Kysela <perex@perex.cz>
+  *  Routines for control of YMF724/740/744/754 chips
+@@ -2042,8 +2044,13 @@
+ 	int err, is_1e;
+ 	const char *name;
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
+ 	err = request_firmware(&chip->dsp_microcode, "yamaha/ds1_dsp.fw",
+ 			       &chip->pci->dev);
++#else
++	err = request_firmware(&chip->dsp_microcode, "yamaha/ds1_dsp.fw",
++			       pci_name(chip->pci));
++#endif
+ 	if (err >= 0) {
+ 		if (chip->dsp_microcode->size == YDSXG_DSPLENGTH)
+ 			snd_ymfpci_convert_from_le(chip->dsp_microcode);
+@@ -2059,8 +2066,13 @@
+ 		chip->device_id == PCI_DEVICE_ID_YAMAHA_744 ||
+ 		chip->device_id == PCI_DEVICE_ID_YAMAHA_754;
+ 	name = is_1e ? "yamaha/ds1e_ctrl.fw" : "yamaha/ds1_ctrl.fw";
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
+ 	err = request_firmware(&chip->controller_microcode, name,
+ 			       &chip->pci->dev);
++#else
++	err = request_firmware(&chip->controller_microcode, name,
++			       pci_name(chip->pci));
++#endif
+ 	if (err >= 0) {
+ 		if (chip->controller_microcode->size == YDSXG_CTRLLENGTH)
+ 			snd_ymfpci_convert_from_le(chip->controller_microcode);
+@@ -2394,7 +2406,7 @@
+ 	chip->pci = pci;
+ 	chip->irq = -1;
+ 	chip->device_id = pci->device;
+-	chip->rev = pci->revision;
++	chip->rev = snd_pci_revision(pci);
+ 	chip->reg_area_phys = pci_resource_start(pci, 0);
+ 	chip->reg_area_virt = ioremap_nocache(chip->reg_area_phys, 0x8000);
+ 	pci_set_master(pci);

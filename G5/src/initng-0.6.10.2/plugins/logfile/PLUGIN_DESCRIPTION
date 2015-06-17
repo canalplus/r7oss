@@ -1,0 +1,8 @@
+          name : logfile
+        author : neuron <neuron@hollowtube.mine.nu>
+  contributors : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+      commands : 
+       options : logfile
+   description : Outputs all service output to a specific file set by logfile.
+                 This is not the same as stdout, that redirects the output from initng.
+		 With this, both the logfile and initng will get output.

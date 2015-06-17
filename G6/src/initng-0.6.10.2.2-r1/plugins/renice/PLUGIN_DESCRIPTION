@@ -1,0 +1,6 @@
+          name : renice
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : 
+      commands : 
+       options : nice
+   description : Change the nice level on a process.

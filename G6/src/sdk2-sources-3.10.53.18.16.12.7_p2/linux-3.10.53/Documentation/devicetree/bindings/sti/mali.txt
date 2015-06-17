@@ -1,0 +1,58 @@
+==============================================================================
+ ARM Mali-400 device configuration for STMicroelectronics SoCs.
+==============================================================================
+
+SoCs DTSI required properties:
+- compatible : "st,mali".
+- reg, reg-names, interrupts, interrupt-names   :
+			Standard way to define device resources with names.
+			Look in
+                        Documentation/devicetree/bindings/resource-names.txt
+
+IRQs for each graphical processor has to match with own register resource.
+At probe time, these resources will be found by using the reg-name plus
+the "_IRQ" suffix as reported in the example below:
+
+If the reg-name is Mali_GP its interrupt must be described as: Mali_GP_IRQ
+
+
+Boards DT configurable options:
+- mali-mem-size : the maximum limit of memory the Mali GPU driver can
+			allocate from the OS. If not provided the
+			default size is 224MiB.
+- gpu-clk-rate : to setup a specific GPU clock rate.
+
+Example:
+/* Mali GPU resources */
+mali: mali@fd680000 {
+	compatible      = "st,mali";
+	reg             = <0xfd681000 0x200>,
+			<0xfd680000 0x100>,  <0xfd683000 0x100>,
+			<0xfd688000 0x1100>, <0xfd684000 0x100>,
+			<0xfd68a000 0x1100>, <0xfd685000 0x100>,
+			<0xfd68c000 0x1100>, <0xfd686000 0x100>,
+			<0xfd68e000 0x1100>, <0xfd687000 0x100>;
+	reg-names       = "Mali_L2",
+			"Mali_GP", "Mali_GP_MMU",
+			"Mali_PP0", "Mali_PP0_MMU",
+			"Mali_PP1", "Mali_PP1_MMU",
+			"Mali_PP2", "Mali_PP2_MMU",
+			"Mali_PP3", "Mali_PP3_MMU";
+	interrupts      = <0 80 0>, <0 81 0>,
+			<0 78 0>, <0 79 0>,
+			<0 82 0>, <0 85 0>,
+			<0 83 0>, <0 86 0>,
+			<0 84 0>, <0 87 0>;
+	interrupt-names = "Mali_GP_IRQ",  "Mali_GP_MMU_IRQ",
+		       "Mali_PP0_IRQ", "Mali_PP0_MMU_IRQ",
+		       "Mali_PP1_IRQ", "Mali_PP1_MMU_IRQ",
+		       "Mali_PP2_IRQ", "Mali_PP2_MMU_IRQ",
+		       "Mali_PP3_IRQ", "Mali_PP3_MMU_IRQ";
+	status = "okay";
+	gpu-clk-rate = <400000000>;
+	};
+
+Example Board configuration:
+mali: mali@09f00000 {
+	mali-mem-size = <300000000>;
+};

@@ -1,0 +1,28 @@
+StreamingEngine Component
+====================================
+
+Build & Install
+---------------
+cf INSTALL file
+
+Documentation
+-------------
+Streaming Engine (SE) external documentation se_api.pdf
+(requires doxygen > 1.8.4)
+in SDK2 build system shell, from SE top dir Makefile
+make apidoc
+
+Streaming Engine internal documentations
+in SDK2 build system shell, from SE top dir Makefile
+make doxygen
+
+or to generate both
+make docs
+
+see also sdk2pkg/product_description for detailed information
+on streaming engine modules
+
+Obtaining support
+-----------------
+Please use bugzilla:
+https://bugzilla.stlinux.com/

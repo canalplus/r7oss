@@ -1,0 +1,5 @@
+debian/tmp/usr/include/ffmpeg/rgb2rgb.h
+debian/tmp/usr/include/ffmpeg/swscale.h
+debian/tmp/usr/lib/libswscale.a
+debian/tmp/usr/lib/libswscale.so
+debian/tmp/usr/lib/pkgconfig/libswscale.pc

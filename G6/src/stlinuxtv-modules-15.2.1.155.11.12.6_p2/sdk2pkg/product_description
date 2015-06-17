@@ -1,0 +1,3 @@
+dvb adaptation is a glue layer which interfaces stm_te and stm_fe components
+to LinuxDVB / player2. Dvb adaptation layer covers the following ST SOCs:
+STx7108, B2000_A9

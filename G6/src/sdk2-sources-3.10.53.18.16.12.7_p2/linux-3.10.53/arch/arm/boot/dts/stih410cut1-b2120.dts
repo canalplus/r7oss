@@ -1,0 +1,35 @@
+/*
+ * Copyright (C) 2014 STMicroelectronics (R&D) Limited.
+ * Author: Giuseppe Cavallaro <peppe.cavallaro@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+/dts-v1/;
+#include "stih410cut1.dtsi"
+#include "stihxxx-b2120.dtsi"
+/ {
+	model = "STiH410cut1 B2120";
+	compatible = "st,stih410", "st,stih410-b2120";
+
+	memory {
+		device_type = "memory";
+		reg = <0x40000000 0x80000000>;
+	};
+
+	soc {
+		usb3_phy: usb3_phy@0 {
+			st,auto-calibration;
+		};
+
+		/* set tx impedance compensation */
+		miphy28lp_phy0: miphy28lp@0 {
+			st,tx-impedance-comp;
+		};
+
+		miphy28lp_phy1: miphy28lp@1 {
+			st,tx-impedance-comp;
+		};
+	};
+};

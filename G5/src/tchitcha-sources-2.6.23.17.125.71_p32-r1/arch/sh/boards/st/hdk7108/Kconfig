@@ -1,0 +1,22 @@
+if SH_ST_HDK7108
+
+menu "hdk7108: STx7108 Reference board options"
+
+config SH_ST_HDK7108_STMMAC0
+	bool "Enable STMMAC 0"
+	default n
+	help
+	  Enable STMMAC 0
+
+config SH_ST_HDK7108_STMMAC0_FIXED_PHY
+	bool "Use fixed PHY for STMMAC 0"
+	depends on SH_ST_HDK7108_STMMAC0
+	select FIXED_PHY
+	help
+	  Associate STMMAC0 with an emulated PHY on the "fixed" MDIO Bus.
+	  This is useful for PHYs which have insufficient SMI registers
+	  to support the normal PHY management interface.
+
+endmenu
+
+endif

@@ -1,0 +1,25 @@
+From 2decab618772b0ed76fc2ef1ce05906c8deb7dcc Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:19:59 +0100
+Subject: [PATCH 17/36] patches/default-PolicyH264TreatTopBottomPictureStructAsInterlaced
+
+---
+ player/player/player_construct.cpp |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/player/player/player_construct.cpp b/player/player/player_construct.cpp
+index 692d1d5..654617a 100644
+--- a/player/player/player_construct.cpp
++++ b/player/player/player_construct.cpp
+@@ -118,7 +118,7 @@ unsigned int    i;
+     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyH264AllowBadPreProcessedFrames,			PolicyValueApply );
+     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyH264TreatDuplicateDpbValuesAsNonReferenceFrameFirst,	PolicyValueApply );
+     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyH264ForcePicOrderCntIgnoreDpbDisplayFrameOrdering,	PolicyValueDisapply );
+-    SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyH264TreatTopBottomPictureStructAsInterlaced,		PolicyValueDisapply );
++    SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyH264TreatTopBottomPictureStructAsInterlaced,		PolicyValueApply );
+ 
+     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyMPEG2ApplicationType,				PolicyValueMPEG2ApplicationDvb );
+     SetPolicy( PlayerAllPlaybacks, PlayerAllStreams, PolicyMPEG2DoNotHonourProgressiveFrameFlag,		PolicyValueDisapply );
+-- 
+1.7.9.5
+

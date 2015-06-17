@@ -1,0 +1,200 @@
+/*
+ * Copyright (C) 2014 STMicroelectronics (R&D) Limited.
+ * Author: Amelie Herault <amelie.herault@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+/dts-v1/;
+#include "stih301.dtsi"
+/ {
+	chosen {
+		bootargs = "console=ttyAS0,115200";
+		linux,stdout-path = &sbc_serial0;
+	};
+
+	aliases {
+		ttyAS0 = &sbc_serial0;
+		ethernet0 = &ethernet0;
+		miphy0 = &miphy28lp_phy0;
+		miphy1 = &miphy28lp_phy1;
+		miphy2 = &miphy28lp_phy2;
+		usb1 = &usb1;
+	};
+
+	memory {
+		device_type = "memory";
+		/*
+		 * 2 x 16 bits x 512MB: reg = <0x40000000 0x40000000>;
+		 * 1 x 16 bits x 512MB: reg = <0x40000000 0x20000000>;
+		 */
+		reg = <0x40000000 0x20000000>;
+	};
+
+	soc {
+		mmc1: sdhci@09080000 {
+			status = "okay";
+		};
+
+		lpm:stm-lpm@9400000 {
+			status = "okay";
+			gpios = <&PIO3 2 0>;
+			st,lmi-ret-gpio = <&PIO5 2 0>;
+                };
+
+		gpio_keys {
+			compatible = "gpio-keys";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			button@1 {
+				label = "wakeup";
+				linux,code = <41>;
+				gpios = <&PIO3 3 0>;
+				gpio-key,wakeup;
+			};
+		};
+
+		sbc_serial0: serial@9530000 {
+			status = "okay";
+		};
+
+		leds {
+			compatible = "gpio-leds";
+			red {
+				#gpio-cells = <2>;
+				label = "Front Panel LED";
+				gpios = <&PIO4 1 0>;
+				linux,default-trigger = "heartbeat";
+			};
+			green {
+				#gpio-cells = <2>;
+				gpios = <&PIO1 3 0>;
+				default-state = "off";
+			};
+		};
+
+		/* SSC4 to PCIe connector */
+		i2c4: i2c@9844000 {
+			status = "okay";
+		};
+
+		/* SSC11 to HDMI */
+		i2c11: i2c@9541000 {
+			status = "okay";
+			/* HDMI V1.3a supports Standard mode only */
+			clock-frequency = <100000>;
+			st,i2c-min-scl-pulse-width-us = <0>;
+			st,i2c-min-sda-pulse-width-us = <5>;
+		};
+
+		ethernet0: dwmac@9630000 {
+			st,tx-retime-src = "clkgen";
+			status = "okay";
+			phy-mode = "rgmii";
+			pinctrl-0 = <&pinctrl_rgmii1 &pinctrl_rgmii1_mdio>;
+
+			snps,phy-bus-name = "stmmac";
+			snps,phy-bus-id = <0>;
+			snps,phy-addr = <0x04>;
+			snps,reset-gpio = <&PIO0 7 0>;
+			snps,reset-active-low;
+			snps,reset-delays-us = <0 10000 1000000>;
+
+			st,eee-force-disable;
+		};
+
+		usb1: usb@9A80000 {
+			status = "okay";
+		};
+
+		st_dwc3: dwc3@8f94000 {
+			status = "okay";
+		};
+
+		/* select internal clock for miphy0 (sata) */
+		miphy28lp_phy0: miphy28lp@0 {
+			/* select internal clock for miphy0 (sata) */
+			st,sata_gen = "gen3";
+			status = "okay";
+		};
+
+		pcie0: pcie@9b00000{
+			status = "okay";
+			reset-gpio = <&PIO34 2 0>;
+		};
+
+		/*
+		 * B2173 has a MALI-400 MP2 (dual core) instead of
+		 * MALI-400 MP4 (quad core)
+		 */
+		mali: mali@09f00000 {
+			compatible = "st,mali";
+			reg = <0x09f01000 0x200>,
+			      <0x09f00000 0x100>, <0x09f03000 0x100>,
+			      <0x09f08000 0x1100>, <0x09f04000 0x100>,
+			      <0x09f0a000 0x1100>, <0x09f05000 0x100>;
+			reg-names = "Mali_L2",
+				    "Mali_GP", "Mali_GP_MMU",
+				    "Mali_PP0", "Mali_PP0_MMU",
+				    "Mali_PP1", "Mali_PP1_MMU";
+
+			interrupts = <GIC_SPI 49 IRQ_TYPE_NONE>,
+				     <GIC_SPI 50 IRQ_TYPE_NONE>,
+				     <GIC_SPI 41 IRQ_TYPE_NONE>,
+				     <GIC_SPI 45 IRQ_TYPE_NONE>,
+				     <GIC_SPI 42 IRQ_TYPE_NONE>,
+				     <GIC_SPI 46 IRQ_TYPE_NONE>;
+			interrupt-names = "Mali_GP_IRQ",
+					  "Mali_GP_MMU_IRQ",
+					  "Mali_PP0_IRQ",
+					  "Mali_PP0_MMU_IRQ",
+					  "Mali_PP1_IRQ",
+					  "Mali_PP1_MMU_IRQ";
+		};
+
+		/*
+		 * disable this fdma as there is no TS MUX on B2173
+		 */
+		fdma2_mpe: fdma-mpe@2 {
+			status = "disabled";
+		};
+
+		nandbch: nand-bch {
+			st,bch-ecc-mode = "18bit";
+			st,bch-bitflip-threshold = <0x12>;
+			status = "okay";
+			st,nand-banks = <&nand_banks>;
+		};
+
+		nand_banks: nand-banks {
+			bank0 {
+				/* NAND_BBT_USE_FLASH (4Gbit) */
+				nand-on-flash-bbt;
+				nand-no-autoincr;
+				st,nand-cs = <0>;
+				st,nand-timing-data = <&nand_timing0>;
+				partitions {
+					#address-cells = <1>;
+					#size-cells = <1>;
+					partition@0{
+						label = "NAND Flash 1";
+						reg = <0x00000000 0x1e000000>;
+					};
+				};
+			};
+		};
+
+		nand_timing0: nand-timing {
+			sig-setup = <10>;
+			sig-hold = <10>;
+			CE-deassert = <0>;
+			WE-to-RBn = <100>;
+			wr-on = <10>;
+			wr-off = <30>;
+			rd-on = <10>;
+			rd-off = <30>;
+			chip-delay = <30>; /* delay in us */
+		};
+	};
+};

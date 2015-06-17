@@ -1,0 +1,20 @@
+/*
+ * Copyright (C) 2014 STMicroelectronics (R&D) Limited.
+ * Author: Giuseppe Cavallaro <peppe.cavallaro@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+/dts-v1/;
+#include "stih410.dtsi"
+#include "stihxxx-b2089.dtsi"
+/ {
+	model = "STiH310 B2089";
+	compatible = "st,stih310-b2089", "st,stih310", "st,stih410";
+
+	memory {
+		device_type = "memory";
+		reg = <0x40000000 0x40000000>;
+	};
+};

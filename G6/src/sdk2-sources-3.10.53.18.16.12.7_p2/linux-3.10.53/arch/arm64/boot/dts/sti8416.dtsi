@@ -1,0 +1,361 @@
+/*
+ * Copyright (C) 2014 STMicroelectronics Limited.
+ * Author: Nunzio Raciti <nunzio.raciti@st.com>
+ * Author: Giuseppe Cavallaro <peppe.cavallaro@st.com>
+ * Author: Madianga M'boumba Cedric <cedric.madianga@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+
+#include "sti8416-clock.dtsi"
+#include "sti8416-pinctrl.dtsi"
+#include <dt-bindings/reset-controller/sti8416-resets.h>
+
+/ {
+	#address-cells = <2>;
+	#size-cells = <1>;
+
+	cpus {
+		#address-cells = <2>;
+		#size-cells = <0>;
+
+		cpu@0 {
+			device_type = "cpu";
+			compatible = "arm,armv8";
+			reg = <0x0 0x0>;
+			enable-method = "spin-table";
+			cpu-release-addr = <0x0 0xc000fff8>;
+		};
+		cpu@1 {
+			device_type = "cpu";
+			compatible = "arm,armv8";
+			reg = <0x0 0x1>;
+			enable-method = "spin-table";
+			cpu-release-addr = <0x0 0xc000fff8>;
+		};
+		cpu@2 {
+			device_type = "cpu";
+			compatible = "arm,armv8";
+			reg = <0x0 0x2>;
+			enable-method = "spin-table";
+			cpu-release-addr = <0x0 0xc000fff8>;
+
+		};
+		cpu@3 {
+			device_type = "cpu";
+			compatible = "arm,armv8";
+			reg = <0x0 0x3>;
+			enable-method = "spin-table";
+			cpu-release-addr = <0x0 0xc000fff8>;
+		};
+	};
+
+	intc: interrupt-controller@06c00000 {
+		compatible = "arm,cortex-a15-gic";
+		#interrupt-cells = <3>;
+		interrupt-controller;
+		reg = <0x0 0x06c01000 0x1000>, /* GIC Dist */
+		      <0x0 0x06c02000 0x1000>; /* GIC CPU */
+	};
+
+	timer {
+		compatible = "arm,armv8-timer";
+		interrupt-parent = <&intc>;
+		interrupts = <1 13 0xff01>, /* Secure Phys IRQ */
+			     <1 14 0xff01>; /* Non-secure Phys IRQ */
+		clock-frequency = <500000000>;
+	};
+
+	soc {
+		#address-cells = <2>;
+		#size-cells = <1>;
+		ranges;
+		interrupt-parent = <&intc>;
+		compatible = "simple-bus";
+
+		powerdown: powerdown-controller {
+			#reset-cells = <1>;
+			compatible = "st,sti8416-powerdown";
+		};
+
+		softreset: softreset-controller {
+			#reset-cells = <1>;
+			compatible = "st,sti8416-softreset";
+		};
+
+		/* FC0 BACKBONE - 21000-21199 */
+		syscfg_pio_front:pio-front-syscfg@8300000 {
+			compatible = "st,sti8416-pio-front-syscfg", "syscon";
+			reg = <0x0 0x8300000 0x320>;
+		};
+
+		/* 22000-22166 */
+		syscfg_pio_rear:pio-rear-syscfg@8310000 {
+			compatible = "st,sti8416-pio-rear-syscfg", "syscon";
+			reg = <0x0 0x8310000 0x29c>;
+		};
+
+		/* 25000-25136 */
+		syscfg_pio_net:pio-net-syscfg@8320000 {
+			compatible = "st,sti8416-pio-net-syscfg", "syscon";
+			reg = <0x0 0x8320000 0x224>;
+		};
+
+		/* 24000-24110 */
+		syscfg_pio_sd:pio-sd-syscfg@8330000 {
+			compatible = "st,sti8416-pio-sd-syscfg", "syscon";
+			reg = <0x0 0x8330000 0x1bc>;
+		};
+
+		/* FC1 VSAFE 20000-20149 */
+		syscfg_pio_sbc:pio-sbc-syscfg@a600000 {
+			compatible = "st,sti8416-pio-sbc-syscfg", "syscon";
+			reg = <0x0 0xa600000 0x258>;
+		};
+
+		/* FC11 BOOTDEV 23000-23086 */
+		syscfg_pio_flash:pio-flash-syscfg@0x1e400000 {
+			compatible = "st,sti8416-pio-flash-syscfg", "syscon";
+			reg = <0x0 0x1e400000 0x15c>;
+		};
+
+		/* Specific system control registers per cluster */
+
+		/*
+			This is the layout of the system config registers
+			available in each cluster that has 11 internal areas
+			organized as shown below:
+
+			o 2MiB of sysconfig bank:
+				RESET/Clock Gating	-> FC_ID*1000+[0-15]
+				RESERVED		-> FC_ID*1000+[100-199]
+				RESERVED		-> FC_ID*1000+[200-299]
+				PANIC_CTRL		-> FC_ID*1000+[300-399]
+				SPECIFIC		-> FC_ID*1000+[400-499]
+				POWER_CTRL		-> FC_ID*1000+[500-599]
+				RESERVED		-> FC_ID*1000+[600-699]
+				NOC_A1			-> FC_ID*1000+[700-799]
+			o 128KiB of SDP sysconfig bank:
+				SDP Manager CC area	-> FC_ID*1000+[800-899]
+				SDP Manager HYP area	-> FC_ID*1000+[900-999]
+		*/
+
+		/* FC0 BACKBONE 0-799 */
+		syscfg_fc0_backbone:fc0-backbone-syscfg@9000000 {
+			compatible = "st,sti8416-fc0-backbone-syscfg", "syscon";
+			reg = <0x0 0x9000000 0x200000>;
+		};
+
+		/* FC0 BACKBONE SDP 800-999 */
+		syscfg_sdp_fc0_backbone:sdp-fc0-backbone-syscfg@9400000 {
+			compatible = "st,sti8416-sdp-fc0-backbone-syscfg", "syscon";
+			reg = <0x0 0x9400000 0x20000>;
+		};
+
+		/* FC1 VSAFE 1000-1799 (no SDP reg exposed) */
+		syscfg_fc1_vsafe:sdp-fc1-vsafe-syscfg@b000000 {
+			compatible = "st,sti8416-sdp-fc1-vsafe-syscfg", "syscon";
+			reg = <0x0 0xb000000 0x200000>;
+		};
+
+		syscfg_vsafe_lpm:lpm-syscfg@0xa1f0000{
+			compatible = "st,sti8416-lpm-syscfg", "syscon";
+			reg = <0x0 0xa1f0000 0x10000>;
+		};
+
+		/* FC2 TS 2000-2999 */
+		syscfg_fc2_ts:fc2-ts-syscfg@d000000 {
+			compatible = "st,sti8416-fc2-ts-syscfg", "syscon";
+			reg = <0x0 0xd000000 0x200000>;
+		};
+
+		syscfg_sdp_fc2_ts:sdp-fc2-ts-syscfg@d400000 {
+			compatible = "st,sti8416-sdp-fc2-ts-syscfg", "syscon";
+			reg = <0x0 0xd400000 0x20000>;
+		};
+
+		/* FC3 VDEC0 3000-3999 */
+		syscfg_fc3_vdec0:fc3-vdec0-syscfg@f000000 {
+			compatible = "st,sti8416-fc3-vdec0-syscfg", "syscon";
+			reg = <0x0 0xf000000 0x200000>;
+		};
+
+		syscfg_sdp_fc3_vdec0:sdp-fc3-vdec0-syscfg@f400000 {
+			compatible = "st,sti8416-sdp-fc3-vdec0-syscfg", "syscon";
+			reg = <0x0 0xf400000 0x20000>;
+		};
+
+		/* FC4 VDEC1 4000-4999 */
+		syscfg_fc4_vdec1:fc4-vdec1-syscfg@11000000 {
+			compatible = "st,sti8416-fc4-vdec1-syscfg", "syscon";
+			reg = <0x0 0x11000000 0x200000>;
+		};
+
+		syscfg_sdp_fc4_vdec1:sdp-fc4-vdec1-syscfg@11400000 {
+			compatible = "st,sti8416-sdp-fc4-vdec1-syscfg", "syscon";
+			reg = <0x0 0x11400000 0x20000>;
+		};
+
+		/* FC5 VENC 5000-5999 */
+		syscfg_fc5_venc:fc5-venc-syscfg@13000000 {
+			compatible = "st,sti8416-fc5-venc-syscfg", "syscon";
+			reg = <0x0 0x13000000 0x200000>;
+		};
+
+		syscfg_sdp_fc5_venc:sdp-fc5-venc-syscfg@13400000 {
+			compatible = "st,sti8416-sdp-fc5-venc-syscfg", "syscon";
+			reg = <0x0 0x13400000 0x20000>;
+		};
+
+		/* FC6 DISPLAY 6000-6999 */
+		syscfg_fc6_display:fc6-display-syscfg@15000000 {
+			compatible = "st,sti8416-fc6-display-syscfg", "syscon";
+			reg = <0x0 0x15000000 0x200000>;
+		};
+
+		syscfg_sdp_fc6_display:sdp-fc6-display-syscfg@15400000 {
+			compatible = "st,sti8416-sdp-fc6-display-syscfg", "syscon";
+			reg = <0x0 0x15400000 0x20000>;
+		};
+
+		/* FC7 HSIF 7000-7999 */
+		syscfg_fc7_hsif:fc7-hsif-syscfg@17000000 {
+			compatible = "st,sti8416-fc7-hsif-syscfg", "syscon";
+			reg = <0x0 0x17000000 0x200000>;
+		};
+
+		syscfg_sdp_fc7_hsif:sdp-fc7-hsif-syscfg@17400000 {
+			compatible = "st,sti8416-sdp-fc7-hsif-syscfg", "syscon";
+			reg = <0x0 0x17400000 0x20000>;
+		};
+
+		/* FC8 NET 8000-8999 */
+		syscfg_fc8_net:fc8-net-syscfg@19000000 {
+			compatible = "st,sti8416-fc8-net-syscfg", "syscon";
+			reg = <0x0 0x19000000 0x200000>;
+		};
+
+		syscfg_sdp_fc8_net:sdp-fc8-net-syscfg@19400000 {
+			compatible = "st,sti8416-sdp-fc8-net-syscfg", "syscon";
+			reg = <0x0 0x19400000 0x20000>;
+		};
+
+		/* FC9 ST231SS 9000-9999 */
+		syscfg_fc9_st231ss:fc9-st231ss-syscfg@1b000000 {
+			compatible = "st,sti8416-fc9-st231ss-syscfg", "syscon";
+			reg = <0x0 0x1b000000 0x200000>;
+		};
+
+		syscfg_sdp_fc9_st231ss:sdp-fc9-st231ss-syscfg@1b400000 {
+			compatible = "st,sti8416-sdp-fc9-st231ss-syscfg", "syscon";
+			reg = <0x0 0x1b400000 0x200000>;
+		};
+
+		/* FC10 GPU 10000-10999 */
+		syscfg_fc10_gpu:fc10-gpu-syscfg@1d000000 {
+			compatible = "st,sti8416-fc10-gpu-syscfg", "syscon";
+			reg = <0x0 0x1d000000 0x200000>;
+		};
+
+		syscfg_sdp_fc10_gpu:sdp-fc10-gpu-syscfg@1d400000 {
+			compatible = "st,sti8416-sdp-fc10-gpu-syscfg", "syscon";
+			reg = <0x0 0x1d400000 0x20000>;
+		};
+
+		/* FC11 BOOTDEV 11000-11999 */
+		syscfg_fc11_bootdev:fc11-bootdev-syscfg@1f000000 {
+			compatible = "st,sti8416-fc11-bootdev-syscfg", "syscon";
+			reg = <0x0 0x1f000000 0x200000>;
+		};
+
+		syscfg_sdp_fc11_bootdev:sdp-fc11-bootdev-syscfg@1f400000 {
+			compatible = "st,sti8416-sdp-fc11-bootdev-syscfg", "syscon";
+			reg = <0x0 0x1f400000 0x20000>;
+		};
+
+		/* FC12 VDIN 12000-12999 */
+		syscfg_fc12_vdin:fc12-vdin-syscfg@21000000 {
+			compatible = "st,sti8416-fc12-vdin-syscfg", "syscon";
+			reg = <0x0 0x21000000 0x200000>;
+		};
+
+		syscfg_sdp_fc12_vdin:sdp-fc12-vdin-syscfg@21400000 {
+			compatible = "st,sti8416-sdp-fc12-vdin-syscfg", "syscon";
+			reg = <0x0 0x21400000 0x20000>;
+		};
+
+		/* FC13 TSIF 13000-13799 (no SDP reg.) */
+		syscfg_fc13_tsif:fc13-tsif-syscfg@23000000 {
+			compatible = "st,sti8416-fc13-tsif-syscfg", "syscon";
+			reg = <0x0 0x23000000 0x200000>;
+		};
+
+		/* FC14 GBS 14000-14999 */
+		syscfg_fc14_gbs:fc14-gbs-syscfg@25000000 {
+			compatible = "st,sti8416-fc14-gbs-syscfg", "syscon";
+			reg = <0x0 0x25000000 0x200000>;
+		};
+
+		syscfg_sdp_fc14_gbs:sdp-fc14-gbs-syscfg@25400000 {
+			compatible = "st,sti8416-sdp-fc14-gbs-syscfg", "syscon";
+			reg = <0x0 0x25400000 0x20000>;
+		};
+
+		/* FC15 CSEM 15000-15999 */
+		syscfg_fc15_csem:fc15-csem-syscfg@27000000 {
+			compatible = "st,sti8416-fc15-csem-syscfg", "syscon";
+			reg = <0x0 0x27000000 0x200000>;
+		};
+
+		syscfg_sdp_fc15_csem:sdp-fc15-csem-syscfg@27400000 {
+			compatible = "st,sti8416-sdp-fc15-csem-syscfg", "syscon";
+			reg = <0x0 0x27400000 0x20000>;
+		};
+
+		/* UART0_FRONT */
+		serial0: serial0@08930000 {
+			compatible = "st,asc";
+			status = "disabled";
+			reg = <0x0 0x08930000 0x2c>;
+			interrupts = <GIC_SPI 170 IRQ_TYPE_NONE>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_front_serial0>;
+			clocks = <&CLK_ICN_REG_1>;
+		};
+
+		/* UART1_FRONT */
+		serial1: serial1@08931000 {
+			compatible = "st,asc";
+			status = "disabled";
+			reg = <0x0 0x08931000 0x2c>;
+			interrupts = <GIC_SPI 171 IRQ_TYPE_NONE>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_front_serial1>;
+			clocks = <&CLK_ICN_REG_1>;
+		};
+
+		/* UART2_FRONT */
+		serial2: serial2@08932000 {
+			compatible = "st,asc";
+			status = "disabled";
+			reg = <0x0 0x08932000 0x2c>;
+			interrupts = <GIC_SPI 172 IRQ_TYPE_NONE>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_front_serial2>;
+			clocks = <&CLK_ICN_REG_1>;
+		};
+
+		/* UART3_REAR */
+		serial3: serial3@08a30000 {
+			compatible = "st,asc";
+			status = "disabled";
+			reg = <0x0 0x08a30000 0x2c>;
+			interrupts = <GIC_SPI 174 IRQ_TYPE_NONE>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_rear_serial3>;
+			clocks = <&CLK_ICN_REG_2>;
+		};
+	};
+};

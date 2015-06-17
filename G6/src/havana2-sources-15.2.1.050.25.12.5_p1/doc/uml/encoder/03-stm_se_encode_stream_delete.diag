@@ -1,0 +1,40 @@
+seqdiag {
+	// Define the logical order of components
+	Wrapper;	Encoder;	Encode;		Stream;
+	Preproc;	Coder;		Transporter;
+
+	// Tidy up some labels
+	Wrapper [label = "STKPI/Wrapper"];
+	Encode [label = "Encode Container"];
+	Stream [label = "Encode Stream"];
+	Preproc [label = "PreProcessor"];
+
+	Wrapper -> 	Encoder								[label = "Encoder->TerminateEncodeStream()"]
+											[leftnote = "stm_se_encode_stream_delete()"]
+
+			Encoder => Encoder						[rightnote = "EncodeStreamTerminateSysfs()"]
+
+			Encoder ->	Encode						[label = "Encode->RemoveStream()"]
+					Encode ->	Stream				[label = "Stream->StopStream()"]
+
+							Stream =>	Preproc		[label = "Preproc->Halt()"]
+							Stream =>	Coder		[label = "Coder->Halt()"]
+							Stream =>	Transporter	[label = "Transporter->Halt()"]
+											[rightnote = "Stream Components\nHalted"]
+
+							Stream =>	Preproc		[label = "PreprocOutputRing->Insert(NULL)"]
+											[rightnote = "Wake up the rings\nwith a Null Insert"]
+							Stream =>	Coder		[label = "CoderOutputRing->Insert(NULL)"]
+											[rightnote = "Threads Terminated"]
+
+					Encode <-	Stream
+			Encoder <-	Encode
+
+		Encoder =>				EncodeStream			[label = "delete EncodeStream"]
+		Encoder =>						Preproc		[label = "delete Preproc"]
+		Encoder =>						Coder		[label = "delete Coder"]
+		Encoder =>						Transporter	[label = "delete Transporter"]
+
+	Wrapper <-	Encoder
+
+}

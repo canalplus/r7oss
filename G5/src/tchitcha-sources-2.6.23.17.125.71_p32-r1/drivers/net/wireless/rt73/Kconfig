@@ -1,0 +1,54 @@
+config RT73_WIRELESS
+  tristate "rt73 wireless usb device"
+  depends on USB && MAC80211 && WLAN_80211
+	select FW_LOADER
+  default n
+ 	---help---
+	Say Y if you want to use one of the following Wirelles USB Ethernet
+	devices based on the rt2571w, rt2573 and rt2671 chips.
+	Development comes from http://sourceforge.net/projects/rt2400/
+	Supported devices are:
+	* Asus WL-167G
+	* Belkin F5D7050EF
+	* Belkin F5D7050ES
+	* Conceptronic C54RU Ver2
+	* D-Link DWL-G122 H/W Ver.:C1
+	* Edimax EW7318UG
+	* Linksys WUSB54GC
+	* Sitecom WL-113
+	* Sitecom WL-172
+	* Surecom EP-9001-g
+	* PLanex GW-US54HP
+	* Digitus DN-7003GR VPR 1.0
+
+	This driver makes the adapter appear as a normal Ethernet interface,
+	typically on wlan0.
+
+	rt73 device requires external firmware to be loaded (rt73.bin).
+	This can be found as rpm starting from STLinux-2.3 release.
+
+	To enable debug, please, add the following in command line:
+	--------------
+	rt73wlan=debug:<level>, with level=1,2,4,8 to enable respectively ERROR, WARN,
+	TRACE and INFO debug.
+	--------------
+	Take care to have copied rt73.bin firmware file under /lib/firmware of your
+	filesystem before plugging dongle in usb port.
+	Please, plug dongles after kernel has booted, to avoid problems due to the
+	firmware lack at startup.
+	
+	To compile this driver as a module, choose M here: the module will be called 
+	rt73.ko.
+
+config RT73_WIRELESS_FRMW_BUILTIN
+	bool "Rt73 firmware loaded inside kernel"
+	depends on RT73_WIRELESS=y
+	default n
+	---help---
+	Enabling this kernel option you will be able to load rt73 firmware
+	directly from kernel. In this case you have to put your rt73.bin
+	file under usr kernel directory.
+	To note that once on board, for each plug/unplug operation on your
+	physical wireless device, the original rt73.bin firmware (/lib/firmware)
+	will be used, so is mandatory to maintain it under the specified
+	directory.

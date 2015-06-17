@@ -1,0 +1,22 @@
+INTRODUCTION
+------------
+
+This directory contains unit-test code.
+
+
+
+DESCRIPTION
+-----------
+
+unit_test_rle
+
+	Displays and blits around an image over the primary surface.
+	The RLE/BMP image gets loaded into a static memory buffer first;
+	it is then associated to a DirectFB data buffer tied to an Image Provider.
+
+USAGE
+-----
+
+unit_test_rle	[file_name]
+
+	(the file name defaults to "directfb.bmp" in the current working directory)

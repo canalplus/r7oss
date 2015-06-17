@@ -1,0 +1,2 @@
+#Package name will nerver contain SONAME version probably
+initng: package-name-doesnt-match-sonames

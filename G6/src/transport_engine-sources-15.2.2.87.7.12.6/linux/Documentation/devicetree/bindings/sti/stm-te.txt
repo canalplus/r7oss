@@ -1,0 +1,247 @@
+STM Transport Engine (demux) properties
+===============================================================================
+
+Property description for stm-tango-tp, stm-tango-fe, stm-tango-dummy devices
+
+Tango TP device
+-------------------------------------------------------------------------------
+
+Required Properties:
+- compatible: "st,tango-tp"
+- reg: physical address range of TP registers
+- reg-names: must be named "tp"
+- interrupts: mailbox interrupt for TP
+- clocks: from common clock binding: handle to STFE clocks
+- clock-names: from common clock binding: clock name used by driver corresponding to each entry in clocks
+
+- tp_config: phandle to the tp hardware configuration
+
+	Required hardware configuration properties:
+	- ddem-offset: Offset of the STxP70 DMEM
+	- idem-offset: Offset of the STxP70 IMEM
+	- st-bux-plug-write-offset: Offset of the write plug registers
+	- st-bux-plug-read-offset: Offset of the read plug registers
+	- core-ctrl-offset: Offset of the core controller registers
+	- mailbox0-to-xp70-offset: Offset of the host to xP70 mailbox registers
+	- mailbox0-to-host-offset: Offset of the xP70 to host mailbox registers
+	- writelock-error-offset: Offset of the write lock error registers
+	- t3-addr-filter-offset: Offset of the T3 request filter address range base registers
+	- timer-counter-offset: Offset of the STxP70 timers block
+	- firmware: String representing the required TP firmware
+			e.g. pti_tp3.elf or pti_tp5.elf
+	- nb-vdevice: Number of vDevices supported by the TP firmware
+	- nb-slot: Number of slots supported by the TP firmware
+	- nb-section-filter: Number of section filters supported by the TP firmware
+	- nb-dma-structure: Number of dma structures supported by the TP firmware
+	- nb-indexer: Number of indexers supported by the TP firmware
+	- nb-status-blk: Number of status blocks supported by the TP firmware
+
+	- timer-counter-divider: Device timer divider
+
+	Optional hardware configuration properties:
+	- sc-bypass: If present transport packets will bypass the secure-coprocessor
+	             (no [de]scrambling will be supported)
+	- permit-powerdown: If present the TP can be put into a low-power state
+	- software-leaky-pid: If present enables the software leaky pid workaround
+	- software-leaky-pid-timeout: Timeout for software leaky pid
+	                              (required if software-leaky-pid property is present)
+
+Optional properties:
+- clocks: An array of child nodes, each of which defines a clock that should
+          managed by the TP driver
+	- clkX: Defines clock properties
+		Required clock properties:
+		- clk-name: String name of the clock
+
+		Optional clock properties:
+		- clk-rate: Desired frequency of the clock (MHz)
+		- clk-parent: String name of the parent clock (workaround in case the clock
+		              needs to be re-parented)
+- power-down: If defined "yes", TP device will be powered down
+
+Example:
+
+tp_hw_config: tp-hw-config {
+	ddem-offset = <0x00000>;
+	idem-offset = <0x10000>;
+	st-bux-plug-write-offset = <0x28000>;
+	st-bux-plug-read-offset = <0x2a000>;
+	core-ctrl-offset = <0x2d000>;
+	mailbox0-to-xp70-offset = <0x2d020>;
+	mailbox0-to-host-offset = <0x2d030>;
+	writelock-error-offset = <0x2d068>;
+	t3-addr-filter-offset = <0x2d06c>;
+	timer-counter-offset = <0x2e060>;
+
+	firmware = "pti_tp3.elf";
+
+	nb-vdevice = <16>;
+	nb-slot = <256>;
+	nb-section-filter = <256>;
+	nb-dma-structure = <96>;
+	nb-indexer = <32>;
+	nb-status-blk = <32>;
+
+	timer-counter-divider = <0x0b>;
+
+	sc-bypass;
+	permit-powerdown;
+};
+
+tp@fd580000 {
+	compatible = "st,tango-tp";
+	status = "okay";
+	reg = <0xfd580000 0x2f000>;
+	reg-names = "tp";
+	interrupts = <0 57 0>;
+	tp_config = <&tp_hw_config>;
+	clocks = <&CLK_S_C0_FLEXGEN CLK_PROC_TP>;
+	clock-names = "CLK_M_TP";
+	clocks {
+		clk0 {
+			clk-name = "CLK_M_TP";
+		};
+	};
+};
+
+STFE device
+-------------------------------------------------------------------------------
+
+Required Properties:
+- compatible: "st,tango-fe"
+- reg: physical address range of STFE registers and memory
+- reg-names: Register names
+	Must define range "stfe" for stfe registers
+	Must define range "stfe-ram" for stfe memory
+- clocks: from common clock binding: handle to STFE clocks
+- clock-names: from common clock binding: clock name used by driver corresponding to each entry in clocks
+
+- stfe_config: phandle to the tp hardware configuration
+
+	Required hardware configuration properties:
+	- stfe-version: STFE hardware version
+		<1> -- STFEv1
+		<2> -- STFEv2
+	- nb-ib: Number of IB
+	- nb-mib: Number of MIB
+	- nb-swts: Number of SWTS
+	- nb-tsdma: Number of TSDMA
+	- nb-ccsc: Number of CCSC
+	- nb-tag: Number of tag
+
+	- ib-offset: IB register offset
+	- tag-offset: Tag register offset
+	- pid-filter-offset: PID filter register offset
+	- system-regs-offset: System register offset
+	- memdma-offset: MEMDMA register offset
+	- tsdma-offset: TSDMA register offset
+	- ccsc-offset: CCSC register offset
+
+	Optional hardware configuration properties:
+	- firmware: String representing the required MEMDMA firmware (STFE v2 devices only)
+			e.g. pti_memdma_h416.elf, pti_memdma_h407_one-pkt-dac.elf, etc
+
+Optional properties:
+- interrupts: STFE MEMDMA interrupts (STFE v2 devices only)
+- interrupt-names: Interrupt names
+	Must define "stfe-idle-irq" for MEMDMA idle interrupt
+	Must define "stfe-error-irq" for MEMDMA error interrupt
+- default_dest: Default output routing for the STFE
+	* "demux", "tsout0", "tsout1", "ext_tsout0", "ext_tsout1"
+	If not specified, "demux" is assumed
+- clocks: An array of child nodes, each of which defines a clock that should
+          managed by the TP driver
+	- clkX: Defines clock properties
+		Required clock properties:
+		- clk-name: String name of the clock
+
+		Optional clock properties:
+		- clk-rate: Desired frequency of the clock (MHz)
+		- clk-parent: String name of the parent clock (workaround in case the clock
+		              needs to be re-parented)
+- power-down: If defined "yes", STFE device will be powered down
+
+Example:
+
+stfe_hw_config: stfe-hw-config {
+	stfe-version = <2>;
+
+	nb-ib = <5>;
+	nb-mib = <2>;
+	nb-swts = <2>;
+	nb-tsdma = <1>;
+	nb-ccsc = <1>;
+	nb-tag = <3>;
+
+	ib-offset = <0x1000>;
+	tag-offset = <0x2000>;
+	pid-filter-offset = <0x2800>;
+	system-regs-offset = <0x0000>;
+	memdma-offset = <0x4000>;
+	tsdma-offset = <0x3000>;
+	ccsc-offset = <0x2c00>;
+
+	firmware = "pti_memdma_h416.elf";
+};
+
+stfe@fec00000 {
+	compatible = "st,tango-fe";
+	status = "okay";
+	reg = <0xfec00000 0x10000>, <0xfe910000 0x4000>;
+	reg-names = "stfe", "stfe-ram";
+	interrupts = <0 131 0>, <0 132 0>;
+	interrupt-names = "stfe-idle-irq", "stfe-error-irq";
+	stfe_config = <&stfe_hw_config>;
+	clocks = <&CLK_S_C0_FLEXGEN CLK_PROC_STFE>,
+		 <&CLK_S_D3_FLEXGEN CLK_TSOUT_0>,
+		 <&CLK_S_D3_FLEXGEN CLK_TSOUT_1>,
+		 <&CLK_S_D3_FLEXGEN CLK_STFE_FRC1>,
+		 <&CLK_S_C0_FLEXGEN CLK_STFE_FRC2>,
+		 <&CLK_S_D3_FLEXGEN CLK_MCHI>;
+
+	clock-names = "stfe_ccsc",
+		      "stfe_tsout-0",
+		      "stfe_tsout-1",
+		      "stfe_frc-0",
+		      "stfe_frc-1",
+		      "stfe_mchi";
+	clocks {
+		clk0 {
+			clk-name = "stfe_ccsc";
+		};
+		clk1 {
+			clk-name = "stfe_tsout-0";
+			clk-rate = <108000000>;
+		};
+		clk2 {
+			clk-name = "stfe_tsout-1";
+			clk-rate = <108000000>;
+		};
+		clk3 {
+			clk-name = "stfe_frc-0";
+			clk-rate = <27000000>;
+		};
+		clk4 {
+			clk-name = "stfe_frc-1";
+			clk-rate = <27000000>;
+		};
+		clk5 {
+			clk-name = "stfe_mchi";
+			clk-rate = <27000000>;
+		};
+	};
+};
+
+
+Tango-lite device
+-------------------------------------------------------------------------------
+Required Properties:
+
+- compatible: "st,tango-dummy"
+
+Example:
+
+tp@0 {
+	compatible = "st,tango-dummy";
+	status = "okay";
+};

@@ -1,0 +1,5 @@
+to build and install
+in SDK2 build system shell, from pltf adequate build dir
+(make .clean_player2)
+make player2
+make .modules_install_player2

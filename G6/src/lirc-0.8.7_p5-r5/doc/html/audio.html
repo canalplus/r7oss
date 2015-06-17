@@ -1,0 +1,236 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<HTML>
+  <HEAD>
+    <TITLE>LIRC - Linux Infrared Remote Control</TITLE>
+    <LINK REL=stylesheet TYPE="text/css" HREF="../lirc.css">
+    <LINK REL="shortcut icon" HREF="../favicon.ico">
+    <META NAME="description" CONTENT="LIRC - Linux Infra-red Remote Control">
+    <META NAME="keywords" CONTENT="linux, kernel module, remote control, animax, multimedia">
+  </HEAD>
+  
+  <BODY BACKGROUND="../images/marb18.jpg"
+    BGCOLOR="#FFFFFF" TEXT="#000000" ALINK="#8080FF">
+    <TABLE WIDTH="100%" BORDER="0" CELLSPACING="0" CELLPADDING="0">
+      <TR>
+	<TD CLASS="menu" WIDTH="100%" HEIGHT="150">
+	  <IMG SRC="../images/diode.gif" ALT=""
+	    WIDTH="300" HEIGHT="150" BORDER="0" HSPACE="20"
+	    VSPACE="0" ALIGN="LEFT"> 
+	  <IMG SRC="../images/lirc.gif" ALT=""
+	    WIDTH="300" HEIGHT="150" BORDER="0" HSPACE="20"
+	    VSPACE="0" ALIGN="RIGHT">
+	</TD>
+      </TR>
+      <TR>
+	<TD WIDTH="100%">&#160;<BR>
+	  <TABLE WIDTH="100%" BORDER="0" CELLSPACING="0" CELLPADDING="0">
+	    <TR>
+	      <TD WIDTH="15%">&#160;<BR></TD>
+	      <TD WIDTH="70%" ALIGN="LEFT" VALIGN="TOP">&#160;<BR>
+
+<!-- Text ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+
+<P>
+The receiver part for this driver is described <A HREF="http://people.inf.ethz.ch/mringwal/lirc/">here</A>.
+</P>
+<A NAME="audio_transmitter"></A><HR>
+<H1 ALIGN=CENTER>Using the audio driver for transmitting.</H1>
+<P>
+Pros:
+</P>
+<UL>
+<LI>Very simple circuit.</LI>
+<LI>No need for a kernel module.</LI>
+</UL>
+<P>
+Cons:
+</P>
+<UL>
+<LI>Doesn't transmit very far without an amplifier (about 3 meters
+when directly aiming).</LI>
+
+<LI>A reasonably good sound-card is required (cheap cards might not
+provide enough voltage, or might not be able to output a correct 19
+kHz sine).</LI>
+
+<LI>It takes some time to set up (50 ms or so) so when no clients are
+connected to lircd the first transmission will have some higher
+latency.
+<P>
+ A workaround for this is to keep irw running with a bash
+script like this:
+</P>
+<code>
+#!/bin/bash<br>
+while [ true ]; do<br>
+irw || true<br>
+sleep 1<br>
+done<br>
+</code>
+</LI>
+</UL>
+
+
+<H2 ALIGN=CENTER>How it works:</H2>
+<br>
+<P>
+The audio driver can send IR signals using a (reasonably good)
+sound-card and a very simple circuit. It does this by modulating
+the data onto a sine which is half the carrier frequency (38 kHz is
+the default if the remote doesn't have a frequency specified).
+After rectification the sine becomes a full frequency carrier.
+The wave is inverted on the right channel, so the left and right
+channels can be used to double the voltage.
+</P>
+
+<CENTER><img src="../images/audio_wave.png"></CENTER>
+
+<P>
+The top wave is how the wave looks when it comes out the sound-card,
+the bottom wave is how it looks after rectification, as you can see
+the frequency is doubled.
+</P>
+<P>
+The rectification is done using the following circuit:
+</P>
+
+<CENTER><img src="../images/audio_transmitter.png"></CENTER>
+
+<P>
+LED1 and LED2 are 950 nm infra-red LEDs, R1 is a 0.25 watt resistor.
+</P>
+<P>
+Because LEDs are diodes, they only conduct one way. Since the
+sound-card outputs a wave that goes both positive and negative, two
+LEDs are placed anti-parallel, that way infrared is emitted on both the
+positive and negative cycles.
+</P>
+<P>
+R1 is used to limit the current, this presents a load to the sound-card
+that is roughly the same as a pair of 32 ohms headphones. To make the
+transmission more powerful, you can try lowering the value of R1 (or
+just short it out), but this might damage your sound-card, the LEDs, or
+both. So try at your own risk!
+</P>
+<P>
+Another way to make the transmission more powerful is to use a small
+speaker amplifier (5 watts or less), in this case a 5 watt resistor
+should be used for safety. The volume should be adjusted so that the
+amplifier outputs its full voltage without clipping.
+</P>
+<H2 ALIGN=CENTER>Setting up:</H2>
+<P>
+Compile LIRC with the audio driver (not the IR diode or alsa ones) and
+install it as usual. Connect the circuit to the sound-card and set the
+volume to the maximum level. Start lircd, the -d flag can be used to
+select the audio device and/or sample-rate, the syntax is
+<code>api:device[@samplerate[:latency]]</code> or
+<code>@samplerate[:latency]</code>.
+</P>
+<P>
+Examples:
+</P>
+
+<code>
+lircd -d ALSA:default<br>
+lircd -d ALSA:default@48000<br>
+lircd -d ALSA:default@48000:0.02<br>
+lircd -d @48000<br>
+lircd -d @48000:0.05<br>
+</code>
+
+<P>
+Use irsend to test if it works.
+</P>
+<P>
+A samplerate of 48 kHz is about the bare minimum needed to make a
+modulated 19 khz sine, if your soundcard supports 96 kHz, you should
+use that.
+</P>
+
+<H2 ALIGN=CENTER>Choosing an audio device:</H2>
+
+<P>
+If you want to use a different soundcard, check the lircd log for lines
+like these:
+</P>
+<P>
+<code>
+Found input device 0 OSS:/dev/dsp<br>
+Found input device 1 OSS:/dev/dsp1<br>
+Found input device 2 ALSA:SB Audigy 1
+[SB0092]: ADC Capture/Standard PCM Playback (hw:0,0)<br>
+Found input device 3 ALSA:SB Audigy 1
+[SB0092]: Mic Capture (hw:0,1)<br>
+Found input device 4 ALSA:SB Audigy 1
+[SB0092]: Multichannel Capture/PT Playback (hw:0,2)<br>
+Found input device 6 ALSA:HDA ATI SB: HDA Generic (hw:1,0)<br>
+Found input device 13 ALSA:spdif<br>
+Found input device 14 ALSA:default<br>
+Found output device 0 OSS:/dev/dsp<br>
+Found output device 1 OSS:/dev/dsp1<br>
+Found output device 2 ALSA:SB Audigy 1
+[SB0092]: ADC Capture/Standard PCM Playback (hw:0,0)<br>
+Found output device 5 ALSA:SB Audigy 1
+[SB0092]: Multichannel Playback (hw:0,3)<br>
+Found output device 6 ALSA:HDA ATI SB: HDA Generic (hw:1,0)<br>
+Found output device 7 ALSA:front<br>
+Found output device 8 ALSA:rear<br>
+Found output device 9 ALSA:center_lfe<br>
+Found output device 10 ALSA:surround41<br>
+Found output device 11 ALSA:surround50<br>
+Found output device 12 ALSA:iec958<br>
+Found output device 13 ALSA:spdif<br>
+Found output device 14 ALSA:default<br>
+Found output device 15 ALSA:dmix<br>
+</code>
+</P>
+<P>
+Now use the string for the device you want to use after the device number
+as argument for the -d flag like this:<br>
+<code>lircd -d "ALSA:HDA ATI SB: HDA Generic (hw:1,0)"</code><br>
+</P>
+
+<H2 ALIGN=CENTER>Known issues:</H2>
+
+<P>
+The audio driver uses PortAudio to interface with the sound-card, there
+seems to be a bug in some later versions that makes portaudio hang
+completely, lircd becomes unresponsive and you have to kill it with
+<code>killall -9 lircd</code>. To get around this use the PortAudio
+stable release from December 7, 2007.<br>
+</P>
+<P>
+Low latency values will cause dropped audio, when this happens lines like
+this will be printed in the lircd log:<br>
+</P>
+<P>
+<code>
+WARNING: Input overflow ALSA:HDA ATI SB: HDA Generic (hw:1,0)@96000:0.02<br>
+WARNING: Output underflow ALSA:HDA ATI SB: HDA Generic (hw:1,0)@96000:0.02<br>
+</code>
+</P>
+<P>
+To prevent this you can set the niceness of lircd to -20 or increase the latency.
+</P>
+
+<!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+
+		<BR><BR>
+		<CENTER>[<A HREF="http://www.lirc.org/">LIRC homepage</A>]<BR>
+		  <I>The LIRC Manual, last update: 24-May-2009</I></CENTER>
+		<BR><BR>
+	      </TD>
+	      <TD WIDTH="15%">&#160;<BR></TD>
+	    </TR>
+	  </TABLE>
+	</TD>
+      </TR>
+      <TR>
+	<TD CLASS="menu" WIDTH="100%">&#160;<BR>
+	</TD>
+      </TR>
+    </TABLE>
+  </BODY>
+</HTML>

@@ -1,0 +1,8 @@
+debian/tmp/usr/include/ffmpeg/avformat.h
+debian/tmp/usr/include/ffmpeg/avio.h
+debian/tmp/usr/include/ffmpeg/rtp.h
+debian/tmp/usr/include/ffmpeg/rtspcodes.h
+debian/tmp/usr/include/ffmpeg/rtsp.h
+debian/tmp/usr/lib/libavformat.a
+debian/tmp/usr/lib/libavformat.so
+debian/tmp/usr/lib/pkgconfig/libavformat.pc

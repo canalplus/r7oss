@@ -1,0 +1,277 @@
+--- ../alsa-kernel/usb/usbaudio.c	2008-01-04 22:49:23.000000000 +0100
++++ usbaudio.c	2008-01-06 16:04:04.000000000 +0100
+@@ -1,3 +1,4 @@
++#include "usbaudio.inc"
+ /*
+  *   (Tentative) USB Audio Driver for ALSA
+  *
+@@ -69,7 +70,12 @@
+ static int vid[SNDRV_CARDS] = { [0 ... (SNDRV_CARDS-1)] = -1 }; /* Vendor ID for this card */
+ static int pid[SNDRV_CARDS] = { [0 ... (SNDRV_CARDS-1)] = -1 }; /* Product ID for this card */
+ static int nrpacks = 8;		/* max. number of packets per urb */
+-static int async_unlink = 1;
++static int async_unlink =
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 0)
++1;
++#else
++0; /* disabled as default for buggy async-unlink handling */
++#endif
+ static int device_setup[SNDRV_CARDS]; /* device parameter for this card*/
+ 
+ module_param_array(index, int, NULL, 0444);
+@@ -653,7 +659,11 @@
+ /*
+  * complete callback from data urb
+  */
++#if !defined(OLD_USB) && !defined(CONFIG_SND_NEW_IRQ_HANDLER)
++static void snd_complete_urb(struct urb *urb, struct pt_regs *regs)
++#else
+ static void snd_complete_urb(struct urb *urb)
++#endif
+ {
+ 	struct snd_urb_ctx *ctx = urb->context;
+ 	struct snd_usb_substream *subs = ctx->subs;
+@@ -676,7 +686,11 @@
+ /*
+  * complete callback from sync urb
+  */
++#if !defined(OLD_USB) && !defined(CONFIG_SND_NEW_IRQ_HANDLER)
++static void snd_complete_sync_urb(struct urb *urb, struct pt_regs *regs)
++#else
+ static void snd_complete_sync_urb(struct urb *urb)
++#endif
+ {
+ 	struct snd_urb_ctx *ctx = urb->context;
+ 	struct snd_usb_substream *subs = ctx->subs;
+@@ -753,9 +767,12 @@
+ 		if (test_bit(i, &subs->active_mask)) {
+ 			if (! test_and_set_bit(i, &subs->unlink_mask)) {
+ 				struct urb *u = subs->dataurb[i].urb;
+-				if (async)
++				if (async) {
++#ifdef URB_ASYNC_UNLINK
++					u->transfer_flags |= URB_ASYNC_UNLINK;
++#endif
+ 					usb_unlink_urb(u);
+-				else
++				} else
+ 					usb_kill_urb(u);
+ 			}
+ 		}
+@@ -765,9 +782,12 @@
+ 			if (test_bit(i+16, &subs->active_mask)) {
+  				if (! test_and_set_bit(i+16, &subs->unlink_mask)) {
+ 					struct urb *u = subs->syncurb[i].urb;
+-					if (async)
++					if (async) {
++#ifdef URB_ASYNC_UNLINK
++						u->transfer_flags |= URB_ASYNC_UNLINK;
++#endif
+ 						usb_unlink_urb(u);
+-					else
++					} else
+ 						usb_kill_urb(u);
+ 				}
+ 			}
+@@ -1140,7 +1160,9 @@
+ 			if (! u->urb)
+ 				goto out_of_memory;
+ 			u->urb->transfer_buffer = subs->syncbuf + i * 4;
++#ifdef HAVE_USB_BUFFERS
+ 			u->urb->transfer_dma = subs->sync_dma + i * 4;
++#endif
+ 			u->urb->transfer_buffer_length = 4;
+ 			u->urb->pipe = subs->syncpipe;
+ 			u->urb->transfer_flags = URB_ISO_ASAP |
+@@ -2060,8 +2082,13 @@
+ 		if (!buf)
+ 			return -ENOMEM;
+ 	}
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 12)
+ 	err = usb_control_msg(dev, pipe, request, requesttype,
+ 			      value, index, buf, size, timeout);
++#else
++	err = usb_control_msg(dev, pipe, request, requesttype,
++			      value, index, buf, size, timeout * HZ / 1000);
++#endif
+ 	if (size > 0) {
+ 		memcpy(data, buf, size);
+ 		kfree(buf);
+@@ -2074,6 +2101,7 @@
+  * entry point for linux usb interface
+  */
+ 
++#ifndef OLD_USB
+ static int usb_audio_probe(struct usb_interface *intf,
+ 			   const struct usb_device_id *id);
+ static void usb_audio_disconnect(struct usb_interface *intf);
+@@ -2085,6 +2113,7 @@
+ #define usb_audio_suspend NULL
+ #define usb_audio_resume NULL
+ #endif
++#endif
+ 
+ static struct usb_device_id usb_audio_ids [] = {
+ #include "usbquirks.h"
+@@ -2097,11 +2126,19 @@
+ MODULE_DEVICE_TABLE (usb, usb_audio_ids);
+ 
+ static struct usb_driver usb_audio_driver = {
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 70) && LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,15)	/* FIXME: find right number */
++	.owner =	THIS_MODULE,
++#endif
+ 	.name =		"snd-usb-audio",
+ 	.probe =	usb_audio_probe,
+ 	.disconnect =	usb_audio_disconnect,
++#ifndef OLD_USB
+ 	.suspend =	usb_audio_suspend,
+ 	.resume =	usb_audio_resume,
++#endif
++#ifdef OLD_USB
++	.driver_list =	LIST_HEAD_INIT(usb_audio_driver.driver_list), 
++#endif
+ 	.id_table =	usb_audio_ids,
+ };
+ 
+@@ -2650,7 +2687,11 @@
+ 		    (altsd->bInterfaceSubClass != USB_SUBCLASS_AUDIO_STREAMING &&
+ 		     altsd->bInterfaceSubClass != USB_SUBCLASS_VENDOR_SPEC) ||
+ 		    altsd->bNumEndpoints < 1 ||
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 11)
+ 		    le16_to_cpu(get_endpoint(alts, 0)->wMaxPacketSize) == 0)
++#else
++		    get_endpoint(alts, 0)->wMaxPacketSize == 0)
++#endif
+ 			continue;
+ 		/* must be isochronous */
+ 		if ((get_endpoint(alts, 0)->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) !=
+@@ -2718,7 +2759,11 @@
+ 		fp->altset_idx = i;
+ 		fp->endpoint = get_endpoint(alts, 0)->bEndpointAddress;
+ 		fp->ep_attr = get_endpoint(alts, 0)->bmAttributes;
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 11)
+ 		fp->maxpacksize = le16_to_cpu(get_endpoint(alts, 0)->wMaxPacketSize);
++#else
++		fp->maxpacksize = get_endpoint(alts, 0)->wMaxPacketSize;
++#endif
+ 		if (snd_usb_get_speed(dev) == USB_SPEED_HIGH)
+ 			fp->maxpacksize = (((fp->maxpacksize >> 11) & 3) + 1)
+ 					* (fp->maxpacksize & 0x7ff);
+@@ -3002,7 +3047,11 @@
+ 	fp->iface = altsd->bInterfaceNumber;
+ 	fp->endpoint = get_endpoint(alts, 0)->bEndpointAddress;
+ 	fp->ep_attr = get_endpoint(alts, 0)->bmAttributes;
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 11)
+ 	fp->maxpacksize = le16_to_cpu(get_endpoint(alts, 0)->wMaxPacketSize);
++#else
++	fp->maxpacksize = get_endpoint(alts, 0)->wMaxPacketSize;
++#endif
+ 
+ 	switch (fp->maxpacksize) {
+ 	case 0x120:
+@@ -3069,7 +3118,11 @@
+ 	fp->iface = altsd->bInterfaceNumber;
+ 	fp->endpoint = get_endpoint(alts, 0)->bEndpointAddress;
+ 	fp->ep_attr = get_endpoint(alts, 0)->bmAttributes;
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 11)
+ 	fp->maxpacksize = le16_to_cpu(get_endpoint(alts, 0)->wMaxPacketSize);
++#else
++	fp->maxpacksize = get_endpoint(alts, 0)->wMaxPacketSize;
++#endif
+ 	fp->rate_max = fp->rate_min = combine_triple(&alts->extra[8]);
+ 
+ 	stream = (fp->endpoint & USB_DIR_IN)
+@@ -3186,8 +3239,13 @@
+ 	struct usb_host_config *config = dev->actconfig;
+ 	int err;
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 11)
+ 	if (le16_to_cpu(get_cfg_desc(config)->wTotalLength) == EXTIGY_FIRMWARE_SIZE_OLD ||
+ 	    le16_to_cpu(get_cfg_desc(config)->wTotalLength) == EXTIGY_FIRMWARE_SIZE_NEW) {
++#else
++	if (get_cfg_desc(config)->wTotalLength == EXTIGY_FIRMWARE_SIZE_OLD ||
++	    get_cfg_desc(config)->wTotalLength == EXTIGY_FIRMWARE_SIZE_NEW) {
++#endif
+ 		snd_printdd("sending Extigy boot sequence...\n");
+ 		/* Send message to force it to reconnect with full interface. */
+ 		err = snd_usb_ctl_msg(dev, usb_sndctrlpipe(dev,0),
+@@ -3199,8 +3257,13 @@
+ 		if (err < 0) snd_printdd("error usb_get_descriptor: %d\n", err);
+ 		err = usb_reset_configuration(dev);
+ 		if (err < 0) snd_printdd("error usb_reset_configuration: %d\n", err);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 11)
+ 		snd_printdd("extigy_boot: new boot length = %d\n",
+ 			    le16_to_cpu(get_cfg_desc(config)->wTotalLength));
++#else
++		snd_printdd("extigy_boot: new boot length = %d\n",
++			    get_cfg_desc(config)->wTotalLength);
++#endif
+ 		return -ENODEV; /* quit this anyway */
+ 	}
+ 	return 0;
+@@ -3208,6 +3271,8 @@
+ 
+ static int snd_usb_audigy2nx_boot_quirk(struct usb_device *dev)
+ {
++/* The pre-2.6.13 EHCI driver blows up when doing high speed iso transfers */
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 13)
+ 	u8 buf = 1;
+ 
+ 	snd_usb_ctl_msg(dev, usb_rcvctrlpipe(dev, 0), 0x2a,
+@@ -3219,6 +3284,7 @@
+ 				1, 2000, NULL, 0, 1000);
+ 		return -ENODEV;
+ 	}
++#endif
+ 	return 0;
+ }
+ 
+@@ -3422,8 +3488,13 @@
+ 	chip->index = idx;
+ 	chip->dev = dev;
+ 	chip->card = card;
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 11)
+ 	chip->usb_id = USB_ID(le16_to_cpu(dev->descriptor.idVendor),
+ 			      le16_to_cpu(dev->descriptor.idProduct));
++#else
++	chip->usb_id = USB_ID(dev->descriptor.idVendor,
++			      dev->descriptor.idProduct);
++#endif
+ 	INIT_LIST_HEAD(&chip->pcm_list);
+ 	INIT_LIST_HEAD(&chip->midi_list);
+ 	INIT_LIST_HEAD(&chip->mixer_list);
+@@ -3510,8 +3581,12 @@
+ 
+ 	alts = &intf->altsetting[0];
+ 	ifnum = get_iface_desc(alts)->bInterfaceNumber;
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 11)
+ 	id = USB_ID(le16_to_cpu(dev->descriptor.idVendor),
+ 		    le16_to_cpu(dev->descriptor.idProduct));
++#else
++	id = USB_ID(dev->descriptor.idVendor, dev->descriptor.idProduct);
++#endif
+ 
+ 	if (quirk && quirk->ifnum >= 0 && ifnum != quirk->ifnum)
+ 		goto __err_val;
+@@ -3643,6 +3718,7 @@
+ 	}
+ }
+ 
++#ifndef OLD_USB
+ /*
+  * new 2.5 USB kernel API
+  */
+@@ -3703,6 +3779,7 @@
+ 	return 0;
+ }
+ #endif		/* CONFIG_PM */
++#endif	/* OLD_USB */
+ 
+ static int __init snd_usb_audio_init(void)
+ {
+@@ -3721,3 +3798,5 @@
+ 
+ module_init(snd_usb_audio_init);
+ module_exit(snd_usb_audio_cleanup);
++
++#include "usbaudio.inc1"

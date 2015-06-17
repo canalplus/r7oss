@@ -1,0 +1,12 @@
+/sys/devices/soc.2/fe100000.usb/stm-ehci.0
+/sys/devices/soc.2/fe200000.usb/stm-ehci.1
+/sys/devices/soc.2/fe300000.usb/stm-ehci.2
+/sys/devices/soc.2/fe100000.usb/stm-ohci.0
+/sys/devices/soc.2/fe200000.usb/stm-ohci.1
+/sys/devices/soc.2/fe300000.usb/stm-ohci.2
+/sys/devices/platform/ahci_stm.0/ahci.0
+/sys/devices/soc.2/fdda0000.h264pp
+/sys/devices/soc.2/fd341000.bdispII
+/sys/devices/soc.2/fd342000.bdispII
+/sys/devices/platform/stm-fb.0
+/sys/devices/platform/stm-fb.1

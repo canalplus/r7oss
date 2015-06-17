@@ -1,0 +1,60 @@
+--- alsa-kernel/pci/trident/trident.c	2007-10-15 11:25:09.000000000 +0200
++++ alsa-kernel/pci/trident/trident.c	2007-10-29 17:07:57.000000000 +0100
+@@ -155,13 +155,6 @@
+ 		return err;
+ 	}
+ 
+-#if defined(CONFIG_SND_SEQUENCER) || (defined(MODULE) && defined(CONFIG_SND_SEQUENCER_MODULE))
+-	if ((err = snd_trident_attach_synthesizer(trident)) < 0) {
+-		snd_card_free(card);
+-		return err;
+-	}
+-#endif
+-
+ 	snd_trident_create_gameport(trident);
+ 
+ 	if ((err = snd_card_register(card)) < 0) {
+--- alsa-kernel/pci/trident/trident_main.c	2007-10-15 11:25:09.000000000 +0200
++++ alsa-kernel/pci/trident/trident_main.c	2007-10-29 17:07:57.000000000 +0100
+@@ -3313,12 +3313,6 @@
+ 			snd_iprintf(buffer, "Memory Free    : %d\n", snd_util_mem_avail(trident->tlb.memhdr));
+ 		}
+ 	}
+-#if defined(CONFIG_SND_SEQUENCER) || (defined(MODULE) && defined(CONFIG_SND_SEQUENCER_MODULE))
+-	snd_iprintf(buffer,"\nWavetable Synth\n");
+-	snd_iprintf(buffer, "Memory Maximum : %d\n", trident->synth.max_size);
+-	snd_iprintf(buffer, "Memory Used    : %d\n", trident->synth.current_size);
+-	snd_iprintf(buffer, "Memory Free    : %d\n", (trident->synth.max_size-trident->synth.current_size));
+-#endif
+ }
+ 
+ static void __devinit snd_trident_proc_init(struct snd_trident * trident)
+@@ -3815,28 +3809,6 @@
+ 	return IRQ_HANDLED;
+ }
+ 
+-/*---------------------------------------------------------------------------
+-   snd_trident_attach_synthesizer
+-  
+-   Description: Attach synthesizer hooks
+-                
+-   Paramters:   trident  - device specific private data for 4DWave card
+-
+-   Returns:     None.
+-  
+-  ---------------------------------------------------------------------------*/
+-int snd_trident_attach_synthesizer(struct snd_trident *trident)
+-{	
+-#if defined(CONFIG_SND_SEQUENCER) || (defined(MODULE) && defined(CONFIG_SND_SEQUENCER_MODULE))
+-	if (snd_seq_device_new(trident->card, 1, SNDRV_SEQ_DEV_ID_TRIDENT,
+-			       sizeof(struct snd_trident *), &trident->seq_dev) >= 0) {
+-		strcpy(trident->seq_dev->name, "4DWave");
+-		*(struct snd_trident **)SNDRV_SEQ_DEVICE_ARGPTR(trident->seq_dev) = trident;
+-	}
+-#endif
+-	return 0;
+-}
+-
+ struct snd_trident_voice *snd_trident_alloc_voice(struct snd_trident * trident, int type, int client, int port)
+ {
+ 	struct snd_trident_voice *pvoice;

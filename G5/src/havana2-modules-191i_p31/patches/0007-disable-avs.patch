@@ -1,0 +1,138 @@
+From 8dd790643a9b11369f823f65de1dc19cd2237b52 Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:19:59 +0100
+Subject: [PATCH 07/36] disable-avs
+
+---
+ linux/drivers/media/dvb/stm/backend/Makefile       |    3 --
+ .../media/dvb/stm/backend/player_factory.cpp       |   44 ++++++++++----------
+ 2 files changed, 22 insertions(+), 25 deletions(-)
+
+diff --git a/linux/drivers/media/dvb/stm/backend/Makefile b/linux/drivers/media/dvb/stm/backend/Makefile
+index 0e6db39..c98a974 100644
+--- a/linux/drivers/media/dvb/stm/backend/Makefile
++++ b/linux/drivers/media/dvb/stm/backend/Makefile
+@@ -107,7 +107,6 @@ collator-objs :=        collator_base.o \
+ 			collator_pes_video_mpeg2.o \
+ 			collator_pes_video_h264.o \
+ 			collator_pes_video_vc1.o \
+-			collator_pes_video_avs.o \
+ 			collator_pes_video_mjpeg.o \
+ 			collator_pes_frame.o \
+ 			collator_pes_video_divx.o \
+@@ -141,7 +140,6 @@ frame_parser-objs :=    frame_parser_base.o \
+ 			frame_parser_video_vp6.o \
+ 			frame_parser_video_rmv.o \
+ 			frame_parser_video_theora.o \
+-			frame_parser_video_avs.o \
+ 			frame_parser_video_mjpeg.o \
+ 			frame_parser_audio.o \
+ 			frame_parser_audio_aac.o \
+@@ -169,7 +167,6 @@ codec-objs :=           codec_mme_base.o        \
+ 			codec_mme_video_vp6.o  \
+ 			codec_mme_video_rmv.o  \
+ 			codec_mme_video_theora.o  \
+-			codec_mme_video_avs.o  \
+ 			codec_mme_video_mjpeg.o  \
+ 			codec_dvp_video.o       \
+ 			codec_mme_audio.o       \
+diff --git a/linux/drivers/media/dvb/stm/backend/player_factory.cpp b/linux/drivers/media/dvb/stm/backend/player_factory.cpp
+index cd3e7c9..5d6d87d 100644
+--- a/linux/drivers/media/dvb/stm/backend/player_factory.cpp
++++ b/linux/drivers/media/dvb/stm/backend/player_factory.cpp
+@@ -24,7 +24,7 @@
+ #include "collator_pes_video_vp6.h"
+ #include "collator_pes_video_rmv.h"
+ #include "collator_pes_video_theora.h"
+-#include "collator_pes_video_avs.h"
++//#include "collator_pes_video_avs.h"
+ #include "collator_pes_video_mjpeg.h"
+ #include "collator_pes_video_raw.h"
+ #include "collator_pes_audio_aac.h"
+@@ -51,7 +51,7 @@
+ #include "frame_parser_video_vp6.h"
+ #include "frame_parser_video_rmv.h"
+ #include "frame_parser_video_theora.h"
+-#include "frame_parser_video_avs.h"
++//#include "frame_parser_video_avs.h"
+ #include "frame_parser_video_mjpeg.h"
+ #include "frame_parser_audio_aac.h"
+ #include "frame_parser_audio_mpeg.h"
+@@ -75,7 +75,7 @@
+ #include "codec_mme_video_vp6.h"
+ #include "codec_mme_video_rmv.h"
+ #include "codec_mme_video_theora.h"
+-#include "codec_mme_video_avs.h"
++//#include "codec_mme_video_avs.h"
+ #include "codec_mme_video_mjpeg.h"
+ #include "codec_dvp_video.h"
+ #include "codec_mme_audio_aac.h"
+@@ -169,11 +169,11 @@ static void* CollatorPesVideoTheoraFactory  (void)
+     return new Collator_PesVideoTheora_c ();
+ }
+ 
+-static void* CollatorPesVideoAvsFactory  (void)
+-{
+-    PLAYER_DEBUG("\n");
+-    return new Collator_PesVideoAvs_c ();
+-}
++// static void* CollatorPesVideoAvsFactory  (void)
++// {
++//     PLAYER_DEBUG("\n");
++//     return new Collator_PesVideoAvs_c ();
++// }
+ 
+ static void* CollatorPesVideoMjpegFactory  (void)
+ {
+@@ -350,11 +350,11 @@ static void* FrameParserVideoTheoraFactory (void)
+     return new FrameParser_VideoTheora_c ();
+ }
+ 
+-static void* FrameParserVideoAvsFactory (void)
+-{
+-    PLAYER_DEBUG("\n");
+-    return new FrameParser_VideoAvs_c ();
+-}
++// static void* FrameParserVideoAvsFactory (void)
++// {
++//     PLAYER_DEBUG("\n");
++//     return new FrameParser_VideoAvs_c ();
++// }
+ 
+ static void* FrameParserVideoMjpegFactory (void)
+ {
+@@ -523,11 +523,11 @@ static void* CodecMMEVideoTheoraFactory (void)
+     return new Codec_MmeVideoTheora_c ();
+ }
+ 
+-static void* CodecMMEVideoAvsFactory (void)
+-{
+-    PLAYER_DEBUG("\n");
+-    return new Codec_MmeVideoAvs_c ();
+-}
++// static void* CodecMMEVideoAvsFactory (void)
++// {
++//     PLAYER_DEBUG("\n");
++//     return new Codec_MmeVideoAvs_c ();
++// }
+ 
+ static void* CodecMMEVideoMjpegFactory (void)
+ {
+@@ -788,10 +788,10 @@ HavanaStatus_t RegisterBuiltInFactories (class  HavanaPlayer_c* HavanaPlayer)
+     HavanaPlayer->RegisterFactory (BACKEND_DVP_ID,  FACTORY_ANY_ID,  StreamTypeVideo, ComponentFrameParser, 0, false, FrameParserVideoDvpFactory);
+     HavanaPlayer->RegisterFactory (BACKEND_PES_ID,  BACKEND_DVP_ID,  StreamTypeVideo, ComponentCollator,    0, false, CollatorPacketDvpFactory);
+ 
+-    // Avs video
+-    HavanaPlayer->RegisterFactory (BACKEND_AVS_ID,  FACTORY_ANY_ID,    StreamTypeVideo, ComponentCodec,       0, false, CodecMMEVideoAvsFactory);
+-    HavanaPlayer->RegisterFactory (BACKEND_AVS_ID,  FACTORY_ANY_ID,    StreamTypeVideo, ComponentFrameParser, 0, false, FrameParserVideoAvsFactory);
+-    HavanaPlayer->RegisterFactory (BACKEND_PES_ID,  BACKEND_AVS_ID,    StreamTypeVideo, ComponentCollator,    0, false, CollatorPesVideoAvsFactory);
++//     // Avs video
++//     HavanaPlayer->RegisterFactory (BACKEND_AVS_ID,  FACTORY_ANY_ID,    StreamTypeVideo, ComponentCodec,       0, false, CodecMMEVideoAvsFactory);
++//     HavanaPlayer->RegisterFactory (BACKEND_AVS_ID,  FACTORY_ANY_ID,    StreamTypeVideo, ComponentFrameParser, 0, false, FrameParserVideoAvsFactory);
++//     HavanaPlayer->RegisterFactory (BACKEND_PES_ID,  BACKEND_AVS_ID,    StreamTypeVideo, ComponentCollator,    0, false, CollatorPesVideoAvsFactory);
+ 
+     // Mjpeg video
+     HavanaPlayer->RegisterFactory (BACKEND_MJPEG_ID,  FACTORY_ANY_ID,    StreamTypeVideo, ComponentCodec,       0, false, CodecMMEVideoMjpegFactory);
+-- 
+1.7.9.5
+

@@ -1,0 +1,9 @@
+#!/bin/sh
+# 
+# link .ko modules to alsa-driver/modules directory
+#
+
+src="$1"
+
+cd $src/modules
+find $src -name "*.ko" -type f -exec ln -s {} 2> /dev/null \;

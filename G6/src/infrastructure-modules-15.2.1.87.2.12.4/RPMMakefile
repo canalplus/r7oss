@@ -1,0 +1,13 @@
+SPEC?=SPECS/stm-host-infrastructure-source.spec
+BUILDAREA?=$(PWD)/../
+
+-include $(BUILDAREA)/Makefile.rpm
+INFRASTRUCTURE_VERSION=`$(RPMIT) -q --qf "%{VERSION}\n" --specfile SPECS/stm-host-infrastructure-source.spec`
+
+SPECS/stm-target-infrastructure-scripts.spec: SPECS/stm-target-infrastructure-scripts.spec.template
+	sed -e "s,@INFRASTRUCTURE_VERSION@,$(INFRASTRUCTURE_VERSION)," < $< > $@
+
+rpmpackage:
+	mkdir -p SOURCES
+	ls -A | egrep -ve '^\.git|SPECS|SOURCES|^\.rpm|^\.config$$' | xargs tar cjf SOURCES/infrastructure.tar.bz2
+	tar cjfv SOURCES/infrastructure-scripts.tar.bz2 stm_power/scripts/*

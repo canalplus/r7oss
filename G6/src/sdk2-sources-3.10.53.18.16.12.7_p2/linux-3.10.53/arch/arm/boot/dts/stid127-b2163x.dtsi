@@ -1,0 +1,239 @@
+/*
+ * Copyright (C) 2014 STMicroelectronics Limited.
+ * Author: Amelie Herault <amelie.herault@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * publishhed by the Free Software Foundation.
+ */
+#include "stid127.dtsi"
+
+/ {
+	model = "STiD127 B2163 Board";
+	compatible = "st,stid127-b2163", "st,stid127";
+
+	memory {
+		device_type = "memory";
+		reg = <0x40000000 0x10000000>;
+	};
+
+	chosen {
+		bootargs = "";
+		linux,stdout-path = &uart2;
+	};
+
+	aliases {
+		ttyAS0 = &uart2;
+		usb0 = &usb0;
+		if17 = &if17;
+		if18 = &if18;
+		if16 = &if16;
+		if1 = &if1;
+		if0 = &if0;
+		ethernet0 = &ethernet0;
+		i2c4 = &i2c4;
+	};
+
+	soc {
+		uart2: serial@fe532000{
+			status = "okay";
+		};
+
+		leds {
+			compatible = "gpio-leds";
+			led_wifi0 {
+				label = "LED WIFI 0";
+				gpios = <&PIO19 0 1>;
+				default-state = "off";
+			};
+			led_wifi1 {
+				label = "LED WIFI 1";
+				gpios = <&PIO19 1 1>;
+				default-state = "off";
+			};
+			led_wifi_wps {
+				label = "LED WIFI WPS";
+				gpios = <&PIO19 2 1>;
+				default-state = "off";
+			};
+			led_ctr_pwr {
+				label = "LED CTR PWR";
+				gpios = <&PIO19 3 1>;
+				default-state = "off";
+			};
+			led_ctr_ds {
+				label = "LED CTR DS";
+				gpios = <&PIO19 4 1>;
+				default-state = "off";
+			};
+			led_ctr_us {
+				label = "LED CTR US";
+				gpios = <&PIO19 5 1>;
+				default-state = "off";
+			};
+			led_ctr_online {
+				label = "LED CTR ONLINE";
+				gpios = <&PIO19 6 1>;
+				default-state = "off";
+			};
+			led_ctr_link {
+				label = "LED CTR LINK";
+				gpios = <&PIO19 7 1>;
+				default-state = "off";
+			};
+		};
+
+		ethernet0: dwmac@feb00000 {
+			/* can be enable for debug purpose, in this case,
+			 * realtek switch must be disabled as common PIO
+			 * are shared between dwmac and realtek switch */
+			status = "disabled";
+			st,tx-retime-src = "clkgen";
+			max-speed = <100>;
+
+			phy-mode = "rgmii";
+			snps,phy-addr = <0x4>;
+			snps,reset-gpio = <&PIO21 3 0>;
+			snps,reset-active-low;
+			snps,reset-delays-us = <0 2000000 1000000>;
+		};
+
+		usb0: usb@fe800000{
+			status = "okay";
+		};
+
+		rtl8367rb {
+			compatible = "realtek,rtl8367rb";
+			status = "okay";
+
+			/* M1M connected to stid127 RGMII0_FP */
+			rtl8367rb,extif1;
+			rtl8367rb,extif1-mode = <1>;    // RGMII
+			rtl8367rb,extif1-txdelay = <1>;
+			rtl8367rb,extif1-rxdelay = <1>;
+			rtl8367rb,extif1-force_mode = <1>;
+			rtl8367rb,extif1-txpause = <1>;
+			rtl8367rb,extif1-rxpause = <1>;
+			rtl8367rb,extif1-link = <1>;
+			rtl8367rb,extif1-duplex = <1>;
+			rtl8367rb,extif1-speed = <2>;
+
+			/* M2M connected to stih410 RGMII1 */
+			rtl8367rb,extif2;
+			rtl8367rb,extif2-mode = <1>;    // RGMII
+			rtl8367rb,extif2-txdelay = <0>;
+			rtl8367rb,extif2-rxdelay = <1>;
+			rtl8367rb,extif2-force_mode = <1>;
+			rtl8367rb,extif2-txpause = <1>;
+			rtl8367rb,extif2-rxpause = <1>;
+			rtl8367rb,extif2-link = <1>;
+			rtl8367rb,extif2-duplex = <1>;
+			rtl8367rb,extif2-speed = <2>;
+		};
+
+		fpethernet:stmfp@fee80000 {
+			status = "okay";
+			phy-mode = "rgmii";
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_b2163_fp0>, <&pinctrl_b2163_fp1>;
+
+			fpdocsis {
+				st,phy-bus-name = "fixed";
+				fixed-link = <1 1000 0 0>;
+				st,phy-bus-id = <0>;
+				st,phy-addr = <2>;
+			};
+
+			fpgige0 {
+				st,phy-bus-name = "fixed";
+				fixed-link = <1 1000 0 0>;
+				st,phy-bus-id = <0>;
+				st,phy-addr = <3>;
+			};
+
+			fpgige1 {
+				st,phy-bus-name = "fixed";
+				fixed-link = <1 1000 0 0>;
+				st,phy-bus-id = <0>;
+				st,phy-addr = <1>;
+			};
+		};
+
+		/* Intended for RTL8192ER */
+		pcie0: pcie@fef20000 {
+			status = "okay";
+			reset-gpio = <&PIO8 5 0>;
+		};
+
+		/* Intended for Quantenna module */
+		pcie1: pcie@fef30000 {
+			status = "okay";
+			reset-gpio = <&PIO8 7 0>;
+		};
+
+		/* Intended for MoCA */
+		i2c4: i2c@fe544000 {
+			status = "okay";
+		};
+
+		spi@fe540000 {
+			status = "okay";
+		};
+
+		spifsm:	spifsm@fe302000{
+			status = "okay";
+			flash-name = "n25q512";
+			partitions = <&b2163_fsm_partitions>;
+
+			b2163_fsm_partitions: partitions-b2163 {
+				#address-cells = <1>;
+				#size-cells = <1>;
+				partition@0 {
+                                        label = "boot";
+                                        reg = <0x00000000 0x01A00000>;	/* 26 MB */
+                                };
+                                partition@1a00000{
+                                        label = "nvm";
+                                        reg = <0x01A00000 0x00100000>;	/* 1 MB */
+                                };
+                                partition@1b00000{
+                                        label = "rest";			/* presently unused */
+                                        reg = <0x01B00000 0x02500000>;
+                                };
+			};
+		};
+
+		if17:queue_3 {
+			status = "okay";
+		};
+
+		if18:queue_4 {
+			status = "okay";
+		};
+
+		if6:queue_5 {
+			status = "okay";
+		};
+
+		if1:queue_7 {
+			status = "okay";
+		};
+
+		if0:queue_0 {
+			status = "okay";
+		};
+
+		telss_spi0: telss-spi0{
+			status = "okay";
+		};
+
+		snd_tdm_player0: snd-uni-tdm@0xfeba4000 {
+			status = "okay";
+		};
+
+		snd_tdm_reader0: snd-uni-tdm@0xfeba5000 {
+			status = "okay";
+		};
+	};
+};
+

@@ -1,0 +1,96 @@
+diff --git a/linux/drivers/media/dvb/stm/backend/havana_stream.cpp b/linux/drivers/media/dvb/stm/backend/havana_stream.cpp
+index 7570820..884eca9 100644
+--- a/linux/drivers/media/dvb/stm/backend/havana_stream.cpp
++++ b/linux/drivers/media/dvb/stm/backend/havana_stream.cpp
+@@ -586,6 +586,9 @@ HavanaStatus_t HavanaStream_c::SetOption       (play_option_t           Option,
+                 case VIDEO_CENTER_CUT_OUT:
+                     PolicyValue         = PolicyValueCentreCutOut;
+                     break;
++                case VIDEO_ZOOM_4_3:
++                    PolicyValue         = PolicyValueZoom_4_3;
++                    break;
+                 default:
+                     PolicyValue         = PolicyValueFullScreen;
+                     break;
+@@ -772,6 +775,9 @@ HavanaStatus_t HavanaStream_c::GetOption       (play_option_t           Option,
+                 case PolicyValueCentreCutOut:
+                     *Value              = VIDEO_CENTER_CUT_OUT;
+                     break;
++                case PolicyValueZoom_4_3:
++                    *Value              = VIDEO_ZOOM_4_3;
++                    break;
+                 default:
+                     *Value              = VIDEO_FULL_SCREEN;
+                     break;
+diff --git a/linux/drivers/media/dvb/stm/dvb/dvb_video.c b/linux/drivers/media/dvb/stm/dvb/dvb_video.c
+index c1a0b2f..4bc5d7c 100644
+--- a/linux/drivers/media/dvb/stm/dvb/dvb_video.c
++++ b/linux/drivers/media/dvb/stm/dvb/dvb_video.c
+@@ -604,7 +604,7 @@ static int VideoIoctlSetDisplayFormat (struct DeviceContext_s* Context, unsigned
+ 
+     DVB_DEBUG("(video%d) Display format = %d\n", Context->Id, Format);
+ 
+-    if ((Format < VIDEO_PAN_SCAN) || (Format > VIDEO_FULL_SCREEN))
++    if ((Format < VIDEO_PAN_SCAN) || (Format > VIDEO_ZOOM_4_3))
+         return  -EINVAL;
+ 
+     if (Context->VideoStream != NULL)
+diff --git a/linux/include/linux/dvb/stm_ioctls.h b/linux/include/linux/dvb/stm_ioctls.h
+index ae5a0ba..2d40299 100644
+--- a/linux/include/linux/dvb/stm_ioctls.h
++++ b/linux/include/linux/dvb/stm_ioctls.h
+@@ -20,6 +20,7 @@
+ #define DVB_FRAME_RATE_MULTIPLIER       1000
+ 
+ #define VIDEO_FULL_SCREEN               (VIDEO_CENTER_CUT_OUT+1)
++#define VIDEO_ZOOM_4_3                  (VIDEO_CENTER_CUT_OUT+2) /* Zoom 4:3 zone of 16:9 stream, no effect on 4:3 stream */
+ 
+ #define DMX_FILTER_BY_PRIORITY_LOW      0x00010000      /* These flags tell the transport pes filter whether to filter */
+ #define DMX_FILTER_BY_PRIORITY_HIGH     0x00020000      /* using the ts priority bit and, if so, whether to filter on */
+diff --git a/player/class_definitions/player_types.h b/player/class_definitions/player_types.h
+index 5b2c60f..e0c76e2 100644
+--- a/player/class_definitions/player_types.h
++++ b/player/class_definitions/player_types.h
+@@ -275,6 +275,7 @@ typedef enum
+ #define PolicyValueLetterBox            1
+ #define PolicyValuePanScan              2
+ #define PolicyValueFullScreen           3
++#define PolicyValueZoom_4_3             4
+ 
+     PolicyDisplayFormat,
+ 
+diff --git a/player/manifestor/manifestor_video.cpp b/player/manifestor/manifestor_video.cpp
+index f88145d..59f2a9f 100644
+--- a/player/manifestor/manifestor_video.cpp
++++ b/player/manifestor/manifestor_video.cpp
+@@ -1174,7 +1174,8 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows (struct VideoDisplayPar
+                    DestX                        = DestX + ((SurfaceWindow.Width - DestWidth) >> 1);
+                }
+             }
+-            else
++            else if (DisplayFormatPolicyValue == PolicyValueCentreCutOut ||
++                     DisplayFormatPolicyValue == PolicyValuePanScan)
+             {
+                if (PictureAspectRatio > WindowAspectRatio)
+                {
+@@ -1193,6 +1194,20 @@ ManifestorStatus_t Manifestor_Video_c::SetDisplayWindows (struct VideoDisplayPar
+                    SourceY                      = SourceY + ((OldHeight - SourceHeight) >> 1);
+                }
+             }
++            else if (DisplayFormatPolicyValue == PolicyValueZoom_4_3)
++            {
++                if (PictureAspectRatio > WindowAspectRatio)
++                {
++                    int OldWidth         = SourceWidth;
++                    int OldHeight        = SourceHeight;
++                    Rational_t NewWidth  = (SourceWidth * WindowAspectRatio) / PictureAspectRatio;
++                    Rational_t NewHeight = (SourceHeight * WindowAspectRatio) / PictureAspectRatio;
++                    SourceWidth          = NewWidth.IntegerPart();
++                    SourceHeight         = NewHeight.IntegerPart();
++                    SourceX             += ((OldWidth - SourceWidth) >> 1);
++                    SourceY             += ((OldHeight - SourceHeight) >> 1);
++                }
++            }
+         }
+     }
+ 

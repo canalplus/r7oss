@@ -1,0 +1,84 @@
+--- ../alsa-kernel/core/control.c	2007-12-20 10:19:16.000000000 +0100
++++ control.c	2007-12-20 10:37:29.000000000 +0100
+@@ -1,3 +1,5 @@
++#define __NO_VERSION__
++#include "adriver.h"
+ /*
+  *  Routines for driver control interface
+  *  Copyright (c) by Jaroslav Kysela <perex@perex.cz>
+@@ -21,6 +23,7 @@
+ 
+ #include <linux/threads.h>
+ #include <linux/interrupt.h>
++#include <linux/smp_lock.h>
+ #include <linux/slab.h>
+ #include <linux/vmalloc.h>
+ #include <linux/time.h>
+@@ -716,6 +719,10 @@
+ 	return result;
+ }
+ 
++#ifdef CONFIG_SND_BIT32_EMUL_MODULE
++EXPORT_SYMBOL(snd_ctl_elem_read);
++#endif
++
+ static int snd_ctl_elem_read_user(struct snd_card *card,
+ 				  struct snd_ctl_elem_value __user *_control)
+ {
+@@ -779,6 +786,10 @@
+ 	return result;
+ }
+ 
++#ifdef CONFIG_SND_BIT32_EMUL_MODULE
++EXPORT_SYMBOL(snd_ctl_elem_write);
++#endif
++
+ static int snd_ctl_elem_write_user(struct snd_ctl_file *file,
+ 				   struct snd_ctl_elem_value __user *_control)
+ {
+@@ -1383,25 +1394,44 @@
+ /*
+  * ioctl32 compat
+  */
+-#ifdef CONFIG_COMPAT
++#if defined(CONFIG_COMPAT) && defined(CONFIG_SND_HAVE_NEW_IOCTL)
+ #include "control_compat.c"
+ #else
+ #define snd_ctl_ioctl_compat	NULL
+ #endif
+ 
++#ifndef CONFIG_SND_HAVE_NEW_IOCTL
++/* need to unlock BKL to allow preemption */
++static int snd_ctl_ioctl_old(struct inode *inode, struct file * file,
++			     unsigned int cmd, unsigned long arg)
++{
++	int err;
++	unlock_kernel();
++	err = snd_ctl_ioctl(file, cmd, arg);
++	lock_kernel();
++	return err;
++}
++#endif
++
+ /*
+  *  INIT PART
+  */
+ 
+ static const struct file_operations snd_ctl_f_ops =
+ {
++#ifndef LINUX_2_2
+ 	.owner =	THIS_MODULE,
++#endif
+ 	.read =		snd_ctl_read,
+ 	.open =		snd_ctl_open,
+ 	.release =	snd_ctl_release,
+ 	.poll =		snd_ctl_poll,
++#ifdef CONFIG_SND_HAVE_NEW_IOCTL
+ 	.unlocked_ioctl =	snd_ctl_ioctl,
+ 	.compat_ioctl =	snd_ctl_ioctl_compat,
++#else
++	.ioctl =	snd_ctl_ioctl_old,
++#endif
+ 	.fasync =	snd_ctl_fasync,
+ };
+ 

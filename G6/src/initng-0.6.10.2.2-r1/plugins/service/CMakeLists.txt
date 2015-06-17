@@ -1,0 +1,6 @@
+INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR}/src ${CMAKE_BINARY_DIR} )
+
+ADD_LIBRARY(service MODULE initng_service.c)
+TARGET_LINK_LIBRARIES(service initng)
+INSTALL_TARGETS(${LIB_INSTALL_DIR}/initng service)
+

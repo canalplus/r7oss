@@ -1,0 +1,561 @@
+/*
+ * Copyright (C) 2012 STMicroelectronics Limited.
+ * Author(s): Giuseppe Cavallaro <peppe.cavallaro@st.com>
+ *	      Alexandre Torgue <alexandre.torgue@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * publishhed by the Free Software Foundation.
+ */
+#include <dt-bindings/pinctrl/st-pincfg.h>
+/ {
+	aliases {
+		gpio0 = &PIO0;
+		gpio1 = &PIO1;
+		gpio2 = &PIO2;
+		gpio3 = &PIO3;
+		gpio4 = &PIO4;
+		gpio5 = &PIO5;
+		gpio6 = &PIO6;
+		gpio7 = &PIO7;
+		gpio8 = &PIO8;
+		gpio9 = &PIO9;
+		gpio10 = &PIO10;
+		gpio11 = &PIO11;
+		gpio12 = &PIO12;
+		gpio13 = &PIO13;
+		gpio14 = &PIO14;
+		gpio15 = &PIO15;
+		gpio16 = &PIO16;
+		gpio17 = &PIO17;
+		gpio18 = &PIO18;
+		gpio19 = &PIO19;
+		gpio20 = &PIO20;
+		gpio21 = &PIO21;
+		gpio22 = &PIO22;
+
+	};
+
+	soc {
+		pin-controller-pwest {
+			#address-cells = <1>;
+			#size-cells = <1>;
+			compatible = "st,stid127-pwest-pinctrl";
+			st,syscfg = <&syscfg_pwest>;
+			ranges = <0 0xfebe0000 0x8000>;
+
+			PIO0: gpio@febe0000 {
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0 0x100>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupt-names = "irqmux";
+				interrupts = <GIC_SPI 149 IRQ_TYPE_NONE>;
+				st,bank-name = "PIO0";
+			};
+			PIO1: gpio@febe1000 {
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0x1000 0x100>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupt-names = "irqmux";
+				interrupts = <GIC_SPI 150 IRQ_TYPE_NONE>;
+				st,bank-name = "PIO1";
+			};
+			PIO2: gpio@febe2000 {
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0x2000 0x100>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupt-names = "irqmux";
+				interrupts = <GIC_SPI 151 IRQ_TYPE_NONE>;
+				st,bank-name = "PIO2";
+			};
+			PIO3: gpio@febe3000 {
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0x3000 0x100>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupt-names = "irqmux";
+				interrupts = <GIC_SPI 152 IRQ_TYPE_NONE>;
+				st,bank-name = "PIO3";
+			};
+			PIO4: gpio@febe4000 {
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0x4000 0x100>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupt-names = "irqmux";
+				interrupts = <GIC_SPI 153 IRQ_TYPE_NONE>;
+				st,bank-name = "PIO4";
+			};
+			PIO5: gpio@febe5000 {
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0x5000 0x100>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupt-names = "irqmux";
+				interrupts = <GIC_SPI 154 IRQ_TYPE_NONE>;
+				st,bank-name = "PIO5";
+			};
+			PIO6: gpio@febe6000 {
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0x6000 0x100>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupt-names = "irqmux";
+				interrupts = <GIC_SPI 155 IRQ_TYPE_NONE>;
+				st,bank-name = "PIO6";
+			};
+			PIO7: gpio@febe7000 {
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0x7000 0x100>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupt-names = "irqmux";
+				interrupts = <GIC_SPI 156 IRQ_TYPE_NONE>;
+				st,bank-name = "PIO7";
+			};
+			uart0 {
+				pinctrl_uart0: uart0 {
+					st,pins {
+						tx = <&PIO3 2 ALT2 OUT>;
+						rx = <&PIO3 0 ALT2 IN>;
+					};
+				};
+			};
+
+			fpgige0{
+				pinctrl_fp0: fp0-pinctrl {
+					st,pins {
+						 txd0_0 = <&PIO7 0 ALT1 OUT DE_IO 0 CLK_A>;
+						 txd1_0 = <&PIO7 1 ALT1 OUT DE_IO 0 CLK_A>;
+						 txd2_0 = <&PIO7 2 ALT1 OUT DE_IO 0 CLK_A>;
+						 txd3_0 = <&PIO7 3 ALT1 OUT DE_IO 0 CLK_A>;
+						 txen_0 = <&PIO6 7 ALT1 OUT DE_IO 0 CLK_A>;
+						 txclk_0 = <&PIO7 4 ALT1 OUT NICLK 3250 CLK_A>;
+						 rxd0_0 = <&PIO6 2 ALT1 IN DE_IO 0 CLK_A>;
+						 rxd1_0 = <&PIO6 3 ALT1 IN DE_IO 0 CLK_A>;
+						 rxd2_0 = <&PIO6 4 ALT1 IN DE_IO 0 CLK_A>;
+						 rxd3_0 = <&PIO6 5 ALT1 IN DE_IO 0 CLK_A>;
+						 rxdv_0 = <&PIO6 1 ALT1 IN DE_IO 0 CLK_A>;
+						 rxclk_0 = <&PIO6 6 ALT1 IN NICLK 3250 CLK_A>;
+						 phyclk_0 = <&PIO6 0 ALT1 IN NICLK 0 CLK_A>;
+					};
+				};
+				pinctrl_b2163_fp0: fp0-b2163-pinctrl {
+					st,pins {
+						 txd0_0 = <&PIO7 0 ALT1 OUT DE_IO 0 CLK_A>;
+						 txd1_0 = <&PIO7 1 ALT1 OUT DE_IO 0 CLK_A>;
+						 txd2_0 = <&PIO7 2 ALT1 OUT DE_IO 0 CLK_A>;
+						 txd3_0 = <&PIO7 3 ALT1 OUT DE_IO 0 CLK_A>;
+						 txen_0 = <&PIO6 7 ALT1 OUT DE_IO 0 CLK_A>;
+						 txclk_0 = <&PIO7 4 ALT1 OUT NICLK 3250 CLK_A>;
+						 rxd0_0 = <&PIO6 2 ALT1 IN DE_IO 0 CLK_A>;
+						 rxd1_0 = <&PIO6 3 ALT1 IN DE_IO 0 CLK_A>;
+						 rxd2_0 = <&PIO6 4 ALT1 IN DE_IO 0 CLK_A>;
+						 rxd3_0 = <&PIO6 5 ALT1 IN DE_IO 0 CLK_A>;
+						 rxdv_0 = <&PIO6 1 ALT1 IN DE_IO 0 CLK_A>;
+						 rxclk_0 = <&PIO6 6 ALT1 IN NICLK 500 CLK_A>;
+						 phyclk_0 = <&PIO6 0 ALT1 IN NICLK 0 CLK_A>;
+					};
+				};
+			};
+
+			systrace {
+				pinctrl_systrace_default: systrace-default {
+					st,pins {
+						trc_data0 = <&PIO0 5 ALT4 OUT>;
+						trc_data1 = <&PIO0 6 ALT4 OUT>;
+						trc_data2 = <&PIO0 7 ALT4 OUT>;
+						trc_data3 = <&PIO1 1 ALT4 OUT>;
+						trc_clk = <&PIO1 0 ALT4 OUT>;
+					};
+				};
+			};
+		};
+
+		pin-controller-psouth {
+			#address-cells = <1>;
+			#size-cells = <1>;
+			compatible = "st,stid127-psouth-pinctrl";
+			st,syscfg = <&syscfg_psouth>;
+			ranges = <0 0xfef70000 0x7000>;
+
+			PIO8: gpio@fef70000 {
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0 0x100>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupt-names = "irqmux";
+				interrupts = <GIC_SPI 157 IRQ_TYPE_NONE>;
+				st,bank-name = "PIO8";
+			};
+			PIO9: gpio@fef71000 {
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0x1000 0x100>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupt-names = "irqmux";
+				interrupts = <GIC_SPI 158 IRQ_TYPE_NONE>;
+				st,bank-name = "PIO9";
+			};
+			PIO10: gpio@fef72000 {
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0x2000 0x100>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupt-names = "irqmux";
+				interrupts = <GIC_SPI 159 IRQ_TYPE_NONE>;
+				st,bank-name = "PIO10";
+			};
+			PIO11: gpio@fef73000 {
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0x3000 0x100>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupt-names = "irqmux";
+				interrupts = <GIC_SPI 160 IRQ_TYPE_NONE>;
+				st,bank-name = "PIO11";
+			};
+			PIO12: gpio@fef74000 {
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0x4000 0x100>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupt-names = "irqmux";
+				interrupts = <GIC_SPI 161 IRQ_TYPE_NONE>;
+				st,bank-name = "PIO12";
+			};
+			PIO13: gpio@fef75000 {
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0x5000 0x100>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupt-names = "irqmux";
+				interrupts = <GIC_SPI 162 IRQ_TYPE_NONE>;
+				st,bank-name = "PIO13";
+			};
+			PIO14: gpio@fef76000 {
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0x6000 0x100>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupt-names = "irqmux";
+				interrupts = <GIC_SPI 163 IRQ_TYPE_NONE>;
+				st,bank-name = "PIO14";
+			};
+
+			gmac0{
+				pinctrl_rgmii0: rgmii0 {
+					st,pins {
+						 txd0 = <&PIO11 0 ALT1 OUT DE_IO 0 CLK_A>;
+						 txd1 = <&PIO11 1 ALT1 OUT DE_IO 0 CLK_A>;
+						 txd2 = <&PIO11 2 ALT1 OUT DE_IO 0 CLK_A>;
+						 txd3 = <&PIO11 3 ALT1 OUT DE_IO 0 CLK_A>;
+						 txen = <&PIO11 4 ALT1 OUT DE_IO 0 CLK_A>;
+						 txclk = <&PIO11 5 ALT1 OUT NICLK 500 CLK_A>;
+
+						 rxd0 = <&PIO11 6 ALT1 IN DE_IO 0 CLK_A>;
+						 rxd1 = <&PIO11 7 ALT1 IN DE_IO 0 CLK_A>;
+						 rxd2 = <&PIO12 0 ALT1 IN DE_IO 0 CLK_A>;
+						 rxd3 = <&PIO12 1 ALT1 IN DE_IO 0 CLK_A>;
+						 rxdv = <&PIO12 2 ALT1 IN DE_IO 0 CLK_A>;
+						 rxclk = <&PIO12 3 ALT1 IN NICLK 500 CLK_A>;
+
+						 phyclk = <&PIO12 4 ALT1 OUT NICLK 0 CLK_A>;
+						 mdio = <&PIO12 5 ALT1 BIDIR_PU BYPASS 0>;
+						 mdc = <&PIO12 6 ALT1 OUT NICLK 0 CLK_A>;
+						 mdint = <&PIO12 7 ALT1 IN BYPASS 0>;
+					};
+				};
+			};
+
+			fpgige1{
+				pinctrl_fp1: fp1-pinctrl {
+					st,pins {
+						 txd0_1 = <&PIO13 0 ALT1 OUT DE_IO 0 CLK_A>;
+						 txd1_1 = <&PIO13 1 ALT1 OUT DE_IO 0 CLK_A>;
+						 txd2_1 = <&PIO13 2 ALT1 OUT DE_IO 0 CLK_A>;
+						 txd3_1 = <&PIO13 3 ALT1 OUT DE_IO 0 CLK_A>;
+						 txen_1 = <&PIO13 4 ALT1 OUT DE_IO 0 CLK_A>;
+						 txclk_1 = <&PIO13 5 ALT1 OUT NICLK 3250 CLK_A>;
+						 rxd0_1 = <&PIO13 6 ALT1 IN DE_IO 0 CLK_A>;
+						 rxd1_1 = <&PIO13 7 ALT1 IN DE_IO 0 CLK_A>;
+						 rxd2_1 = <&PIO14 0 ALT1 IN DE_IO 0 CLK_A>;
+						 rxd3_1 = <&PIO14 1 ALT1 IN DE_IO 0 CLK_A>;
+						 rxdv_1 = <&PIO14 2 ALT1 IN DE_IO 0 CLK_A>;
+						 rxclk_1 = <&PIO14 3 ALT1 IN NICLK 3000 CLK_A>;
+						 phyclk_1 = <&PIO14 4 ALT1 IN NICLK 0 CLK_A>;
+					};
+				};
+				pinctrl_b2163_fp1: fp1-b2163-pinctrl {
+					st,pins {
+						 txd0_1 = <&PIO13 0 ALT1 OUT DE_IO 0 CLK_A>;
+						 txd1_1 = <&PIO13 1 ALT1 OUT DE_IO 0 CLK_A>;
+						 txd2_1 = <&PIO13 2 ALT1 OUT DE_IO 0 CLK_A>;
+						 txd3_1 = <&PIO13 3 ALT1 OUT DE_IO 0 CLK_A>;
+						 txen_1 = <&PIO13 4 ALT1 OUT DE_IO 0 CLK_A>;
+						 txclk_1 = <&PIO13 5 ALT1 OUT NICLK 0 CLK_A>;
+						 rxd0_1 = <&PIO13 6 ALT1 IN DE_IO 0 CLK_A>;
+						 rxd1_1 = <&PIO13 7 ALT1 IN DE_IO 0 CLK_A>;
+						 rxd2_1 = <&PIO14 0 ALT1 IN DE_IO 0 CLK_A>;
+						 rxd3_1 = <&PIO14 1 ALT1 IN DE_IO 0 CLK_A>;
+						 rxdv_1 = <&PIO14 2 ALT1 IN DE_IO 0 CLK_A>;
+						 rxclk_1 = <&PIO14 3 ALT1 IN NICLK 500 CLK_A>;
+						 phyclk_1 = <&PIO14 4 ALT1 IN NICLK 0 CLK_A>;
+					};
+				};
+
+			};
+
+			spi0 {
+				pinctrl_spi0_default: spi0-default {
+					st,pins {
+						mtsr = <&PIO8 1 ALT1 BIDIR>;
+						mrst = <&PIO8 0 ALT1 BIDIR>;
+						scl = <&PIO8 2 ALT1 BIDIR>;
+					};
+				};
+			};
+
+			i2c0 {
+				pinctrl_i2c0: i2c0 {
+					st,pins {
+						scl = <&PIO8 2 ALT1 BIDIR>;
+						sda = <&PIO8 1 ALT1 BIDIR>;
+					};
+				};
+			};
+
+			i2c1 {
+				pinctrl_i2c1: i2c1 {
+					st,pins {
+						scl = <&PIO8 3 ALT1 BIDIR>;
+						sda = <&PIO8 4 ALT1 BIDIR>;
+					};
+				};
+			};
+
+			i2c2 {
+				pinctrl_i2c2: i2c2 {
+					st,pins {
+						scl = <&PIO9 0 ALT1 BIDIR>;
+						sda = <&PIO9 1 ALT1 BIDIR>;
+					};
+				};
+			};
+
+			i2c3 {
+				pinctrl_i2c3: i2c3 {
+					st,pins {
+						scl = <&PIO9 5 ALT1 BIDIR>;
+						sda = <&PIO9 4 ALT1 BIDIR>;
+					};
+				};
+			};
+
+			i2c4 {
+				pinctrl_i2c4: i2c4 {
+					st,pins {
+						scl = <&PIO10 0 ALT1 BIDIR>;
+						sda = <&PIO10 1 ALT1 BIDIR>;
+					};
+				};
+			};
+
+			i2c5 {
+				pinctrl_i2c5: i2c5 {
+					st,pins {
+						scl = <&PIO10 3 ALT1 BIDIR>;
+						sda = <&PIO10 4 ALT1 BIDIR>;
+					};
+				};
+			};
+		};
+
+		pin-controller-peast {
+			#address-cells = <1>;
+			#size-cells = <1>;
+			compatible = "st,stid127-peast-pinctrl";
+			st,syscfg = <&syscfg_peast>;
+			ranges = <0 0xfebc0000 0x8000>;
+
+			PIO15: gpio@febc0000 {
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = < 0 0x100>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupt-names = "irqmux";
+				interrupts = <GIC_SPI 164 IRQ_TYPE_NONE>;
+				st,bank-name = "PIO15";
+			};
+			PIO16: gpio@febc1000 {
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0x1000 0x100>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupt-names = "irqmux";
+				interrupts = <GIC_SPI 165 IRQ_TYPE_NONE>;
+				st,bank-name = "PIO16";
+			};
+			PIO17: gpio@febc2000 {
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0x2000 0x100>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupt-names = "irqmux";
+				interrupts = <GIC_SPI 166 IRQ_TYPE_NONE>;
+				st,bank-name = "PIO17";
+			};
+			PIO18: gpio@febc3000 {
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0x3000 0x100>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupt-names = "irqmux";
+				interrupts = <GIC_SPI 167 IRQ_TYPE_NONE>;
+				st,bank-name = "PIO18";
+			};
+			PIO19: gpio@febc4000 {
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0x4000 0x100>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupt-names = "irqmux";
+				interrupts = <GIC_SPI 168 IRQ_TYPE_NONE>;
+				st,bank-name = "PIO19";
+			};
+			PIO20: gpio@febc5000 {
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0x5000 0x100>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupt-names = "irqmux";
+				interrupts	= <GIC_SPI 169 IRQ_TYPE_NONE>;
+				st,bank-name = "PIO20";
+			};
+			PIO21: gpio@febc6000 {
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0x6000 0x100>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupt-names = "irqmux";
+				interrupts	= <GIC_SPI 170 IRQ_TYPE_NONE>;
+				st,bank-name = "PIO21";
+			};
+			PIO22: gpio@febc7000 {
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0x7000 0x100>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupt-names = "irqmux";
+				interrupts = <GIC_SPI 171 IRQ_TYPE_NONE>;
+				st,bank-name = "PIO22";
+			};
+
+			fsm {
+				pinctrl_fsm: fsm {
+					st,pins {
+						spi-fsm-clk = <&PIO18 1 ALT1 OUT>;
+						spi-fsm-cs = <&PIO18 2 ALT1 OUT>;
+						spi-fsm-mosi = <&PIO18 3 ALT1 OUT>;
+						spi-fsm-miso = <&PIO18 4 ALT1 IN>;
+						spi-fsm-hol = <&PIO18 5 ALT1 OUT>;
+						spi-fsm-wp = <&PIO18 6 ALT1 OUT>;
+						spi-fsm-cs2 = <&PIO18 7 ALT1 OUT>;
+					};
+				};
+			};
+
+			uart2 {
+				pinctrl_uart2: uart2-0 {
+					st,pins {
+						tx = <&PIO20 1 ALT3 OUT>;
+						rx = <&PIO20 2 ALT3 IN>;
+					};
+				};
+			};
+			usb0 {
+				pinctrl_usb0: usb0 {
+					st,pins {
+						oc-detect = <&PIO22 6 ALT1 IN>;
+						pwr-enable = <&PIO22 7 ALT1 OUT>;
+					};
+				};
+			};
+			pwm0 {
+				pinctrl_pwm0_chan0_default: pwm0-0-default {
+					st,pins {
+						pwm-out = <&PIO20 3 ALT1 OUT>;
+					};
+				};
+				pinctrl_pwm0_chan1_default: pwm0-1-default {
+					st,pins {
+						pwm-out = <&PIO20 7 ALT1 OUT>;
+					};
+				};
+			};
+
+			i2c6 {
+				pinctrl_i2c6: i2c6 {
+					st,pins {
+						scl = <&PIO22 0 ALT1 BIDIR>;
+						sda = <&PIO22 1 ALT1 BIDIR>;
+					};
+				};
+			};
+
+			telss_spi0 {
+				pinctrl_telss_spi0: telss_spi0 {
+					st,pins {
+						tel-spi-clk = <&PIO16 1 ALT1 OUT>;
+						tel-spi-mosi = <&PIO16 2 ALT1 OUT>;
+						tel-spi-miso = <&PIO16 3 ALT1 IN>;
+					};
+				};
+			};
+
+			snd_tdm_player0 {
+				pinctrl_lantiq_duslic_player0: pinctrl-lantiq-duslic-player0 {
+					st,pins {
+						PCLK = <&PIO15 5 ALT1 OUT>;
+						DTX = <&PIO15 6	ALT1 OUT>;
+						FSYNC = <&PIO17 0 ALT2 OUT>;
+					};
+				};
+			};
+
+			snd_tdm_reader0 {
+				pinctrl_lantiq_duslic_reader0: pinctrl-lantiq-duslic-reader0 {
+					st,pins {
+						DRX = <&PIO15 7	ALT1 IN>;
+					};
+				};
+			};
+		};
+	};
+};

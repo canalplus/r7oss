@@ -1,0 +1,53 @@
+--- ../alsa-kernel/core/pcm.c	2007-12-20 10:20:09.000000000 +0100
++++ pcm.c	2007-12-20 10:47:12.000000000 +0100
+@@ -1,3 +1,4 @@
++#include "adriver.h"
+ /*
+  *  Digital Audio (PCM) abstract layer
+  *  Copyright (c) by Jaroslav Kysela <perex@perex.cz>
+@@ -909,8 +910,12 @@
+ 	substream->pstr->substream_opened--;
+ }
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20)
+ static ssize_t show_pcm_class(struct device *dev,
+ 			      struct device_attribute *attr, char *buf)
++#else
++static ssize_t show_pcm_class(struct class_device *class_device, char *buf)
++#endif
+ {
+ 	struct snd_pcm *pcm;
+ 	const char *str;
+@@ -921,7 +926,11 @@
+ 		[SNDRV_PCM_CLASS_DIGITIZER] = "digitizer",
+ 	};
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20)
+ 	if (! (pcm = dev_get_drvdata(dev)) ||
++#else
++	if (! (pcm = class_get_devdata(class_device)) ||
++#endif
+ 	    pcm->dev_class > SNDRV_PCM_CLASS_LAST)
+ 		str = "none";
+ 	else
+@@ -929,7 +938,11 @@
+         return snprintf(buf, PAGE_SIZE, "%s\n", str);
+ }
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20)
+ static struct device_attribute pcm_attrs =
++#else
++static struct class_device_attribute pcm_attrs =
++#endif
+ 	__ATTR(pcm_class, S_IRUGO, show_pcm_class, NULL);
+ 
+ static int snd_pcm_dev_register(struct snd_device *device)
+@@ -979,7 +992,7 @@
+ 			return err;
+ 		}
+ 		snd_add_device_sysfs_file(devtype, pcm->card, pcm->device,
+-					  &pcm_attrs);
++					  (struct device_attribute *)&pcm_attrs);
+ 		for (substream = pcm->streams[cidx].substream; substream; substream = substream->next)
+ 			snd_pcm_timer_init(substream);
+ 	}

@@ -1,0 +1,902 @@
+Version History:
+---------------
+2007/11/11
+initng-0.6.10.2 Die bugs die!
+	* Fixed the usage of va_args in event handlers.
+
+2007/05/19
+initng-0.6.10.1 Adesso e Fortuna
+	* Backported a fix for the signal stuff.
+	* Removed the service_file plugin.
+
+2007/03/25
+initng-0.6.10 Adesso e Fortuna
+	* Disabled the find plugin, it's problematic.
+	* Added RUNLEVEL_PREFIX option, defaults to "runlevel/".
+	* Set close-on-exec flag on the opened files to avoid explicitely
+	  closing them.
+	* Finished the service_file plugin, it's usable now.
+
+2007/02/03
+initng-0.6.9 Shappire Sparks
+	* Implemented an internal event system, that replaces plugin-hooks.
+	* Added event plugin, the skeleton for ifiles event support.
+	* Added FORCE_POSIX_IFILES option, to force POSIX compliance on ifiles.
+	* Changed the beviahour of initng when pid != 1, now fake-mode is activated via a parameter (--fake)
+	* Updated the documentation.
+	* A lot of bugfixing.
+
+2006/09/19
+initng-0.6.8
+	* Optimized the depend algorithm.
+	* Automatically zap failed services if the source changes.
+	* Added service_file plugin (experimental).
+	* Some bug fixes.
+
+2006/04/18
+initng-0.6.7 Never been so good (Part 4)
+	* Code listed by accident under the LGPL is now GPL again
+	* Added netdev plugin, network interfaces can now be specified using need = device/eth0;
+	* Added fmon plugin, if initng sources are modified, initng will notice.
+	* Plugin paths are saved in initng core for monitoring.
+	* killalli5 has been improved with an ignore list, tries not to kill initng services.
+	* initng-usplash plugin now provides proper usplash support with ubuntu.
+	* Plugins are now loaded in alpabetical order, might prevent bugs when the order is random, also easier to test.
+	* New version check when loading plugins, hopefully no more problems where stale plugins in /lib/initng* prevented your computer from booting.
+	* Thanks to fmon plugin, hopefully problems mounting / read only due to a kernel bug are fixed, read wiki FAQ for more info about this bug.
+	* nge plugin now gives some more info to the listeners.
+	* nge protocol version bumped.
+	* add cpout_nocolors to initline if you dont like ansi colors on screen.
+	* Lots of bugfixing as usual.
+
+2006/05/12
+initng-0.6.6 Never been so good (Part 3)
+	* In service type, the services can be set as hidden, for more internal services used as deps only.
+	* cpout plugin will now not print services marked as hidden.
+	* ngc -s wont print hidden services.
+	* ngc -S is moved to ngc -t
+	* ngc -S will work like ngc -s, but also show hidden services.
+	* provide plugin got some fixes.
+	* selinux is hopefully working now, please test and report.
+	* Some bugfixing all over.
+	* set cpout_console:/dev/tty10 in grub to redirect the nice cpout console somewhere else.
+
+initng-0.6.5 Never been so good (Part 2)
+	* A bug in iparser made initng segfault if trying to start a service like test/*/* with ngc -u test/abc/def.
+	* Add a state REQ_NOT_FOUND that will be put on services that require = not_found; instead of refusing to start them.
+	* Selinux code moved to a plugin, is so far untested.
+
+2006/05/06
+initng-0.6.4 Never been so good
+	* GNU autotools support has been removed completely - cmake is better in many ways.
+	* Install the libs to /lib64 if needed.
+	* The nge socket now reports % complete on boot, is possible to build splash daemons listening on ngebus during boot.
+	* Work on making escape chars work in i-files, with i-parser. \; wont break the row anymore.
+	* Many string functions were rewritten to decrease cpu usage.
+	* Added the possibility to use test/*/* services.
+	* Fixed a cirular bug in i_parser used by the find plugin that could have locked up initng.
+	* Added a new command to be able to manually launch scripts in i-files for other functions than starting and stopping a service.
+	* Fixed a buffer handling bug.
+	* Ngc4 protocol updates.
+	* Add state descriptions on all states printed by ngc -S (--states).
+	* Fixed random ngc command failure.
+	* Lots of bugfixing and memleaks fixed as usual.
+	* Add a provide plugin for service virtuals (not enabled by default to copile, this plugin is pretty untested).
+	* Add a NO_CACHE option which can be added to service_types which are not based on a file. This one is experimental, and only used by the provide plugin today which is not compiled by default.
+	* Ngc4 header updated.
+
+2006/03/26 12:00 CET
+initng-0.6.3
+	* Added Selinux support.
+	* Rewrote fix_variables, the new version is faster, but may still contain bugs.
+	* Fix_varibles rewrite, env_parser = $CONFFILE; now works.
+	* Fixed bug where if A=HELLO, B=$A, C=$B, C was not assigned the correct value (#553).
+	* Fixed bug where env_file was not always parsed correctly.
+	* Add ngc -S (--states) which lists the current states services can have, and soon maybe description of the states.
+
+2006/03/24 15:00 CET
+initng-0.6.2
+	* Fixed a bug in the ngc4 plugin; file descriptors were not closed and could cause remounting / read-only on shutdown to fail
+	* Non-essential console output has been reduced
+	* Nge plugin partially redesigned
+	* Core functions renamed to better describe their purpose
+
+2006/03/21 12:00 CET
+initng-0.6.1 Progressing fast
+	* Completed support for cmake - you will need cmake to install Initng now!!!  Autotools is no longer supported and if you use it, you do so at your own risk
+	* New website adress http://www.initng.org/
+	* Only one runlevel (note system is no longer counted as a runlevel - you must rename it to system.virtual) can be up at once, trying to start a second runlevel will stop the first, along with any services not listed in the new runlevel
+	* add itype binary, that will soon be a tool for offline usage of .i files
+	* Make ngc -u /etc/full/path/ifile.i work
+	* Rewrote process buffer handling
+	* Filecache updates: Initng won't read an i file over and over again for each entry in it
+	* Completely rewritten ngc4 plugin: nicer output, written as an clientpart so writing gui-tools using ngc is now possible.
+	* Added comments to the code
+	* Documentation/templates added for all plugins
+	* Cleanups in the code and output
+	* Fixed segfault from DBus plugin
+	* Initng data storage backend rewritten.
+	* Fond and fixed a lot of memoryholes
+	* Add support for google coredumper on segfaults
+	* nge plugin updates, to work with the really nice initng-gnome tool
+	* Segfaulting code is now more safe.
+	* Moved some commands used for devel users from stcmd to debug_commands plugin
+	* Hot reload issues fixed
+	* Cpu usage has been reduced
+	* LOTS OF BUGFIXING.
+	* much more
+
+2006/03/21 12:00 CET
+initng-0.6.0
+	* First modular release - don't forget to install the initng-ifiles package
+	* Various minor ngcs improvements
+	* lots of work on the build system
+	* added a xml based event protocol
+	* don't start udev several times (#485)
+	* lots of other work
+
+2006/03/08 15:00 (German timezone GMT+1)
+initng-0.5.5 Major bugfixing
+	* API changed, plugins have to be recompiled.
+	* ngc -z will now also flush service cache for that service.
+	* Added ngc -I lists all initng open filedescriptors, to see if there is remount ro problems.
+	* Fixed a potential segfault in the envparser.
+	* Bugfix: #438, #506, #501, #488, #307, #492, #463, #475
+	* ngc -f now works, but there are few services with a father so this option might be removed soon.
+	* Now initng closes fds to clients, if they close the fifo.
+	* More work on ngcs plugin.
+	* Output buffers are now dynamic, and will be increased when the service outputs, with a 100 char heap.
+	* Don't flush service cache on "make install" (there's no guarantee the currently-running InitNG version will be compatible with the new initscripts)
+	* The buildsystem are rebuilt, ./autogen.sh is dead, long live Make -f Makefile.cvs
+	* Now really fails the service if stop_timeout or start_timeout passes.
+	* newer_kill option added, for services that are to important (like fsck) so there should not be any timeout.
+	* suid and find plugins got some bugfixing.
+	* The svn is reorganized, to get support for tags and releases, all current svn, is stored in folder trunk.
+
+2006/02/22 12:00 (swedish timezone GMT+1)
+initng-0.5.4 One month later.
+	Thanks to havy internal changes, this release have been delayed a month, I believe there will be more frequent releases in the future.
+	* svdrpd.i added.
+	* recent hald does not need --retain-privileges or --drop-privileges anymore.
+	* # 470, #471, #466, #468, #464, #432, #452, #445, #451 fixed.
+	* create /dev/xconsole in syslog script.
+	* ngc2 will try not use more then 80 chars wide.
+	* A new test suite from makomk added.
+	* make dist, now works again.
+	* ngc -l, is now less verbose then ngc -L again.
+	* Added colors to ngc.
+	* Ngc output cleanup.
+	* Ability to stop, a not yet started service, and to start a not yet started service.
+	* add quite_when_up option to ngc, will make initng shut up when system is up.
+	* Removed a lot of .h files in plugindirs that won't be nessesary.
+	* Now, won't run same START_DEP_MET tiwice for a service, to save cpu cycles.
+	* Modify module_init(const char *version) to module_init(int api_version), comparing a number is less cpu-intesive then comparing strings.
+	* State_test framework removed, not used anymore.
+	* Add a state timeout framework to initng, to get better internal control, and less cpu usage having to probe a timeout every second.
+	* mountfs now mounts in order.
+	* initng-9999.ebuild added, that is having more USE variables then the current one, please test.
+	* apache2: remove hardcoded -DPHP5
+	* Stopped services are now removed after 60 seconds, so you can probe and fetch output and that in 60 seconds, before all stopped services are flushed.
+	* Added START_TIMEOUT and STOP_TIMEOUT to initng_service.c, is also set to default values, if a script takes long to start, increase this.
+	* Bug in history plugin, did not free output saved in history, making initng to fill the memory with verbose daemons output.
+	* Much internal logic, states, processtypes, and V_variables moved out from core to plugins (initng_runlevel, initng_service, initng_daemon).
+	* Move all depend logic into src/initng_depend.c.
+	* spellchecking to initng source.
+	* Add the IS_CHANGE hook, that trigger when service changes a routh_state.
+	* Now initng sockets and fifos are recreated when a kill -SIGHUP 1 are sent.
+	* Reload framework rebuilt.
+	* Now initng won't take the system down when udevd is killed.
+	* Added new commands: ngstart, ngstop, ngstatus, ngzap, ngrestart, ngreboot, nghalt.
+	* ngc -h is cleaned from advanced commands, ngc -H will show all.
+	* How advanced a command is, is set in every s_command.
+	* added option forks; that should be set on every daemon that forks.
+	* Now unmounting is done in .i files, and shutdown_script are not used anymore.
+	* Lots of improvements all over.
+	* Lots of bugs fixed.
+	* And more bugs added :-)
+
+2006/01/22 22:00 (swedish timezone GMT+1)
+initng-0.5.3 Next step.
+	* new svn folder, gui contains gnome tool for controlling initng.
+	* A circular dep fix.
+	* new alsasound configs.
+	* count_me.sh now takes the nick hw addrs, thru md5 for privacy and forwards it to, so we won't count same machine twice.
+	* Fix for /usr on diffrent filesystem
+	* added configure script to disable count_me.sh
+	* Dont compile dparser or ezxmlparser by default, it exprimental and should not be used.
+	* ngc output prettifyer.
+	* udev/hal fixes.
+	* slackware is know known.
+
+2006/01/14 12:00 (swedish timezone GMT+1)
+initng-0.5.2 Small step ahead.
+	* env_file bug fixed.
+	* alsasound-new.ii added, debian uses might try this instead.
+	* system/udev added, and many udev bugs seems resolved.
+	* TheLitch fixed serious parsing bug in i_parser.
+	* system/initial paritally rewritten.
+	* initng_find.c will now work.
+	* Random fixes all over.
+	* Lots of bugfixing.
+
+2006/01/07 15:00 (swedish timezone GMT+1)
+initng-0.5.1 Better late then never.
+	* make dist fix.
+	* split exec option, into exec (alone) and excs with exec_args
+	* Fixed bug in i_parser, reading VARIABLE_STRINGS.
+	* Made ngc more nice.
+	* count_me.sh script, execute to get your initng machine counted.
+	* initial.ii cleanup.
+	* logfile plugin fixed again.
+	* added ngc --quiet
+	* daemon_clean plugin, you can now execute code, when daemon dies.
+	* moved exec_delay to start_pause and make it work with all exec.
+	* initng_kill_handler.c, better error messages.
+	* sshd, automatic generated keys.
+	* initial work for ngc replacements.
+	* pidfile_plugin fixes.
+	* Bug with set values in i_parser.
+	* sysvinit plugin now understands more sysvnint commands, like U, q.
+	* Misc fixes, after pref monitors.
+	* ngc -p, facelift.
+	* Fixed bugs in env_parser.
+	* Renamed lots of functions.
+	* Report time in ms.
+	* readded untested xml parser again.
+	* lots of bugfixing, and added services.
+
+2005/12/24 12:00 (swedish timezone GMT+1)
+initng-0.5.0 Happy Xmas
+	* Remove start_udev on fedora.
+	* Dep fix on misc .ii files.
+	* Now use hald pidfile.
+	* splash_fix.
+	* add quingy.ii
+	* Better output on failure.
+	* added script to free initrd.
+	* W_, F_, P_ fixes.
+	* Fix pause plugin, with T_KILL
+	* add pidof=udevd;
+	* Dont hang plugins if ERR_MSG line func and file is NULL.
+	* Made daemon/hdparm posix compat.
+	* Rebuild initng time infrastructure, will now report in milliseconds.
+	* Almoast a rewrite of the process fd output handeling system in initng.
+	* Fixes for outputs, make sure messages are outputed, even if no output plugin is avaible.
+	* Debian scripts return succes even if inteface not has been up, add extra checks to net.ii
+	* Fixes reload bug, not always setting the service types correctly.
+	* Update manual.
+	* A strcpy that should be strcat
+	* added nam_len to to struct stype_h, value is autogenerated on stype_add() also moved s_entry->strlen to s_entry->opt_name_len, and is also autogenerated from now.(initng_sdt_add()) added initng_service_types.c->initng_get_stype(const char *name) that will get an stype from a name if exists. Updated parser to use the new tools while parsing.
+	* Include initng_env_variable.h, and use NULL instead of STD_OPT, which is no longer available. This fixes Bug #348.
+	* Make plugin use another status check hook. Also make sure not rerun that test that passed last, again. move daemon/anacron to system/anacron. Some other fixes.
+	* Dont touch /dev/.udev on a recent udev system.
+	* A bugfix from seldon, to fix the bug for amd64 arch. After the first time the va_list was passed, it was apparently invalidated, so the call to the next logging plugin segfaulted.
+	* Better pidfile code.
+	* Some work to make readahead read ahead while udevplug is running.
+	* Set respawn entry, fixes bug 346.
+	* Make checks before mount rw (/dev, /proc, /sys), not create new dirs.
+
+2005/12/14 13:00 (swedish timezone GMT+1)
+initng-0.4.8 Xmas bugfixes
+	* Fixed to work with recent udev systems.
+	* Lots of bugfixes.
+	* Internal changes, lots of (char *) moved to (const char *)
+	* made ngc -j not segfault anymore.
+	* Mount fstab binds after others.
+	* typo in laptop-mode.ii
+	* system/initial got an rework.
+	* make install_service more strict.
+	* gen_system_runlevel does more checkings now.
+	* Allow configure paths for /lib/initng and /etc/initng, by ./configure level.
+	* Fixed compilewarnings with -D_FORTIFY_SOURCE=2
+	* The launchers was rewritten, to be made more bug proof.
+	* Lots of work, and lots of bugfixes.
+
+2005/12/01 12:00 (swedish timezone GMT+1)
+initng-0.4.7 Snowrelease
+	* gen_system_runlevel got some work to probe existing services when migrating from sysvinit.
+	* Fixed hot-reload.
+	* test_parser is beatufull now.
+	* uClibc support fixed (untested)
+	* A few new and updated *.ii scripts.
+	* add console=option support to initng, you can now on boot redirect initng console.
+	* ngc -L is now more beutifull.
+	* Fixed a typo that made syslog plugin not work.
+	* Lots of bugfixing.
+
+2005/11/28 00:30 (swedish timezone GMT+1)
+initng-0.4.6 Sorrt for the delay.
+	* Last minues bug found in .ii, install_services cant handle #ifd in a #ifd.
+
+2005/11/28 00:00 (swedish timezone GMT+1)
+initng-0.4.5 Sorry for the delay.
+	* Lots of work for compatibily with fedora by Daniel Malmgren
+	* Fix bug, parsing env_files
+	* Added script to find cirular dependencies.
+	* updated imanual.txt to reflect syntax.
+	* Add Linspire support for install_service.c
+	* ability to choose runlevel again with grub runlevel:
+	* Fixed ngc -g, to get pid of a service.
+	* Bug, prevented ngc -l to show empty lines.
+	* Make sulogin handle better.
+	* Make initng core even more modular, adding hooks to start_service, stop_service, restart_service commands.
+	* Reload plugin api change.
+	* New .i parser syntax, more hard, and requires a ';'
+	* i_parser generates more nice errors.
+	* Added test_parser, that will walk all services, checking for bad syntax.
+	* Clean up printe_service.c
+	* Added support for variable variable names, in data struct, now we can add multibles like exec daemon = test, exec stop = test2
+	* fig bug in install_service.c ignoring last name.
+	* initial skeleton work on inetd support.
+	* Lots of bugfixes.
+	* Lots of new bugs.
+	* Lots of hard work.
+
+2005/11/19 05:00 (swedish timezone GMT+1)
+initng-0.4.4 Better then last time.
+	* Fixed an hang on halt/reboot bug.
+
+2005/11/19 00:00 (swedish timezone GMT+1)
+initng-0.4.3 Better then last time.
+	* Now avoiding circular dependencies.
+	* Now can calulate deep dependencies, ngc -A ngc -B
+	* Now, wait until daemons is deaed before stopping network.
+	* Interrupt system got an facelift.
+	* Made respawn newer go mad, sleep 1 seconds between respawns.
+	* Fix segfault with ngc -l
+	* Added ngc -O, list all options that can be set in .ii files.
+	* added environs INIT_VERSION, RUNLEVEL, PREVLEVEL
+	* Added REQUIRE keyword, that is a stronger version of NEED
+	* usplash plugin added.
+	* fixes in install_service
+	* Added limit plugin, now services can be limited, in cpu, mem and so on..
+	* Lots of bugfixing.
+
+2005/11/14 05:10 (swedish timezone GMT+1)
+initng-0.4.2 Fixed some bugs.
+	* Fixed a bug, services not respawned correctly.
+	* Fixed bug, ngc -u started service, but stuck until Ctrl + C
+
+2005/11/14 03:30 (swedish timezone GMT+1)
+initng-0.4.1 Report ALL bugs.
+	* Tell users trying to use ngc non-root that this won't work.
+	* ngc -s nonexiting/service won't generate a strange result.
+	* initng will try to reload if it makes a segfault, after offering the user sulogin for 60 seconds.
+	* Big structural shanges, introduced g.states that makes initng evern more modular now.
+	* Just before X plin added, a ugly hack used to make splash disapere just before x starts.
+	* fixed inbuilt env_file parser, and added env_file_required that if problems parsing, won't make the service start.
+	* Typos in configure.in, that prevented interactive module to build.
+	* Added support for sguid.
+	* Added a fist cron feature, have to get more work, soon we have full cron support in initng.
+	* Prevent service to respawn 2 times within 10 seconds.
+	* fixed fix_variable to work better, now you can user ${VARIABLE} in .i files, that will work with env variables, initng variables and the old ones.
+	* Unclutter halt messages a bit.
+	* idleprobe plugin added, add wait_for_cpu_idle to your service, and it will start when the system is calm.
+	* Fixed some bugs in i_parser, i know there is still some, please add bugreports with .i files, that crash initng.
+	* Parse /etc/udev/links.conf in initial.i
+	* install killalli5, and own initng version of the same tools, so that you can waits sysvint totaly now.
+	* intall_service.c got a lots of facelift, support for @/sbin/daemon:/sbin/anoter_name_for_this_daemon@ and other werry goot solution to make initng distro independent, works real greate!
+	* iimanual.txt added.
+	* all .ii files converted to @daemon@
+	* gentoo networking scripts problem seems resolver now.
+	* Bugfixes, and new features allover.
+	* Almoast all .ii files got rewritten.
+	* And i am terribly tired working with initng for the last 12h, the clock is past 3, and i am going to work tomorrow selling icecream from my icecream truck :-)
+	* Over an out.
+
+2005/11/07 13:00 (swedish timezone GMT+1)
+initng-0.4.0 Try this one.
+	* New imanual.txt, tnx to Thomas Ilnseher
+	* ngc will only wait 10 seconds on staring/stoping services and not clutter the screen.
+	* Bug 197 finally fixed.
+	* Splashplugin update, will show icons with gensplash.
+	* grapth tool got an update, will work correctly.
+	* Fixed bug, that complied when we where stopping services, and it started stopping other by random.
+	* Only check for a pidfile, when daemon returns, and returns happily (return code 0)
+	* Added new option pid_of, will when daemon return search for a process with the name set here, and update daemon pid to that pid, be aware that you should first try to run daemons in foreground, then use pidfile, this is a last solution.
+	* install_service.c Got some bugfixes and ability to search for daemons by using @syslogd@ in .ii files, this will simplyfy a lot in the future.
+	* main.c got some major cleanup.
+	* Made start_pause apply also for daemons.
+	* Only wait 120 seconds on segfault if initng is compiled with DEBUG set.
+	* Dont use new_environ() with sulogin, it can make initng hang, if it used before initng is inizialized global variables right.
+	* Made last pluing ignore TYPE_RUNLEVEL
+	* Bug 134, install killall5 and sysvinit replacement with the --enable-install-init
+	* splashy plugin got merged in splash plugin.
+	* Trigger did work on build system, every plugin can be disabled/enabled in ./configure
+	* ngc -L fixed, now shows all.
+	* Bugfix, dont segfault if /etc/initng/daemon or default dont exits.
+	* Lots of bugfixing.
+	* Lots of updates to .ii files.
+	* Lots of unpaid work by the initng team.
+
+2005/11/02 22:00 (swedish timezone GMT+1)
+initng-0.3.5 Getting closer to perfection.
+	* Added an runlevelEditor gui using python and pykde
+	* update to reload ngc -c command.
+	* Rewrite of i_parser.
+	* Lots of posix fixes to scripts.
+	* bootsplash fix.
+	* Segfault bug fixed, for env_plugin.
+	* More testing.
+	* 120 second sleep after segfault, before initng is relaunching.
+	* fixed initng_interactive
+	* added a net_check plugin that probes network capabilities before launching network daemons.
+	* Hard-tage on initng variables, can be set daemon, service or internal, or standard option so that will be inpossible to set a variable wrong.
+	* New internal fixes for dependency checking, Much more nice.
+	* Bugfixes all over.
+
+2005/10/28 16:00 (swedish timezone GMT+1)
+initng-0.3.4 After my vacation
+	* Fix bug #232
+	* consolfont for Fedora users.
+	* Fedora users start_udev instead of udevstart
+	* Cleanup and identfion from caglar.
+	* Bug, not fetching parameters while loading static modules.
+	* system/console-screen for debian.
+	* Fix bug #196, #228 Tnx. caglar and Elan Ruusame
+	* Huge updates to the internal api now we can add more processes then a start, daemon, and stop process to our services, i will implent the soultion for this in next release.
+	* Services and daemons are separated by a keyword.
+	* fix bug # 197
+	* changed /bin/bash to /bin/sh as default, give me bugs on this.
+	* system/urandom fix on debian
+	* fix bug #229
+	* new services lighttpd.ii, adsl.ii, rppoe.i and more.
+	* fix bug #186, #182, #219, #226
+	* ngc will print initng and ngc version, on all commands, and varn if version differs.
+	* Lots of typos in services.
+	* added an environ parser plugin, include by option "env_file = /etc/envrionment" for example in a service.
+	* moved stdout to logfile.
+	* Reorder readahead on ubuntu, systems using readahead.
+	* Stdout work, new options stdout, and stderr will move away daemon output compleatly from initng, in the feature i can add a collector process, that will get service output for handeling.
+	* Bug segfault on module initziation when a module returns FALSE.
+	* Added an own working copy of killall5.c stolen from sysvinit, this was hard time to get compiling du to the hard compilation warnings initng uses, neded a lot of cleanup.
+	* removed up_when_pid_set, not to be used again.
+	* fixed bug #175 and a lot of other.
+
+2005/10/11 23:00 (swedish timezone GMT+1)
+initng-0.3.3 Looking forward
+	* Pipe handeling code.
+	* Dep search bug fixed.
+	* ngc -u and ngc -d will wait until service is started, and return that status.
+	* removed ngc -x, should now be used.
+	* Major cleanups.
+
+2005/10/07 20:00 (swedish timezone GMT+1)
+initng-0.3.2 Now can't hang.
+	* Fixed bug #204, #205
+	* Offer sulogin if system is shuting down, and is not shut down within 120 seconds.
+	* Now when initng segfaults, it won't leave init down, it will execve /sbin/initng-segfault that will offer sulogin.
+	* Endless loop bug fixed.
+	* Cleanups.
+	* Made dep_on and dep_on_me include deeper deps.
+	* New plugin, last will start service last, when all other services is started.
+	* Now syslog will get initng errormessages also.
+	* Errors are printed thru plugins, all plugins can collect them now.
+	* Many lists seems to be browsed backwards, now they are browsed in correct order.
+	* Bug, now hooks is added in order.
+	* Added ALIAS support, we can now set REQUIRE to same as DEEP in configs.
+
+2005/10/05 12:00 (swedish timezone GMT+1)
+initng-0.3.1 Now uses syslogd.
+	* moved variables from the active_h struct, to s_data entrys.
+	* Bootsplash plugin, by SaTaN0rX
+	* Add an ngc -y plugin, that will kill all services not in current runlevel.
+	* Add an respawning plugin, moved out come respawn logic out of core.
+	* A total rewrite of status_handler code in initng_handler.c, this will hopefully fix reboot/halt hang issues.
+	* Fixed the pidfile plugin, to work correctly.
+	* Walked the code, and inserted asserts() all over.
+	* Fixed a few memory leaks found with valgrind.
+	* Added a syslog plugin, now all daemon output, and actions are sent directly to syslogd, if syslogd is not started they are buffered in Initng, and flushed so that no dbug msgs is missed.
+	* Added ngc -L , prints a bootlog with all process output attached to it.
+	* Fixed initng, to show start-up time more accurate, this is hard becouse syste/clock changes the thime on the system on boot.
+	* A lot of .ii files got updated, cut was removed becouse it contains in /usr/ in some distros, and it might now be mounted at root.
+	* added mingetty.ii, athcool.ii, acahi-daemon.ii and more.
+	* Lots of bugfixing all over, file new bugs at http://bugzilla.initng.thinktux.net
+
+2005/09/27 12:30 (swedish timezone GMT+1)
+initng-0.3.0 Its getting better.
+	* Reload service data from disk, when reloading a service.
+	* Don't close STDIN when forking, service like dbus needs STDIN working.
+	* New framework for halt and reboot, use ngc --reboot or ngc --halt
+	* Fix from Andrew de Quincey, fixes a usb mount bug.
+	* ngc -s, get status from active_db_get_status_string, no ida to keep to dbs sync anymore.
+	* Shanged the way mark_services call services, now it first checks with plugins, if change is ok, then it notice the plugins again.
+	* Clean up depend, critial plugin.
+	* Removed strange echo in numlock.ii
+	* Added files_to_exist_after, to .i, can be used for daemons, that might not be up when they are started, set this variable to a file, that is usually created, (like a pid file), the service won't be set STATUS_RUNNING, until this file exists.'
+	* Lots of random fixes, bugfixing, and cleanups.
+
+2005/09/26 12:00 (swedish timezone GMT+1)
+initng-0.2.5 Bugs never rest.
+	* Virtual work, now added the ngc -V, to be used like ngc -V virtual/networking to set a virtual, from a script.
+	* Fixed bug, to segfault when a command is called that does not exists.
+	* Fix, never print negative time.
+	* Default shut down the mashine, don't halt it.
+
+2005/09/25 23:00 (swedish timezone GMT+1)
+initng-0.2.4 Bugfixing.
+	* Fixed bug, trying to reboot/halt with sysvinit halt and reboot command.
+	* Fixed bug #177.
+	* Let ngc recive bigger data then 10k.
+	* Check out verry nice, ngc -A
+	* mailinglist for svnupdates addad initng-svn@initng.thinktux.net
+
+2005/09/23 12:00 (swedish timezone GMT+1)
+initng-0.2.3
+	* Fixed bug #150, #152, #174
+	* Remmoved badly included header in splash plugins.
+	* made ngc -c don't hang.
+	* added daemon/ivman
+
+2005/09/22 01:00 (swedish timezone GMT+1)
+initng-0.2.2
+	* Fixed bug, when i set the version name, with a bad char.
+	* put the history_db to an optional plugin, if you not want ngc -l support, remove the history_plugin, that takes a bit of memory.
+	* reactivated module unloading support, that was disabled.
+
+2005/09/21 00:00 (swedish timezone GMT+1)
+initng-0.2.1 - Now better.
+	* Moved unsupported ash launcher, to underconstruction.
+	* New plugin, that will check fore file exist for a dep to be up.
+	* use and need matching by TheLich.
+	* included kernel patch, to be able to attach gdb to pid 1.
+	* Added critical plugin, if service with that flag is set, initng will sudo.
+	* Reboting might now work.
+	* Clean up initng boot messages, now boots more pretty.
+	* General tweeking.
+	* Make modules able to unload itself.
+	* Work on the i_parser by TheLich.
+	* A lot of new tests have been written, and initng have been tested.
+	* A splashy plugin.
+	* Moved all lists, to the list_entry(), stolen from linux kernel source (list.h).
+
+2005/09/02 23:00 (swedish timezone GMT+1)
+initng-0.2.0 - Now, lets go bughunt.
+	* Readahed plugin has been removed, we should use neurons solution, with an readahead deamon instead, i hope neuron will add readahead daemon scripts to initng soon.
+	* no defaults to install_service.pl.
+	* gen_system_runlevel is now hopefylly posix compatible
+	* Fixed the gentoo build bug, with inting-0.1.9
+	* rlimit is set in main(), hopefully initng will generate core file with segfautls.
+	* active_db free got an facelift, hopefully fixe som bugs
+	* little work on scripts, that shane did start, we miss you SHANE!
+	* Aditional services added.
+	* ngc was remade, ngc -h will now show actuall commands, that exisits in ngc.
+	* changed types like "--verbose" to trigger if option is "verbose", this type of options are common on kerel option lines, also +service to start an extra, and -service to disable one.
+	* whutdown_script hopefullt first kill, than term.
+	* /etc/issue support, added.
+	* command_db got some more data entrys, that will output with ngc -h
+	* create dev/MAKEDEV on debian.
+	* cleanups by sorcefiles.
+	* other bugfixing.
+
+2005/08/24 02:00 (swedish timezone GMT+1)
+initng-0.1.9 - Hopefully Rebooting
+	* New way of rebooting, and halting with execve plugin, hopefully fixes the shutdown bug.
+	* Using short commands like for example ngc -u samba, will probe daemon/samba.
+	* New parser, parses /etc/init.d file, if requested, and will read some hidden variables, in bash comments.
+	* Readahead work, not enabled by default, it seems that we are getting somewhere on this one, tnx neuron.
+	* Updates to .i files, and documentation.
+	* Lots of bugfixing
+	* Lots of woring on the auto[conf|make], by grzegorz.
+	* Now, debug can be disabled with --disable-debug
+	* Now making sure that modules, is compiled for the same version, or it won't load.
+	* Plugin timers added.
+	* And more.
+
+2005/08/12 20:00 (swedish timezone GMT+1)
+initng-0.1.8 - Now Reloading
+	* Fixed bug, ngc -l, after a ngc -c when history_db is empty.
+	* Fixed bug, that don't killed services that refused to term.
+	* Implented a reload command, you can now update your running initng on the fly.
+	* Fixed bug, stop service with respawn flag set.
+	* Fixed --syncronicly again.
+	* Delete services directly from active_db if a need is not found.
+	* Fixed broaken #exec in .ii files.
+	* updated vixie-cron.i to vixie-cron.ii that probes options for every version.
+	* Added scripts for bluetooth.
+	* dbus.i and hal.i fixed.
+	* neurons instant-gdm.i included.
+	* Now open /dev/console, before loading plugins.
+	* Converted daemons to use daemon { } instad of a preservice.
+	* Now calls in call_db is ordered, bugs that depended on physical file ordering in /lib/initng will now hopefully be gone.
+	* I rewrote command_database into call_db, this will save memory, but i don't know how stable it is, this needs more work,
+	* danne, was adding an rpm buildfile.
+	* pidfileplugin did got an facelift, and now works even better.
+	* clean up gen_system_runlevel.sh
+	* cleanup in autotools script, we desperatly need someone to work on auto[conf:make] scripts, please help us!
+	* Tons of bugfixes, and cleanups.
+	* The compleate code got an indention.
+
+2005/08/05 18:00 (swedish timezone GMT+1)
+initng-0.1.7 - Now virtual
+	* Cleanup in all .i files, to reduce unnesseasry screen clutter.
+	* manpage work.
+	* fixed tha hald.i proble, hopely for good.
+	* added support for virtuals, now net/* provides virtual/networking
+	* added a no_parralel plugin, if we now 2 services, won't load asyncronicly.
+	* work on readahead
+	* New nice output, while starting.
+	* Internal db changes, histrory_db, active_db, service_db got an face-lift, with this initng will use less memory, and use less cpu.
+	* Alot of renamed filenames.
+	* ngc -s can now query one service.
+	* ngc -a and -b commands added.
+	* separeted out code into initng_active_status.c
+	* module loading code, got an facelift, tnx shane.
+	* a new dlopen launcher added.
+	* neuron did some work on rcparser, sone we may get sysvinit compatibility.
+	* TheLich, fixed ngc -p -s -l commands to work better.
+	* .ii service, that can be distro dependent.
+	* Many other thinngs fixed.
+	* A lot of bugs fixed.
+	* A lot of memoryholes fixed.
+	* A lot of new bugs.
+	* And a lot of hard work.
+
+2005/07/28 23:00 (Swedish timezone GMT+1)
+initng-0.1.6 - Sorry for the shutdown bug.
+	* Added an botsplash plugin.
+	* Fixed coldplug bug.
+	* fixed debian/ubuntu network scripts
+	* added an --syncronicly option, to start system service, one by one.
+	* added an --interactive option, to ask the user if they wanna start this service.
+	* gen_system_runlevel.sh got an facelift.
+	* updated the module code, dependncies for plugins fixed.
+	* shane started a initng test framewrok.
+	* Lots of cleanup.
+	* Fixed bug, hang on try to boot on an non existant runlevel.
+	* New system for plugintype commands, to be called by ngc.
+	* now linkin an inhereited service, instead of copy it, saves memory.
+	* a new provide option was added.
+	* added a system for distro dependent install of services (aka .ii files)
+	* Lots of bugfixes, and probably lots of new bugs.
+	* Fixed the typo in halt.i, that made shutdown not work.
+
+2005/07/24 19:00 (Swedish timezone GMT+1)
+initng-0.1.5 - More or less bugs?
+	* fixed autogen.sh script.
+	* patch from shane, fixing initng_signal.c
+	* patch from shane, making cpout make more nice output of seconds.
+	* move umount script into reboot.i and link halt there.
+	* ifplugd.i updated.
+	* trigger made networking work on debian.
+	* .ii files, can now make .i files distro dependendt.
+	* ngcontrol rename to tools.
+	* new initng_fork, this makes plugins smaller.
+	* added stringlist type to struct_data.
+	* many posix fixes for ash plugin.
+	* added ash scripting, this is faster than bash, tnx neuron. Not enabled by default.
+	* coldplug.i update, this may broke coldpluging, please report.
+	* gen_system_runlevel.sh make better checkings.
+	* made xfs.i load before x.
+	* point TODO to wiki todo.
+	* Lots of bugfixing, and new bugs added :-)
+
+2005/07/17 21:00 (Swedish timezone GMT+1)
+initng-0.1.4
+	* Added some missing daemons.
+	* Changed --stoploose to --stopunneeded.
+	* Cosmetic fixes.
+	* gen_system_runlevel has to make need = instead of depends.
+	* Made compile w-o #define DEBUG set.
+	* Fixed hang on reboot bug.
+	* Some better verbosity system.
+	* Arguments starting with "--" are no longer interpreted as service names.
+	* Added --i_am_not_init.
+	* All option requires --option or --opt=value, on initng now.
+	* Added some debian sources.
+	* Added restart (ngc -r), reload changed to (ngc -R).
+	* Fixed link_install script.
+	* Added dynamic verbose functions, ngc -i, ngc -k
+	* Better plugin loader code.
+	* Another system for saving data, not using a table, but uses data->next instead.
+	* Moved system variables back to static.
+	* Don't build and install xmlconfig, broken.
+	* Moved to auto[conf:make], with ./configure
+	* Better signal handling.
+	* Lots of plugin work.
+	* Lots, lots and lots of bug fixing.
+	* Found some memory leaks with valgrind.
+	* Some variable names in .i files have changed, make sure you change depends to need in your scripts.
+	* Please report any bugs direcly to the bugzilla.initng.thinktux.net and send the "core" file aswell.
+	* Happy hacking / Jimmy, Neuron and all others that did make initng possible.
+
+2005/06/18 00:00 (Swedish timezone GMT+1)
+initng-0.1.3 - I am taking a week of / J.w.
+	* Fixed a last minute bug, making a random plugin hook fail, the add_hook did return struct point no, insted true or false.
+	* Initscript cleanup.
+	* Shutdown maybe works better now. :-)
+	* Prettier output, and faster out.
+	* New plugin types, like stdout.
+	* New wiki homepage http://initng.thinktux.net
+	* Clean _launcher code.
+	* Some functions moved to macros, for speed.
+	* Introduce dynamic system variables, now plugins can add change, or query system variables dynamicly.
+	* i_parser improvement.
+	* option_table move to g.option_table
+	* Options in optiontable add dynamically, by initng_sdt_add();
+	* Start of readahead support.
+	* Before keyworkd added.
+	* Added xmlconfig.
+	* Splashplugin fix.
+	* Lots, lots and lots of bug fixes from various people.
+	* As alyways, check svn log for more info.
+
+2005/06/07 03:00 (Swedish timezone GMT+1)
+initng-0.1.2 - A lot has happend.
+	* Found some bugs with valgrind, realy, nice tool.
+	* Disable signals, in forks.
+	* List modules, with ngc -l
+	* Load module, with ngc -o "full_path"
+	* New version of ngc, skips fifo.
+	* print_service, true ngc, instead out to terminal
+	* Don't load same module twice.
+	* ngc got some cleanup.
+	* Every service, will remember its filename
+	* New manuals ngc.8 initng.8
+	* Fixed a nasty bug, to small allocation.
+	* New installation instructions
+	* Try /dev/tty12 when it won't find /dev/vc/12
+	* fix_variables, is now used in pid file, args, exec. can be dynamic $NAME
+	* Dynamically reload data from disk, if flushed
+	* Check if udevstart exits, befor mounting /dev
+	* Updated Makefiles, now installs correctly
+	* Ngc -y kills all services, that don't remain in current runlevel
+	* Ngc won't print all options, ngc -h will
+	* dash plugin added, thanks neuron, doesn'y realy work yet.
+	* Added main-loop hook.
+	* Full plugin framework rewrite.
+	* Moved bash_exec and s_exec to plugins.
+	* Added options, also_stop and also_start, also_stop will stop another service, if this service got a stop request
+	* Moved some code from handler.c to killed_handler.c
+	* Wrote up plugin.
+	* A readme, for plugins.
+	* libsplash got some work, currently broken.
+	* More than one DAEMON or START, make initng probe for one working.
+	* sysvinit reboot fixes.
+	* Random bug fixes.
+
+
+2005/05/29 15:00 (Swedish timezone GMT+1)
+initng-0.1.1 - Bugfix.
+	* Fixed ebuild problem, this was nasty.
+	* sysvinit/halt and reboot should now be usable.
+	* Fixed for waitpid problem.
+	* Random bug fixing.
+
+2005/05/26 12:00 (Swedish timezone GMT+1)
+initng-0.1.0 - tnx neuron.
+	* Added /dev/initctl emulation layer support, should work with sysvinit tools.
+	* Changed remote_control to be a plug-in
+	* Worked on the plugin layer.
+	* Fixed bug with pidfile daemon
+	* Autogeneration of runlevel files during install.
+	* Work to make debian supported.
+	* Nicer output, loging show what service that owns output
+	* Coldplug fixes.
+	* lvm2/evms/dm in checkroot
+
+2005/05/22 23:30 (Swedish timezone GMT+1)
+initng-0.0.21 - Engine work.
+	* Introduce libinitng.so.0.0
+	* Dynamically load all .so.0.0 files in /lib/initng
+
+2005/05/22 23:30 (Swedish timezone GMT+1)
+initng-0.0.20 - Chdir and chroot.
+	* Added support for chdir.
+	* Added support for chroot.
+	* Add support for multible start and daemon entrys, put in all known possible paths, and initng will finde the right one.
+
+2005/05/22 23:00 (Swedish timezone GMT+1)
+initng-0.0.19 - Finally on track.
+	* Possible for have int values in service db.
+	* Added nice parameter, prioritize your paralell scripts
+	* Cleanups in initng_execute.c
+	* Added a setuid parameter, specify linux user to own process.
+	* Added delay parameter, do some sleep before service is actually started.
+
+2005/05/16 12:00 (Swedish timezone GMT+1)
+initng-0.0.18 - Stable Bump.
+	* Fixes to splash, doesn't clutter when its not avaible.
+	* net.i fixes
+	* Allocation should never fail.
+	* Documentation from Patric B.
+	* Tweaks to system/coldplg (emiliano)
+	* ng-update fixes (emiliano)
+	* Random bugs fixed
+
+2005/05/14 00:30 (Swedish timezone GMT+1)
+initng-0.0.17 - Splash Progressbar.
+	* Added a splash progressbar output plugin.
+	* Install fixes by make install
+	* Fifos created by initng automaticly
+	* make install-link to install links to current compile-directory, insted of copying files, god for svn update
+	* exprimental checkroot.i, vill solve /var and /usr dep problem.
+
+2005/05/13 03:00 (Swedish timezone GMT+1)
+initng-0.0.16 - Plugable Output.
+	* Plugin work, now getting better.
+	* Moved colorprint to a module, maybe I write a splash output plugin soon.
+	* Uberlord added net/* files that works well!
+
+2005/05/12 22:50 (Swedish timezone GMT+1)
+initng-0.0.15 - Bug and plug.
+	* Added anacron script.
+	* Removed macro that required a recent glibc.
+	* Support for unloading modules.
+	* new indent of code.
+	* Global struct, for global options.
+	* a fix for /etc/pcmcia/network
+
+2005/05/11 01:00 (Swedish timezone GMT+1)
+initng-0.0.14 - Verbose on demand.
+	* Replacing printf with D_ and F_ macros on demand.
+	* Debug messages can be turned of and on on demand with ngc -v, initial state can be set in main.c int verbose=TRUE;
+	* Peter wrote an FAQ, keep up the good work Peter.
+
+2005/05/10 13:20 (Swedish timezone GMT+1)
+initng-0.0.13 - Bug fix release
+	* I hope this one doesn't owerwrite initfiles.
+	* Made initng shut down ngc-fifo before unmounting / that often failed before
+	* Added some if [ -e so non gentoo users don't get failing messages.
+	* Spell fixes from Peter
+
+2005/05/10 00:40 (Swedish timezone GMT+1)
+initng-0.0.12 - Again, a new xml lightwait parser
+	* Wrote a new parser using a simple and good xml parser named ezxml
+	* Added reboot and halt script on install
+	* Bug fixing
+
+2005/05/09 16:10 (Swedish timezone GMT+1)
+initng-0.0.11 - XML parser, and plugins
+	* Added an xml parser, this seems to be little overhead, someone pointed out expat for me, i might give it a try
+	* Added basic plugin support, can now add parsers on the fly, other plugin types are comming.
+	* Lots of bug fixing, and some redesigning.
+
+2005/05/08 16:10 (Swedish timezone GMT+1)
+initng-0.0.10 - Fixes a big/small bug
+	* Fixed a big bug trying to load a service don't exist that make initng hang.  Turned out to be a missing *
+	* Added more services
+	* Renamed an moved getty to daemon/agetty change this in system.runlevel or default.runlevel
+	* Redesigned to dynamic memory alocate depends[i]
+	* Also put up a bugzilla at http://jw.dyndns.org/bugzilla report all bugs there please.
+
+2005/05/07 23:55 (Swedish timezone GMT+1)
+initng-0.0.9 - Now with bootsplash
+	* Added support to set enviromental variables in config, use env or environ, environ = "PATH=test"
+	* Added a bootsplash support, tru a helping daemon, enable with ng-update add daemon/splash_update
+	* Random bug fixing, there is lot to do yet.
+
+2005/05/07 14:00 (Swedish timezone GMT+1)
+initng-0.0.8 - Now with stdout
+	* Added stdout and stderr options, now output can be directed to a tty or file, make sure system mounted rw before direct to a file
+	* Print service changes
+	* Fixed a bug in pcmcia.i that delayd and brok boot
+
+2005/05/06 14:20 (Swedish timezone GMT+1)
+initng-0.0.7
+	* Typos and bugs, check svn log
+	* Some new services added.
+
+2005/05/05 03:00 (Swedish timezone GMT+1)
+initng-0.0.6
+	* Clean up code with indent thanks Andre
+	* Change the gpl headers, initng is not a library, thanks again Andre
+	* Now by default, not compiles with debuging symbols.
+	* Bug fixing.
+
+2005/05/05 00:00 (Swedish timezone GMT+1)
+initng-0.0.5
+	* Added many init-files and fixet up_when=pid_set
+
+2005/05/02 00:00 (Swedish timezone GMT+1)
+0.0.3 - Second test release "Redy for testing"
+	* Fixed Make install, added ebuild.
+
+2005/05/01 00:00 (Swedish timezone GMT+1)
+0.0.2 - First test release "Redy for testing"
+	* Initial release for the public
+
+2005/03/16 00:00 (Swedish timezone GMT+1)
+0.0.1 - First test release "Still In Construction"
+	* Initial release.
+	* Creators birthday :-)

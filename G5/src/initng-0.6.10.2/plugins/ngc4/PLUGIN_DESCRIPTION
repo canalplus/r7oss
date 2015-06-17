@@ -1,0 +1,8 @@
+          name : ngc4
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : 
+      commands : 
+       options : 
+   description : This is the standard initng control tool, for starting and
+                 stopping services, calling commands and providing information
+                 to the user.  Use 'ngc -h' or 'ngc -H' to get more info.

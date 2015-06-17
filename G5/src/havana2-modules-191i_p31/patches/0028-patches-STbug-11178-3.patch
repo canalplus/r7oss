@@ -1,0 +1,25 @@
+From a17e6c0900a4acd78c4edd46e83031992f228177 Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:20:00 +0100
+Subject: [PATCH 28/36] patches/STbug-11178-3
+
+---
+ player/frame_parser/frame_parser_video_h264.cpp |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/player/frame_parser/frame_parser_video_h264.cpp b/player/frame_parser/frame_parser_video_h264.cpp
+index 695a61b..18bff5f 100644
+--- a/player/frame_parser/frame_parser_video_h264.cpp
++++ b/player/frame_parser/frame_parser_video_h264.cpp
+@@ -4782,7 +4782,7 @@ report( severity_info, "MMCO(%d %d %d) - %d - %3d %3d %3d %3d\n", Field, Top, Fr
+ 
+ 	if( (NumShortTerm + NumLongTerm) > NumReferenceFrames )
+ 	{
+-#if 0
++#if 1
+ 	    report( severity_error, "FrameParser_VideoH264_c::MarkReferencePictures - After MMCO operations, \n\t\tthere are more than the allowed number of reference frames.\n\t\tThe oldest will be discarded.\n" );
+ 	    for( i=0,j=1; j<(NumReferenceFrames+1); j++ )
+ 		if( ReferenceFrames[i].DecodeFrameIndex > ReferenceFrames[j].DecodeFrameIndex )
+-- 
+1.7.9.5
+

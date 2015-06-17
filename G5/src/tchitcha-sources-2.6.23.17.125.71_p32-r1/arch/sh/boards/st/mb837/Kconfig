@@ -1,0 +1,37 @@
+if SH_ST_MB837
+
+menu "mb837: STx7108 Validation board options"
+
+config SH_ST_MB837_STMMAC0
+	bool "Enable STMMAC 0"
+	default n
+	help
+	  Enable STMMAC 0
+
+config SH_ST_MB837_STMMAC0_FIXED_PHY
+	bool "Use fixed PHY for STMMAC 0"
+	depends on SH_ST_MB837_STMMAC0
+	select FIXED_PHY
+	help
+	  Associate STMMAC0 with an emulated PHY on the "fixed" MDIO Bus.
+	  This is useful for PHYs which have insufficient SMI registers
+	  to support the normal PHY management interface.
+
+config SH_ST_MB837_STMMAC1
+	bool "Enable STMMAC 1"
+	default n
+	help
+	  Enable STMMAC 1
+
+config SH_ST_MB837_STMMAC1_FIXED_PHY
+	bool "Use fixed PHY for STMMAC 1"
+	depends on SH_ST_MB837_STMMAC1
+	select FIXED_PHY
+	help
+	  Associate STMMAC1 with an emulated PHY on the "fixed" MDIO Bus.
+	  This is useful for PHYs which have insufficient SMI registers
+	  to support the normal PHY management interface.
+
+endmenu
+
+endif

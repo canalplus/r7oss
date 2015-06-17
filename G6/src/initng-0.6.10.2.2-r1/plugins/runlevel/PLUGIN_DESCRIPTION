@@ -1,0 +1,10 @@
+          name : runlevel
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : 
+      commands : 
+       options : 
+ service_types : runlevel, virtual
+        states : START_MARKED, STOP_MARKED, UP, WAITING_FOR_START_DEP, WAITING_FOR_STOP_DEP,
+	         DOWN, START_DEPS_FAILED, FAIL_STARTING, FAIL_STOPPING
+   description : Runlevel or virutal works like a service but will only handle
+                 dependencies and not launch any code.

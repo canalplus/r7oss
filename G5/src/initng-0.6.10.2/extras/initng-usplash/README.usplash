@@ -1,0 +1,14 @@
+initng-usplash
+~~~~~~~~~~~~~~
+
+How to use:
+
+initng-usplash currently works only for Ubuntu, make sure the usplash package 
+is installed.
+Then open /boot/grub/menu.lst and add "init=/sbin/initng-usplash" to the
+kernel line. Make sure you also have the "splash" boot parameter.
+As a last step, add usplash to your default runlevel:
+# ng-update add usplash
+
+
+/Jimmy.

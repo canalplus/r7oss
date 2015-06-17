@@ -1,0 +1,39 @@
+/*
+ * Copyright (C) 2013 STMicroelectronics (R&D) Limited.
+ * Author: Srinivas Kandagatla <srinivas.kandagatla@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * publishhed by the Free Software Foundation.
+ */
+#include "stih41x-b2020x.dtsi"
+/ {
+	aliases {
+		ethernet1 = &ethernet1;
+	};
+	soc {
+		ethernet1: dwmac@fef08000 {
+			st,tx-retime-src = "clk_125";
+			snps,reset-gpio = <&PIO3 0>;
+		};
+
+		lpm:stm-lpm@fe400000 {
+			status = "okay";
+			gpios = <&PIO3 6>;
+			st,lmi-ret-gpio = <&PIO4 4>;
+                };
+
+		i2c@fe540000 {
+			status = "okay";
+
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			eeprom@50 {
+				compatible = "at,24c256";
+				pagesize = <64>;
+				reg = <0x50>;
+			};
+		};
+	};
+};

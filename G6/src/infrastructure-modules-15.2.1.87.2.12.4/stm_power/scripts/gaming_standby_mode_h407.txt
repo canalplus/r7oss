@@ -1,0 +1,6 @@
+/sys/devices/soc.3/9900000.usb_dwc3/dwc3.0
+/sys/devices/soc.3/8c00000.h264pp
+/sys/devices/soc.3/9f10000.bdispII
+/sys/devices/soc.3/9f11000.bdispII
+/sys/devices/platform/stm-fb.0
+/sys/devices/platform/stm-fb.1

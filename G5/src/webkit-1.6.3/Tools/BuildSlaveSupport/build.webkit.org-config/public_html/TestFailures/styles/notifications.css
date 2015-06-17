@@ -1,0 +1,206 @@
+/*
+ * Copyright (C) 2011 Google Inc. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY APPLE INC. AND ITS CONTRIBUTORS ``AS IS''
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL APPLE INC. OR ITS CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/* FIXME: This should really be in actions.css. */
+ul.actions>li {
+    display: inline-block;
+}
+
+ol.notifications {
+    list-style: none;
+    padding: 0;
+}
+
+ol.notifications ul {
+    list-style: none;
+    padding: 0;
+}
+
+ol.notifications>li {
+    display: -webkit-box;
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    border-top: 1px solid Gray;
+}
+
+ol.notifications div.how {
+    width: 300px;
+}
+
+ol.notifications time {
+    display: block;
+    color: #888;
+    padding: 0 0 20px 0;
+}
+
+ol.notifications div.what {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    padding: 0 0 0 10px;
+    -webkit-box-flex: 1;
+}
+
+    ol.notifications>li div.what ul.effects>li.builder-name {
+        display: inline;
+        padding-left: 10px;
+    }
+
+ol.notifications ul.causes>li, ol.notifications div.problem {
+    display: -webkit-box;
+}
+
+ol.notifications ul.causes div.description, ol.notifications div.problem ul.effects {
+    -webkit-box-flex: 1;
+}
+
+ol.notifications>li div.problem {
+    padding-bottom: 10px;
+}
+
+    ol.notifications>li div.problem>ul.actions {
+        visibility: hidden;
+    }
+
+    ol.notifications>li:hover div.problem>ul.actions {
+        visibility: visible;
+    }
+
+    ol.notifications>li table.failures {
+        visibility: hidden;
+    }
+
+    ol.notifications>li:hover table.failures {
+        visibility: visible;
+    }
+
+ol.notifications>li ul.causes>li>ul.actions {
+}
+
+    ol.notifications>li ul.causes>li>div.description {
+        padding: 0 10px 0 0;
+    }
+
+        ol.notifications>li ul.causes>li>div.description>a {
+            padding: 0 20px 0 10px;
+            border-radius: 4px;
+        }
+
+        ol.notifications>li ul.causes>li:hover>div.description>a {
+            background-color: #555;
+            padding: 5px 10px 5px 10px;
+            margin: 0 10px 0 0;
+            color: White;
+        }
+
+        ol.notifications>li ul.causes>li:hover>div.description>a::after {
+            content: '';
+            width: 0;
+            height: 0;
+            margin-top: 5px;
+            position: absolute;
+            margin-left: 10px;
+            border-top: 5px solid White;
+            border-left: 5px solid #555;
+            border-bottom: 5px solid White;
+        }
+
+        ol.notifications>li ul.causes>li>div.description>span {
+            padding: 0 10px 0 0;
+            display: inline-block;
+        }
+
+        ol.notifications>li ul.causes>li>div.description>span.author {
+            font-style: italic;
+        }
+
+        ol.notifications>li ul.causes>li>div.description>span.reviewer {
+            color: Gray;
+        }
+
+        ol.notifications>li ul.causes>li>div.description>span.reviewer::before {
+            content: '(';
+        }
+
+        ol.notifications>li ul.causes>li>div.description>span.reviewer::after {
+            content: ')';
+        }
+
+    ol.notifications>li ul.causes>li>ul.actions {
+        visibility: hidden;
+    }
+
+    ol.notifications>li ul.causes>li:hover>ul.actions {
+        visibility: visible;
+    }
+
+    ol.notifications>li ul.causes>li li {
+        padding: 10px 0 0 0;
+        display: inline;
+    }
+
+ol.notifications table.failures {
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 11px;
+    width: 300px;
+}
+
+    ol.notifications table.failures thead tr td:first-child {
+        visibility: hidden;
+    }
+
+    ol.notifications table.failures tbody tr {
+        border-top: 1px solid #eee;
+    }
+
+    ol.notifications table.failures tbody td {
+        width: 33%;
+        padding: 2px;
+    }
+
+    ol.notifications table.failures tbody tr td:first-child {
+        vertical-align: top;
+    }
+
+    ol.notifications table.failures tbody td:nth-child(n+2)>a {
+        display: inline-block;
+        border: 1px solid Gray;
+        margin: 0 0 2px 0;
+        padding: 1px;
+        color: Black;
+        text-decoration: none;
+    }
+
+        ol.notifications table.failures tbody td:nth-child(n+2)>a>span.version {
+            text-transform: uppercase;
+            background-color: #555;
+            color: White;
+            padding: 0 2px;
+        }
+
+        ol.notifications table.failures tbody td:nth-child(n+2)>a>span.architecture {
+            padding: 0 3px 0 0;
+        }

@@ -1,0 +1,25 @@
+From 3b8fa8b745f378b11cc3514cf8da7db0036d7291 Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:19:59 +0100
+Subject: [PATCH 10/36] patches/annoying_logs
+
+---
+ linux/drivers/media/dvb/stm/dvb/dvb_v4l2.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/linux/drivers/media/dvb/stm/dvb/dvb_v4l2.c b/linux/drivers/media/dvb/stm/dvb/dvb_v4l2.c
+index ee2f856..3aaa6ba 100644
+--- a/linux/drivers/media/dvb/stm/dvb/dvb_v4l2.c
++++ b/linux/drivers/media/dvb/stm/dvb/dvb_v4l2.c
+@@ -513,7 +513,7 @@ int linuxdvb_ioctl(struct stm_v4l2_handles *handle,struct stm_v4l2_driver *drive
+ 			VideoGetPixelAspectRatio (&DvbContext->DeviceContext[ldvb->input.index],
+ 						  &cropcap->pixelaspect.numerator, &cropcap->pixelaspect.denominator);
+ 
+-			printk("%s VIDIOC_CROPCAP, type = %d\n", __FUNCTION__, cropcap->type);
++			//printk("%s VIDIOC_CROPCAP, type = %d\n", __FUNCTION__, cropcap->type);
+ 		//}
+ 		break;
+ 	}
+-- 
+1.7.9.5
+

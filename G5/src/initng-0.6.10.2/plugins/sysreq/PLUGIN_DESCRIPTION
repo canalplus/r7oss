@@ -1,0 +1,7 @@
+          name : sysreq
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : 
+      commands : 
+       options : 
+   description : If this plugin is loaded, the service list is duplicated on
+                 the console when executing keyboard sysreq, ( Alt + KeyUp )

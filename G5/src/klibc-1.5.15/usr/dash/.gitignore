@@ -1,0 +1,17 @@
+.builtins.def.d
+arith.c
+arith.h
+builtins.c
+builtins.def
+builtins.h
+init.c
+mkinit
+mknodes
+mksyntax
+nodes.c
+nodes.h
+sh
+sh.shared
+syntax.c
+syntax.h
+token.h

@@ -1,0 +1,3802 @@
+<title>DVB Video Device</title>
+<para>The DVB video device controls the MPEG2 video decoder of the DVB hardware. It
+can be accessed through <emphasis role="tt">/dev/dvb/adapter0/video0</emphasis>. Data types and and
+ioctl definitions can be accessed by including <emphasis role="tt">linux/dvb/video.h</emphasis> in your
+application.
+</para>
+<para>Note that the DVB video device only controls decoding of the MPEG video stream, not
+its presentation on the TV or computer screen. On PCs this is typically handled by an
+associated video4linux device, e.g. <emphasis role="tt">/dev/video</emphasis>, which allows scaling and defining output
+windows.
+</para>
+<para>Some DVB cards don&#8217;t have their own MPEG decoder, which results in the omission of
+the audio and video device as well as the video4linux device.
+</para>
+<para>The ioctls that deal with SPUs (sub picture units) and navigation packets are only
+supported on some MPEG decoders made for DVD playback.
+</para>
+<section id="video_types">
+<title>Video Data Types</title>
+
+<section id="video-format-t">
+<title>video_format_t</title>
+<para>The <emphasis role="tt">video_format_t</emphasis> data type defined by
+</para>
+<programlisting>
+typedef enum {
+	VIDEO_FORMAT_4_3,     /&#x22C6; Select 4:3 format &#x22C6;/
+	VIDEO_FORMAT_16_9,    /&#x22C6; Select 16:9 format. &#x22C6;/
+	VIDEO_FORMAT_221_1    /&#x22C6; 2.21:1 &#x22C6;/
+} video_format_t;
+</programlisting>
+<para>is used in the VIDEO_SET_FORMAT function (??) to tell the driver which aspect ratio
+the output hardware (e.g. TV) has. It is also used in the data structures video_status
+(??) returned by VIDEO_GET_STATUS (??) and video_event (??) returned by
+VIDEO_GET_EVENT (??) which report about the display format of the current video
+stream.
+</para>
+</section>
+
+<section id="video-displayformat-t">
+<title>video_displayformat_t</title>
+<para>In case the display format of the video stream and of the display hardware differ the
+application has to specify how to handle the cropping of the picture. This can be done using
+the VIDEO_SET_DISPLAY_FORMAT call (??) which accepts
+</para>
+<programlisting>
+typedef enum {
+	VIDEO_PAN_SCAN,       /&#x22C6; use pan and scan format &#x22C6;/
+	VIDEO_LETTER_BOX,     /&#x22C6; use letterbox format &#x22C6;/
+	VIDEO_CENTER_CUT_OUT  /&#x22C6; use center cut out format &#x22C6;/
+} video_displayformat_t;
+</programlisting>
+<para>as argument.
+</para>
+</section>
+
+<section id="video-stream-source-t">
+<title>video stream source</title>
+<para>The video stream source is set through the VIDEO_SELECT_SOURCE call and can take
+the following values, depending on whether we are replaying from an internal (demuxer) or
+external (user write) source.
+</para>
+<programlisting>
+typedef enum {
+	VIDEO_SOURCE_DEMUX, /&#x22C6; Select the demux as the main source &#x22C6;/
+	VIDEO_SOURCE_MEMORY /&#x22C6; If this source is selected, the stream
+			       comes from the user through the write
+			       system call &#x22C6;/
+} video_stream_source_t;
+</programlisting>
+<para>VIDEO_SOURCE_DEMUX selects the demultiplexer (fed either by the frontend or the
+DVR device) as the source of the video stream. If VIDEO_SOURCE_MEMORY
+is selected the stream comes from the application through the <emphasis role="tt">write()</emphasis> system
+call.
+</para>
+</section>
+
+<section id="video-play-state-t">
+<title>video play state</title>
+<para>The following values can be returned by the VIDEO_GET_STATUS call representing the
+state of video playback.
+</para>
+<programlisting>
+typedef enum {
+	VIDEO_STOPPED, /&#x22C6; Video is stopped &#x22C6;/
+	VIDEO_PLAYING, /&#x22C6; Video is currently playing &#x22C6;/
+	VIDEO_FREEZED  /&#x22C6; Video is freezed &#x22C6;/
+} video_play_state_t;
+</programlisting>
+</section>
+
+<section id="video-command">
+<para>The structure must be zeroed before use by the application
+This ensures it can be extended safely in the future.</para>
+<title>struct video-command</title>
+<programlisting>
+struct video_command {
+	__u32 cmd;
+	__u32 flags;
+	union {
+		struct {
+			__u64 pts;
+		} stop;
+
+		struct {
+			/&#x22C6; 0 or 1000 specifies normal speed,
+			   1 specifies forward single stepping,
+			   -1 specifies backward single stepping,
+			   &gt;>1: playback at speed/1000 of the normal speed,
+			   &lt;-1: reverse playback at (-speed/1000) of the normal speed. &#x22C6;/
+			__s32 speed;
+			__u32 format;
+		} play;
+
+		struct {
+			__u32 data[16];
+		} raw;
+	};
+};
+</programlisting>
+</section>
+
+<section id="video-size-t">
+<title>struct video_size-t</title>
+<programlisting>
+typedef struct {
+	int w;
+	int h;
+	video_format_t aspect_ratio;
+} video_size_t;
+</programlisting>
+</section>
+
+
+<section id="video-event">
+<title>struct video_event</title>
+<para>The following is the structure of a video event as it is returned by the VIDEO_GET_EVENT
+call.
+</para>
+<programlisting>
+struct video_event {
+	__s32 type;
+#define VIDEO_EVENT_SIZE_CHANGED	1
+#define VIDEO_EVENT_FRAME_RATE_CHANGED	2
+#define VIDEO_EVENT_DECODER_STOPPED 	3
+#define VIDEO_EVENT_VSYNC 		4
+	__kernel_time_t timestamp;
+	union {
+		video_size_t size;
+		unsigned int frame_rate;	/&#x22C6; in frames per 1000sec &#x22C6;/
+		unsigned char vsync_field;	/&#x22C6; unknown/odd/even/progressive &#x22C6;/
+	} u;
+};
+</programlisting>
+<section id="st-video-event">
+<title>ST specific video_event [STMicroelectronics extension]</title>
+<para>ST SoCs driver introduces new video_event type</para>
+<informaltable>
+  <tgroup cols="3">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>type</para>
+        </entry>
+        <entry align="char">
+          <para>Purpose</para>
+        </entry>
+        <entry align="char">
+          <para>Parameter field</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>VIDEO_EVENT_SIZE_CHANGED</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports a change in at least one of the parameters of the video frames decoded. However only size information are exposed within this event.</para>
+        </entry>
+        <entry align="char">
+          <para>u.size</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>VIDEO_EVENT_FRAME_RATE_CHANGED</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports a change in frame rate</para>
+        </entry>
+        <entry align="char">
+          <para>u.frame_rate</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>VIDEO_EVENT_STREAM_UNPLAYABLE</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports that the stream cannot be played</para>
+        </entry>
+        <entry align="char">
+          <para>u.frame_rate contains an ID internally describing the reason for not being playable.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>VIDEO_EVENT_TRICK_MODE_CHANGE</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports the adoption of an alternative approach to minimize decoder bandwidth during trick mode playback</para>
+        </entry>
+        <entry align="char">
+          <para>u.frame_rate contains the updated trick mode domain. The value are DVB_OPTION_VALUE_TRICK_MODE_*</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>VIDEO_EVENT_FRAME_DECODED</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports that a frame has been decoded</para>
+        </entry>
+        <entry align="char">
+          <para>None</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>VIDEO_EVENT_FRAME_RENDERED</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports that a frame has been rendered</para>
+        </entry>
+        <entry align="char">
+          <para>None</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>VIDEO_EVENT_FIRST_FRAME_ON_DISPLAY</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports that the first frame has gone on display (that is, decode and render have commenced).</para>
+        </entry>
+        <entry align="char">
+          <para>None</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>VIDEO_EVENT_FRAME_DECODED_LATE</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports a frame that left the decoder too late to be displayed at the correct time</para>
+        </entry>
+        <entry align="char">
+          <para>None</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>VIDEO_EVENT_DATA_DELIVERED_LATE</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports a frame that left the decoder too late to be displayed at the correct time and the fault was caused by the data not being available for decode early enough</para>
+        </entry>
+        <entry align="char">
+          <para>None</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>VIDEO_EVENT_FATAL_ERROR</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports a serious internal failure</para>
+        </entry>
+        <entry align="char">
+          <para>None</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>VIDEO_EVENT_FATAL_HARDWARE_FAILURE</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports that the hardware has entered an unrecoverable failure state</para>
+        </entry>
+        <entry align="char">
+          <para>None</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>VIDEO_EVENT_STREAM_IN_SYNC</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports the success of rendering the decoded frames synchronously</para>
+        </entry>
+        <entry align="char">
+          <para>None</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>VIDEO_EVENT_LOST</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports that the internal decoder event queue overflowed and the last event have been discarded and replaced with this event.</para>
+        </entry>
+        <entry align="char">
+          <para>None</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>VIDEO_EVENT_END_OF_STREAM</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports that an end-of-stream marker has reached the output of the decoder. The end-of-stream marker can be pushed directly into the decoder via VIDEO_DISCONTINUITY or even from an upper location in the pipeline.</para>
+        </entry>
+        <entry align="char">
+          <para>None</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>VIDEO_EVENT_FRAME_STARVATION</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports that the video decoder has not been fed with compressed data for an unexpected period of time and all the internal queues of the pipeline are empty.</para>
+        </entry>
+        <entry align="char">
+          <para>None</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>VIDEO_EVENT_FRAME_SUPPLIED</para>
+        </entry>
+        <entry align="char">
+          <para>This event reports that the video decoder has started playing out new decoded data. It is sent on startup, when exiting a pause or when data is being fed again after a starvation.</para>
+        </entry>
+        <entry align="char">
+          <para>None</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+</section>
+</section>
+
+<section id="video-status">
+<title>struct video_status</title>
+<para>The VIDEO_GET_STATUS call returns the following structure informing about various
+states of the playback operation.
+</para>
+<programlisting>
+struct video_status {
+	int                   video_blank;   /&#x22C6; blank video on freeze? &#x22C6;/
+	video_play_state_t    play_state;    /&#x22C6; current state of playback &#x22C6;/
+	video_stream_source_t stream_source; /&#x22C6; current source (demux/memory) &#x22C6;/
+	video_format_t        video_format;  /&#x22C6; current aspect ratio of stream &#x22C6;/
+	video_displayformat_t display_format;/&#x22C6; selected cropping mode &#x22C6;/
+};
+</programlisting>
+<para>If video_blank is set video will be blanked out if the channel is changed or if playback is
+stopped. Otherwise, the last picture will be displayed. play_state indicates if the video is
+currently frozen, stopped, or being played back. The stream_source corresponds to the seleted
+source for the video stream. It can come either from the demultiplexer or from memory.
+The video_format indicates the aspect ratio (one of 4:3 or 16:9) of the currently
+played video stream. Finally, display_format corresponds to the selected cropping
+mode in case the source video format is not the same as the format of the output
+device.
+</para>
+</section>
+
+<section id="video-still-picture">
+<title>struct video_still_picture</title>
+<para>An I-frame displayed via the VIDEO_STILLPICTURE call is passed on within the
+following structure.
+</para>
+<programlisting>
+/&#x22C6; pointer to and size of a single iframe in memory &#x22C6;/
+struct video_still_picture {
+	char &#x22C6;iFrame;        /&#x22C6; pointer to a single iframe in memory &#x22C6;/
+	int32_t size;
+};
+</programlisting>
+</section>
+
+<section id="video_caps">
+<title>video capabilities</title>
+<para>A call to VIDEO_GET_CAPABILITIES returns an unsigned integer with the following
+bits set according to the hardwares capabilities.
+</para>
+<programlisting>
+ /&#x22C6; bit definitions for capabilities: &#x22C6;/
+ /&#x22C6; can the hardware decode MPEG1 and/or MPEG2? &#x22C6;/
+ #define VIDEO_CAP_MPEG1   1
+ #define VIDEO_CAP_MPEG2   2
+ /&#x22C6; can you send a system and/or program stream to video device?
+    (you still have to open the video and the audio device but only
+     send the stream to the video device) &#x22C6;/
+ #define VIDEO_CAP_SYS     4
+ #define VIDEO_CAP_PROG    8
+ /&#x22C6; can the driver also handle SPU, NAVI and CSS encoded data?
+    (CSS API is not present yet) &#x22C6;/
+ #define VIDEO_CAP_SPU    16
+ #define VIDEO_CAP_NAVI   32
+ #define VIDEO_CAP_CSS    64
+</programlisting>
+</section>
+
+<section id="video-system">
+<title>video system</title>
+<para>A call to VIDEO_SET_SYSTEM sets the desired video system for TV output. The
+following system types can be set:
+</para>
+<programlisting>
+typedef enum {
+	 VIDEO_SYSTEM_PAL,
+	 VIDEO_SYSTEM_NTSC,
+	 VIDEO_SYSTEM_PALN,
+	 VIDEO_SYSTEM_PALNc,
+	 VIDEO_SYSTEM_PALM,
+	 VIDEO_SYSTEM_NTSC60,
+	 VIDEO_SYSTEM_PAL60,
+	 VIDEO_SYSTEM_PALM60
+} video_system_t;
+</programlisting>
+</section>
+
+<section id="video-highlight">
+<title>struct video_highlight</title>
+<para>Calling the ioctl VIDEO_SET_HIGHLIGHTS posts the SPU highlight information. The
+call expects the following format for that information:
+</para>
+<programlisting>
+ typedef
+ struct video_highlight {
+	 boolean active;      /&#x22C6;    1=show highlight, 0=hide highlight &#x22C6;/
+	 uint8_t contrast1;   /&#x22C6;    7- 4  Pattern pixel contrast &#x22C6;/
+			      /&#x22C6;    3- 0  Background pixel contrast &#x22C6;/
+	 uint8_t contrast2;   /&#x22C6;    7- 4  Emphasis pixel-2 contrast &#x22C6;/
+			      /&#x22C6;    3- 0  Emphasis pixel-1 contrast &#x22C6;/
+	 uint8_t color1;      /&#x22C6;    7- 4  Pattern pixel color &#x22C6;/
+			      /&#x22C6;    3- 0  Background pixel color &#x22C6;/
+	 uint8_t color2;      /&#x22C6;    7- 4  Emphasis pixel-2 color &#x22C6;/
+			      /&#x22C6;    3- 0  Emphasis pixel-1 color &#x22C6;/
+	 uint32_t ypos;       /&#x22C6;   23-22  auto action mode &#x22C6;/
+			      /&#x22C6;   21-12  start y &#x22C6;/
+			      /&#x22C6;    9- 0  end y &#x22C6;/
+	 uint32_t xpos;       /&#x22C6;   23-22  button color number &#x22C6;/
+			      /&#x22C6;   21-12  start x &#x22C6;/
+			      /&#x22C6;    9- 0  end x &#x22C6;/
+ } video_highlight_t;
+</programlisting>
+
+</section>
+<section id="video-spu">
+<title>video SPU</title>
+<para>Calling VIDEO_SET_SPU deactivates or activates SPU decoding, according to the
+following format:
+</para>
+<programlisting>
+ typedef
+ struct video_spu {
+	 boolean active;
+	 int stream_id;
+ } video_spu_t;
+</programlisting>
+
+</section>
+<section id="video-spu-palette">
+<title>video SPU palette</title>
+<para>The following structure is used to set the SPU palette by calling VIDEO_SPU_PALETTE:
+</para>
+<programlisting>
+ typedef
+ struct video_spu_palette{
+	 int length;
+	 uint8_t &#x22C6;palette;
+ } video_spu_palette_t;
+</programlisting>
+
+</section>
+<section id="video-navi-pack">
+<title>video NAVI pack</title>
+<para>In order to get the navigational data the following structure has to be passed to the ioctl
+VIDEO_GET_NAVI:
+</para>
+<programlisting>
+ typedef
+ struct video_navi_pack{
+	 int length;         /&#x22C6; 0 ... 1024 &#x22C6;/
+	 uint8_t data[1024];
+ } video_navi_pack_t;
+</programlisting>
+</section>
+
+
+<section id="video-attributes-t">
+<title>video attributes</title>
+<para>The following attributes can be set by a call to VIDEO_SET_ATTRIBUTES:
+</para>
+<programlisting>
+ typedef uint16_t video_attributes_t;
+ /&#x22C6;   bits: descr. &#x22C6;/
+ /&#x22C6;   15-14 Video compression mode (0=MPEG-1, 1=MPEG-2) &#x22C6;/
+ /&#x22C6;   13-12 TV system (0=525/60, 1=625/50) &#x22C6;/
+ /&#x22C6;   11-10 Aspect ratio (0=4:3, 3=16:9) &#x22C6;/
+ /&#x22C6;    9- 8 permitted display mode on 4:3 monitor (0=both, 1=only pan-sca &#x22C6;/
+ /&#x22C6;    7    line 21-1 data present in GOP (1=yes, 0=no) &#x22C6;/
+ /&#x22C6;    6    line 21-2 data present in GOP (1=yes, 0=no) &#x22C6;/
+ /&#x22C6;    5- 3 source resolution (0=720x480/576, 1=704x480/576, 2=352x480/57 &#x22C6;/
+ /&#x22C6;    2    source letterboxed (1=yes, 0=no) &#x22C6;/
+ /&#x22C6;    0    film/camera mode (0=camera, 1=film (625/50 only)) &#x22C6;/
+</programlisting>
+</section>
+
+
+<section id="video-encoding-type">
+
+<title>video_encoding_t [STMicroelectronics extension]</title>
+
+<para>The ioctl VIDEO_SET_ENCODING allows to set the video stream encoding using the following values:
+</para>
+
+<programlisting>
+typedef enum {
+	VIDEO_ENCODING_AUTO,
+	VIDEO_ENCODING_MPEG1,
+	VIDEO_ENCODING_MPEG2,
+	VIDEO_ENCODING_MJPEG,
+	VIDEO_ENCODING_DIVX3,
+	VIDEO_ENCODING_DIVX4,
+	VIDEO_ENCODING_DIVX5,
+	VIDEO_ENCODING_MPEG4P2,
+	VIDEO_ENCODING_H264,
+	VIDEO_ENCODING_WMV,
+	VIDEO_ENCODING_VC1,
+	VIDEO_ENCODING_RAW,
+	VIDEO_ENCODING_H263,
+	VIDEO_ENCODING_FLV1,
+	VIDEO_ENCODING_VP6,
+	VIDEO_ENCODING_RMV,
+	VIDEO_ENCODING_DIVXHD,
+	VIDEO_ENCODING_AVS,
+	VIDEO_ENCODING_VP3,
+	VIDEO_ENCODING_THEORA,
+	VIDEO_ENCODING_COMPOCAP,
+	VIDEO_ENCODING_VP8,
+	VIDEO_ENCODING_MVC,
+	VIDEO_ENCODING_HEVC,
+	VIDEO_ENCODING_NONE,
+	VIDEO_ENCODING_PRIVATE
+} video_encoding_t;
+</programlisting>
+
+<para>VIDEO_ENCODING_AUTO let the Video driver tries to figure out the encoding by checking the first packet sent for decode. VIDEO_ENCODING_NONE indicates that there is no video in the stream being played.</para>
+
+</section>
+<section id="video-discontinuity-type">
+<title>video_discontinuity_t [STMicroelectronics extension]</title>
+<para>The ioctl VIDEO_DISCONTINUITY uses the following values as input:
+</para>
+
+<programlisting>
+typedef enum {
+	VIDEO_DISCONTINUITY_SKIP,
+	VIDEO_DISCONTINUITY_CONTINUOUS_REVERSE,
+	VIDEO_DISCONTINUITY_SURPLUS_DATA
+	VIDEO_DISCONTINUITY_EOS
+} video_discontinuity_t;
+</programlisting>
+
+</section>
+
+
+<section id="video-play-interval-type">
+<title>video_play_interval_t [STMicroelectronics extension]</title>
+<para>The ioctl VIDEO_SET_PLAY_INTERVAL uses the following structure as input:
+</para>
+<programlisting>
+#define DVB_TIME_NOT_BOUNDED            0xfedcba9876543210ULL
+
+typedef struct dvb_play_interval_s {
+        unsigned long long              start;
+        unsigned long long              end;
+}dvb_play_interval_t;
+
+typedef dvb_play_interval_t             video_play_interval_t;
+</programlisting>
+
+</section>
+
+<section id="video_play_time_t">
+<title>video_play_time_t [STMicroelectronics extension]</title>
+<para>The ioctl VIDEO_GET_PLAY_TIME returns information using the following structure:
+</para>
+<programlisting>
+typedef struct dvb_play_time_s {
+	unsigned long long system_time;
+	unsigned long long presentation_time;
+	unsigned long long pts;
+} dvb_play_time_t;
+
+typedef dvb_play_time_t video_play_time_t;
+</programlisting>
+
+</section>
+<section id="video_play_info_t">
+<title>video_play_info_t [STMicroelectronics extension]</title>
+<para>The ioctl VIDEO_GET_PLAY_INFO returns information using the following structure:
+</para>
+<programlisting>
+typedef struct dvb_play_info_s {
+	unsigned long long system_time;
+	unsigned long long presentation_time;
+	unsigned long long pts;
+	unsigned long long frame_count;
+} dvb_play_info_t;
+
+typedef dvb_play_info_t video_play_info_t;
+</programlisting>
+
+<para>Structure elements:</para>
+<programlisting>
+system_time                         The current value of the system clock.
+presentation_time                   The reference time defined by an encoder clock
+pts                                 The timestamp of the frame on display
+frame_count                         The number of frames put on the display regardless of play direction.
+</programlisting>
+</section>
+
+<section id="video_clock_data_point_t">
+<title>video_clock_data_point_t [STMicroelectronics extension]</title>
+<para>The ioctl VIDEO_{GET/SET}_CLOCK_DATA_POINT uses the following structure:
+</para>
+<programlisting>
+typedef enum {
+	DVB_CLOCK_FORMAT_US = 0x00,
+	DVB_CLOCK_FORMAT_PTS = 0x01,
+	DVB_CLOCK_FORMAT_27MHz = 0x02,
+	DVB_CLOCK_FORMAT_MASK = 0xff,
+	DVB_CLOCK_INITIALIZE = 0x100
+} dvb_clock_flags_t;
+
+typedef struct dvb_clock_data_point_s {
+	dvb_clock_flags_t flags;
+	unsigned long long source_time;
+	unsigned long long system_time;
+} dvb_clock_data_point_t;
+
+typedef dvb_clock_data_point_t video_clock_data_point_t;
+</programlisting>
+
+</section>
+<section id="video_time_mapping_t">
+<title>video_time_mapping_t [STMicroelectronics extension]</title>
+<para>The ioctl VIDEO_SET_TIME_MAPPING uses the following structure:
+</para>
+<programlisting>
+typedef struct dvb_time_mapping_s {
+        unsigned long long native_stream_time;
+        unsigned long long system_presentation_time;
+} dvb_time_mapping_t;
+
+typedef dvb_time_mapping_t video_time_mapping_t;
+</programlisting>
+</section>
+
+<section id="video command type">
+<title>video command type [STMicroelectronics extension]</title>
+<para>Video decoder command types used by the VIDEO_COMMAND ioctl are described as</para>
+<programlisting>
+	VIDEO_CMD_SET_OPTION: Set various option to the decoder. See <xref linkend="dvb_option_t"/>
+</programlisting>
+</section>
+
+<section id="dvb_option_t">
+<title>dvb_option_t [STMicroelectronics extension]</title>
+<para>Video decoder command options</para>
+<informaltable>
+  <tgroup cols="3">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>Option</para>
+        </entry>
+        <entry align="char">
+          <para>Purpose</para>
+        </entry>
+        <entry align="char">
+          <para>Value</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_TRICK_MODE_AUDIO</para>
+        </entry>
+        <entry align="char">
+          <para>TBF</para>
+        </entry>
+        <entry align="char">
+          <para>TBF</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_PLAY_24FPS_VIDEO_AT_25FPS</para>
+        </entry>
+        <entry align="char">
+          <para>TBF</para>
+        </entry>
+        <entry align="char">
+          <para>TBF</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_MASTER_CLOCK</para>
+        </entry>
+        <entry align="char">
+          <para>Selects the clock to be used to master mappings between system time and playback time. The system clock may be either a free running operating system clock or a recovered clock, depending upon the media transmission system.</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_VIDEO_CLOCK_MASTER: Use video stream as master</para>
+          <para>DVB_OPTION_VALUE_AUDIO_CLOCK_MASTER: Use audio stream as master</para>
+          <para>DVB_OPTION_VALUE_SYSTEM_CLOCK_MASTER: Use system clock as master</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_EXTERNAL_TIME_MAPPING</para>
+        </entry>
+        <entry align="char">
+          <para>Allows to impose an externally specified mapping between system time and playback time. This is used in real-time capture and playback systems to ensure fixed input to output latencies</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Use normal heuristics to select the time mapping</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Use an externally imposed time mapping</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_EXTERNAL_TIME_MAPPING_VSYNC_LOCKED</para>
+        </entry>
+        <entry align="char">
+          <para>Allows to request the use of highly aggressive synchronization actions to achieve the requested external time mapping.
+In particular, when this control is applied, the system may re-time the external vertical sync to create a fixed relationship between incoming and outgoing vertical syncs. This will cause the connected display device to glitch during initial synchronization and is therefore normally disabled.
+It is appropriate for use in very low latency modes of operation, such as a mode optimized for interactive games where local control signals are sent to a server that replies with a compressed stream
+</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Use standard synchronization mechanisms</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Permit the use of aggressive synchronization mechanisms</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_AV_SYNC</para>
+        </entry>
+        <entry align="char">
+          <para>Allows to enable/disable stream synchronization.</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Disable synchronization</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Enable synchronization</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_DISPLAY_FIRST_FRAME_EARLY</para>
+        </entry>
+        <entry align="char">
+          <para>Allows to request a still frame be put on display as soon as it is decoded to offer a preview while waiting for normal decoding to commence.
+This is most appropriate for very highly buffered (high latency) systems, such as an IP set-top box connected to a network with substantial jitter</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Show the first frame at its normal display time</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Show the first frame as soon as it is decoded</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_VIDEO_BLANK</para>
+        </entry>
+        <entry align="char">
+          <para>Allows to request special termination characteristics for video play streams</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Keep final frame on display during stream shutdown</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Blank display during stream shutdown</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_STREAM_ONLY_KEY_FRAMES</para>
+        </entry>
+        <entry align="char">
+          <para>TBF</para>
+        </entry>
+        <entry align="char">
+          <para>TBF</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_STREAM_SINGLE_GROUP_BETWEEN_DISCONTINUITIES</para>
+        </entry>
+        <entry align="char">
+          <para>Allows to restrict the decode to a single group of pictures (GOP).
+This is typically used for trick modes under application control when the container is not indexed (or indexed badly). At allows the application to over-inject data without the additional data causing additional unwanted pictures to be displayed.</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Normal playback</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Playback a single GOP and stall until the next discontinuity</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_CLAMP_PLAYBACK_INTERVAL_ON_PLAYBACK_DIRECTION_CHANGE</para>
+        </entry>
+        <entry align="char">
+          <para>Causes the system to automatically clamp the lower or upper bounds of the play interval on direction change. This causes a request to enter trick mode to be honored more quickly but will freeze the display for a few frames as the pipeline refills</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Normal behavior</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Perform clamp of play interval.</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_PLAYOUT_ON_TERMINATE</para>
+        </entry>
+        <entry align="char">
+          <para>Allows to control how buffered data is handled during stream termination</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Discard buffered frames</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Play out all buffered frames</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_PLAYOUT_ON_SWITCH</para>
+        </entry>
+        <entry align="char">
+          <para>Allows to control how buffered data is handled during stream switch</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Discard buffered frames</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Play out all buffered frames</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_PLAYOUT_ON_DRAIN</para>
+        </entry>
+        <entry align="char">
+          <para>Allows to control how buffered data is handled during stream drain</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Discard buffered frames</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Play out all buffered frames</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_TRICK_MODE_DOMAIN</para>
+        </entry>
+        <entry align="char">
+          <para>Selects the techniques applied to reduce the decode bandwidth during trick mode playback</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_TRICK_MODE_AUTO: Automatic discard and degrade management</para>
+          <para>DVB_OPTION_VALUE_TRICK_MODE_DECODE_ALL: Decode everything at full quality</para>
+          <para>DVB_OPTION_VALUE_TRICK_MODE_DECODE_ALL_DEGRADE_NON_REFERENCE_FRAMES: Allow degraded decode of non-reference frames (reducing decoder bandwidth)</para>
+          <para>DVB_OPTION_VALUE_TRICK_MODE_START_DISCARDING_NON_REFERENCE_FRAMES: Discard non-reference frames</para>
+          <para>DVB_OPTION_VALUE_TRICK_MODE_DECODE_REFERENCE_FRAMES_DEGRADE_NON_KEY_FRAMES: Allow degraded decode</para>
+          <para>DVB_OPTION_VALUE_TRICK_MODE_DECODE_KEY_FRAMES: Decode only key frames</para>
+          <para>DVB_OPTION_VALUE_TRICK_MODE_DISCONTINUOUS_KEY_FRAMES: Decode key frames with large jumps between the frames displayed</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_DISCARD_LATE_FRAMES</para>
+        </entry>
+        <entry align="char">
+          <para>Selects the how the player should cope with late decodes. 
+When performing media playback from locally controlled data sources (such as the hard disc), discarding frames may be harmful; it is better to keep them and require the player to reestablish the time mapping.
+For broadcast sources, discarding frames makes it possible to quickly realign with the broadcaster</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISCARD_LATE_FRAMES_NEVER: Never discard late frames</para>
+          <para>DVB_OPTION_VALUE_DISCARD_LATE_FRAMES_ALWAYS: Discard all late frames</para>
+          <para>DVB_OPTION_VALUE_DISCARD_LATE_FRAMES_AFTER_SYNCHRONIZE: Discard late frames only after all synchronization actions have been performed (no early discard).</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_VIDEO_START_IMMEDIATE</para>
+        </entry>
+        <entry align="char">
+          <para>Allows the caller to force the startup synchronization to work on the basis of starting at the first video frame and letting audio join in appropriately.
+This has particular effect in some transport streams where there may be a lead in time of up to one second of audio</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Never start video early</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Start the video stream(s) as soon as frames are available</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_REBASE_ON_DATA_DELIVERY_LATE</para>
+        </entry>
+        <entry align="char">
+          <para>Allows to enable restablishment of the time mapping when data is delivered late.
+Enabling this control provides a good user experience during recovery from hardware error conditions, such as scratched optical media</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Avoid recalculating the time mapping</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Recalculate the time mapping when data is delivered late</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_REBASE_ON_FRAME_DECODE_LATE</para>
+        </entry>
+        <entry align="char">
+          <para>Allows the caller to enable restablishment of the time mapping when a frame decode occurs after the last opportunity to queue it for display</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Avoid recalculating the time mapping</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Recalculate the time mapping when decodes complete late</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_H264_ALLOW_NON_IDR_RESYNCHRONIZATION</para>
+        </entry>
+        <entry align="char">
+          <para>Allows to enable support for certain unusual H.264 streams.
+The H.264 standard requires streams to contain IDR frames as re-synchronization points and jumps will not resynchronize until IDR to guarantee reference frame integrity.
+Unfortunately, some broadcast streams do not incorporate IDRs. This control allows such streams to be reproduced by using I frames to indicate re-synchronization points</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Resynchronize only on IDR frames</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Resynchronize on I frames</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_MPEG2_IGNORE_PROGESSIVE_FRAME_FLAG</para>
+        </entry>
+        <entry align="char">
+          <para>Allows to request the decoder to ignore the progressive frame flag in an MPEG2 picture coding extension header.
+Some broadcasters are unable to reliably set this flag, causing interlaced frames to be incorrectly treated as progressive. Applying this control allows streams from these broadcasters to render correctly.
+This control is harmful to streams that depend on progressive frame flag being honored. This includes many DVD and VCD streams and any stream deploying 3:2 pulldown</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Standards conformant behavior</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Workaround exceptional streams</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_H264_ALLOW_BAD_PREPROCESSED_FRAMES</para>
+        </entry>
+        <entry align="char">
+          <para>Request additional effort be applied to decode frames that are known to be partly damaged</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Discard badly pre-processed frames</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Decode badly pre-processed frames</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_CLOCK_RATE_ADJUSTMENT_LIMIT_2_TO_THE_N_PARTS_PER_MILLION</para>
+        </entry>
+        <entry align="char">
+          <para>Allows to specify the maximum rate at which the clock rates for the rendering hardware are adjusted.
+This control is used to constrain the clock pulling software to particular appropriate limits</para>
+        </entry>
+        <entry align="char">
+          <para>Value: Set limit to 2^value parts per million</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_LIMIT_INPUT_INJECT_AHEAD</para>
+        </entry>
+        <entry align="char">
+          <para>Enables a limiting mechanism for injecting data ahead of time.
+By limiting the quantity of data in the later parts of the decode pipeline, we decrease the latency need for some actions to be performed. Adopting new PID (for example, switching languages) is an example of this.
+This is normally desirable (and enabled by default). Operating without throttling allows the decode buffers to comprise part of the buffering for very bursty systems operating with very low memory systems</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Unlimited injection</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Limit inject ahead</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_MPEG2_APPLICATION_TYPE</para>
+        </entry>
+        <entry align="char">
+          <para>Specifies the application for MPEG2 decoding purposes. This affects the default values for color matrices</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_MPEG2_APPLICATION_MPEG2: Use MPEG2 color matrices</para>
+          <para>DVB_OPTION_VALUE_MPEG2_APPLICATION_ATSC: Use ATSC color matrices</para>
+          <para>DVB_OPTION_VALUE_MPEG2_APPLICATION_DVB: Use DVB color matrices</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_DECIMATE_DECODER_OUTPUT</para>
+        </entry>
+        <entry align="char">
+          <para>Requests that the decoder issue decimated buffers in addition to full frame buffers.
+Decimated buffers are used in PiP deployments to reduce memory bandwidth required by the display subsystem</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DECIMATE_DECODER_OUTPUT_DISABLED: No decimation</para>
+          <para>DVB_OPTION_VALUE_DECIMATE_DECODER_OUTPUT_HALF: Decimate to half original size (quarter of original bandwidth)</para>
+          <para>DVB_OPTION_VALUE_DECIMATE_DECODER_OUTPUT_QUARTER: Decimate to a quarter of the original size (sixteen fold reduction in bandwidth)</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_PTS_FORWARD_JUMP_DETECTION_THRESHOLD</para>
+        </entry>
+        <entry align="char">
+          <para>This control sets the forward jump threshold for the PTS jump detector.
+When a jump is detected, the system may perform some automatic activity. In particular, when operating as a media player then the relationship between the system time and playback time may be reestablished.
+For example, if the playback time jumps forwards by one second then the system may either:
+1.	Frame repeat (or mute for audio) for one second until the time for the next frame is reached
+2.	Rebase time mapping, effectively jumping the playback time forwards by one second
+The control sets the threshold at which a discontinuity in playback times will be treated as a jump (rather than as stream corruption).</para>
+        </entry>
+        <entry align="char">
+          <para>Value: Set limit to 2^value seconds</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_H264_TREAT_DUPLICATE_DPB_AS_NON_REFERENCE_FRAME_FIRST</para>
+        </entry>
+        <entry align="char">
+          <para>This control requests a workaround for special H.264 streams</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Disable workaround logic</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Enable workaround logic</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_PIXEL_ASPECT_RATIO_CORRECTION</para>
+        </entry>
+        <entry align="char">
+          <para>This control allows the user to specify how much of the image the pixel aspect ratio will be preserved when converting to widescreen outputs.
+This is used for non-linear widescreen conversions where the edges of the screen are stretched in a non-linear manner in order to leave the center leaving a center portion.
+For example, when the control is set to 50%, half the screen will appear with the correct aspect ratio and the edges of the screen will be stretched more significantly as a result</para>
+        </entry>
+        <entry align="char">
+          <para>Value: Percent of screen to maintain original pixel aspect ratio</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_H264_FORCE_PIC_ORDER_CNT_IGNORE_DPB_DISPLAY_FRAME_ORDERING</para>
+        </entry>
+        <entry align="char">
+          <para>This control requests workaround for a special H.264 streams</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Disable workaround logic</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Enable workaround logic</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_SYMMETRIC_JUMP_DETECTION</para>
+        </entry>
+        <entry align="char">
+          <para>This control requests that short backward jumps be handled the same way as short forward jumps.
+When a jump is detected, the system may perform some automatic activity. In particular, when operating as a media player then the relationship between the system time and playback time may be reestablished.
+Normally, any backwards step in playback time results in a jump being detected and jump activity performed. This control can be used to suppress this for short backwards jumps</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Asymmetric jump detection</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Symmetric jump detection</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_ALLOW_FRAME_DISCARD_AT_NORMAL_SPEED</para>
+        </entry>
+        <entry align="char">
+          <para>This control allows the selective discard of B frames during normal playback if the decoder cannot maintain real-time performance</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Forbid B frame discard</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Permit B frame discard</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_OPERATE_COLLATOR2_IN_REVERSIBLE_MODE</para>
+        </entry>
+        <entry align="char">
+          <para>TBF</para>
+        </entry>
+        <entry align="char">
+          <para>TBF</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_IGNORE_STREAM_UNPLAYABLE_CALLS</para>
+        </entry>
+        <entry align="char">
+          <para>Some play streams can be declared unplayable by the player. This control controls whether the player continues attempts to decode an unplayable play stream</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Stop attempting to decode unplayable streams</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Continue attempts to decode unplayable streams</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_USE_PTS_DEDUCED_DEFAULT_FRAME_RATES</para>
+        </entry>
+        <entry align="char">
+          <para>This control allows the correct handling of streams with incorrectly described frame rates</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Use the frame rate discovered in the meta-data</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Estimate the frame rate using the rate of PTS evolution</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_H264_TREAT_TOP_BOTTOM_PICTURE_STRUCT_AS_INTERLACED</para>
+        </entry>
+        <entry align="char">
+          <para>This control requests a workaround for special H.264 streams</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Disable workaround logic</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Enable workaround logic</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_H264_VALIDATE_DPB_VALUES_AGAINST_PTS_VALUES</para>
+        </entry>
+        <entry align="char">
+          <para>This control requests a workaround for special H.264 streams</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Disable workaround logic</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Enable workaround logic</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_LIVE_PLAY</para>
+        </entry>
+        <entry align="char">
+          <para>The live play policy allows the player to optimize its behavior for playback from live sources. In particular it influences that techniques deployed to recover from starvation</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_DISABLE: Optimize for media playback</para>
+          <para>DVB_OPTION_VALUE_ENABLE: Optimize for live playback</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_RUNNING_DEVLOG</para>
+        </entry>
+        <entry align="char">
+          <para>TBF</para>
+        </entry>
+        <entry align="char">
+          <para>TBF</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_ERROR_DECODING_LEVEL</para>
+        </entry>
+        <entry align="char">
+          <para>TBF</para>
+        </entry>
+        <entry align="char">
+          <para>TBF</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_ALLOW_REFERENCE_FRAME_SUBSTITUTION</para>
+        </entry>
+        <entry align="char">
+          <para>TBF</para>
+        </entry>
+        <entry align="char">
+          <para>TBF</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_DISCARD_FOR_REFERENCE_QUALITY_THRESHOLD</para>
+        </entry>
+        <entry align="char">
+          <para>TBF</para>
+        </entry>
+        <entry align="char">
+          <para>TBF</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_DISCARD_FOR_MANIFESTATION_QUALITY_THRESHOLD</para>
+        </entry>
+        <entry align="char">
+          <para>TBF</para>
+        </entry>
+        <entry align="char">
+          <para>TBF</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_CTRL_PLAYBACK_LATENCY</para>
+        </entry>
+        <entry align="char">
+          <para>Primarily this is used to increase the level of buffering for all streams within a playback allowing the playback to tolerate periods of starvation. In particular this allows the playback to tolerate network jitter in IP set-top-box applications.
+For an IP network with a maximum specified jitter of 300ms then this control should be set to 300</para>
+        </entry>
+        <entry align="char">
+          <para>Value: Additional latency to be added to the presentation time before choosing a render time (in ms)</para>
+        </entry>
+      </row>
+
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_CTRL_VIDEO_DISCARD_FRAMES</para>
+        </entry>
+        <entry align="char">
+          <para>This control allows the caller to restrict the decode to reference or key frames only. This causes identical behavior to some of the STM_SE_CTRL_TRICK_MODE_DOMAIN control values, but can be applied even when the playback speed is x1.
+This is typically used for key or reference frames based trick modes under application control</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_CTRL_VALUE_NO_DISCARD: All the frames are decoded</para>
+          <para>DVB_OPTION_CTRL_VALUE_REFERENCE_FRAMES_ONLY: The non reference frames are not decoded</para>
+          <para>DVB_OPTION_CTRL_VALUE_KEY_FRAMES_ONLY: Only the key frames are decoded</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_FRAME_RATE_CALCULATION_PRECEDENCE</para>
+        </entry>
+        <entry align="char">
+          <para>This control allows to change the frame rate calculation precedance in SE. SE will calculate the frame rate in the order of precedance set,for example, DVB_OPTION_VALUE_PRECEDENCE_CONTAINER_STREAM_PTS will make SE calculate frame rate from containe,stream or pts which ever returns a value.
+
+This is typically set in encoding usecases where if we want to ensure that we can start encoder as soon as possible then getting the frame rate from the streams will be faster than getting from pts calculation.</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_VALUE_PRECEDENCE_STREAM_PTS_CONTAINER: Use precedence Stream,pts,container for frame rate calculation</para>
+          <para>DVB_OPTION_VALUE_PRECEDENCE_STREAM_CONTAINER_PTS: Use precedence Stream,container,pts for frame rate calculation</para>
+          <para>DVB_OPTION_VALUE_PRECEDENCE_PTS_STREAM_CONTAINER: Use precedence pts,stream,container for frame rate calculation</para>
+          <para>DVB_OPTION_VALUE_PRECEDENCE_PTS_CONTAINER_STREAM: Use precedence pts,container,stream for frame rate calculation</para>
+          <para>DVB_OPTION_VALUE_PRECEDENCE_CONTAINER_PTS_STREAM: Use precedence container,pts,stream for frame rate calculation</para>
+          <para>DVB_OPTION_VALUE_PRECEDENCE_CONTAINER_STREAM_PTS: Use precedence container,stream,pts for frame rate calculation</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_CTRL_VIDEO_MEMORY_PROFILE</para>
+        </entry>
+        <entry align="char">
+          <para>This control allows to set the maximum usable memory size for video decoders (applies to codecs video h264/hevc)</para>
+        </entry>
+        <entry align="char">
+          <para>DVB_OPTION_CTRL_VALUE_HD_PROFILE: Optimized buffer allocation for HD streams</para>
+          <para>DVB_OPTION_CTRL_VALUE_4K2K_PROFILE: Max buffer allocation for 4K2K streams</para>
+          <para>DVB_OPTION_CTRL_VALUE_SD_PROFILE: Max buffer allocation for SD streams</para>
+          <para>DVB_OPTION_CTRL_VALUE_720P_PROFILE: Max buffer allocation for 720p streams (1280x720)</para>
+          <para>DVB_OPTION_CTRL_VALUE_UHD_PROFILE: Max buffer allocation for UHD streams (3840x2160)</para>
+          <para>DVB_OPTION_CTRL_VALUE_HD_LEGACY_PROFILE: Max buffer allocation for HD streams</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>DVB_OPTION_CTRL_CONTAINER_FRAMERATE</para>
+        </entry>
+        <entry align="char">
+          <para>This control allows to set container framerate</para>
+        </entry>
+        <entry align="char">
+          <para>Value: container framerate</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+</section>
+</section>
+
+<section id="video_function_calls">
+<title>Video Function Calls</title>
+
+
+<section id="video_fopen">
+<title>open()</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This system call opens a named video device (e.g. /dev/dvb/adapter0/video0)
+ for subsequent use.</para>
+<para>When an open() call has succeeded, the device will be ready for use.
+ The significance of blocking or non-blocking mode is described in the
+ documentation for functions where there is a difference. It does not affect the
+ semantics of the open() call itself. A device opened in blocking mode can later
+ be put into non-blocking mode (and vice versa) using the F_SETFL command
+ of the fcntl system call. This is a standard system call, documented in the Linux
+ manual page for fcntl. Only one user can open the Video Device in O_RDWR
+ mode. All other attempts to open the device in this mode will fail, and an
+ error-code will be returned. If the Video Device is opened in O_RDONLY
+ mode, the only ioctl call that can be used is VIDEO_GET_STATUS. All other
+ call will return an error code.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int open(const char &#x22C6;deviceName, int flags);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>const char
+ *deviceName</para>
+</entry><entry
+ align="char">
+<para>Name of specific video device.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int flags</para>
+</entry><entry
+ align="char">
+<para>A bit-wise OR of the following flags:</para>
+</entry>
+ </row><row><entry
+ align="char">
+</entry><entry
+ align="char">
+<para>O_RDONLY read-only access</para>
+</entry>
+ </row><row><entry
+ align="char">
+</entry><entry
+ align="char">
+<para>O_RDWR read/write access</para>
+</entry>
+ </row><row><entry
+ align="char">
+</entry><entry
+ align="char">
+<para>O_NONBLOCK open in non-blocking mode</para>
+</entry>
+ </row><row><entry
+ align="char">
+</entry><entry
+ align="char">
+<para>(blocking mode is the default)</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>RETURN VALUE</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>ENODEV</para>
+</entry><entry
+ align="char">
+<para>Device driver not loaded/available.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>EINTERNAL</para>
+</entry><entry
+ align="char">
+<para>Internal error.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>EBUSY</para>
+</entry><entry
+ align="char">
+<para>Device or resource busy.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>EINVAL</para>
+</entry><entry
+ align="char">
+<para>Invalid argument.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+
+</section>
+<section id="video_fclose">
+<title>close()</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This system call closes a previously opened video device.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int close(int fd);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>RETURN VALUE</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>EBADF</para>
+</entry><entry
+ align="char">
+<para>fd is not a valid open file descriptor.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+
+</section>
+<section id="video_fwrite">
+<title>write()</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This system call can only be used if VIDEO_SOURCE_MEMORY is selected
+ in the ioctl call VIDEO_SELECT_SOURCE. The data provided shall be in
+ PES format, unless the capability allows other formats. If O_NONBLOCK is
+ not specified the function will block until buffer space is available. The amount
+ of data to be transferred is implied by count.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>size_t write(int fd, const void &#x22C6;buf, size_t count);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>void *buf</para>
+</entry><entry
+ align="char">
+<para>Pointer to the buffer containing the PES data.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>size_t count</para>
+</entry><entry
+ align="char">
+<para>Size of buf.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>RETURN VALUE</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>EPERM</para>
+</entry><entry
+ align="char">
+<para>Mode VIDEO_SOURCE_MEMORY not selected.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>ENOMEM</para>
+</entry><entry
+ align="char">
+<para>Attempted to write more data than the internal buffer can
+ hold.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>EBADF</para>
+</entry><entry
+ align="char">
+<para>fd is not a valid open file descriptor.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+
+</section><section id="VIDEO_STOP"
+role="subsection"><title>VIDEO_STOP</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl call asks the Video Device to stop playing the current stream.
+ Depending on the input parameter, the screen can be blanked out or displaying
+ the last decoded frame.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(fd, int request = VIDEO_STOP, boolean
+ mode);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals VIDEO_STOP for this command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>Boolean mode</para>
+</entry><entry
+ align="char">
+<para>Indicates how the screen shall be handled.</para>
+</entry>
+ </row><row><entry
+ align="char">
+</entry><entry
+ align="char">
+<para>TRUE: Blank screen when stop.</para>
+</entry>
+ </row><row><entry
+ align="char">
+</entry><entry
+ align="char">
+<para>FALSE: Show last decoded frame.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="VIDEO_PLAY"
+role="subsection"><title>VIDEO_PLAY</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl call asks the Video Device to start playing a video stream from the
+ selected source. VIDEO_PLAY must be used to resume playback at 1x speed after a call
+ to VIDEO_FREEZE in a trick mode.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(fd, int request = VIDEO_PLAY);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals VIDEO_PLAY for this command.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="VIDEO_FREEZE"
+role="subsection"><title>VIDEO_FREEZE</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl call suspends the live video stream being played. Decoding
+ and playing are frozen. It is then possible to restart the decoding
+ and playing process of the video stream using the VIDEO_CONTINUE
+ command. If VIDEO_SOURCE_MEMORY is selected in the ioctl call
+ VIDEO_SELECT_SOURCE, the DVB subsystem will not decode any more
+ data until the ioctl call VIDEO_CONTINUE or VIDEO_PLAY is performed.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(fd, int request = VIDEO_FREEZE);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals VIDEO_FREEZE for this command.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="VIDEO_CONTINUE"
+role="subsection"><title>VIDEO_CONTINUE</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl call restarts decoding and playing processes of the video stream
+ which was played before a call to VIDEO_FREEZE was made. VIDEO_CONTINUE will make
+ the playback resume at the same speed which was set before a call to VIDEO_FREEZE.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(fd, int request = VIDEO_CONTINUE);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals VIDEO_CONTINUE for this command.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="VIDEO_SELECT_SOURCE"
+role="subsection"><title>VIDEO_SELECT_SOURCE</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl call informs the video device which source shall be used for the input
+ data. The possible sources are demux or memory. If memory is selected, the
+ data is fed to the video device through the write command.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(fd, int request = VIDEO_SELECT_SOURCE,
+ video_stream_source_t source);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals VIDEO_SELECT_SOURCE for this command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>video_stream_source_t
+ source</para>
+</entry><entry
+ align="char">
+<para>Indicates which source shall be used for the Video stream.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="VIDEO_SET_BLANK"
+role="subsection"><title>VIDEO_SET_BLANK</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl call asks the Video Device to blank out the picture.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(fd, int request = VIDEO_SET_BLANK, boolean
+ mode);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals VIDEO_SET_BLANK for this command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>boolean mode</para>
+</entry><entry
+ align="char">
+<para>TRUE: Blank screen when stop.</para>
+</entry>
+ </row><row><entry
+ align="char">
+</entry><entry
+ align="char">
+<para>FALSE: Show last decoded frame.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="VIDEO_GET_STATUS"
+role="subsection"><title>VIDEO_GET_STATUS</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl call asks the Video Device to return the current status of the device.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para> int ioctl(fd, int request = VIDEO_GET_STATUS, struct
+ video_status &#x22C6;status);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals VIDEO_GET_STATUS for this command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>struct video_status
+ *status</para>
+</entry><entry
+ align="char">
+<para>Returns the current status of the Video Device.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="VIDEO_GET_EVENT"
+role="subsection"><title>VIDEO_GET_EVENT</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl call returns an event of type video_event if available. If an event is
+ not available, the behavior depends on whether the device is in blocking or
+ non-blocking mode. In the latter case, the call fails immediately with errno
+ set to EWOULDBLOCK. In the former case, the call blocks until an event
+ becomes available. The standard Linux poll() and/or select() system calls can
+ be used with the device file descriptor to watch for new events. For select(),
+ the file descriptor should be included in the exceptfds argument, and for
+ poll(), POLLPRI should be specified as the wake-up condition. Read-only
+ permissions are sufficient for this ioctl call.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para> int ioctl(fd, int request = VIDEO_GET_EVENT, struct
+ video_event &#x22C6;ev);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals VIDEO_GET_EVENT for this command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>struct video_event
+ *ev</para>
+</entry><entry
+ align="char">
+<para>Points to the location where the event, if any, is to be
+ stored.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>EWOULDBLOCK</para>
+</entry><entry
+ align="char">
+<para>There is no event pending, and the device is in
+ non-blocking mode.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>EOVERFLOW</para>
+</entry><entry
+ align="char">
+<para>Overflow in event queue - one or more events were lost.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+
+</section><section id="VIDEO_SET_DISPLAY_FORMAT"
+role="subsection"><title>VIDEO_SET_DISPLAY_FORMAT</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl call asks the Video Device to select the video format to be applied
+ by the MPEG chip on the video.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para> int ioctl(fd, int request =
+ VIDEO_SET_DISPLAY_FORMAT, video_display_format_t
+ format);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals VIDEO_SET_DISPLAY_FORMAT for this
+ command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>video_display_format_t
+ format</para>
+</entry><entry
+ align="char">
+<para>Selects the video format to be used.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="VIDEO_STILLPICTURE"
+role="subsection"><title>VIDEO_STILLPICTURE</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl call asks the Video Device to display a still picture (I-frame). The
+ input data shall contain an I-frame. If the pointer is NULL, then the current
+ displayed still picture is blanked.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(fd, int request = VIDEO_STILLPICTURE,
+ struct video_still_picture &#x22C6;sp);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals VIDEO_STILLPICTURE for this command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>struct
+ video_still_picture
+ *sp</para>
+</entry><entry
+ align="char">
+<para>Pointer to a location where an I-frame and size is stored.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="VIDEO_FAST_FORWARD"
+role="subsection"><title>VIDEO_FAST_FORWARD</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl call asks the Video Device to skip decoding of N number of I-frames.
+ This call can only be used if VIDEO_SOURCE_MEMORY is selected.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(fd, int request = VIDEO_FAST_FORWARD, int
+ nFrames);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals VIDEO_FAST_FORWARD for this command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int nFrames</para>
+</entry><entry
+ align="char">
+<para>The number of frames to skip.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>EPERM</para>
+</entry><entry
+ align="char">
+<para>Mode VIDEO_SOURCE_MEMORY not selected.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+
+</section><section id="VIDEO_SLOWMOTION"
+role="subsection"><title>VIDEO_SLOWMOTION</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl call asks the video device to repeat decoding frames N number of
+ times. This call can only be used if VIDEO_SOURCE_MEMORY is selected.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(fd, int request = VIDEO_SLOWMOTION, int
+ nFrames);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals VIDEO_SLOWMOTION for this command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int nFrames</para>
+</entry><entry
+ align="char">
+<para>The number of times to repeat each frame.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>EPERM</para>
+</entry><entry
+ align="char">
+<para>Mode VIDEO_SOURCE_MEMORY not selected.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+
+</section><section id="VIDEO_GET_CAPABILITIES"
+role="subsection"><title>VIDEO_GET_CAPABILITIES</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl call asks the video device about its decoding capabilities. On success
+ it returns and integer which has bits set according to the defines in section ??.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(fd, int request = VIDEO_GET_CAPABILITIES,
+ unsigned int &#x22C6;cap);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals VIDEO_GET_CAPABILITIES for this
+ command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>unsigned int *cap</para>
+</entry><entry
+ align="char">
+<para>Pointer to a location where to store the capability
+ information.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="VIDEO_SET_ID"
+role="subsection"><title>VIDEO_SET_ID</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl selects which sub-stream is to be decoded if a program or system
+ stream is sent to the video device.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(int fd, int request = VIDEO_SET_ID, int
+ id);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals VIDEO_SET_ID for this command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int id</para>
+</entry><entry
+ align="char">
+<para>video sub-stream id</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>EINVAL</para>
+</entry><entry
+ align="char">
+<para>Invalid sub-stream id.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+
+</section><section id="VIDEO_CLEAR_BUFFER"
+role="subsection"><title>VIDEO_CLEAR_BUFFER</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl call clears all video buffers in the driver and in the decoder hardware.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(fd, int request = VIDEO_CLEAR_BUFFER);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals VIDEO_CLEAR_BUFFER for this command.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="VIDEO_SET_STREAMTYPE"
+role="subsection"><title>VIDEO_SET_STREAMTYPE</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl tells the driver which kind of stream to expect being written to it. If
+ this call is not used the default of video PES is used. Some drivers might not
+ support this call and always expect PES.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>int ioctl(fd, int request = VIDEO_SET_STREAMTYPE,
+ int type);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals VIDEO_SET_STREAMTYPE for this command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int type</para>
+</entry><entry
+ align="char">
+<para>stream type</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="VIDEO_SET_FORMAT"
+role="subsection"><title>VIDEO_SET_FORMAT</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl sets the screen format (aspect ratio) of the connected output device
+ (TV) so that the output of the decoder can be adjusted accordingly.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para> int ioctl(fd, int request = VIDEO_SET_FORMAT,
+ video_format_t format);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals VIDEO_SET_FORMAT for this command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>video_format_t
+ format</para>
+</entry><entry
+ align="char">
+<para>video format of TV as defined in section ??.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>EINVAL</para>
+</entry><entry
+ align="char">
+<para>format is not a valid video format.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+
+</section><section id="VIDEO_SET_SYSTEM"
+role="subsection"><title>VIDEO_SET_SYSTEM (NOT SUPPORTED)</title>
+
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl sets the television output format. The format (see section ??) may
+ vary from the color format of the displayed MPEG stream. If the hardware is
+ not able to display the requested format the call will return an error.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para> int ioctl(fd, int request = VIDEO_SET_SYSTEM ,
+ video_system_t system);</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals VIDEO_SET_FORMAT for this command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>video_system_t
+ system</para>
+</entry><entry
+ align="char">
+<para>video system of TV output.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>EINVAL</para>
+</entry><entry
+ align="char">
+<para>system is not a valid or supported video system.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+
+</section><section id="VIDEO_SET_HIGHLIGHT"
+role="subsection"><title>VIDEO_SET_HIGHLIGHT (NOT SUPPORTED)</title>
+
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl sets the SPU highlight information for the menu access of a DVD.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para> int ioctl(fd, int request = VIDEO_SET_HIGHLIGHT
+ ,video_highlight_t &#x22C6;vhilite)</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals VIDEO_SET_HIGHLIGHT for this command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>video_highlight_t
+ *vhilite</para>
+</entry><entry
+ align="char">
+<para>SPU Highlight information according to section ??.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+
+</section><section id="VIDEO_SET_SPU"
+role="subsection"><title>VIDEO_SET_SPU (NOT SUPPORTED)</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl activates or deactivates SPU decoding in a DVD input stream. It can
+ only be used, if the driver is able to handle a DVD stream.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para> int ioctl(fd, int request = VIDEO_SET_SPU ,
+ video_spu_t &#x22C6;spu)</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals VIDEO_SET_SPU for this command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>video_spu_t *spu</para>
+</entry><entry
+ align="char">
+<para>SPU decoding (de)activation and subid setting according
+ to section ??.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>EINVAL</para>
+</entry><entry
+ align="char">
+<para>input is not a valid spu setting or driver cannot handle
+ SPU.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+
+</section><section id="VIDEO_SET_SPU_PALETTE"
+role="subsection"><title>VIDEO_SET_SPU_PALETTE (NOT SUPPORTED)</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl sets the SPU color palette.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para> int ioctl(fd, int request = VIDEO_SET_SPU_PALETTE
+ ,video_spu_palette_t &#x22C6;palette )</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals VIDEO_SET_SPU_PALETTE for this command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>video_spu_palette_t
+ *palette</para>
+</entry><entry
+ align="char">
+<para>SPU palette according to section ??.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>EINVAL</para>
+</entry><entry
+ align="char">
+<para>input is not a valid palette or driver doesn&#8217;t handle SPU.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+
+</section><section id="VIDEO_GET_NAVI"
+role="subsection"><title>VIDEO_GET_NAVI (NOT SUPPORTED)</title>
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl returns navigational information from the DVD stream. This is
+ especially needed if an encoded stream has to be decoded by the hardware.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para> int ioctl(fd, int request = VIDEO_GET_NAVI ,
+ video_navi_pack_t &#x22C6;navipack)</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals VIDEO_GET_NAVI for this command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>video_navi_pack_t
+ *navipack</para>
+</entry><entry
+ align="char">
+<para>PCI or DSI pack (private stream 2) according to section
+ ??.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>EFAULT</para>
+</entry><entry
+ align="char">
+<para>driver is not able to return navigational information</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+
+</section><section id="VIDEO_SET_ATTRIBUTES"
+role="subsection"><title>VIDEO_SET_ATTRIBUTES (NOT SUPPORTED)</title>
+
+<para>DESCRIPTION
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para>This ioctl is intended for DVD playback and allows you to set certain
+ information about the stream. Some hardware may not need this information,
+ but the call also tells the hardware to prepare for DVD playback.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>SYNOPSIS
+</para>
+<informaltable><tgroup cols="1"><tbody><row><entry
+ align="char">
+<para> int ioctl(fd, int request = VIDEO_SET_ATTRIBUTES
+ ,video_attributes_t vattr)</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+<para>PARAMETERS
+</para>
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>int fd</para>
+</entry><entry
+ align="char">
+<para>File descriptor returned by a previous call to open().</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>int request</para>
+</entry><entry
+ align="char">
+<para>Equals VIDEO_SET_ATTRIBUTES for this command.</para>
+</entry>
+ </row><row><entry
+ align="char">
+<para>video_attributes_t
+ vattr</para>
+</entry><entry
+ align="char">
+<para>video attributes according to section ??.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+&return-value-dvb;
+<informaltable><tgroup cols="2"><tbody><row><entry
+ align="char">
+<para>EINVAL</para>
+</entry><entry
+ align="char">
+<para>input is not a valid attribute setting.</para>
+</entry>
+ </row></tbody></tgroup></informaltable>
+ </section>
+
+
+<section id="VIDEO-SET-ENCODING" role="subsection">
+
+<title>VIDEO_SET_ENCODING [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl tells the Video Device the encoding of the video stream. It is used by the
+          Video Device to select the correct codec to decode the stream </para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = VIDEO_SET_ENCODING, video_encoding_t encoding);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals VIDEO_SET_ENCODING for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>video_encoding_t encoding</para>
+        </entry>
+        <entry align="char">
+          <para>Indicates which encoding has been used to encode the video stream according to <xref linkend="video-encoding-type"/></para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+</section>
+
+
+<section id="VIDEO-FLUSH" role="subsection">
+
+<title>VIDEO_FLUSH [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl call asks the video device to play out the
+          data already injected. The IOCTL does not return until all
+          of the previously injected data has been rendered.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = VIDEO_FLUSH);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals VIDEO_FLUSH for this command.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+
+<section id="VIDEO-SET-SPEED" role="subsection">
+
+<title>VIDEO_SET_SPEED [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl call asks the video device to play the
+          current video stream at the defined speed. The desired speed
+          is defined as follows:</para>
+
+          <para>speed = 1000 	: normal play</para>
+
+          <para>0 &lt; speed &lt; 1000 	: slow forward</para>
+
+          <para>speed > 1000 	: fast forward</para>
+
+          <para>speed = -1000 	: reverse play</para>
+
+          <para>-1000 &lt; speed &lt; 0 	: slow reverse</para>
+
+          <para>speed &lt; -1000 	: fast reverse</para>
+
+          <para>The normal play speed is defined by the name DVB_SPEED_NORMAL_PLAY.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = VIDEO_SET_SPEED, int speed);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals VIDEO_SET_SPEED for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int speed</para>
+        </entry>
+        <entry align="char">
+          <para>Speed definition, as above.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+
+<section id="VIDEO-DISCONTINUITY" role="subsection">
+
+<title>VIDEO_DISCONTINUITY [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl call tells the video device that the next
+          block of data is discontinuous with the previous blocks of
+          data received. The discontinuity may be because the
+          application has skipped in the stream or because the
+          application is playing the stream in reverse. If the
+          application has written data to the video device in excess
+          of an exact number of frames it can inform the video device
+          of this fact by setting the surplus data flag.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = VIDEO_DISCONTINUITY, video_discontinuity_t discontinuity);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals VIDEO_DISCONTINUITY for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>video_discontinuity_t discontinuity</para>
+        </entry>
+        <entry align="char">
+          <para>Type of discontinuity as according to section <xref linkend="video-discontinuity-type" />.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+
+<section id="VIDEO-STEP" role="subsection">
+
+<title>VIDEO_STEP [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl call tells the video device to display the
+          next frame in the current play direction. The frame will be
+          displayed only if it is available. An application must,
+          therefore, keep track of the number of pictures injected to
+          know when more data is required to allow the step to
+          succeed.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = VIDEO_STEP);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals VIDEO_STEP for this command.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+
+<section id="VIDEO-SET-PLAY-INTERVAL" role="subsection">
+
+<title>VIDEO_SET_PLAY_INTERVAL [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl call tells the video device the PTS range
+          for visible pictures. Frames with PTS times within this
+          range will be displayed. Frames outside the range will not
+          be displayed. The value DVB_TIME_NOT_BOUNDED indicates that
+          that end of the range is unbounded.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = VIDEO_SET_PLAY_INTERVAL, video_play_interval_t *play_interval);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals VIDEO_SET_PLAY_INTERVAL for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>video_play_interval_t *play_interval</para>
+        </entry>
+        <entry align="char">
+          <para>Play interval start and stop as according to <xref linkend="video-play-interval-type" />.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+
+<section id="VIDEO-SET-SYNC-GROUP" role="subsection">
+
+<title>VIDEO_SET_SYNC_GROUP [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl call tells the audio device to synchronise
+          the stream on this device with the streams on the specified
+          LinuxDVB device.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = VIDEO_SET_SYNC_GROUP, unsigned int group);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals VIDEO_SET_SYNC_GROUP for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>unsigned int group</para>
+        </entry>
+        <entry align="char">
+          <para>Device with which device/demux to synchronise this stream to.</para>
+          <para>     group = 0xGGvvvvvv</para>
+          <para> GG: 00 = invalid group type</para>
+          <para>     01 = demux group: sync to a playback attached to a specific demux (VIDEO_SYNC_GROUP_DEMUX)</para>
+          <para>     10 = audio group: sync to a audio device (VIDEO_SYNC_GROUP_AUDIO)</para>
+          <para>     11 = video group: sync to a video device (VIDEO_SYNC_GROUP_VIDEO)</para>
+          <para>  (VIDEO_SYNC_GROUP_MASK = VIDEO_SYNC_GROUP_DEMUX | VIDEO_SYNC_GROUP_AUDIO | VIDEO_SYNC_GROUP_VIDEO)</para>
+          <para>   VVVVVV: id of the device within the selected group</para>
+          <para>example: group = VIDEO_SYNC_GROUP_AUDIO | 0x01 will allow sync the audio device with the audio1 device </para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+
+<section id="VIDEO-GET-PTS" role="subsection">
+
+<title>VIDEO_GET_PTS</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl call reads the 33 bit presentation time
+          stamp as defined in ITU T-REC-H.222.0 / ISO/IEC
+          13818-1.</para>
+
+          <para>The PTS should belong to the currently played frame if
+          possible, but may also be a value close to it like the PTS
+          of the last decoded frame or the last PTS extracted by the
+          PES parser.</para>
+
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = VIDEO_GET_PTS, unsigned long long *pts);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals VIDEO_GET_PTS for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>unsigned long long *pts</para>
+        </entry>
+        <entry align="char">
+          <para>PTS from system.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+
+<section id="VIDEO-GET-FRAME-RATE" role="subsection">
+
+<title>VIDEO_GET_FRAME_RATE</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl call asks the Video Device to return the current framerate</para>
+
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = VIDEO_GET_FRAME_RATE, unsigned int *rate);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals VIDEO_GET_FRAME_RATE for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>unsigned int *rate</para>
+        </entry>
+        <entry align="char">
+          <para>Returns the framerate in number of frames per 1000 seconds</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+
+<section id="VIDEO_GET_FRAME_COUNT" role="subsection">
+
+<title>VIDEO_GET_FRAME_COUNT</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl call returns the number of frames displayed
+          since the device was opened.</para>
+
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = VIDEO_GET_FRAME_COUNT, unsigned int *frame_count);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals VIDEO_GET_FRAME_COUNT for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>unsigned int *frame_count</para>
+        </entry>
+        <entry align="char">
+          <para>Count of frames displayed.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+
+<section id="VIDEO-GET-PLAY-TIME" role="subsection">
+
+<title>VIDEO_GET_PLAY_TIME [STMicroelectronics extension] (DEPRECATED)</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>DEPRECATED &ndash; see <xref linkend="VIDEO-GET-PLAY-INFO" />.</para>
+
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = VIDEO_GET_PLAY_TIME, video_play_time_t *play_time);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals VIDEO_GET_PLAY_TIME for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>video_play_time_t *play_time</para>
+        </entry>
+        <entry align="char">
+          <para>Reference to video_play_time_t structure &mdash; see <xref linkend="video_play_time_t" />.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+
+<section id="VIDEO-GET-PLAY-INFO" role="subsection">
+
+<title>VIDEO_GET_PLAY_INFO [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>This ioctl call returns timing and frame count information about the display.</para>
+
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = VIDEO_GET_PLAY_INFO, video_play_info_t *play_info);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals VIDEO_GET_PLAY_INFO for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>video_play_info_t *play_info</para>
+        </entry>
+        <entry align="char">
+          <para>Reference to video_play_info_t structure – see <xref linkend="video_play_time_t" />.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+
+<section id="VIDEO-SET-CLOCK-DATA-POINT" role="subsection">
+
+<title>VIDEO_SET_CLOCK_DATA_POINT [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>The clock data point values are intended to enable the
+          system to recover the broadcast clock. This function
+          provides the mechanism to inject the PCR data pairs which
+          have previously been obtained from the demux device (DMX_SET_PES_FILTER) </para>
+
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = VIDEO_SET_CLOCK_DATA_POINT, video_clock_data_point_t *clock_data);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals VIDEO_SET_CLOCK_DATA_POINT for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>video_clock_data_point_t *clock_data</para>
+        </entry>
+        <entry align="char">
+          <para>Reference to video_clock_data_point_t structure – see <xref linkend="video_clock_data_point_t" />.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+
+<section id="VIDEO-GET-CLOCK-DATA-POINT" role="subsection">
+
+<title>VIDEO_GET_CLOCK_DATA_POINT [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>The clock data point values are intended to enable the
+          system to recover the broadcast clock. This function
+          provides the mechanism to retrieve the current mapping
+          between the source clock and the system clock.</para>
+
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = VIDEO_GET_CLOCK_DATA_POINT, video_clock_data_point_t *clock_data);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals VIDEO_GET_CLOCK_DATA_POINT for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>video_clock_data_point_t *clock_data</para>
+        </entry>
+        <entry align="char">
+          <para>Reference to video_clock_data_point_t structure – see <xref linkend="video_clock_data_point_t" />.</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+
+<section id="VIDEO-SET-TIME-MAPPING" role="subsection">
+
+<title>VIDEO_SET_TIME_MAPPING [STMicroelectronics extension]</title>
+
+<para>DESCRIPTION</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>VIDEO_SET_TIME_MAPPING is used to set a specific the
+          relationship between PTS values in the stream and the system
+          clock. This can be used, for example, to adjust the latency
+          on a specific stream to match that on another stream.</para>
+
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>SYNOPSIS</para>
+
+<informaltable>
+  <tgroup cols="1">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int ioctl(int fd, int request = VIDEO_SET_TIME_MAPPING, video_time_mapping_t *time_mapping);</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+<para>PARAMETERS</para>
+
+<informaltable>
+  <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry align="char">
+          <para>int fd</para>
+        </entry>
+        <entry align="char">
+          <para>File descriptor returned by a previous call to open().</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>int request</para>
+        </entry>
+        <entry align="char">
+          <para>Equals VIDEO_SET_TIME_MAPPING for this command.</para>
+        </entry>
+      </row>
+      <row>
+        <entry align="char">
+          <para>video_time_mapping_t *time_mapping</para>
+        </entry>
+        <entry align="char">
+          <para>Reference to video_time_mapping_t structure - see <xref linkend="video_time_mapping_t" /> .</para>
+        </entry>
+      </row>
+    </tbody>
+  </tgroup>
+</informaltable>
+
+&return-value-dvb;
+
+</section>
+
+
+</section>

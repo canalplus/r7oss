@@ -1,0 +1,22 @@
+--- ../../alsa-kernel/pci/ali5451/ali5451.c	2007-12-20 11:47:36.000000000 +0100
++++ ali5451.c	2007-12-20 11:57:49.000000000 +0100
+@@ -1,3 +1,4 @@
++#include "adriver.h"
+ /*
+  *  Matt Wu <Matt_Wu@acersoftech.com.cn>
+  *  Apr 26, 2001
+@@ -2204,7 +2205,7 @@
+ 	codec->card = card;
+ 	codec->pci = pci;
+ 	codec->irq = -1;
+-	codec->revision = pci->revision;
++	codec->revision = snd_pci_revision(pci);
+ 	codec->spdif_support = spdif_support;
+ 
+ 	if (pcm_streams < 1)
+@@ -2374,3 +2375,5 @@
+ 
+ module_init(alsa_card_ali_init)
+ module_exit(alsa_card_ali_exit)
++
++EXPORT_NO_SYMBOLS;

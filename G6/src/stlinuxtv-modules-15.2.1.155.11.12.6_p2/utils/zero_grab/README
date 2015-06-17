@@ -1,0 +1,88 @@
+# Using zero copy test case
+# -------------------------
+# o  In case of display on Main-VID (default) remember to unlink first
+#    the tunneled connection (via Media Controller) between Video and
+#    display plane, otherwise the first QBUF fails with device BUSY!
+# o  The Streaming engine, to decode properly (worst case), allocates a
+#    contiguous blob memory big enough to contain up to 9 video frames
+#    full HD (1088*1920*2 [16 bit X pixel]), roughly 30Mb.
+#    'zerograb" test has to allocate such memory and to share it with
+#    the decoder. To do this it negotiates a number of buffers (agreed
+#    with SE) with the Display device (/dev/video1). The display device
+#    alocates in BPA2 "gfx-memory", so before launching the test remember
+#    to enlarge this zone via BPA2 Linux command line.
+#    Below an example to add 30Mb to "gfx-memory", removing the same
+#    amount from next contiguous zone (BPA2_Region0).
+#    In SDK2 (Rel. 10) build system BPA2 map is defined in the file
+#    "config.in.memory_map_bpa2_stuff"
+#
+	BPA2_BOOTARGS+=gfx-memory:180M:0x60000000
+        BPA2_BOOTARGS+=BPA2_Region0|aud-coded|.....|v4l2-grab:192M:0x6B400000
+
+#
+# Some hints on test application
+# ------------------------------
+# zerograb is a simple application wich spawns three threads:
+#     main:   read the arguments initializes and than play
+#             the role of "capturer thread". The capturer, waits
+#             for decoded frame on V4L2 /dev/video0 device and
+#             pushes to display (see below which and how planes
+#             can be used)
+#     sink:   waits for empty frames from display and returns
+#             to video encoder
+#     inject: read the Video PES file, in chunks of 64k and
+#             injects to decoder (LinuxDVB /dev/dvb/adapter0/videoN)
+#             device). See below how to select video device.
+#
+# Options
+# -------
+#
+# -V    verbose (output all TRACEs)
+# -b    blocking on capture device
+# -B    blocking on sink (display) device
+# -Tn   test case number, valid number are:
+#          1  STREAMON/OFF and open/close (to test only attach/detach)
+#          2  inject and grab, no display (to test SE production)
+#          3  inject, grab and display
+#       Test cases 1 and 2 are there to test stages of development  and do
+#       not make any sense for the user.
+# -P    disable use of PTS on display (mean set PTS=0 when queuing to
+#       display which mean display as soon as possible. The video results
+#       accelerated.
+#       Default is display enabling PTS (if uncertain do not specify)
+# -c    codec type. Not all the codec have been tested (default h264, also
+#       tested with mpeg2)
+# -uN   try to allocate N additional buffers to the number required by SE.
+#       Current default is 0, although in most of the cases 1 additional
+#       buffer makes the difference!
+# -H    picture resolution full HD_1080 (default)
+#       WARNING: although thought to work also with other resolution, this
+#                has not been tested yet, so most likely not working!
+#                Also consider that the resolution affect (unfortunately)
+#                the buffer allocation size.
+# -vN   index of LinuxDVB input video device (decoder). Default = 0, should
+#       be removed as soon as new device model will be supported.
+# -o <out>      specify the name of the display output device (plane).
+#               By default uses Main-VID
+#               Aux-VID and Main-PIP on Orly have been used although not
+#               extensively tested
+# -f <format>   aims to specify the display window output format and
+#               position (hence to integrate scaling, windoving, etc).
+#               Not yet implemented.
+#
+# Example:
+#   media-ctl -l '"dvb0.video0":0->"Main-VID":0[0]'
+#   media-ctl -l '"STM Video Output":4->"Main-VID":0[1]'
+#   zerograb -v0 -b -P -c h264 HORSE.PES
+#
+# Known limits:
+# -------------
+#    o thread syncronization not extremely robust. Doesn't handle yet
+#      the kill (ctrl ^C).
+#    o Display output tested only on Main-VID, Aux-VID and Main-PIP
+#      (Orly 1 platform B2020)
+#    o using both options "-b" and "-B' at the same time it may hang
+#      It is recommanded to use "-b" (wait on capture)
+#    o so far tested only with codec: H264 and MPEG2
+#    o specify display output format: not yet supported
+#

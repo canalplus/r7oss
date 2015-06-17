@@ -1,0 +1,66 @@
+Player 2 (INT_191)
+=================
+
+Introduction
+------------
+
+Player 2 is a thorough redesign of the successful Player 1 architecture 
+currently deployed as the playback engine for digital video recorders 
+and media centres.
+
+Player 2 revisits many of the design decisions of Player 1 modernizing 
+the architecture thus making is suitable for demanding applications 
+such as BD-ROM playback and A/V receiver while retaining the features 
+required to support traditional media centres.
+
+Among the faults with player 1 are:
+
+ * There is one player 1 instantiation per playback (you may not have 
+   noticed this if you have only one TV).
+
+ * Buffers carry no context (without fudging a header at the start).
+
+ * There is no way to flush instructions or operations down the 
+   decoding pipeline.
+
+ * The avsync control is based around operations on frames of data.
+
+ * There is no mechanism to import, or export the playback time and 
+   consequently no way to synchronise external events with the playback.
+
+ * There is no way to dispose of a buffer out of line.
+
+Player 2 is expected to address these and other issues, among the key 
+changes to player 2 are:
+
+ * There is only one player instantiation, with multiple ongoing 
+   playbacks.
+
+ * There is a more sophisticated buffer mechanism, based around a class 
+   implementation, and supporting reference counts and meta data 
+   attachment etc...
+
+ * Input is via a buffer, and can be multiplexed or de-multiplexed.
+
+ * We can support the passing of instructions/parameters down the 
+   buffer chain.
+
+ * Avsync is based around providing a preferred manifestation time for 
+   every frame of audio/video, alongside an expected duration (to allow 
+   video drivers, for example, to decide how long the top field of an 
+   interlaced frame should be on display).
+
+ * We have added functions to import and export time in its 
+   multiple forms.
+
+Building Player 2
+-----------------
+
+See INSTALL
+
+Obtaining support
+-----------------
+
+Please use bugzilla:
+
+https://bugzilla.stlinux.com/

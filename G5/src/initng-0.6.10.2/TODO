@@ -1,0 +1,23 @@
+- Make reload plugin, save sys_state, and current runlevel and more static
+  global stuff. Maby we can call ngc -c, when system is stopping or starting
+  without problems.
+
+- Add need deps like need = (daemon/sysvlog || daemon/syslogd), needs core
+  rewrite too.
+
+- The i parser shud not only know '=' but '+=' and '=+' or maby '=-' to reset
+  a multistring variable, needs core rewrite.
+
+- A service that stops because the dependency stoped, will atomaticly be
+  started again when the dep is up again. Need to rewrite pars of core to
+  make this nice?
+
+- dbus work, for a dbusc plugin. [BIG_TASK]
+
+- Fix devices/printer like services, maby using hal? [BIG_TASK]
+
+- Fix the/A xml parser. [BIG_TASK]
+
+- create ngc5 with an shiny new xml data backend. [BIG_TASK]
+
+- Remove doc/initng_hooks.txt and document the new static event_types.

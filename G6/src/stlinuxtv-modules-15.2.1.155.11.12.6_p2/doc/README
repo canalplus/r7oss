@@ -1,0 +1,15 @@
+The STLinuxTV documentation is made of several parts:
+	* STLinuxTV Implementation Report
+	* LinuxTV customized documentation
+
+STLinuxTV Implementation Report
+===============================
+This document describes the various devices/API provided by the STLinuxTV layer.
+It does NOT intend to describe the API of each device precisely but instead of
+that gives important information about each devices (ex: data format supported, type of buffer, buffer constraints etc)
+It also give information about API changes between releases.
+
+LinuxTV customized documentation
+================================
+This document is a customized version of the media API documentation found in
+the vanilla Linux kernel source tree. ST specific extension are added.

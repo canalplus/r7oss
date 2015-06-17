@@ -1,0 +1,31 @@
+==============================================================================
+        st-socinfo: configuration for STMicroelectronics SoCs.
+==============================================================================
+
+SoCs DTSI required properties:
+- compatible : "st,stih416-socinfo", "st,stih407-socinfo", "st,stid127-socinfo".
+- st,syscfg  : System configuration register bank in which can be found
+               "Device ID" register. Should be a phandle of the syscfg node.
+
+Board DTS required properties:
+- model      : Usually described at board level (in opposition with the two
+               previous properties), this property gives the full board name,
+               starting with SoC name, followed by space character and board
+               name.
+
+
+Example :
+
+model = "STiH407 B2089";
+
+soc {
+        socinfo {
+                compatible = "st,stih407-socinfo";
+                st,syscfg = <&syscfg_core>;
+        };
+
+        syscfg_core:core-syscfg@92b0000{
+                compatible = "st,stih407-core-syscfg", "syscon";
+                reg = <0x92b0000 0x1000>;
+        };
+};

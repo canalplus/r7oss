@@ -1,0 +1,13 @@
+menuconfig SCART
+	tristate "Support for SCART interface"
+	
+config SCART_ST6437
+	tristate "scart driver for st6437  Controller"
+	depends on SCART
+	help
+	  Generic scart support for ST6437
+
+
+
+
+

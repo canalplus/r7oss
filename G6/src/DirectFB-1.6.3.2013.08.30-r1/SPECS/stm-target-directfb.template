@@ -1,0 +1,616 @@
+%define _dfb_build_config	x@BUILD_CONFIG@
+
+Name:		%{_stm_pkg_prefix}-target-directfb@BUILD_CONFIG@
+Summary:	Hardware graphics acceleration library
+Group:		DirectFB/Libraries
+%define _dfbversion	1.6.3
+%define _abiversion	1.6-0
+%define _stmversion	+STM2013.08.30
+Version:	1.6.3%{_stmversion}
+Release:	1
+Epoch: 1
+License:	LGPL
+# created by:
+# git archive --format=tar --prefix=DirectFB-1.6.3/ DIRECTFB_1_6_3 | bzip2 --best > DirectFB-1.6.3.tar.bz2
+# git diff DIRECTFB_1_6_3..DIRECTFB_1_6_3_STM2013.08.30 | bzip2 --best > DirectFB-1.6.3.stm.patch.bz2
+# old way:
+# git archive --format=tar --prefix=DirectFB-1.6.1+STM2012.07.25/ DIRECTFB_1_6_1_STM2012.07.25 | bzip2 --best > DirectFB-1.6.1+STM2012.07.25.tar.bz2
+Source0:	DirectFB-%{_dfbversion}.tar.bz2
+Patch0:	DirectFB-%{_dfbversion}.stm.patch.bz2
+
+
+URL:		http://www.directfb.org
+Buildroot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-%{_stm_target_arch}-XXXXXX)
+Prefix:		%{_stm_cross_target_dir}
+
+BuildRequires: %{_stm_pkg_prefix}-%{_stm_target_arch}-libpng-dev
+BuildRequires: %{_stm_pkg_prefix}-host-fluxcomp >= 1.4.3
+%if %target_cpu arm sh
+%define _mme_enabled yes
+%define _stmfbdev --enable-stmfbdev
+%else
+%define _mme_enabled no
+%define _stmfbdev --disable-stmfbdev
+%endif
+%if %target_cpu arm
+%define _multicore_enabled yes
+%else
+%define _multicore_enabled no
+%endif
+%if "%{_dfb_build_config}" == "x-multi"
+BuildRequires: %{_stm_pkg_prefix}-%{_stm_target_arch}-linux-fusion-headers >= 9.0.0
+%define _dfb_multiapp --enable-multi
+%else
+%if "%{_dfb_build_config}" == "x"
+%define _dfb_multiapp --disable-multi
+%else
+# unsupported, error out
+unsupported BUILD_CONFIG option
+%endif
+%endif
+
+%define _pkgname	%{_stm_pkg_prefix}-%{_stm_target_arch}-directfb
+%define _fullname	directfb-%{_abiversion}
+%define _docdir		%{_stm_cross_target_dir}%{_stm_target_doc_dir}
+
+
+#
+#  SRPM Package
+#
+%description
+The source package for directfb.
+
+#
+#  RPMS
+#
+%package -n %{_pkgname}@BUILD_CONFIG@
+Summary:	Hardware graphics acceleration library
+Group:		DirectFB/Libraries
+Provides:	%{_pkgname} = %{version}-%{release}
+
+%if "%{_dfb_build_config}" == "x-multi"
+Provides:	%{_pkgname}-multi = %{version}-%{release}
+Conflicts:	%{_pkgname}-single
+%else
+%if "%{_dfb_build_config}" == "x"
+Provides:	%{_pkgname}-single = %{version}-%{release}
+Conflicts:	%{_pkgname}-multi
+%endif
+%endif
+%description -n %{_pkgname}@BUILD_CONFIG@
+DirectFB is a thin library that provides developers with hardware graphics
+acceleration, input device handling and abstraction, an integrated windowing
+system with support for translucent windows and multiple display layers on top
+of the Linux frame buffer device. It is a complete hardware abstraction layer
+with software fallbacks for every graphics operation that is not supported by
+the underlying hardware.
+%if "%{_dfb_build_config}" == "x-multi"
+This version has been built with the Multi Application Core.
+%else
+%if "%{_dfb_build_config}" == "x"
+This version has been built with the Single Application Core.
+%endif
+%endif
+
+%package -n %{_pkgname}@BUILD_CONFIG@-dev
+Summary:	Hardware graphics acceleration library - development
+Group:		DirectFB/Development
+AutoReq:	no
+Provides:	%{_pkgname}-dev = %{version}-%{release}
+%if "%{_dfb_build_config}" == "x-multi"
+Requires:	%{_pkgname}-multi = %{version}-%{release}
+Provides:	%{_pkgname}-multi-dev = %{version}-%{release}
+%else
+%if "%{_dfb_build_config}" == "x"
+Requires:	%{_pkgname}-single = %{version}-%{release}
+Provides:	%{_pkgname}-single-dev = %{version}-%{release}
+%endif
+%endif
+%description -n %{_pkgname}@BUILD_CONFIG@-dev
+DirectFB header files needed for building DirectFB applications.
+
+%package -n %{_pkgname}@BUILD_CONFIG@-dbg
+Summary:	Hardware graphics acceleration library - debug info
+Group:		DirectFB/Development
+AutoReq:	no
+Provides:	%{_pkgname}-dbg = %{version}-%{release}
+%if "%{_dfb_build_config}" == "x-multi"
+Requires:	%{_pkgname}-multi = %{version}-%{release}
+Provides:	%{_pkgname}-multi-dbg = %{version}-%{release}
+%else
+%if "%{_dfb_build_config}" == "x"
+Requires:	%{_pkgname}-single = %{version}-%{release}
+Provides:	%{_pkgname}-single-dbg = %{version}-%{release}
+%endif
+%endif
+%description -n %{_pkgname}@BUILD_CONFIG@-dbg
+This package provides debug information for DirectFB. Debug information
+is useful for providing meaningful backtraces in case of bugs.
+
+%package -n %{_pkgname}-bin
+Summary:	Hardware graphics acceleration library - binaries
+Group:		DirectFB/Development
+%description -n %{_pkgname}-bin
+ DirectFB is a graphics library which was designed with embedded systems
+ in mind. It offers maximum hardware accelerated performance at a minimum
+ of resource usage and overhead.
+ .
+ This package contains the various DirectFB tools, e.g. a background
+ configuration tool, and also the directfbrc man page.
+
+%package -n %{_pkgname}-tests
+Summary:	Hardware graphics acceleration library - tests
+Group:		DirectFB/Development
+%description -n %{_pkgname}-tests
+ DirectFB is a graphics library which was designed with embedded systems
+ in mind. It offers maximum hardware accelerated performance at a minimum
+ of resource usage and overhead.
+ .
+ This package various tests that come with the DirectFB source tree. They
+ are normally not needed, except for maybe driver validatation.
+
+
+%prep
+%target_setup
+%setup -qn DirectFB-%{_dfbversion}
+%patch0 -p1
+# the patch contains symlinks (in git format), but only git-patch can
+# deal with these, do it manually
+for i in fb.h vt.h ; do
+  rm -f systems/stmfbdev/${i}
+  ln -s ../fbdev/${i} systems/stmfbdev/
+done
+%target_autoreconf
+
+%build
+%target_setup
+# the st231 compiler emits a warning when it encounters multiple -O statements,
+# which makes auto* assume that some of its tests failed. Strip out existing -O
+# and add -O3
+_stripped_flags=
+for _this_flag in $CFLAGS ; do
+  _stripped_flags="${_stripped_flags} `echo $_this_flag | sed -e 's,-O.,,'`"
+done
+export CFLAGS="${_stripped_flags} -O3"
+export CPPFLAGS="$CPPFLAGS -DDIRECTFB_VERSION_VENDOR=\\\"%{_stmversion}\\\""
+# add -g for debug package
+export CFLAGS="${CFLAGS} -g3"
+export CXXFLAGS="${CFLAGS} -g3"
+
+%target_do_configure \
+	--enable-static \
+	\
+	--disable-devmem \
+	--disable-sdl \
+	%{_stmfbdev} \
+	\
+	--enable-voodoo \
+	\
+	--with-gfxdrivers=none \
+	--enable-mme=%{_mme_enabled} \
+	--enable-multicore=%{_multicore_enabled} \
+	--with-message-size=65536 \
+	\
+	%{_dfb_multiapp} \
+	\
+	--with-tests
+%make
+
+
+%install
+%target_setup
+%target_makeinstall_destdir
+# make sure the graphics drivers directory exists as we don't (necessarily)
+# build graphics drivers. This will ensure a defined owner of this directory
+# (the DirectFB RPMs), also ensuring that the directory is removed during
+# uninstall of the DFB RPMs.
+mkdir -p %{buildroot}%{_stm_cross_target_dir}%{_stm_target_lib_dir}/%{_fullname}/gfxdrivers
+
+# build directfb-config for host environment
+# we assume that _stm_target_lib_dir is in the default search path of both the cross
+# and target dynamic linkers, to suppres spurious -L/usr/lib in *.la files
+mkdir -p %{buildroot}%{_stm_cross_bin_dir}
+sed -e "s,libs=-L%{_stm_target_lib_dir},libs=,g" \
+    -e "s,%{_stm_target_prefix},%{_stm_cross_target_dir}%{_stm_target_prefix},g" \
+    < %{buildroot}%{_stm_cross_target_dir}%{_stm_target_bin_dir}/directfb-config \
+    > %{buildroot}%{_stm_cross_bin_dir}/%{_stm_target_toolprefix}directfb-config
+chmod +x %{buildroot}%{_stm_cross_bin_dir}/%{_stm_target_toolprefix}directfb-config
+
+%target_install_fixup
+# Process target .pc files so they are useful in a cross environment
+for f in %{buildroot}%{_stm_cross_target_dir}%{_stm_target_pkgconfig_dir}/*.pc ; do
+  sed -i '/^prefix=/!s,%{_stm_target_prefix},${prefix},' $f
+done
+
+
+cd ..
+cp COPYING LICENSE
+
+
+# pull debug from elf files out into separate files, to be packaged in the -dbg package
+: > debugfiles.list
+files=`find %{buildroot}%{_stm_cross_target_dir}%{_stm_target_bin_dir} -type f` || true
+files="${files} `find %{buildroot}%{_stm_cross_target_dir}%{_stm_target_lib_dir} -name '*so*' -type f | egrep -v '\.debug$' | egrep '(\.so$|\.so\.)'`"
+for elffile in ${files} ; do
+  sofile=`readelf -h ${elffile} 2> /dev/null | grep "DYN"` || true
+  execfile=`readelf -h ${elffile} 2> /dev/null | grep "EXEC"` || true
+  if [ "X${sofile}" != "X" -o "X${execfile}" != "X" ] ; then
+    debugfile=%{_stm_cross_target_dir}%{_stm_target_debug_dir}`echo ${elffile} | sed -e s,%{buildroot}%{_stm_cross_target_dir},,`.debug
+    mkdir -p `dirname %{buildroot}${debugfile}`
+    %{_stm_target_toolprefix}objcopy --only-keep-debug ${elffile} %{buildroot}${debugfile}
+    %{_stm_target_toolprefix}objcopy --strip-debug ${elffile}
+    %{_stm_target_toolprefix}objcopy --add-gnu-debuglink=%{buildroot}${debugfile} ${elffile}
+    echo ${debugfile} >> debugfiles.list
+  fi
+done
+
+
+%clean
+rm -rf %{buildroot}
+
+
+%files -n %{_pkgname}@BUILD_CONFIG@
+%defattr(-,root,root)
+%{_stm_cross_target_dir}%{_stm_target_lib_dir}/lib*.so.*
+%dir %{_stm_cross_target_dir}%{_stm_target_lib_dir}/%{_fullname}
+%dir %{_stm_cross_target_dir}%{_stm_target_lib_dir}/%{_fullname}/*
+%{_stm_cross_target_dir}%{_stm_target_lib_dir}/%{_fullname}/*/lib*.so
+%dir %{_stm_cross_target_dir}%{_stm_target_lib_dir}/%{_fullname}/interfaces/*
+%{_stm_cross_target_dir}%{_stm_target_lib_dir}/%{_fullname}/interfaces/*/lib*.so
+%dir %{_stm_cross_target_dir}%{_stm_target_data_dir}/directfb-%{_dfbversion}
+%{_stm_cross_target_dir}%{_stm_target_data_dir}/directfb-%{_dfbversion}/cursor.dat
+%doc AUTHORS ChangeLog LICENSE NEWS README TODO
+
+%files -n %{_pkgname}@BUILD_CONFIG@-dev
+%defattr(-,root,root)
+%{_stm_cross_target_dir}%{_stm_target_bin_dir}/directfb-config
+%{_stm_cross_target_dir}%{_stm_target_bin_dir}/directfb-csource
+%{_stm_cross_target_dir}%{_stm_target_include_dir}/directfb
+%{_stm_cross_target_dir}%{_stm_target_include_dir}/directfb-internal
+%{_stm_cross_target_dir}%{_stm_target_lib_dir}/lib*.so
+%{_stm_cross_target_dir}%{_stm_target_lib_dir}/lib*.a
+%{_stm_cross_target_dir}%{_stm_target_lib_dir}/lib*.la
+%{_stm_cross_target_dir}%{_stm_target_lib_dir}/%{_fullname}/*/lib*.a
+%{_stm_cross_target_dir}%{_stm_target_lib_dir}/%{_fullname}/*/lib*.la
+%{_stm_cross_target_dir}%{_stm_target_lib_dir}/%{_fullname}/*/lib*.o
+%{_stm_cross_target_dir}%{_stm_target_lib_dir}/%{_fullname}/interfaces/*/lib*.a
+%{_stm_cross_target_dir}%{_stm_target_lib_dir}/%{_fullname}/interfaces/*/lib*.la
+%{_stm_cross_target_dir}%{_stm_target_lib_dir}/%{_fullname}/interfaces/*/lib*.o
+%{_stm_cross_target_dir}%{_stm_target_pkgconfig_dir}/*.pc
+%{_stm_cross_target_dir}%{_stm_target_data_dir}/man/man1/directfb-csource*1*
+%{_stm_cross_bin_dir}/*
+%doc AUTHORS ChangeLog LICENSE NEWS README TODO
+
+%files -n %{_pkgname}@BUILD_CONFIG@-dbg -f debugfiles.list
+%defattr(-,root,root)
+%doc AUTHORS ChangeLog LICENSE NEWS README TODO
+
+%files -n %{_pkgname}-bin
+%defattr(-,root,root)
+%{_stm_cross_target_dir}%{_stm_target_bin_dir}/dfbdump
+%{_stm_cross_target_dir}%{_stm_target_bin_dir}/dfbfx
+%{_stm_cross_target_dir}%{_stm_target_bin_dir}/dfbg
+%{_stm_cross_target_dir}%{_stm_target_bin_dir}/dfbinfo
+%{_stm_cross_target_dir}%{_stm_target_bin_dir}/dfbinput
+%{_stm_cross_target_dir}%{_stm_target_bin_dir}/dfbinspector
+%{_stm_cross_target_dir}%{_stm_target_bin_dir}/dfblayer
+%{_stm_cross_target_dir}%{_stm_target_bin_dir}/dfbmaster
+%{_stm_cross_target_dir}%{_stm_target_bin_dir}/dfbpenmount
+%{_stm_cross_target_dir}%{_stm_target_bin_dir}/dfbproxy
+%{_stm_cross_target_dir}%{_stm_target_bin_dir}/dfbscreen
+%{_stm_cross_target_dir}%{_stm_target_bin_dir}/dfbdumpinput
+%{_stm_cross_target_dir}%{_stm_target_bin_dir}/mkdfiff
+%{_stm_cross_target_dir}%{_stm_target_bin_dir}/mkdgiff
+%{_stm_cross_target_dir}%{_stm_target_bin_dir}/mkdgifft
+%{_stm_cross_target_dir}%{_stm_target_bin_dir}/voodooplay
+%{_stm_cross_target_dir}%{_stm_target_bin_dir}/voodooplay_client
+%{_stm_cross_target_dir}%{_stm_target_bin_dir}/voodooplay_server
+%{_stm_cross_target_dir}%{_stm_target_data_dir}/man/man1/dfbg*1*
+%{_stm_cross_target_dir}%{_stm_target_data_dir}/man/man5/directfbrc*5*
+%doc AUTHORS ChangeLog LICENSE NEWS README TODO
+
+%files -n %{_pkgname}-tests
+%defattr(-,root,root)
+%{_stm_cross_target_dir}%{_stm_target_bin_dir}/coretest_*
+%{_stm_cross_target_dir}%{_stm_target_bin_dir}/dfbtest_*
+%{_stm_cross_target_dir}%{_stm_target_bin_dir}/direct_*
+%{_stm_cross_target_dir}%{_stm_target_bin_dir}/fusion_*
+%{_stm_cross_target_dir}%{_stm_target_bin_dir}/voodoo_bench*
+%dir %{_stm_cross_target_dir}%{_stm_target_data_dir}/directfb-%{_dfbversion}
+%{_stm_cross_target_dir}%{_stm_target_data_dir}/directfb-%{_dfbversion}/decker.dgiff
+%doc AUTHORS ChangeLog LICENSE NEWS README TODO
+
+
+%changelog
+* Fri Aug 30 2013 Ilyes Gouta <ilyes.gouta@st.com> - 1:1.6.3+STM2013.08.30-1
+- [Bugzilla: 29557] colour fill to NV12 and NV21 broken
+- [Bugzilla: 29559] IDirectFBSurface::Dump() for DSPF_YUV444P incorrect
+- [Bugzilla: 29496] IDirectFBSurface::Dump() for DSPF_(A)VYU incorrect
+- [Bugzilla: 29512] IDirectFBSurface::Dump() for DSPF_YV16 incorrect
+- [Bugzilla: 29985] DSPF_NV12MB and DSPF_NV16MB aren't marked as YCbCr
+- [Bugzilla: 35133] WebP imageprovider crashes when doing multiple RenderTo()
+- inputdrivers: set DICAPS_KEYS only for input devices with keys
+- imageprovider: add a new TIFF image provider
+
+* Wed Jun 12 2013 André Draszik <andre.draszik@st.com> - 1:1.6.3+STM2013.04.10-2
+- [Spec; Bugzilla: 31952] make sure we create and own the gfxdrivers directory
+
+* Wed Apr 10 2013 Ilyes Gouta <ilyes.gouta@st.com> - 1:1.6.3+STM2013.04.10-1
+- [Bugzilla: 29280] idirectfb: allow creating NV1xMB surfaces with
+  DSCAPS_PREMULTIPLIED set
+- imageprovider: add WebP imageprovider
+- hwjpeg: early validate the JPEG buffer with the h/w decoder
+- hwjpeg: don't downsample NV24 to a temporary NV16 buffer
+- [Bugzilla: 27188] fusion: ref: immediately execute FusionCall in
+  fusion_ref_down()
+- [Bugzilla: 16971] Revert
+  "direct: replace C++ style comments by standard C comments"
+- [Bugzilla: 27699] interfaces: gif: fix up DVPLAY_PACED decoding mode
+- [Bugzilla: 27886] idirectfb: don't clear config.surface_caps if already set
+
+* Mon Feb 25 2013 Francesco Virlinzi <francesco.virlinzi@st.com> 2
+- [Spec; Bugzilla: 23138] Make compatible with rpm-build 4.10.
+
+* Fri Feb 01 2013 Ilyes Gouta <ilyes.gouta@st.com> - 1:1.6.3+STM2013.02.01-1
+- [Update: 1.6.3] update to 1.6.3 release
+- [Bugzilla: 25124] direct: reimplement direct_waitqueue_wait_timeout() to use
+  clock_gettime()
+- interfaces: jpeg: new hwjpeg-v4l2 image provider
+- directfb: new DSPF_NV24 pixel format
+- directfb: new DSPF_BYTE pixel format
+
+* Fri Sep 21 2012 Ilyes Gouta <ilyes.gouta@st.com> - 1:1.6.1+STM2012.09.21-1
+- [Bugzilla: 21232] DirectFB-1.6: Grayscale JPEG decoding is broken
+- [Bugzilla: 21233] DirectFB-1.6: LUT4 (or LUT2) animated gif doesn't
+		    get rendered properly
+- [Bugzilla: 16971] DirectFB-1.6: replace C++ style comments by
+		    standard C comments
+- [Bugzilla: 18969] Bad interaction between libmme.so and DirectFB
+
+* Wed Aug 01 2012 Ilyes Gouta <ilyes.gouta@st.com> - 1:1.6.1+STM2012.07.25-1
+- [Spec] configure with a 65356 bytes per Fusion message buffer (IPC)
+- [Spec] disable parallel build process (fluxcomp/gcc concurrency)
+
+* Wed Jul 25 2012 André Draszik <andre.draszik@st.com> - 1:1.6.1+STM2012.07.25-1
+- [Update: 1.6.1] update to 1.6.1 release
+- [Spec] change contents of SRPM to contain pristine tarball + STM patch
+- [Spec] add BuildRequires for fluxcomp
+- [Spec] enable voodoo during configure
+- [Spec] package binaries in new -bin package and move man pages here
+- [Spec] package tests in new -tests package
+- [Spec] always fully disable gfxdrivers, stgfx(1) is completely gone,
+  and stgfx2 is now hosted elsewhere
+- [Spec] build armv7 version with multicore support (SMP)
+- [Spec] always fully disable gfxdrivers, stgfx(1) is completely gone,
+  and stgfx2 is now hosted elsewhere
+- [Spec] forcefully enable stmfbdev on SH4 and ARM
+- [Bugzilla: 18771] stmfbdev: don't error out if display driver announced no
+  supported modes
+- stmfbdev: fix to actually allow configuring DVO, allow selection
+  between RGB 24bit and YCbCr 444 16bit
+- stmfbdev: add support for 960x540 and 1440x540 NTG5 modes
+- stmfbdev: for HDMI outputs, be more explicit about YCbCr 444 / 422 / RGB
+- move all of the stmfbdev layer and screen handling out of stgfx2, so that
+  stmfbdev can be used independently of any hardware acceleration
+- [Bugzilla: 12425] JPEG decode segfaults for iDCT downscaled grayscale images
+- [Bugzilla: 16039] jpeg software decode error path broken in case h/w decode
+  failed earlier
+- [Bugzilla: 16040] jpeg: optimise grayscale JPEG decoding
+- jpeg: use JDCT_FASTEST instead of JDCT_IFAST
+- image providers: change the backgrounded image provider API to use the
+  DIRenderFlags that upstream added recently, instead of our
+  DFBImageProviderFlags
+- rle: remove image provider
+- add DSPF_LUT4 implementation
+- add DSPF_BGR24 implementation
+- add DSPF_NV12MB and DSPF_NV16MB and (incomplete) implementation
+- directfb: extend IDirectFBInputDevice to recognize sensors-based input devices
+
+* Fri Jun 08 2012 Ilyes Gouta <ilyes.gouta@st.com> 1:1.4.12+STM2011.09.27-3
+- [Bugzilla: 17925] jpeg: fix stack corruption when going through hardware
+  assisted decode
+- [Bugzilla: 17956] fix SIGSEGV when downscaling via iDCT in the JPEG raw
+  decode path
+- [Bugzilla: 17958] image provider: have to wait for the hardware in certain
+  cases
+- [Bugzilla: 18969] prefer runtime dynamic linking for certain image providers
+- [Delete patch: DirectFB-1.4.12-directfb-improved-idirectfbvideoprovider_gif.patch,
+   DirectFB-1.4.12-directfb-DVPLAY_PACED-declaration.patch,
+   DirectFB-1.4.12-directfb-palette_pass_data-core_instead_of_NULL.patch]
+  not needed anymore
+
+* Thu Feb 16 2012 Mohamed Hafsia <mohamed.hafsia@st.com> 1:1.4.12+STM2011.09.27-2
+- [Bugzilla: 16564] Rework IDirectFBVideoProvider_GIF to implement a paced decode
+- [Add patch: DirectFB-1.4.12-directfb-improved-idirectfbvideoprovider_gif.patch,
+   DirectFB-1.4.12-directfb-DVPLAY_PACED-declaration.patch
+   DirectFB-1.4.12-directfb-palette_pass_data-core_instead_of_NULL.patch]
+  Improved DirectFB IDirectFBVideoProvider_gif
+
+* Tue Sep 27 2011 André Draszik <andre.draszik@st.com> - 1:1.4.12+STM2011.09.27-1
+- [Bugzilla: 14222] subpixel based backwards blits don't look perfect
+- [Delete patch:
+   DirectFB-1.4.12+STM2011.05.05-bdisp2_accel-fix-directions-for-backwards-copy.patch,
+   DirectFB-1.4.12+STM2011.05.05-bdisp_accel-hot-fix-for-backwards-blits-than-don-t-r.patch]
+  not needed anymore
+
+* Fri Sep 16 2011 André Draszik <andre.draszik@st.com> - 1:1.4.12+STM2011.05.05-3
+- [Bugzilla: 14177; Add patch:
+   DirectFB-1.4.12+STM2011.05.05-bdisp2_accel-fix-directions-for-backwards-copy.patch,
+   DirectFB-1.4.12+STM2011.05.05-bdisp_accel-hot-fix-for-backwards-blits-than-don-t-r.patch]
+  hotfix for STLinux bugzilla 14177
+
+* Wed Aug 31 2011 Giuseppe Condorelli <giuseppe.condorelli@st.com> 1:1.4.12+STM2011.05.05-2
+- [Spec] Add libpng BuildRequires, also rebuilding package against updated libpng
+
+* Thu May 05 2011 André Draszik <andre.draszik@st.com> 1:1.4.12+STM2011.05.05-1
+- [Bugzilla: 11922] really fix raw jpeg decoding for libjpeg >= v7
+- [Bugzilla: 10850, 12050] clipping in "fb_gfxcard_drawstring" not checked correctly
+- fix small memory leak in DirectGetInterface()
+
+* Thu Apr 14 2011 André Draszik <andre.draszik@st.com> 1:1.4.12+STM2011.04.14-1
+- [Update: 1.4.12+STM2011.04.14] update to DirectFB 1.4.12 and latest STM version
+- [Bugzilla: 11689] inputdrivers: support lirc>=0.8.6
+- [Bugzilla: 11884] build: libidirectfbfont_ft2 must be linked against libm
+- [Delete patch: DirectFB-1.4.11-non-mme-hotfix.patch] not needed anymore
+- [Bugzilla: 11922] fix raw jpeg decoding for libjpeg >= v7
+
+* Tue Apr 05 2011 André Draszik <andre.draszik@st.com> 1:1.4.11+STM2010.12.15-4
+- [Bugzilla: 11825; Spec] add debug info package
+- [Spec] update summary of -dev package
+
+* Thu Jan 06 2011 André Draszik <andre.draszik@st.com> 1:1.4.11+STM2010.12.15-3
+- [Add patch: DirectFB-1.4.11-non-mme-hotfix.patch] hotfix for builds with
+  disabled MME
+- Breaks binary compatibility with Mali drivers (Mali drivers need to be rebuilt)
+
+* Wed Jan 05 2011 André Draszik <andre.draszik@st.com> 1:1.4.11+STM2010.12.15-2
+- [Spec] disable MME use for image decoding for non sh4 builds during configure
+  to fix build failures on ARM
+
+* Wed Dec 15 2010 André Draszik <andre.draszik@st.com> 1:1.4.11+STM2010.12.15-1
+- [Update: 1.4.11+STM2010.12.15] new release based on 1.4.11 + git 811a8c0
+- [Bugzilla: 10320] don't set any output resolution on startup
+- [Bugzilla: 10344] take DirectFB's init-layer=<x> option into account
+- [Bugzilla: 10769] want SOURCE2 support in DirectFB BDisp driver
+- image providers: accelerate JPEG and PNG using MME
+- fixed point fixes
+- [Delete patch: DirectFB-1.4.3-0001-stgfx2-version-bump.patch] integrated upstream
+- [Spec] Bump BuildRequires for linux-fusion to 8.2.0
+- [Spec] drop setting of LIBPNG_CONFIG - it's not needed anymore
+
+* Thu Oct 21 2010 André Draszik <andre.draszik@st.com> 1:1.4.3+STM2010.10.15-1
+- [Add patch: DirectFB-1.4.3-0001-stgfx2-version-bump.patch] bump stgfx2 version
+  to 0.8
+
+* Fri Oct 15 2010 André Draszik <andre.draszik@st.com> 1:1.4.3+STM2010.10.15-1
+- [Update: 1.4.3+STM2010.10.15] new release
+- [Bugzilla: 10253] jpeg: fix raw decode error paths
+- [Bugzilla: 10242] stgfx2: DSBLIT_XOR does not work
+- [Bugzilla: 10254] stgfx2: incorrect use of line filters for 'slim' stretch blits
+- [Bugzilla: 10228] stgfx2: disable use of hw based clipping
+- [Bugzilla: 10226] stgfx2: full DSBLIT_BLEND_COLORALPHA support
+- [Bugzilla: 10227] stgfx2: fix some 'unusual' PorterDuff blends
+- [Bugzilaa: 10247] stgfx2: DSPD_CLEAR crashes the BDisp in 422r modes
+- stgfx2 cleanup: blit state rewrite, compiler warnings, debug for DirectFB 1.4.3,
+  fixes for RGB32
+- [Spec] some changes so as to make future updates easier
+
+* Thu Aug 26 2010 André Draszik <andre.draszik@st.com> 1:1.4.3+STM2010.06.22-2
+- [Spec] fix build requires to reference correct stmfb headers package version
+  on sh4
+
+* Wed Aug 25 2010 André Draszik <andre.draszik@st.com> 1:1.4.3+STM2010.06.22-1
+- [Update: 1.4.3+STM2010.06.22] new release
+- [Delete patch: DirectFB-1.4.3+STM2010.06.16-stmfb0029.patch] we have an up to
+  date stmfb in STLinux 2.4 now, so this patch is a) harmful for STi7108 support
+  and b) not needed anymore anyway
+- stgfx2: fix clip validation
+
+* Wed Jun 16 2010 André Draszik <andre.draszik@st.com> 1:1.4.3+STM2010.06.16-1
+- [Update: 1.4.3.STM2010.06.16] new release
+- [Delete patch: DirectFB-1.4.3.STM2010.03.10-libjpeg7.patch,
+   DirectFB-1.4.3.STM2010.03.10-libjpeg7_2.patch]
+  jpeg problems correctly fixed upstream
+- [Delete patch: DirectFB-1.4-Revert-versioned-DirectFB-libraries.patch]
+  not needed anymore
+- [Add patch: DirectFB-1.4.3+STM2010.06.16-stmfb0029.patch] needed now
+
+* Tue Apr 27 2010 André Draszik <andre.draszik@st.com> 1.4.3.STM2010.03.10-4
+- [Bugzilla: 8912; Add patch: DirectFB-1.4.3.STM2010.03.10-libjpeg7.patch,
+   DirectFB-1.4.3.STM2010.03.10-libjpeg7_2.patch]
+  fix libjpeg usage for libjpeg versions >= 7
+- [Spec] simplify file ownership list
+- [Spec] bump version to rebuild against updated libjpeg
+
+* Tue Apr 13 2010 André Draszik <andre.draszik@st.com> 1.4.3.STM2010.03.10-3
+- [Spec] fix source package name
+
+* Wed Mar 31 2010 Stuart Menefy <stuart.menefy@st.com> 2
+- [Spec] Bump the release number for 2.4 product release.
+- [Spec] Update BuildRoot to use %%(mktemp ...) to guarantee a unique name.
+
+* Wed Mar 09 2010 André Draszik <andre.draszik@st.com> 1.4.3.STM2010.03.10-1
+- [Spec] add some more files to main package's documentation
+- merge in latest updates from DirectFB/master branch
+- input: handle button devices with just up/down keys as keyboards, too
+- stgfx2: fix shutdown error path
+- stgfx2: big cleanup regarding the destination address
+- stgfx2: slightly smaller cleanup regarding the s3 address & type
+- stgfx2: cleanup regarding s2 address & type
+- stgfx2: huge cleanup regarding drawing state
+- the above four changes yield in about 10% less CPU usage on fills!
+- [Bugzilla: 8256] XOR doesn't work as expected
+- [Bugzilla: 8406] prevent BDisp crash when doing YCbCr422R fast blit
+- [Bugzilla: 8366] desaturation of YCbCr surfaces
+- stgfx2: back to bdisp_aq_VideoYCbCr601_2_RGB matrix for YCbCr->RGB conversions
+- stgfx2: allow 'other' accelerators to access our surface pools
+- stgfx2: RGB32 updates
+
+* Fri Feb 05 2010 André Draszik <andre.draszik@st.com> 1.4.3.STM2010.02.08-1
+- [Bugzilla: 8193] do necessary changes (pollvsync_after)
+- [Bugzilla: 7360, 8077] subpixel vertical filter setup has been
+  greatly simplified and corrected
+
+* Fri Feb 05 2010 André Draszik <andre.draszik@st.com> 1.4.3.STM2010.02.05-1
+- stgfx stgfx2: fix shutdown when not running in stmfbdev system
+- linux_input: fix compilation if stmfbdev is disabled
+
+* Sun Jan 31 2010 André Draszik <andre.draszik@st.com> 1.4.3.STM2010.01.31-1
+- merge in latest updates from DirectFB/master branch
+- stmfbdev: address compiler warnings in non debug builds
+- stmfbdev: fix crash in shutdown
+- stmfbdev: optimize ioctl handling
+- stmfbdev: don't instanciate screens, layers & surface pools anymore
+- stgfx/stgfx2: move instanciation of the above here, this gets us rid of more of DirectFB's startup warnings
+
+* Fri Jan 29 2010 André Draszik <andre.draszik@st.com> 1.4.3.STM2010.01.29-1
+- [Bugzilla: 7995] new system: 'stmfbdev' for many new features reg. screen control
+- stgfx2:
+  + some fixes for blit and fill if destination is YUV
+  + WA for https://bugzilla.stlinux.com/show_bug.cgi?id=7084
+  + update alignment restrictions for STi7108
+  + stgfx surface pools: prevent confusing startup message
+- stgfx:
+  + update alignment restrictions for STi7108
+  + stgfx surface pools: prevent confusing startup message
+- misc:
+  + dfbscreen: little fixes
+  + generic: LUT8 is not a YUV format
+  + screen: NTSC and PAL60 standards are defined as 59.94Hz not 60Hz
+  + IDirectFBScreen: add IDirectFBScreen::GetVSyncCount()
+  + directfb.h: add a DVO 656 'connector'
+  + dfblayer: allow to set layer position and size using command line
+  + dfbinspector: add DSPF_AVYU and DSPF_VYU pixelformats
+- [Delete patch: DirectFB-1.4.3.STM2009.12.11-CLUT8_fix.patch] integrated upstream
+
+* Fri Jan 29 2010 André Draszik <andre.draszik@st.com> 1.4.3.STM2009.12.11-4
+- [Add patch: DirectFB-1.4.3.STM2009.12.11-CLUT8_fix.patch] fix CLUT8 issue in
+  software renderer
+
+* Mon Jan 11 2010 André Draszik <andre.draszik@st.com> 1.4.3.STM2009.12.11-3
+- [Spec] unify multi app and single app spec files
+
+* Wed Dec 16 2009 André Draszik <andre.draszik@st.com> 1.4.3.STM2009.12.11-2
+- [Add patch: DirectFB-1.4.3.STM2009.12.11-autoconf259.patch] so as to enable
+  successful build on arm with old autotools in STLinux-2.3
+
+* Fri Dec 11 2009 André Draszik <andre.draszik@st.com> 1.4.3.STM2009.12.11-1
+- [update: 2009-12.11] update to DirectFB 1.4.3
+- misc: use pkgconfig to detect X11
+- misc: surface: replace GetFramebufferOffset() with GetPhysicalAddress()
+- stgfx2: pick up all updates from 1.0.1 branch
+- stgfx2: release surface pools on shutdown
+- [Bugzilla: 7776] stgfx2: cleanup draw/blitting wrt flags
+- stgfx: release surface pools on shutdown
+- [Bugzilla: 7570] jpeg: implement decimated decode for software JPEG decoder
+- [Bugzilla: 7636] jpeg: implement raw libjpeg decode for possible HW acceleration (using stgfx2)
+
+* Fri Aug 21 2009 André Draszik <andre.draszik@st.com> 1.4.1.STM2009.08.21-1
+- [update: 2009-08-21]
+  allow source widths and heights < 1.0 (but > 0) in BatchStretchBlit()
+
+* Tue Aug 18 2009 André Draszik <andre.draszik@st.com> 1.4.1.STM2009.08.18-1
+- [update: 2009-08-18]
+
+* Tue Jul 29 2009 André Draszik <andre.draszik@st.com> 1
+- [update: 1.4.1] new upstream version with all the STM patches

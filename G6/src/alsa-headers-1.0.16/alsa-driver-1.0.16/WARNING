@@ -1,0 +1,5 @@
+
+WARNING!!! The mixer channels for the ALSA driver are muted by default!!!
+**************************************************************************
+You would use some ALSA or OSS mixer to set the appropriate volume.
+

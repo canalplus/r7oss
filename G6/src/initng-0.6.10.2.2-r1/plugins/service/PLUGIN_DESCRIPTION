@@ -1,0 +1,18 @@
+          name : service
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : 
+      commands : 
+       options : start_timeout, stop_timeout, never_kill, start_fail_ok, stop_fail_ok
+ service_types : service
+ process_types : start, stop
+        states : SERVICE_START_MARKED, SERVICE_STOP_MARKED, SERVICE_DONE, SERVICE_WAITING_FOR_STOP_DEP,
+                 SERVICE_START_DEPS_MET, SERVICE_STOP_DEPS_MET, SERVICE_STOPPED, SERVICE_START_RUN
+		 SERVICE_STOP_RUN, SERVICE_START_DEPS_FAILED, SERVICE_STOP_DEPS_FAILED,
+		 SERVICE_FAIL_STARTING, SERVICE_FAIL_STOPPING, SERVICE_START_FAILED_TIMEOUT,
+		 SERVICE_STOP_FAILED_TIMEOUT, SERVICE_UP_CHECK_FAILED
+   description : A service means a object with an start and optionally an stop
+                 command.  Unlike a daemon, which executes and continues to
+                 run, a service executes, performs an action, then terminates.
+                 A successful service will be given state UP.  If a stop
+                 command/script is specified, it will be used to terminate the
+                 service and state DOWN will be set.

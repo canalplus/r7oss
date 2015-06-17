@@ -1,0 +1,266 @@
+From 3f35f0e7efa410b7a1546972099cf5e6f6bb483a Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:19:59 +0100
+Subject: [PATCH 15/36] patches/optimized-find-startcode
+
+---
+ player/collator/collator_pes.cpp   |   95 +++++++++++++++++++++++++++++++++++-
+ player/collator2/collator2_pes.cpp |   94 +++++++++++++++++++++++++++++++++++
+ 2 files changed, 187 insertions(+), 2 deletions(-)
+
+diff --git a/player/collator/collator_pes.cpp b/player/collator/collator_pes.cpp
+index b3cd554..d677d21 100644
+--- a/player/collator/collator_pes.cpp
++++ b/player/collator/collator_pes.cpp
+@@ -189,6 +189,72 @@ CollatorStatus_t        Status;
+     return Status;
+ }
+ 
++static inline
++unsigned char *FindStartCode(const unsigned char *d, int len)
++{
++	union {
++		unsigned int n;
++		const unsigned char *c;
++		int *i;
++	} p, end, alend;
++
++	int n;
++
++	p.c = d;
++	end.c = p.c + (len-3);
++	alend.n = end.n & ~3;
++
++	/* check any unaligned values at the start of the block */
++	while (p.n & 3 && p.n < end.n) {
++		if (0 == p.c[0] && 0 == p.c[1] && 1 == p.c[2]) {
++			return const_cast<unsigned char *>(p.c);
++		}
++
++		p.c++;
++	}
++
++	while (p.n < end.n) {
++		/* perform an accelerated scan until we find what we are
++		 * looking for or we are about to run off the end
++		 */
++#ifdef __SH4__
++		asm (
++		       "mov.l   @%[p]+, %[n]\n"
++		"1:\n"
++		"       cmp/str %[n], %[zero]\n"
++		"       bt/s    2f\n"
++		"       cmp/hi  %[p], %[alend]\n"
++		"       bt/s    1b\n"
++		"       mov.l   @%[p]+, %[n]\n"
++		"2:"
++			: [p] "+r" (p.n), [n] "=&r" (n)
++			: [alend] "r" (alend.n), [zero] "r" (0));
++
++		p.i--;
++#else
++		while (p.n < alend.n) {
++			n = *p.i++;
++			if ((n - 0x01010101) & ~n & 0x80808080) {
++				p.i--;
++				break;
++			}
++		}
++#endif
++
++		/* we have (up to) four possible candidates to be
++		 * tested before resuming an accelerated scan.
++		 */
++		for (int i=0; i<4 && p.n < end.n; i++) {
++			if (0 == p.c[0] && 0 == p.c[1] && 1 == p.c[2]) {
++				return const_cast<unsigned char *>(p.c);
++			}
++
++			p.c++;
++		}
++	}
++
++	return 0;
++}
+ 
+ // /////////////////////////////////////////////////////////////////////////
+ //
+@@ -201,7 +267,8 @@ CollatorStatus_t   Collator_Pes_c::FindNextStartCode(
+ unsigned int    i;
+ unsigned char   IgnoreLower;
+ unsigned char   IgnoreUpper;
+-
++unsigned char  *StartCode;
++int             DataLeft;
+     //
+     // If less than 4 bytes we do not bother
+     //
+@@ -216,6 +283,30 @@ unsigned char   IgnoreUpper;
+     IgnoreLower                 = Configuration.IgnoreCodesRangeStart;
+     IgnoreUpper                 = Configuration.IgnoreCodesRangeEnd;
+ 
++#if 1
++    StartCode = &RemainingData[0];
++    DataLeft  = RemainingLength;
++
++    do
++    {
++      unsigned char *NextCode = FindStartCode(StartCode, DataLeft);
++      unsigned int   Offset   = NextCode - RemainingData;
++
++      if (!NextCode)
++	return CollatorError;
++
++      if (!inrange(NextCode[3], IgnoreLower, IgnoreUpper))
++      {
++	*CodeOffset = Offset;
++	return CollatorNoError;
++      }
++
++      DataLeft  = ((int)RemainingLength) - (Offset + 1);
++      StartCode = &NextCode[1];
++
++    } while (DataLeft > 3);
++
++#else
+     //
+     // Check in body
+     //
+@@ -275,7 +366,7 @@ unsigned char   IgnoreUpper;
+ 	    }
+ 	}
+     }
+-
++#endif
+     //
+     // No matches
+     //
+diff --git a/player/collator2/collator2_pes.cpp b/player/collator2/collator2_pes.cpp
+index fa8129c..758b52c 100644
+--- a/player/collator2/collator2_pes.cpp
++++ b/player/collator2/collator2_pes.cpp
+@@ -169,6 +169,73 @@ CollatorStatus_t        Status;
+ }
+ 
+ 
++static inline
++unsigned char *FindStartCode(const unsigned char *d, int len)
++{
++	union {
++		unsigned int n;
++		const unsigned char *c;
++		int *i;
++	} p, end, alend;
++
++	int n;
++
++	p.c = d;
++	end.c = p.c + (len-3);
++	alend.n = end.n & ~3;
++
++	/* check any unaligned values at the start of the block */
++	while (p.n & 3 && p.n < end.n) {
++		if (0 == p.c[0] && 0 == p.c[1] && 1 == p.c[2]) {
++			return const_cast<unsigned char *>(p.c);
++		}
++
++		p.c++;
++	}
++
++	while (p.n < end.n) {
++		/* perform an accelerated scan until we find what we are
++		 * looking for or we are about to run off the end
++		 */
++#ifdef __SH4__
++		asm (
++		       "mov.l   @%[p]+, %[n]\n"
++		"1:\n"
++		"       cmp/str %[n], %[zero]\n"
++		"       bt/s    2f\n"
++		"       cmp/hi  %[p], %[alend]\n"
++		"       bt/s    1b\n"
++		"       mov.l   @%[p]+, %[n]\n"
++		"2:"
++			: [p] "+r" (p.n), [n] "=&r" (n)
++			: [alend] "r" (alend.n), [zero] "r" (0));
++
++		p.i--;
++#else
++		while (p.n < alend.n) {
++			n = *p.i++;
++			if ((n - 0x01010101) & ~n & 0x80808080) {
++				p.i--;
++				break;
++			}
++		}
++#endif
++
++		/* we have (up to) four possible candidates to be
++		 * tested before resuming an accelerated scan.
++		 */
++		for (int i=0; i<4 && p.n < end.n; i++) {
++			if (0 == p.c[0] && 0 == p.c[1] && 1 == p.c[2]) {
++				return const_cast<unsigned char *>(p.c);
++			}
++
++			p.c++;
++		}
++	}
++
++	return 0;
++}
++
+ // /////////////////////////////////////////////////////////////////////////
+ //
+ //      Protected - Find the next start code (apart from any one at offset 0)
+@@ -180,6 +247,8 @@ CollatorStatus_t   Collator2_Pes_c::FindNextStartCode(
+ unsigned int    i;
+ unsigned char   IgnoreLower;
+ unsigned char   IgnoreUpper;
++unsigned char  *StartCode;
++int             DataLeft;
+ 
+     //
+     // If less than 4 bytes we do not bother
+@@ -195,6 +264,30 @@ unsigned char   IgnoreUpper;
+     IgnoreLower                 = Configuration.IgnoreCodesRangeStart;
+     IgnoreUpper                 = Configuration.IgnoreCodesRangeEnd;
+ 
++#if 1
++    StartCode = &RemainingData[0];
++    DataLeft  = RemainingLength;
++
++    do
++    {
++      unsigned char *NextCode = FindStartCode(StartCode, DataLeft);
++      unsigned int   Offset   = NextCode - RemainingData;
++
++      if (!NextCode)
++	return CollatorError;
++
++      if (!inrange(NextCode[3], IgnoreLower, IgnoreUpper))
++      {
++	*CodeOffset = Offset;
++	return CollatorNoError;
++      }
++
++      DataLeft  = ((int)RemainingLength) - (Offset + 1);
++      StartCode = &NextCode[1];
++
++    } while (DataLeft > 3);
++
++#else
+     //
+     // Check in body
+     //
+@@ -255,6 +348,7 @@ unsigned char   IgnoreUpper;
+ 	}
+     }
+ 
++#endif
+     //
+     // No matches
+     //
+-- 
+1.7.9.5
+

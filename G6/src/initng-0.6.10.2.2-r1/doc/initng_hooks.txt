@@ -1,0 +1,273 @@
+
+This document specifys all hooks plugins can bind to.
+
+Copyright by author Jimmy Wennlund <jimmy.wennlund@gmail.com>
+
+Status Change Watch
+-------------------
+
+    List head       : g.ASTATUS_CHANGE
+    Function call   : int (*status_change) (active_db_h * service);
+    Description     : When a service changes the state, initng will call
+                      all hooks in ASTATUS_CHANGE with this service name.
+    Return value    : (bool) All status_change calls must return true, or next hook
+                      in line wont be called.
+    Caller location : initng_common.c initng_common_mark_service(service, state);
+
+Major state change watch
+------------------------
+    List head       : g.IS_CHANGE
+    Function call   : int (*status_change) (active_db_h * service);
+    Description     : This is like g.ASTATUS_CHANGE but only triggers on rought
+                      changes, like Stopped -> Starting or Startig -> UP,
+		      meens the IS_UP(), IS_DONW(), IS_STARTING() .. changes.
+    Return value    : (bool) All status_change calls must return true, or next hook
+                      in line wont be called.
+    Caller location : initng_common.c initng_common_mark_service(service, state);
+
+
+Parsers
+-------
+    List head       : g.PARSERS
+    Function call   : service_cache_h *(*parser) (const char *name);
+    Description     : When initng want to fetch some data for a service,
+                      it start calling the "parsers", if you got a parser
+		      add it to this hook-list, if the parser wont be able
+		      to fetch a service data, return NULL.
+    Return value    : If data for that service name is found, allocate an
+                      service_cache_h struct, fill it with data and return
+		      the pointer to it, if not found, return NULL.
+    Caller location : initng_common.c initng_common_parse_service(name)
+
+
+Additional Parse
+----------------
+    List head       : g.ADDITIONAL_PARSE
+    Function call   : int (*additional_parse) (service_cache_h * service);
+    Descriotion     : After a sucessfull parser by g.PARSERS initng tries
+                      the service_cache_h with all hooks in g.ADDITIONAL_PARSE
+		      It might wanna modify on an overlay, or add data.
+    Return value    : (bool) If FALSE the complete service_cache_h entry is
+                      discarded.
+    Caller location : initng_common.c initng_common_parse_service.c
+
+
+System State Watch
+------------------
+    List head       : g.SWATCHERS
+    Function call   : void (*swatcher) (h_sys_state state);
+    Description     : When the system state changes (g.sys_state),
+                      all hooks in this list will be called with the
+		      new sys_state set.
+    Return value    : The return is void.
+    Caller location : initng_plugin_callers.c initng_plugin_callers_load_module_system_changed(new_sys_state)
+
+FileDescriptor Watchers
+-----------------------
+    List Head       : g.FDWATCHERS
+    Function call   : void (*f_module_h->call_module) (f_module_h * module)
+    Description     : If you do an open() in a plugin, and want to get notified
+		      when a socket or pipe is ready for reading or writing,
+		      you can register a hook that will be called when this occurs.
+
+		      You don't add the function hook directly here, but create
+		      a static f_module_h struct where you fill in the function
+		      pointer, the fd, and the events you're interested in
+		      (FDW_READ, FDW_WRITE, FDW_ERROR, or some combination thereof),
+		      then add that struct.
+    Return value    : The return is void.
+    Caller location : initng_fd.c initng_plugin_fd_poll(timeout)
+
+
+Service Output Watchers
+-----------------------
+    List Head       : g.PIPEWATCHERS
+    Function call   : int (*pipewatcher) (active_db_h * service, process_h * process,
+                      char *buffer_pos);
+    Description     : When a service outputs to stdout or stderr the output is sent to
+                      initng, initng takes this output and fills the process output buffer.
+		      This hook is run everytime a service fills his buffer with some output.
+		      the call includes a pointer to the service outputing, the process
+		      that is bound to that service that did the output, and the buffer_pos
+		      that points to the point in process->buffer where the recent fresh
+		      newly outputed content is.
+    Return value    : (bool) If every hook in PIPEWATCHERS return FALSE, it meens that no one
+                      wanted the output, and initng will print the output to /dev/console
+		      (or alternative console set) to make sure that no service output ever
+		      gets lost, even if no plugin wants it.
+    Caller location : initng_fd.c initng_fd_plugin_readpipe(service, process, buffer_pos)
+
+
+Signal Wathers
+--------------
+    List Head       : g.SIGNAL
+    Function call   : void (*signal_hook) (int signal);
+    Description     : Some (not all) signal sent to initng (Signals like SIGTRAP, SIGHUP ..)
+                      generates this hooks to be called, with the signo in (int signal).
+		      Its up to the plugin maker to make sure you check with signal like
+		      if(signal!=SIGHUP) return; to make sure it is right signal it is handeling
+		      to.
+    Return value    : The return is void.
+    Caller location : initng_plugin_callers.c initng_plugin_callers_signal(signal)
+
+Main hook
+---------
+    List Head       : g.MAIN
+    Function call   : void (*main) (void);
+    Description     : This is the main loop hook, use carefully because it will be
+                      executed a lot when main loop is rolling, but almoast never when
+		      initng is waiting for input.
+    Return value    : The return is void.
+    Caller location : main.c main() <the main loop>
+    Todo            : Maby we shud add ability to return how maximum no of seconds it has
+                      to go before mainloop will loop again.
+
+
+
+After Fork
+----------
+    List Head       : g.A_FORK
+    Function call   : int (*af_launcher) (active_db_h * service, process_h * process);
+    Description     : Directly after initng forks, and is on its way to execve to launch
+                      a process. Be aware that this hook is run in the fork, and you can
+		      not change any pid 1 (initng) data.
+    Retrun value    : (bool) if any return false here, the fork will stop and exit with failure.
+    Caller location : initng_fork.c initng_fork()
+
+
+
+Handle Killed
+-------------
+    List Head       : g.HANDLE_KILLED
+    Function call   : int (*handle_killed) (active_db_h * service, process_h * process);
+    Description     : If a known process launched by initng returns, this hooks is called
+                      with a pointer to that service and process that process did belong to
+		      so the plugin may descide what to do next.
+    Return value    : (bool) If any hook returns TRUE, it meens that the kill is handled,
+                      make sure you did cleanup  { list_del(&process->list);
+		      initng_process_db_free(process); }
+		      to clean up if you return TRUE.
+    Caller location : initng_plugin_callers.c initng_plugin_callers_handle_killed(s, p)
+
+
+Compensate Time
+---------------
+    List Head       : g.COMPENSATE_TIME
+    Function call   : void (*compensate_time) (int seconds);
+    Description     : There is many timestamps in initng, if the system clock is changed
+                      during uptime, initng tries to recognise that, timechange, and to
+		      compenaste it. It here calls every hook that listen to tell them to
+		      move their time seconds forward + or backwards -
+    Retrun value    : The return is void.
+    Caller location : initng_plugin_callers.c initng_plugin_callers_compensate_time(t)
+
+
+Error Messages
+--------------
+    List Head       : g.ERR_MSG
+    Function call   : int (*err) (e_mt mt, const char *file, const char *func, int line,
+                      const char *format, va_list ap);
+    Description     : When a D_ W_ S_ or F_ macro is used, the message is sent to all
+                      hooks that are listening on g.ERR_MSG. If the hook know that the user
+		      got the message, it return TRUE. enum e_mt mt, specifies what message
+		      it is (D_, W_ ...)
+    Retrun value    : If no ERR_MSG plugin returns TRUE (User got the message) the message
+                      will be printed ugly to the /dev/console (or other console set).
+    Caller location : initng_error.c initng_error_print(mt, file, func, line, message)
+
+
+LAUNCH - Liftoff
+----------------
+    List Head       : g.LAUNCH
+    Function call   : int (*launch) (active_db_h * service, process_h * process);
+    Description     : The launcer is the code that actually launches the code.
+                      If initng wanna start samba->start it will call the list of
+		      launchers, and the one that contains data how to launch start
+		      will do it.
+    Return value    : (FAIL, FALSE, TRUE) If it returns FALSE meens that this launcher
+                      could not handle this launch, TRUE on sucess, and FAIL if there
+		      was support for this launcher, but something got wrong.
+    Caller location : initng_execute.c initng_execute_launch(service, ptype)
+
+
+Depends On
+----------
+    List Head       : g.DEP_ON
+    Function call   : int (*dep_on_check) (active_db_h * service, active_db_h * check);
+    Descriotion     : hook will tell initng if (service) service depends on (service) check.
+    Return value    : (bool) returns TRUE if service depends on check, othervise FALSE
+    Caller location : initng_depend.c initng_depend(service, check)
+
+
+Dump active_db
+--------------
+    List Head       : g.DUMP_ACTIVE_DB
+    Function call   : int (*dump_active_db) (void);
+    Descrition      : When initng is shuting down, to a reload (execve itself)
+                      it calls this hook to try and find some plugin to try
+		      and find some plugin willing to dump the active_db.
+
+		      Also called once when the system goes up to make a
+		      backup of the active_db in case InitNG segfaults.
+
+		      (Currently only used by the reload plugin, but it's
+		      theoretically possible to add further plugins)
+
+    Return value    : TRUE if the active_db was successfully dumped;
+		         further dump_active_db hooks are not called after this
+		      FALSE if the plugin doesn't want to handle this
+		      FAIL  if an error occured dumping the active_db;
+		            aborts the hot reload immediately
+    Caller location : initng_plugin_callers.c initng_plugin_callers_dump_active_db()
+
+Reload active_db
+----------------
+    List Head       : g.RELOAD_ACTIVE_DB
+    Function call   : int (*reload_active_db) (void);
+    Description     : If initng starts up in a hot-reload after a DUMP_ACTIVE_DB
+		      this hook is called to try and find some plugin willing
+		      and able to reload the active_db from a dump
+    Return value    : TRUE if the plugin successfully reloaded the active_db;
+		          further reload_active_db hooks are not called
+		      FALSE if the plugin didn't find an active_db dump created
+			  by itself; the next hook is called
+		      FAIL if the plugin found its active_db dump, but
+		          encountered an error loading it; further hooks are
+			  not called and InitNG immediately offers a sulogin
+    Caller location : initng_plugin_callers.c initng_plugin_callers_reload_active_db()
+
+
+Start deps met
+--------------
+    List Head       : g.START_DEP_MET
+    Description     : All these hooks need to return TRUE for the service could be
+                      able to start.
+    Function call   : int (*start_dep_met) (active_db_h * service);
+    Return value    : (bool) True - Success, False - Failure.
+    Caller location : initng_depend.c initng_depend_start_dep_met()
+
+
+Stop deps met
+-------------
+    List Head       : g.STOP_DEP_MET
+    Description     : All these hooks need to return TRUE for the service to be
+                      able to stop.
+    Function call   : int (*stop_dep_met) (active_db_h * service);
+    Return value    : (bool) True - Success, False - Failure.
+    Caller location : initng_depend.c initng_depend_stop_dep_met()
+
+
+
+Up deps met
+-----------
+    List Head       : g.UP_MET
+    Description     : All these hooks need to return TRUE for the service to be
+                      decleared up.
+    Function call   : int (*up_met) (active_db_h * service);
+    Return value    : (bool) True - Success, False - Failure.
+    Caller location : initng_depend.c initng_depend_up_check()
+
+
+
+
+This manual was written by Jimmy Wennlund <jimmy.wennlund@gmail.com>

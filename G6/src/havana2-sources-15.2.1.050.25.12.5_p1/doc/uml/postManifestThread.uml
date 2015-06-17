@@ -1,0 +1,88 @@
+@startuml
+
+title Post Manifest Thread
+
+hide footbox
+
+participant "ManifestedFrameRing" as manifestedFrameRing
+participant "PostManifest Thread" as postManifestThread
+participant "OutputTimer" as outputTimer
+participant "OutputCoordinator" as outputCoordinator
+
+loop
+    activate postManifestThread
+
+    manifestedFrameRing <- postManifestThread: Extract()
+    note left
+        Buffers that have been manifested are 
+        put in the ManifestedFrameRing by the
+        manifestation coordinator. They are
+        then extracted by the post-manifest thread
+    end note
+    activate manifestedFrameRing
+    manifestedFrameRing --> postManifestThread: Buffer
+    deactivate manifestedFrameRing
+
+    postManifestThread -> outputTimer: RecordActualFrameTiming(Buffer)
+    note left
+        RecordActualFrameTiming is called 
+        on output timer so that it performs 
+        all actions that use the actual timings
+        that have been attached to the buffer 
+        by the manifestors
+    end note
+    activate outputTimer
+
+    outputTimer -> outputCoordinator: CalculateOutputRateAdjustments()
+    note left
+        the actual timings are first injected into 
+        the output rate adjustment algorithm
+    end note
+    activate outputCoordinator
+    outputTimer <-- outputCoordinator: ClockAdjustments
+    deactivate outputCoordinator
+
+    outputTimer -> outputCoordinator: [streamType = Video] MonitorVsyncOffsets()
+    note left
+        For video streams, the actual timings are
+        also used to monitor the VSYNC offsets
+    end note
+    activate outputCoordinator
+    outputCoordinator -> outputCoordinator: [MonitorVsyncIntegrationDone]\nAdjustTimeMapping(VsyncOffset)
+    note left
+        when the vsync monitoring integration
+        is finished, the time mapping is adjusted
+        with the measured vsync offset
+    end note
+    activate outputCoordinator
+    deactivate outputCoordinator
+    outputTimer <-- outputCoordinator
+    deactivate outputCoordinator
+    
+    outputTimer -> outputTimer: PerformAVDSync()
+    note left
+        The actual timings are then injected 
+        in the percussive adjustment algorithm
+    end note
+    activate outputTimer
+    outputTimer -> outputTimer: [SyncErrorDetected] CorrectSynchronizationError()
+    note left
+        when a synchronization error is detected, 
+        CorrectSynchronizationError is called to take
+        actions to correct the error
+    end note
+    activate outputTimer
+    deactivate outputTimer
+    deactivate outputTimer
+
+
+
+    postManifestThread <-- outputTimer
+    deactivate outputTimer
+
+
+
+
+end
+    
+@enduml

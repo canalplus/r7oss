@@ -1,0 +1,59 @@
+
+Required properties:
+- compatible	: "st,comms-ssc-spi" or "st,comms-ssc4-spi"
+- reg			: Offset and length of the register set for the device
+- interrupts	: the interrupt specifier
+- clock-names	: Must contain "ssc".
+- clocks		: Must contain an entry for each name in clock-names. See the common
+  clock bindings.
+- A pinctrl state named "default" must be defined, using the bindings in
+  ../pinctrl/pinctrl-binding.txt
+
+Optional properties:
+- cs-gpios	: List of GPIO chip selects (see bindings/spi/spi-bus.txt)
+- A pinctrl state named "sleep" could be defined to set pins in sleep state
+  when driver enters in suspend.
+
+Child nodes represent devices on the SPI bus.  See (see
+bindings/spi/spi-bus.txt) for supported options.
+
+Example:
+
+	spi0: spi3{
+		compatible		= "st,spi",
+		reg			= <0xfed43000 0x110>;
+		interrupts		= <GIC_SPI 190 IRQ_TYPE_LEVEL_HIGH>;
+		clocks			= <&CLK_S_ICN_REG_0>;
+		clock-names		= "ssc";
+		status			= "disabled";
+		pinctrl-names		= "default";
+		pinctrl-0		= <&pinctrl_spi0_default>;
+		cs-gpios		= <&PIO13 3>, <&PIO13 4>;
+		#address-cells		= <1>;
+		#size-cells		= <0>;
+
+		m25p80@0 {
+			#address-cells = <1>;
+			#size-cells = <1>;
+			compatible = "n25q128";
+			spi-max-frequency = <1000000>;
+			reg = <0>;
+
+			partition@0 {
+				label = "Serial Flash 1";
+				reg = <0x00000000 0x00500000>;
+			};
+			partition@1{
+				label = "Serial Flash 2";
+				reg = <0x00500000 0x00b00000>;
+			};
+		 };
+
+		spidev@1 {
+			 compatible		= "spidev";
+			 spi-max-frequency	= <1000000>;
+			 reg			= <1>;
+		 };
+
+
+	};

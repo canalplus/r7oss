@@ -1,0 +1,24 @@
+This is a sample program to demonstrate the very basics of using the
+Multi Traget Trace API. The actual documentation for MTT is located
+int Documentation: mtt.txt
+
+build the module with the regular makefile:
+
+make -C <configured kdir> M=`pwd` modules modules_install
+
+build the app simply by calling `make`
+
+On the target, insert the test module with
+
+#>modprobe mttsample_mod
+
+Setup the trace system:
+
+#>mttcontrol --setup -m stm
+#>mttcontrol --start
+
+run the sample client application:
+
+#>mttsample
+
+you may view the traces using the Application Trace Logger.

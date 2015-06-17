@@ -1,0 +1,1216 @@
+* Thu Sep 25 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int155.11
+- [Bugzilla: 56307]: implementation of a Mixer Object enabling a premix of the broadcast inputs
+- [Bugzilla: 55554]: Enable PassThrough of PCM decoded output
+- [Bugzilla: 58205]: v4l2hwjpegdecoder: update unitary tests with the new debugfs paths
+- [Bugzilla: 57548]: kernel crashes when continually turning Close Caption ON/OFF during AVE playback
+- [Bugzilla: 56456]: [hardening] - stlinuxtv - Moving files from sysfs to debugfs
+- [Bugzilla: 58595]: [STLinuxTV]: pcr filter is not created if the decoders are not started
+
+* Thu Sep 11 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int155.10
+- [Bugzilla: 57706]: Android-KK: HDMI-RX] Cannot Read Complete EDID from hdmirx eprom
+- [Bugzilla: 58029]: PAT insertion occasionally stopped and never recovered at channel change
+- [Bugzilla: 55731]: HDMIRx: [Display]: stm_pixel_capture_get_status() returns status as STREAMING, even after stop
+- [Bugzilla: 55065]: Index packet count is restarted when we detach one of the PID filter
+
+* Wed Sep 03 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int155.9
+- [Bugzilla: 51874]: [STLinuxTV]: renaming of MEDIA_ENT_T_V4L2_SUBDEV_VIDEO_DECODER to MEDIA_ENT_T_DVB_SUBDEV_VIDEO_DECODER
+- [Bugzilla: 55352]: [HDMI-Rx Audio] Cannot enable Audio from HDMI-Rx and Media Player in parallel
+- [Bugzilla: 57252]: [HDMIRx] STLinuxTV need to propagate audio properties of the MultiChannel PCM
+- [Bugzilla: 57449]: HDMIRx: [STLinuxTV]: Implementation report update for new signal status and repeater mode
+- [Bugzilla: 57046]: stm-c8jpg: use debugfs instead of sysfs for performance counters
+
+* Fri Aug 29 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int155.8
+- [Bugzilla: 53079]: HDMIRx : [STLinuxTV]: Post SDK2-15 changes planned
+- [Bugzilla: 54478]: HDMIRx : repeater mode control set via "hdmirx-capture" application is ineffective
+- [Bugzilla: 57388]: B2112 compilation error on HeadedGW profile because stmfb.h file is missing
+
+* Tue Aug 26 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int155.7
+- [Reverted: 51978]: Reverted bugzilla 51978 due to regression in HDMIRX Use case
+
+* Thu Aug 21 2014 Satish Kumar <satish-hpc.kumar@st.com> - int155.6
+- [Bugzilla: 43948]: Create memsink in BLOCKING/NONBLOCKING mode as per user request for grab 
+- [Bugzilla: 55592]: Expose the AudioPlayer Controls via the HW0 card
+- [Bugzilla: 56409]: [Hardening] Timeouts when requesting downmix firmware
+- [Bugzilla: 56496]: module loading unloading failing with STLINUXTV_15.0_1.155.4
+- [Bugzilla: 54378]: [Cannes][STLinuxTV][HDMIRx] immutable vidextin-> hdmirx subdev connection
+- [Bugzilla: 56500]: [v4l2gam] Use SRGB as default colorspace to allow driver check for correct output colorspace
+
+* Thu Aug 13 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int155.5
+- [Reverted: 51978]: Reverted bugzilla 51978 due to regression in Module Load/Unload test
+
+* Fri Aug 08 2014 Satish Kumar <satish-hpc.kumar@st.com> - int155.4
+- [Bugzilla: 51978]: [PM][SDK2] Implementation with StlinuxTV (stmvbi, stmvout & HDMI RX ) supporting Run Time power management functionality
+- [Bugzilla: 55381]: [STLinuxTV][HDMIRX] HDMIRX signal state reporting to userland
+- [Bugzilla: 55673]: Need to build with sysroot out of toolchain folder
+- [Bugzilla: 55692]: Need to build with sysroot out of toolchain folder
+
+* Thu Jul 31 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int155.3
+- [Bugzilla: 45788]: Capture: [STLinuxTV]: support simultaneous capture of video/user-data
+- [Bugzilla: 51936]: [SDK2-13.1] stlinuxtv compilation warning that create compilation errorr in stmvout_buffers.c
+- [Bugzilla: 54617]: HDMIRx: [STLinuxTV]: Update Implementation report in scope of sdk2-15
+
+* Tue Jul 22 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int155.2
+- [Bugzilla: 55052]: [ALSA] Wrong value are computed for audio generator positive volumes
+
+* Mon Jul 21 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int155.1
+- [Bugzilla: 54182]: HDMIRx: [STLinuxTV]: Implement initial level getting by the application of the hdmirx subdev
+- [Bugzilla: 53667]: Meaningless ctrl id XXX message too noisy on the kern.log during module load
+- [Bugzilla: 54395]: [STLinuxTV]:fix ioremap issue in stmvout
+- [Bugzilla: 53668]: [STLinuxTV ] [ALSA] Wrong error messages when parsing DT reader node's "mode" property
+- [Bugzilla: 35492]: [STLinuxTV]PCM INjection still reports bad Playback Volume
+- [Bugzilla: 54774]: peaking preset support broken
+- [Bugzilla: 53869]: [Bugzilla: 54774]: peaking preset support broken
+
+* Thu Jul 10 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int155
+- [Bugzilla: 53906]: [NRT] Grabbed encoded frames should use encode_time instead of native_time for timestamp
+- [Bugzilla: 50520]: [STM Grab Overlay] Driver does not copy grab metadata to user
+* Mon Jul 07 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int154
+- [Bugzilla: 53428]: [HDMI-RX] Align V4L2 pixel format to the specification for YUV422
+- [Bugzilla: 53473]: Compo: [STLinuxTV]: compo capture to follow hdmirx start flow
+- [Bugzilla: 52216]: HDMIRx: [STLinuxTV]: Requirement to move to upstream kernel interface for event management
+
+* Tue Jul 01 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int153
+- [Bugzilla: 53433]: [MAT] audio channel mute while playing HD_subs_1080_win_33a_live.ts via streamer
+
+* Fri Jun 27 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int152
+- [Bugzilla: 53205]: Regression v4l2 on video plane
+- [Bugzilla: 52109]: HDMI-RX: [STLinuxTV]: Allow to set custom formats on dvp, as video cannot be displayed on PIP
+- [Bugzilla: 46534]: support of LE and CTI algorithms at V4L level
+- [Bugzilla: 53352]: [DEMUX] Add control to expose underlying DEMUX capabilities
+- [Bugzilla: 52999]: [Cannes][all]Trickmode I-only: No Video event returned after VIDEO_STEP
+- [Bugzilla: 52363]: Enhance LDVB CA interface to expose FUSE operations
+
+* Tue Jun 25 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int151
+- [Bugzilla: 50307]: -Wall and -Werror build option mandatory to be activated in STLinuxTv modules
+- [Bugzilla: 52372]: Alsa Primary / Secondary definition and control not in line between STLinuxTV and Streaming Engine
+- [Bugzilla: 49921]: [STLinuxTV ] [ALSA] Add handling of DIALOG_ENHANCER Processing type audio tuning firmware
+- [Bugzilla: 49519]: [STlinuxTV] [alsa] Add generic "amount" control for each audio Tuning Profile Manager
+- [Bugzilla: 51517]: Remove vertical alignment constraint on STLinuxTv
+- [Bugzilla: 50988]: [STLinuxTV ] [ALSA] audio topology declaration should use DeviceTree instead of hard-coded declaration
+- [Bugzilla: 52772]: STLinuxTV video encoder: Fix input display aspect ratio
+- [Bugzilla: 49922]: False error messages in stm_memsrc/stlinuxtv when closing video/audio
+- [Bugzilla: 51913]: Expose subdev ioctl for writing HDMIRX EDID from userland
+- [Bugzilla: 51077]: HDMIRx: [STLinuxTV]: Dynamic input change or hotplugging
+- [Bugzilla: 52935]: HDMIRx: [STLinuxTV]: media-ctl connection does not work when HDMI-RX cable not plugged
+
+* Thu Jun 19 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int150
+- [Bugzilla: 38296]: [Encoder] Error on Encode side during detach with playstream
+- [Bugzilla: 48147]: [STLinuxTV] Add possibility to override connection between Playstream and VIBE display source
+- [Bugzilla: 52606]: [transcode] Crash when CNRT is activated
+- [Bugzilla: 51766]: Expose subdev ioctl for setting HDMI_REPEATER mode on audio & video playstreams
+- [Bugzilla: 51744]: HDMIRx : Report HDMIRX hotplug events to userland
+
+* Wed Jun 11 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int149
+- [Bugzilla: 47031]: TRANSCODE : V4L2 encoder: update for NRT mode
+- [Bugzilla: 50638]: auto lipsync correction on HDMI : upto 500ms
+- [Bugzilla: 51407]: [STLinuxTV]:Coverity warnings fix on SDK2-14
+- [Bugzilla: 48136]: STLinuxTV: Allow connection from one playstream to 2 display sources
+- [Bugzilla: 51290]: [Compo Capture] Setup Manual IOWindows Mode when using GDP-Lite planes
+- [Bugzilla: 51068]: Compo: [STLinuxTV]: Change the colorspace propagation from output to compo in case of SD output
+- [Bugzilla: 48702]: error in make clean for first time
+- [Bugzilla: 48627]: [S@H]DEMUX : Subsequent calls to SET_PES_FILTER for PCR filter
+- [Bugzilla: 51661]: TRANSCODE : Default HDMIRx mode need to be set to NON_REPEATER
+- [Bugzilla: 51550]: HDMIRx: [STLinuxTV]: Fix HDMI-RX interlaced setting
+
+* Tue May 26 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int148
+- [Compilation Err]: Solved compilation error for kernel 3.4
+
+* Mon May 26 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int147
+- [Bugzilla: 49941]: DMX_SET_BUFFER_SIZE does not read the argument properly
+- [Bugzilla: 22211]: Eliminate ""ioremap of RAM is unsafe on ARMv6+" warnings
+- [Bugzilla: 49962]: transcode audio results in many can't copy to user messages
+- [Bugzilla: 49720]: HDMIRx : Null output in the audio capture
+- [Bugzilla: 50501]: [STLinuxTV]: Enable AVSync in hdmirx->hdmitx
+- [Bugzilla: 50731]: Compo: [STLinuxTV][Compo->CVBS]: Generic fixes for compo configuration
+- [Bugzilla: 50768]: HDMIRx: [STLinuxTV][Cannes]: Remove hardcoding and map v4l2 mbus code to stkpi pixel format and vice versa
+- [Bugzilla: 50883]: HDMIRx: [STLinuxTV][Decoder]: Allow compo and dvp to run in parallel
+- [Bugzilla: 50906]: Compo: [STLinuxTV]: Enable AUTO mode for GFX plane in compo capture
+
+* Mon May 19 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int146
+- [Reverted: 16886]: Reverted bugzilla 16886 due to regression in linear tv use cases
+
+* Wed May 14 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int145
+- [Bugzilla: 50284]: missing break statement for DVB_OPTION_CTRL_CONTAINER_FRAMERATE
+
+* Tue May 13 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int144
+- [Bugzilla: 50083]: Removal of include of target filesystem exported header file for key-rules
+
+* Thu May 08 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int143
+- [Bugzilla: 50001]: STLinuxTV Build issue due to audio header api location change
+
+* Wed May 07 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int141
+- [Bugzilla: 48132]: Update STLinuxTV following update of VIBE's lock function
+- [Bugzilla: 49807]: [STLinuxTV] [ALSA] Remove useless indexes on player's mixer controls
+- [Bugzilla: 48744]: Implement user space control for DRC cut/boost/type on per output basis
+- [Bugzilla: 16886]: FRONTEND : stlinuxtv still passing old frontend types : fe_type (QPSK/QAM/OFDM/ATSC) and not the new fe_delivery_system_t (SYS_DVBS/SYS_DVBS2/etc)
+- [Bugzilla: 49848]: [STLinuxTV] [ALSA] Redefine Speaker configuration controls
+- [Bugzilla: 48967]: Add dyanamic FEC support by adding new IOCTLs in STLinuxtv
+- [Bugzilla: 46422]: HDMIRx : [STLinuxTV][Cannes]: Development of hdmi-rx to hdmi-tx solution
+- [Bugzilla: 46493]: HDMIRx : [STLinuxTV][Cannes]: Creation of data path from hdmirx->hdmitx
+- [Bugzilla: 47751]: HDMIRx : [STLinuxTV][Cannes]: HDMIRx - > HDMITx configuration application
+- [Bugzilla: 49147]: SD Analog output : Option 2b “DENC Automatic Scaling
+
+* Fri May 02 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int140
+- [Bugzilla: 46694]: remove obsolete STKPI/SE usages
+- [Bugzilla: 45900]: pseudo_mixer max gain +32dB is wrong [alsa q23 q13 32bit 16bit]
+- [Bugzilla: 40546]: Add VXI switch mode test
+- [Bugzilla: 49483]: klocwork warning fix for ML
+- [Bugzilla: 48929]: [STLinuxTV] Implement V4L2-compatible buffer flow control, allowing data-driven streaming
+- [Bugzilla: 49124]: Allow compilation against multiple target dirs
+
+* Fri Apr 25 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int139
+- [Bugzilla: 48740]: no way to set decimation before stream is initialized
+- [Bugzilla: 46211]: Benchmarking Performance logging option is missing from stlinuxtv jpeg decode apps
+- [Bugzilla: 45564]: stmvout: use new transparency plane control PLANE_CTRL_TRANSPARENCY_STATE
+- [Bugzilla: 45987]: returning native_time_format = TIME_FORMAT_US in EOS for a captured frame for video crashes
+- [Bugzilla: 45840]: Migration of HAL in user land - Error management and missing events
+- [Bugzilla: 47536]: [STLinuxTV]: If PIP is started before MAIN, then Main video does not appear, PIP freezes
+- [Bugzilla: 46290]: [DEMUX] Remove special handling of TOT/TDT section in LinuxTV
+- [Bugzilla: 49263]: Compilation failure with gcc-4.8.2
+
+* Thu Apr 17 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int138
+- [Bugzilla: 46280]: Fix coverity warning on SDK13.1
+- [Bugzilla: 48432]: [B2120-H305] Kernel Memory leak detected in stlinuxtv code
+- [Bugzilla: 40173]: support anti flicker filter application on GDP through STLinuxtv
+- [Bugzilla: 48397]: [MAT] transcode HLS test fail with STLINUXTV_ML_1.137.0
+
+* Wed Apr 09 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int137
+- [Bugzilla: 42324]: Video planes support for Tunneled Compo Capture
+- [Bugzilla: 46280]: Fix coverity warning on SDK13.1
+- [Bugzilla: 46953]: [STLinuxTV]: PCR timebase should be different than the incoming/original timebase
+- [Bugzilla: 47772]: Add support for container framerate control
+- [Bugzilla: 46170]: Make thread priorities for all sub-systems tuneable using module parameters
+- [Bugzilla: 45204]: IQI on Cannes : PEAKING support at V4L Level
+- [Bugzilla: 45843]: Migration of HAL in user land - Device Demux - Set buffer size
+- [Bugzilla: 44472]: [STLinuxTV] Using FWs carrying preset look-up-tables instead of highly detailed Compound control
+- [Bugzilla: 45644]: Adds UHD memory profile
+- [Bugzilla: 44236]: [STiH407] Fix compilation issue with HDMI-Rx audio
+
+* Tue Apr 01 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int136
+- [Bugzilla: 46314]: Update stm-c8jpg clock management to match kernel 3.10 sti
+
+* Fri Mar 28 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int135
+- [Bugzilla: 41602]: Deadlock when injecting discontinuity in the encoders
+* Wed Mar 12 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int134
+- [Bugzilla: 45943]: Build: build system updated to handle build of utils from sdk2 build component
+- [Bugzilla: 45742]: dvbtest crash when setting PCR PES Filter
+
+* Mon Mar 10 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int133
+- [Bugzilla: 42474]: Do not rely on player2 exported osdev header files
+- [Bugzilla: 45825]: [DEMUX]: DMX_FLUSH_CHANNEL does the job but exits with error
+- [Bugzilla: 45477]: stress tests - kernel oops with - match_filter_input_pid
+- [Bugzilla: 44617]: Media framework - entity initialization missing leading to dodgy behaviour
+- [Bugzilla: 46132]: [STLinuxTV][C8JPG]: Support missing for H310
+
+* Mon Feb 25 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int132
+- [Makefile]: disable compilation for kernel 3.10
+
+* Fri Feb 21 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int131
+- [Bugzilla: 42034]: TSMUX - Need to align on new compound controls API for ML
+- [Bugzilla: 42489]: V4l2/tsmux: Remove error check for zero length buffer on release
+- [Bugzilla: 43632]: videodev.h has long been removed
+- [Bugzilla: 41668]: [STLinuxTV]: c8jpg unlocks mutex during close which is then again unlocked by video device core
+- [Bugzilla: 42020]: [SCR] Align User Space interface file with latest driver interface file
+- [Bugzilla: 38755]: Update v4l2-decode to support logging stm-c8jpg decode performance info
+- [Bugzilla: 44817]: HDMIRx need to set CLOCK_RATE_ADJUSTMENT_LIMIT
+- [Bugzilla: 34481]: [DT] Removal of runtime switch to non-DT
+- [Bugzilla: 29701]: [IPFE]: should have provision for independent stopping of each sink object when multiple of them attached to single instance
+- [Bugzilla: 42515]: v4l2 encoder: rely on kernel vb2 bpa2 contig instead of stlinuxtv original helpers
+- [Bugzilla: 42926]: VIDEO_PLAY do not reset speed not freeze
+- [Bugzilla: 44672]: SDK2 port on Kernel STI 3.10 (draw:jpeg component)
+- [Bugzilla: 44574]: STlinuxTV porting to kernel3.10
+
+* Fri Feb 14 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int130
+- [Bugzilla: 44132]: mem-profile should be sent at playback_init
+- [Bugzilla: 43625]: Adds 720P memory profile
+- [Bugzilla: 44135]: STLinuxTV ignores memory profile if master clock is set (4k2k)
+- [Bugzilla: 42585]: [stmvbi] Enhancement and bug fixes
+- [Bugzilla: 42322]: [MC] Allow linking outputs to video planes for compo capture
+- [Bugzilla: 33591]: V4L2 encoded Bitstream buffer to evolve to worst case size
+
+* Mon Feb 10 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int128
+- [Bugzilla: 41940]: [STLinuxTV]: Expose subdev nodes of stmvout driver (planes)
+- [Bugzilla: 40632]: [STLinuxTV][utils] Test for IOWindows control mechanism
+- [Bugzilla: 42588]: v4l2gam should not crop output window and should not exit on window size requested out of range
+- [Bugzilla: 41362]: SDK2 port on kernel 3.10 step1 (forecast SDK2-13) STLinuxTV
+- [Bugzilla: 43733]: [STLinuxTV-3.10]: V4L2 AV capture fix
+- [Bugzilla: 44228]: [KERNEL-3.10][COMPO]: Update the vfl_dir field to RX
+
+* Fri Jan 24 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int127
+- [Bugzilla: 41266]: Audio bypass injection to tsmux
+- [Bugzilla: 41439]: Move to new transport_engine input type types and constants
+- [Bugzilla: 42799]: All zero LinuxDVB event could be generated under some condition
+- [Bugzilla: 42950]: Fix media_api DocBook to properly be generated for SDK2-12
+- [Bugzilla: 41737]: Put all documentation under the same folder and provide Makefile to build it
+- [Bugzilla: 42496]: Adds SD memory profile
+- [Bugzilla: 40740]: V4L2 video encoder to use new stkpi encode profile API for stkpi memory optimization
+- [Bugzilla: 39122]: Upon a VIDEO_STOP, VIDEO_START doesn't set properly all settings again
+- [Bugzilla: 41090]: Dual display with compo-capture is not functional on H407 platform
+
+* Fri Jan 10 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int126
+- [SpecFile]: corrected the spec file for wrong bugzilla name
+
+* Fri Jan 10 2014 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int125
+- [Bugzilla: 41188]: Rework v4l2 encoder vb2 code to rely on memsink event
+- [Bugzilla: 42734]: [SDK2][SC#122698] Fast trickmode crashes video events
+- [Bugzilla: 42732]: [SDK2][SC#122683][PATCH_SC] No video events after 2 VIDEO_PLAY fail
+- [Bugzilla: 42070]: not coorect at the return in STM_MEMSINK_EVENT_BUFFER_OVERFLOW
+- [Bugzilla: 42489]: V4l2/tsmux: Remove error check for zero length buffer on release
+- [Bugzilla: 41255]: v4l2 decoder shouldn't mandate ST proprietary reserved metadata field
+- [Bugzilla: 41134]: Audio grab not working
+- [Bugzilla: 38416]: V4L2 encoder driver doesn't allow to S_FMT again after a STREAMOFF
+- [Bugzilla: 41953]: Resize output window fails after starting capturing close caption user data
+- [Bugzilla: 31943]: [STLinuxTV]: Framerate change event is not communicated to application
+
+* Thu Dec 12 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int124
+- [Bugzilla: 41197]: Fix Coverity warning on SDK2-12 CF
+- [Bugzilla: 39195]: tunneled demux tunneled playback handling need to be reworked
+- [Bugzilla: 39766]: Fix STLinuxtv to enable /disable secure Ts output + dvbca for ML (same as 39735 for Maintenance)
+- [Bugzilla: 36364]: [STLinuxTV] HDMIRX switch color-type fail
+- [Bugzilla: 40394]: Add Audio-DeEmphasis control to LinuxDVB
+- [Bugzilla: 41039]: v4l2: decoder: Remove unused vb2 mutex
+- [Bugzilla: 39915]: stlinuxtv doesn't compile after fresh install
+- [Bugzilla: 41149]: Panic in kmalloc() when stm_dvb_create_pes_tunneling() failed
+- [Bugzilla: 39296]: [stmvout] Use output ranges when setting the output cropping
+
+* Fri Dec 06 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int123
+- [Bugzilla: 29867]: VXI - Add support of switch mode
+- [Bugzilla: 41134]: Audio grab not working
+- [Bugzilla: 39905]: Memory Leak in video encoder
+- [Bugzilla: 39792]: Add control for video decode memory profile (4K2K)
+- [Bugzilla: 39790]: [V4L2][STMVOUT] Crash on close() after STREAMON failed and REQBUF released buffers
+- [Bugzilla: 36890]: [ORLY2] AudioIoctlGetCapabilities returns hard-coded capabilities
+- [Bugzilla: 40992]: Check for Max Audio Encoder missing in v4l2_encoder_init function
+
+* Mon Nov 25 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int122
+- [Bugzilla: 40646]: Mpeg2 playback regression
+
+* Wed Nov 20 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int121
+- [Bugzilla: 36644]: VIDIOC_S_FMT fails with Input/output error
+- [Bugzilla: 24137]: Audio grab : uncompressed metadata structure
+- [Bugzilla: 28390]: Video grab : need to get the colorspace and interlaced/progressive information
+- [Bugzilla: 32682]: Update of V4L2 grab to support the move to new metadata information (stm_se_uncompressed_frame_metadata_xxxx_t)
+- [Bugzilla: 39766]: Fix STLinuxtv to enable /disable secure Ts output + dvbca for ML
+- [Bugzilla: 37896]: implementation report: fix V4L2_CID_MPEG_AUDIO_x to V4L2_CID_MPEG_STM_AUDIO_x where applicable
+- [Bugzilla: 37693]: [ORLY] video ioctl VIDEO_SET_BLANK does not work
+- [Bugzilla: 37749]: Allow to perform proper stream change via VIDEO_START/VIDEO_STOP only
+
+* Fri Nov 15 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int120
+- [Bugzilla: 37614]: update transparency values setting in stlinuxtv
+- [Bugzilla: 36677]: [v4l2-tsmux]-Incorrect translation from v4l2 timestamps to STKPI at tsmux input
+- [Bugzilla: 38286]: [ORLY] Need the implementation of AUDIO/VIDEO_EVENT_FRAME_STARVATION/TIMEOUT in SDK2
+- [Bugzilla: 38534]: Support of V4L2_PIX_FMT_YUYV format for video encoding
+- [Bugzilla: 37709]: VideoIoctlClearBuffer() should not call DvbStreamDiscontinuity()
+- [Bugzilla: 39738]: v4l2 new metadata structure
+- [Bugzilla: 39530]: stm-c8jpg: Make clock gating work correctly for hardware jpeg decoding
+
+* Fri Oct 25 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int119
+- [Bugzilla: 37614]: update transparency values setting in stlinuxtv
+- [Bugzilla: 38121]: [PM] Cannes/Monaco PD release . Crash while unloading the module
+- [Bugzilla: 36140]: Encode Audio MP3 and AAC at 32kHz and 8kHz Crashed with Oops Kernel
+- [Bugzilla: 29344]: STLinuxTV hdmirx and vxi driver should have its own module
+- [Bugzilla: 37711]: [GDP Planes] Allow multiple connection to outputs for shared GDP planes
+
+* Fri Oct 18 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int118
+- [Bugzilla: 38501]: ML78: Memory leak suspects in stlinuxtv code
+
+* Fri Oct 18 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int117
+- [Alicante]: Fixed compilation issue for Alicante
+
+* Fri Oct 18 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int116
+- [Bugzilla: 38236]: [encoder] locking issue in stm_v4l2_encode.c
+- [Bugzilla: 32581]: When deleting pacing filter, a new pacing filter should be set if possible
+- [Bugzilla: 38501]: ML78: Memory leak suspects in stlinuxtv code
+- [Bugzilla: 35948]: [STLinuxTV][DT][FE]Error check for configuration parameters in DT implementation
+- [Bugzilla: 37754]: [STLinuxTV]: Update ip/ipfec get_pdata() not to allocate memory for for ipfec/ip struct members
+
+* Fri Oct 11 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int115
+- [Bugzilla: 30530]: Allow to set audio stream policy via LDVB (AUDIO_COMMAND)
+- [Bugzilla: 36733]: bytesused on VIDIOC_DQBUF for V4L2_BUF_TYPE_VIDEO_CAPTURE is not valid
+- [Bugzilla: 36034]: Add mutex lock around stm_dvb_dmx_read to avoid kernel panic
+- [Bugzilla: 33518]: Apps-stlinuxTV features support for Cannes/Monaco preliminary release
+- [Bugzilla: 36578]: stm-c8jpg: VIDIOC_TRY_FMT returns incorrect display dimensions for pictures > 8k
+
+* Thu Oct 03 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int114
+- [Bugzilla: 37700]: [MAT] transcode test hangs during run
+
+* Fri Sep 27 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int113
+- [Bugzilla: 37147]: stlinuxtv compilation failure with SDK2-10.98.2 RPM
+- [Bugzilla: 36559]: VIDIOC_QUERYBUF fails for V4L2_BUF_TYPE_AUDIO_CAPTURE MMAP buffer
+- [Bugzilla: 35387]: Need ability to set demux input type from top-level API
+- [Bugzilla: 35065]: ML63: Memory leak suspects in stlinuxtv code
+- [Bugzilla: 35865]: Kernel panic when performing VIDIOC_STREAMOFF & VIDIOC_DQBUF simultaneously
+- [Bugzilla: 35909]: [DT][FE]Default frontend device IO type should be of i2c type
+- [Bugzilla: 36656]: STLinuxTV Demux TS related new controls
+- [Bugzilla: 28979]: Need support in STLinuxtv to enable /disable secure Ts output
+- [Bugzilla: 36156]: [STLinuxTV] Add value "COMPESSED_SD" to player's "Encoding" alsa mixer control
+- [Bugzilla: 36677]: [v4l2-tsmux]-Incorrect translation from v4l2 timestamps to STKPI at tsmux input
+- [Bugzilla: 35148]: [v4l2-tsmux]-Add PTS to indexing information
+
+* Fri Sep 13 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int112
+- [Bugzilla: 36283]: Review coverity warnings on ML69
+- [Bugzilla: 36426]: setting tunneled data path should not result in an error message on the console
+- [Bugzilla: 34865]: Avoid TE deprecated struct member: stm_te_ts_index_data_t.clk
+
+* Fri Sep 06 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int111
+- [Bugzilla: 35173]: Error in bpa2 buffer access from user space
+- [Bugzilla: 34773]: [STLinuxTV]: Audio/Video decoder event dequeue update
+- [Bugzilla: 35936]: SCR: expose class selection inside "stm_scr_capabilities_t" in "linux\stmscr.h" header
+- [Bugzilla: 35079]: v4l2_helpers: remove unnecessary print on the console
+- [Bugzilla: 35308]: Kernel panic in snd_card_pseudo_pcm_event_callback
+- [Bugzilla: 35344]: Fix Audio Generator gain logic
+
+* Thu Aug 29 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int110
+- [Bugzilla: 34750]: [STMVOUT] Support of new 4K2K display modes in STLinuxTV
+- [Bugzilla: 35234]: pseudo-card continuously reports "MIXER0: Could not get mixer parameter 85
+- [Bugzilla: 35308]: Kernel panic in snd_card_pseudo_pcm_event_callback
+- [Bugzilla: 34043]: [H407] Manage the H407 default topology
+
+* Wed Aug 28 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int109
+- [Bugzilla: 33784]: [v4l2-tsmux]-porting to v4l2 ctrl-framework
+- [Bugzilla: 34911]: [STLinuxTV]stm-c8jpg: VIDIOC_G_FMT returns inappropriate dimensions on capture buffer
+- [Bugzilla: 33603]: J83_B tuning fails even though stm_fe tuner supports both J83_B and DVBC
+- [Bugzilla: 29739]: No user space API for MXL584 / STV6120 RF matrix es
+- [Bugzilla: 33754]: v4l2 encoder driver v4l2-ctrl framework porting
+- [Bugzilla: 33837]: v4l2 stmvout driver v4l2-ctrl framework porting
+- [Bugzilla: 33823]: v4l2 decoder driver v4l2-ctrl framework porting
+- [Bugzilla: 34383]: support of CONTRAST, SATURATION, BRIGHTNESS at V4L level
+
+* Wed Aug 14 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int108
+- [Bugzilla: 34857]: [v4l2] Buffers for video encode must not cross a 64 MB aligned address boundary
+- [Bugzilla: 34758]: aplay output frequency not supported
+- [Bugzilla: 34889]: demux source wrongly resetted upon closing of all demux filters even if there is still a dvr device opened
+
+* Tue Aug 13 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int107
+- [Bugzilla: 34917]: stlinuxtv:int106-1 rpm build fails unpackaged files
+
+* Thu Aug 08 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int106
+- [Bugzilla: 30443]: Export TS ST proprietary marker to allow passing information within TS data
+- [Bugzilla: 32283]: Decoder -> Encoder isn't all functional in case of 1 decoder to multiple encoder
+- [Bugzilla: 31984]: [DEMUX] copy_from_user calls missing in demux/demux_feeds.c:stm_dvb_create_index_map
+- [Bugzilla: 29180]: STLinuxTV tsmux driver should have its own module
+- [Bugzilla: 31080]: [audio encoder controls] V4L2_CID_MPEG_AUDIO_CHANNEL_COUNT value 0 should be valid
+
+* Fri Aug 02 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int105
+- [Bugzilla: 30802]: Update VIDIOC_S_OUTPUT_STD to first try starting the output
+- [Bugzilla: 34349]: videodev.h has long been removed
+- [Bugzilla: 34387]: Utils Makefile doest not clean v4l2tsmuxavi and v4l2lut8_2
+- [Bugzilla: 34293]: recursive make commands should always use the variable MAKE, not 'make'
+- [Bugzilla: 30645]: stm-c8jpg: Enable Device tree
+- [Bugzilla: 31120]: STLinuxTV encode audio: Metadata reserved field is optional when pushing an EOS
+
+* Thu Jul 25 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int104
+- [Bugzilla: 33935]: [STLinuxTV SCR] User Interface file name Correction
+- [Bugzilla: 32442]: Please review one customer modification to avoid kernel panic in STLinuxTV
+- [Bugzilla: 33711]: i2c device is not required in dummy frontend devices
+- [Bugzilla: 33583]: [DT] [FE] Changes needed to support frontend child nodes under correct i2c device node
+- [Bugzilla: 33906]: Expose Policy STM_SE_CTRL_PACKET_INJECTOR
+- [Bugzilla: 31612]: Demux: Pending event not notified in in poll function
+- [Bugzilla: 33387]: Memory leak suspect in stlinux tv code
+- [Bugzilla: 30524]: [v4l2-tsmux] : Implement indexing support for tsmux
+- [Bugzilla: 33724]: Update the DocBook for ioctl DMX_FLUSH_CHANNEL
+
+* Wed Jul 17 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int103
+- [Bugzilla: 33018]: Inclusion of the implementation report within the STLinuxTV source tree
+- [Bugzilla: 33295]: Add TSMux Indexing API information within Implementation Report
+- [Bugzilla: 30418]: Add Channel Routing (and emphasis) info to audio_parameters_t
+- [Bugzilla: 31805]: Missing check audio mute status before enable audio stream
+- [Bugzilla: 26326]: STLinuxTV Encoder: driver should have its own mod
+- [Bugzilla: 30311]: [STLinuxTV]: V4L2_MMAP buffers for v4l2-capture driver
+- [Bugzilla: 32387]: Return status of del_filters_from_chain is not checked
+- [Bugzilla: 32662]: Capture devices close and streamoff
+
+* Wed Jul 10 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int102
+- [Bugzilla: 31604]: dvbtest play KO for TER after playing for IP play using gstapps
+- [Bugzilla: 31437]: [StLinuxTv][Include] Smart Card user space interface
+- [Bugzilla: 32675]: Remove unused extented v4l2_buffer flags from STLinuxTV encoder
+- [Bugzilla: 30778]: snd_pseudo_compound_put method for pseudo mixer does not provide error to upper layer
+- [Bugzilla: 31938]: ioctl DMX_FLUSH_CHANNEL not implemented
+- [Bugzilla: 32453]: Improvement in DT implementation related to frontend
+- [Bugzilla: 29060]: Review coverity warnings
+- [Bugzilla: 33140]: [SDK2-10 RC] STLinux Headers Package Conflicts On Fedora 18 Host
+
+* Tue Jun 25 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int101
+- [Bugzilla: 31697]: Addition of dummy demod is required in DT model of STLinuxTV
+- [Bugzilla: 31748]: STLinuxTV: Implement missing LinuxDVB-CA ioctls
+- [Bugzilla: 29920]: Android & SDK2 : Frequent macroblocks observed during "STRTP" zap
+- [Bugzilla: 31789]: customer modification on CEC part in linux\cec\cec_dev_main.c
+- [Bugzilla: 32197]: Handle validity checks for V4L2 AV capture
+- [Bugzilla: 31790]: Customer code review for event read in CEC
+- [Bugzilla: 32285]: media-ctl Main-GDP1 command fails
+
+* Mon Jun 10 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int100
+- [Bugzilla: 31605]: Aux-VID Unable to parse link: Device or resource busy (16)
+- [Bugzilla: 31734]: Issue in reloading modules of stlinuxtv in DT model
+
+* Thu Jun 06 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int99
+- [Bugzilla: 30828]: Renaming of AG Volume
+- [Bugzilla: 30844]: close /dev/dvb/adapter0/video0 hangs after a failed open
+- [Bugzilla: 29498]: Use "v4l2-stmvout" bpa2 partition for user space mapped stmvout display buffer
+- [Bugzilla: 30721]: STLinux TV doesn't clean up after filter creation failure
+- [Bugzilla: 31078]: Implement Audio Generator volume control (for normal PCM input) as a dB value
+- [Bugzilla: 27480]: Add support of closed caption in stmvbi_driver
+- [Bugzilla: 28956]: STLinuxTV Encoder: Capture payload length should be returned via bytesused, instead of reserved
+- [Bugzilla: 24793]: Not able to grab ts file is n>3
+- [Bugzilla: 30766]: Provide BTSC control through amixer
+- [Bugzilla: 28861]: STLinuxTV Encoder: Video Aspect Ratio management support
+- [Bugzilla: 31593]: [Encoder][Audio] 44.1kHz sampling frequencies are wrongly defined
+- [Bugzilla: 30725]: DT: support needs to be added in stlinuxtv for Device Tree deployment in frontend
+- [Bugzilla: 30833]: [EEDID] Too much data returned when reading hdmi device
+- [Bugzilla: 28861]: STLinuxTV Encoder: Video Aspect Ratio management support
+- [Bugzilla: 30127]: [TSMUX] : Implement user data injection support for TSMUX
+- [Bugzilla: 18741]: DVR Record TS Index data in user space requirements
+- [Bugzilla: 31277]: Tunneled compo capture to Aux GDP support in STLinuxTV
+- [Bugzilla: 31384]: [v4l2][hdmirx] disable AVSync and set reader source info to SE
+- [Bugzilla: 31594]: v4l2_tsmux - Update metadata interface to tsmux
+
+* Fri May 31 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int98
+- [Bugzilla: 22721]: STLinuxTV: Update of the capture V4L2 driver to use videobuf2 framework
+- [Bugzilla: 29456]: STLinuxTV: Software Demux isn't available even after adding CONFIG_STLINUXTV_ENABLE_SW_DEMUX
+- [Bugzilla: 30598]: stm-c8jpg: runtime PM and HoM (aka CPS) support
+- [Bugzilla: 30357]: [MS10]-Target Level for the output card need to be converted in unit of mB
+- [Bugzilla: 29508]: Support of zero copy grab : not in line with STKPI documentation
+- [Bugzilla: 30639]: STLinuxTV: PLAYER2_DVB implementation of STKPI control for downmix
+- [Bugzilla: 29986]: Update STLinuxTV demux/dvr non-blocking reads to work with updated pull_data interface
+
+* Fri May 24 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int97
+- [Bugzilla: 29949]: Wrong consumer_interface_type passing while calling stm_memsrc_attach
+- [Bugzilla: 30014]: Android - Dead lock possible on video stop
+- [Bugzilla: 29373]: Remove coverity warnings in TSMUX
+- [Bugzilla: 29723]: STLinuxTV: implementation of STKPI control for downmix
+- [Bugzilla: 30373]: handling of END_OF_STREAM is required
+- [Bugzilla: 30787]: STLinuxTV: Removal of temporary AUDIO_STEP support
+- [Bugzilla: 30653]: stm-c8jpg: updates + h315, h305 and h407 SoCs support (non-DT)
+- [Bugzilla: 29206]: stm_fe_demod_new() not called if for a single demod, instance id is n (n != 0)
+- [Bugzilla: 30727]: Avoid checking for CONFIG_MEDIA_CONTROLLER within the STLinuxTV source code
+
+* Thu May 16 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int96
+- [Bugzilla: 25235]: STLinuxTV: Decentralized object attachment (SE-VIBE)
+- [Bugzilla: 28762]: stm-c8jpg: provide support for VB2_MMAP source buffers
+- [Bugzilla: 26820]: STLinuxTV support for HDMI Rx Audio
+- [Bugzilla: 29778]: stm-c8jpg: compute checksums on V4L2_BUF_TYPE_VIDEO_CAPTURE buffers
+
+* Fri May 10 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int95
+- [Bugzilla: 28868]: STLinuxTV Encoder: Discontinuity support
+- [Bugzilla: 29752]: Add support for A_LAW and MU_LAW pcm streams
+- [Bugzilla: 29444]: Missing audio generetor volume control to user space
+- [Bugzilla: 27541]: Replace CONFIG_CPU_SUBTYPE etc by ifdef CONFIG_STLINUX_(FEATURE)
+- [Bugzilla: 30081]: check_patch passing: Fix STLinuxTV alsa code
+- [Bugzilla: 30098]: Fix cec STLinuxTV driver to pass check_patch.pl
+- [Bugzilla: 30096]: stmedia code fix to pass check_patch.pl
+- [Bugzilla: 30080]: check_patch passing: Update Makefile
+- [Bugzilla: 28987]: Handle Interactive Audio properly
+- [Bugzilla: 25037]: Remove deprecated STLinuxTV ST proprietary stuff
+- [Bugzilla: 30124]: Compilation broken for B2044
+- [Bugzilla: 20991]: Replace Dvb_adaptation naming by STLinuxTV
+- [Bugzilla: 29609]: TS tunneling starts SE Play-Streams before setting playback policy
+- [Bugzilla: 30200]: Stop/Play not working for audio stream
+
+* Wed Apr 24 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int94
+- [Bugzilla: 28600]: LinuxDVB-CA: Provide stm_ca specific message to retrieve CE transform and session handles
+- [Bugzilla: 29449]: Return proper error if hw_params fail for Audio Generator device
+- [Bugzilla: 27541]: Replace CONFIG_CPU_SUBTYPE etc by ifdef CONFIG_STLINUX_(FEATURE)
+- [Bugzilla: 29497]: stm-c8jpg: fix up device registration and removal
+- [Bugzilla: 29594]: stm-c8jpg: properly handle clamped resize ratios
+- [Bugzilla: 28705]: need to check the filter users for ca reset when deleting filter in a chain
+- [Bugzilla: 16898]: dvb_adaptation should perform audio/video PES injection using MEMSRC object
+- [Bugzilla: 29684]: Ensure all transport_engine STKPI function return values are checked
+- [Bugzilla: 29448]: Add 24 bit LE/BE support to Audio Generator and Interactive Audio ALSA devices
+- [Bugzilla: 29343]: ALSA module Coverity fixes
+- [Bugzilla: 27339]: Sharing same audio with several MIXERs object
+
+* Wed Apr 17 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int93
+- [Bugzilla: 29213]: STLinuxTV: Remove unused backend functions
+- [Bugzilla: 28417]: Old dvb_cap_export.h header file still exported
+- [Bugzilla: 28872]: ALSA : migration of control "Emergency Mute Playback Route"
+- [Bugzilla: 28552]: [STLinuxTV]: stm-c8jpg coverity fixes
+- [Bugzilla: 27707]: Use KPI stm_display_source_pixelstream_set_signal_status for HDMI-RX non stable signal detected
+- [Bugzilla: 25784]: Support of zero copy grab
+- [Bugzilla: 28963]: TLinuxTV Encoder: STLinuxTV unused proprietary flag removal
+
+* Tue Apr 09 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int92
+- [Bugzilla: 28713]: Need a mutex to protect DvbPlaybackContext_s when they are in the same SYNC group
+- [Bugzilla: 28737]: STLinuxTV exported TSMux injection meta data format doesn't match with TE TSMux metadata format
+- [Bugzilla: 26798]: Update STLinuxTV to allow the handling of more than 1 section from the TE
+- [Bugzilla: 28487]: Audio Genrator : Mixing 48K PCM on 44.1k main audio is generating noise
+- [Bugzilla: 28517]: AudioGenerator : "BytesPerSample" should depend on dataFormat and numChannels
+- [Bugzilla: 28722]: Correct the played data accounting
+- [Bugzilla: 27710]: Adding support of YCbCr444 color type for HDMI-RX source
+- [Bugzilla: 28985]: VIDIOC_G_FMT type V4L2_BUF_TYPE_AUDIO_CAPTURE is broken
+- [Bugzilla: 21799]: DMX_ONESHOT does not work
+- [Bugzilla: 29168]: Add few git-hooks to ensure better formatted delivery
+- [Bugzilla: 28948]: TOT CRC check not working in LinuxDvb
+
+* Thu Mar 28 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int91
+- [Bugzilla: 28416]: Remove // comment from the STLinuxTV source code
+- [Bugzilla: 28114]: need to check the pacing_object in chain_release
+- [Bugzilla: 28299]: V4L2 compressed video buffer size not sufficient for some streams
+- [Bugzilla: 28216]: Video encode timeout when frame skip happens
+- [Bugzilla: 28419]: v4l2 encoder : need to clean the code
+- [Bugzilla: 28009]: ALSA: migration to STKPI control STM_SE_CTRL_BASSMGT
+- [Bugzilla: 28132]: ALSA: remove unused fields from snd_pseudo_mixer_settings structure
+- [Bugzilla: 28462]: Use stm_display_plane_set_control KPI to fix aspect ratio conversion and get display full screen for HDMI-RX/VXI source
+- [Bugzilla: 14102]: Better to remove hard coding in dvb_stv0367_attach()
+
+* Mon Mar 18 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int90
+- [Bugzilla: 27530]: [v4l2Encoder] add support for new audio encoder frame metadata
+
+* Mon Mar 18 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int89
+- [Bugzilla: 27473]: Enable stm-c8jpg driver compilation and use kernel exported vb2 helpers
+- [Bugzilla: 28002]: CA_SEND_MSG(DVB_CA_SET_SCR_KEY) returns EINVAL if ca_msg.index is not 0
+- [Bugzilla: 28174]: v4l2encoder : need to use the existing flag for I,P,B frame
+- [Bugzilla: 28183]: v4l2encoder : to need to check the pixel field type for top_field_first
+- [Bugzilla: 28199]: v4l2encoder : add V4L2_COLORSPACE_UNSPECIFIED for v4l2 colorspace
+- [Bugzilla: 28244]: STLinuxTV modprobe -r doesn't free properly all resources
+- [Bugzilla: 26270]: Better to rely on a single RPMMakefile for both stlinuxtv modules & utils
+- [Bugzilla: 27532]: [v4l2Encoder]Separate existing audio bitrate controls from video
+- [Bugzilla: 27750]: [v4l2Encoder] Audio merge sampling frequency and channel map control in a single control
+- [Bugzilla: 27373]: Audio generator :add support of new devices in psudo mixer card in ALSA to enable playback of independent PCM
+- [Bugzilla: 28323]: ML_INT_088 SW_DEMUX compilation fails
+- [Bugzilla: 26329]: Development of the TS-Mux V4L2 device driver
+
+* Tue Mar 12 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int88
+- [Bugzilla: 27536]: Should have uniform QUERYCAP driver information in our STLinuxTV video devices
+- [Bugzilla: 27636]: ALSA: migration of "DC Remove Playback Switch"
+- [Bugzilla: 27758]: ALSA : remove deprecated Havana controls
+- [Bugzilla: 27873]: ALSA: migration of "Master Playback Volume"
+- [Bugzilla: 20991]: Replace Dvb_adaptation naming by STLinuxTV
+- [Bugzilla: 27528]: [v4l2Encoder] Need a new serial control management system control
+- [Bugzilla: 27312]: Adding HEVC decoding support to STlinuxTV adapation layer
+
+* Tue Mar 05 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int87
+- [Bugzilla: 24136]: Video grab : framerate
+- [Bugzilla: 26900]: [Encoder] Need to set colorspace information into the uncompressed metadata
+- [Bugzilla: 26901]: [Encoder] Allow to set the field information when pushing an uncompressed frame
+- [Bugzilla: 27419]: Cleaning up controls implementation inside pseudo_mixer.c
+- [Bugzilla: 26666]: ALSA : migration of "Downmix Streamdriven Stereo Playback Switch"
+- [Bugzilla: 26902]: [Encoder] Provide gop & frame information on compressed buffer
+- [Bugzilla: 27688]: LinuxDvb:dvb_playback_add_stream: Failed to create DVB-VIDEO.0-SE-SRC memsrc
+- [Bugzilla: 27262]: [STLinuxTV]: Section data read with timeout is not functional
+- [Bugzilla: 26361]: v4l2gam displays 1088 lines by default for a 1080 lines 420 MacroBlock image
+- [Bugzilla: 27162]: [STLinuxTV]: DvbContext->mutex used for both audio/video is overhead
+- [Bugzilla: 22592]: STLinuxTV: Default number of video / audio device must be increased
+- [Bugzilla: 27526]: [Encoder] Provide Audio Add CRC enable control
+- [Bugzilla: 27664]: video and audio encode : overflow when setting native_time metadata
+
+* Tue Feb 26 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int86
+- [Bugzilla: 26983]: stm-c8jpg: capture buffers can't be wider than MAX_PICTURE_WIDTH
+- [Bugzilla: 27067]: Dual display: All display disapear when detaching only one plane from the decoder
+- [Bugzilla: 27116]: stm_v4l2_encode.c fails to compile when SPI flash is disabled
+- [Bugzilla: 23964]: Add New Video Codec "MVC" in STLinuxTV
+- [Bugzilla: 27265]: [STLinuxTV]: Audio open/close may result in inconsistent readers/writers
+- [Bugzilla: 25399]: ALSA /ALSAMIXER: how to expose new STKPI controls for Bypass/Encoding
+- [Bugzilla: 26317]: Update video encode framerate type
+- [Bugzilla: 27352]: [VSOC HCE] bad address remap in bpa2 buffer access function
+- [Bugzilla: 26324]: STLinuxTV: Removal of AVR & CAP driver initialization part
+- [Bugzilla: 16898]: dvb_adaptation should perform audio/video PES injection using MEMSRC object
+- [Bugzilla: 16905]: MAKAO - Timeout when filter a section seems to not work with LinuxDVB api
+
+* Wed Feb 13 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int85
+- [Bugzilla: 27058]: Remove VXI support for orly2 at stlinuxtv as no support in VIBE
+
+* Mon Feb 11 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int80
+- [Bugzilla: 26552]: STLinuxTV LinuxDVB DocBook doesn't contains all supported video_events
+- [Bugzilla: 26447]: While configuring the cipher engine to play block-mode encrypted stream, packet size and must stay clear are not handled correctly
+- [Bugzilla: 26742]: Android - Compilation error in dvb_stm_fe.c
+- [Bugzilla: 26538]: Policy STM_SE_CTRL_FRAME_RATE_CALCULUATION_PRECEDENCE is unavailable
+- [Bugzilla: 26598]: stm-c8jpg: horizontal resizing factor doesn't take into account rounding to the next MCU
+- [Bugzilla: 26749]: stm-c8jpg: check for 8-bit per sample precision in SOF0 header
+- [Bugzilla: 26757]: stm-c8jpg: clamp the vertical decimation factor to 3
+- [Bugzilla: 26003]: [Media-ctl] behavior on link overwrite
+- [Bugzilla: 26497]: grab_all generate ioremap console message while waiting for a stream to start
+- [Bugzilla: 26590]: segmentation fault seen while doing live decode with -d option
+- [Bugzilla: 26818]: DUALMONO Metadata Override is incorrectly mapped
+- [Bugzilla: 26325]: plf / mode_handling code cleanup
+- [Bugzilla: 25691]: Add V4L2 module for Video eXpansion Input (VXI) drive
+
+* Tue Jan 29 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int79
+- [Bugzilla: 26299]: DvbEventUnsubscribe called twice for same subscriber
+- [Bugzilla: 25761]: Add support for Orly 2 for STLinuxTV HDMIRx
+- [Bugzilla: 26311]: v4l2 encoder : video frame rate overflow
+
+* Wed Jan 23 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int78
+- [Bugzilla: 23257]: Allow compiling only a limited feature of STLinuxTV depending on the available KPI subsystems
+- [Bugzilla: 26121]: Fix KERN_INFO into KERN_DEBUG in pseudocard media controller part
+- [Bugzilla: 26110]: STLinuxTV: Add VIDIOC_G_AUDIO support and fix VIDIOC_S_AUDIO parameters
+- [Bugzilla: 25982]: v4l2 encoder : to support mp3 encoding
+
+* Fri Jan 18 2013 Alain Volmat <alain.volmat@st.com> - int77
+- [Makefile] Disable compilation of the stm-c8jpg driver
+
+* Fri Jan 18 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int76
+- [Bugzilla: 25960]: STLinuxTV: Convert grabs to utilise blitter fence mode
+
+* Thu Jan 17 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int75
+- [Bugzilla: 25793]: Display aspect ratio & Aspect Ratio conv mode setted by V4L2 aren't stored properly
+- [Bugzilla: 25715]: v4l2 encoder : to fix video input timestamp
+- [Bugzilla: 25809]: IPFE ioctl permission check is too strict
+- [Bugzilla: 25627]: [VSOC HCE] dvb_video compilation fails due to missing pointer cast
+- [Bugzilla: 25919]: STLinuxTV: Addition of v4lEncodeTestApp inside STLinuxTV/utils
+- [Bugzilla: 25234]: Update v4l2vbi program to match with new stmbvi driver
+- [Bugzilla: 25819]: Inclusion of v4l2 test tools from VIBE into STLinuxTV source tree
+- [Bugzilla: 25801]: V4L2: Some V4L2 test applications use the wrong video device
+- [Bugzilla: 25309]: Clean up of obsolete legacy event API
+- [Bugzilla: 24344]: STLinuxTV EOS Discontinuity injection support
+- [Bugzilla: 25918]: AVSync: Prototype of the display callback has changed
+- [Bugzilla: 25422]: v4l2 encoder : tunneling from decoder to encoder
+- [Bugzilla: 25761]: Add support for Orly 2 for STLinuxTV HDMIRx
+- [Bugzilla: 25760]: update_channel_config terminate with error with streams without audio track
+- [Bugzilla: 26026]: MASTER_CLOCK SE settings are not done properly at STLinuxTV level
+- [Bugzilla: 24067]: [STLinuxTV]: Introduce v4l2hdmi-ctrl applications to control HDMI output via V4L2 interface
+- [Bugzilla: 26024]: APPS_STLinuxTV v4lEncodeTesApp
+- [Bugzilla: 23204]: stm-c8jpg v4l2 device driver delivery to STLinuxTV for stxh416 (Orly2)
+
+* Fri Jan 11 2013 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int74
+- [Bugzilla: 25421]: v4l2 encoder : need to check the native_time_format for pts
+- [Bugzilla: 25268]: Replace INSTALL_MOD_PATH variable with TARGET_DIR in dvb_adaptation makefiles
+- [Bugzilla: 20803]: Missing setting of cropcap->defrect in video_cropcap_overlay()
+- [Bugzilla: 24421]: v4l2 encoder : need to separate the init_subdev for the av tunneling
+- [Bugzilla: 25282]: MAKAO - [V4L2] VIDIOC_G_OUTPUT and VIDIOC_G_INPUT not implemented
+- [Bugzilla: 25145]: MS10: Unable to set AAC config due to structure mismatch
+- [Bugzilla: 20504]: Event or Message: Audio Stream "Format" Change requirements in STLinuxTV
+- [Bugzilla: 22787]: Garbage flash is observed when switch from one format to other format in HDMI/DVI
+- [Bugzilla: 22852]: HDMIRx backend. stm_display_open_device called but not stm_display_device_close
+- [Bugzilla: 22995]: Pixel stream parameters are not configured properly in dvb_adaptation
+- [Bugzilla: 25644]: STLinuxTV cleanup: "video0" V4L2 handler split
+- [Bugzilla: 24921]: Update V4L2 compo capture module according to latest STKPI changes
+- [Bugzilla: 25677]: Remove aspect ratio and display format SE policy calls
+- [Bugzilla: 24895]: Android - Not able to resume TS playback with portway after stop
+- [Bugzilla: 28231]: V4L2: Removal of the 7200 specific dvb_avr driver from the source tree
+- [Bugzilla: 25775]: v4l2 video encoder : vertical alignment support
+
+* Fri Dec 21 2012 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int73
+- [Bugzilla: 25338]: dvbtest playback without plane attached fails (ex: -n3)
+- [Bugzilla: 25345]: Add a STLinuxTV stat to track the number of valid DQBUF that has been done on a specific stream
+- [Bugzilla: 21779]: Update the stmvbi driver to be more in line with our device model
+- [Bugzilla: 24538]: STLinuxTV Encoder: KPI function call should properly check return value
+- [Bugzilla: 24959]: STLinuxTV oops when doing dvbtest -xv on live
+
+* Mon Dec 17 2012 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int71
+- [Bugzilla: 22853]: stlinuxtv build system should error out if CONFIG_DVB_DUMMY_FE is not enabled
+- [Bugzilla: 24333]: dvb_adaptation is not providing mapping of J83B standard
+- [Bugzilla: 24267]: Stack corruption when using IPFE
+- [Bugzilla: 24317]: Event based implementation to detect whether an AAC stream is "dual mono"
+- [Bugzilla: 25079]: Inclusion of the linuxtv (media) DocBook within the STLinuxTV source code
+- [Bugzilla: 24854]: LinuxDVB Audio region/service/application information should have an enum instead of magic value
+
+* Tue Dec 04 2012 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int70
+- [Bugzilla: 24532]: ALSA: audio-players settings for old toposet controls doesn't work
+- [Bugzilla: 24864]: Force STLinuxTV compilation warnings into errors
+- [Bugzilla: 24859]: Fix stm_memsink_ compilation warning
+- [Bugzilla: 24858]: Modifications to pull > 1 stm_te_index at a time
+- [Bugzilla: 24053]: Pixel Capture - Implementation of V4L2 video capture using pixel_capture
+- [Bugzilla: 24559]: V4L2 encoder: move encoder into v4l2 folder
+- [Bugzilla: 24076]: Region based policy required to handle region specific controls
+- [Bugzilla: 24118]: Dialog Normalization API need to be implemented in STLinuxTV
+- [Bugzilla: 24766]: STLinuxTV: Demux poll do not properly return error when no stream is available [Bugzilla: 24712]: STLinuxTV: Fix stm_memsink_ compilation warning (SDK2-07)
+- [Bugzilla: 24784]: STLinuxTV: FRAME_DECODED & FRAME_RENDERED video events generate video event overflow
+- [Bugzilla: 24767]: STLINUXTV: Demux doesn't return proper error code when used in O_NONBLOCK mode
+- [Bugzilla: 24361]: STlinuxtv is not deleting all the connections and objects
+- [Bugzilla: 24688]: Video encoder : calculation of framerate is not correct
+
+* Tue Nov 27 2012 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int69
+- [Bugzilla: 24542]: STLinuxTV: Use the proper BPA2 partition for grab
+- [Bugzilla: 22237]: when decode jpg file with gst-apps, a kernel trace occure
+- [Bugzilla: 23120]: Remove unnecessary error trace from dvb_v4l2
+- [Bugzilla: 19653]: LinuxDVB VIDEO_SET_FORMAT & VIDEO_SET_DISPLAY_FORMAT update needed to "talk" to coredisplay.
+- [Bugzilla: 24590]: v4l2 audio encoder : need to set correct the max buffer size
+
+* Tue Nov 20 2012 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int68
+- [Bugzilla: 24172]: v4l2 audio encoder : not working for multiple buffers
+- [Bugzilla: 24175]: v4l2 audio encoder : changed time calculation
+- [Bugzilla: 24133]: Video Encoder - Stream Delete is not happening
+- [Bugzilla: 24134]: Video Encoder - Enable the SE preproc Controls in V4L2 video-encoder
+- [Bugzilla: 24113]: error check in stm_dvb_ipfec_attach() needs to be corrected
+- [Bugzilla: 23722]: Implementation proposal for Limiter and DualMono controls
+- [Bugzilla: 24221]: Old encoder wrapper code should be removed from STLinuxTV source tree
+- [Bugzilla: 24274]: Android -- build issue in stmvout_driver.c with __arm_iounmap
+- [Bugzilla: 23478]: Display header files are renamed to "stm_display_xxx.h" instead of "stmdisplayxxx.h"
+- [Bugzilla: 24301]: Create ALSA controls for audio-player card descriptions
+- [Bugzilla: 24338]: HDMI-RX compilation is WRONGLY "partially" enabled in case of Orly2 build
+- [Bugzilla: 24339]: Orly2 & Newman build of pseudo_mixer fails due to wrong default_topology syntax
+
+* Thu Nov 08 2012 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int67
+- [Bugzilla: 24162]: RPM build failure due to wrong name of day
+
+* Thu Nov 08 2012 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int66
+- [Bugzilla: 24123]: Compilation Failure and Unknown symbol error while Module loading for HDK7108
+
+* Thu Nov 08 2012 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int65
+- [Bugzilla: 24123]: Compilation Failure for HDK7108
+
+* Wed Nov 07 2012 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int64
+- [Bugzilla: 23847]: Support for CEC user interface Required in STLinuxTV
+- [Bugzilla: 24027]: Dualmono controls implementation in player2dvb
+- [Bugzilla: 23890]: Video encoder - Implementation of V4L2 video-encoder using streaming engine
+
+* Tue Nov 06 2012 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int63
+- [Bugzilla: 23341]: Fixed definitions for new STM_SE API.
+- [Bugzilla: 23880]: Implementation of a audio encoder using the streaming engine
+- [Bugzilla: 20016]: Audio & video devices sharing the same numbers shouldn't be part of the same playback by default
+- [Bugzilla: 23975]: Add dynamic configuration of connections between playstream - mixers
+- [Bugzilla: 23961]: Revert of the ALSA pseudocard code to the SDK2-06.5 state and addition of player/mixer separation code
+- [Bugzilla: 23544]: [MS10/MS11] support for substream selection for DD+ streams
+- [Bugzilla: 22834]: [VSOC HCE] Add support for VSOC platform execution (targets STiH416)
+
+* Tue Oct 30 2012 Kaushlendra Kumar <kaushlendra.kumar@st.com> - int62
+- [Bugzilla: 21847]: Add Orly2 (STIH416) platform type
+- [Bugzilla: 17110]: There should only be a single attach of object to the demux at a time
+- [Bugzilla: 22976]: Add IO windows and missing aspect ratio commands in V4L2
+- [Bugzilla: 23259]: kernel crash when changing demux source from frontend to dvr
+- [Bugzilla: 23063]: Media Controller disable all video planes in case of Dual Display video
+
+* Wed Oct 17 2012 Alain Volmat <alain.volmat@st.com> - int61
+- Fix compilation of HDMI-RX part (Newman only) that affect the source RPM build.
+
+* Wed Oct 17 2012 Alain Volmat <alain.volmat@st.com> - int60
+- [Bugzilla: 20470]: Missing support to Skip only B frames?
+- [Bugzilla: 21154]: STLinuxTV: Implementation of the packet insertion/replacement demux feature
+- [Bugzilla: 21740]: Make software demux (/dev/dvb/adapter1/) disabled by default
+- [Bugzilla: 21988]: Implement VQ controls (Brightness, Contrast, Hue and Sharpness) in stmvout driver
+- [Bugzilla: 23311]: Backend: disabled STM_SE_CTRL_VIDEO_OUTPUT_WINDOW_RESIZE_STEPS
+- [Bugzilla: 23397]: STLinuxTV user exported file should all be located in the same folder
+
+* Thu Oct 04 2012 Alain Volmat <alain.volmat@st.com> - int59
+- [Bugzilla: 20339]: Android : suspicious trace related to audio may be cause of some robustness issue
+- [Bugzilla: 21633]: Avoid strcpy calls into STLinuxTV to avoid possible memory overflow
+- [Bugzilla: 22511]: Tunneling of PCR data is not working very fine
+- [Bugzilla: 22536]: stm_display_open_device and stm_display_device_close aren't use properly in STLinuxTV
+- [Bugzilla: 22550]: Enable the LS and SPDIF out in ALSA mixer for Newman Platform
+- [Bugzilla: 22722]: ioctl "VIDIOC_REQBUFS" takes 5-6 seconds
+- [Bugzilla: 22726]: STLinuxTV: Chain input & output filters refactoring
+- [Bugzilla: 22805]: printk(KERN_DEBUG "%s ...", __FUNCTION__) does not belong in production code
+- [Bugzilla: 22979]: stmvout oops when compiled with DEBUG
+- [Bugzilla: 23044]: STLinuxTV tries to detach unattached TE input & output filters
+
+* Tue Sep 25 2012 Alain Volmat <alain.volmat@st.com> - int58-1
+- [Bugzilla: 22724]: STLinuxTV INT57 doesn't build properly on Newman
+
+* Mon Sep 24 2012 Alain Volmat <alain.volmat@st.com> - int57-1
+- [Bugzilla: 21786]: rmmod of stmedia giving crash
+- [Bugzilla: 22346]: BPA2 memory leak in STLinuxTV audio / video grab
+- [Bugzilla: 22360]: V4L2 encoder: dqbuf does not return the encoding error
+- [Bugzilla: 22383]: STLinuxTV: Failed to grab both video & user data at the same time
+- [Bugzilla: 22441]: Possible non detach of playstream from memsink for user data
+- [Bugzilla: 22454]: Unloading pseudocard does not clean registry elements
+- [Bugzilla: 22538]: [STLinuxTV]: Fix stlinuxtv module Loading/unloading
+
+* Mon Sep 10 2012 Alain Volmat <alain.volmat@st.com> - int56-1
+- [Bugzilla: 22238]: sdk2-test-utils fails to compile: STLinuxTV stm_frontend.h uses undefined types
+
+* Fri Sep 07 2012 Alain Volmat <alain.volmat@st.com> - int55-1
+- Fix changelog
+
+* Fri Sep 07 2012 Alain Volmat <alain.volmat@st.com> - int54-1
+- [Bugzilla: 22000]: STLinuxTV INT53 doesn't build on SH4 platform
+
+* Fri Sep 07 2012 Alain Volmat <alain.volmat@st.com> - int53-1
+- [Bugzilla: 20781]: V4L2 encoder: use v4l2-mem2mem framework
+- [Bugzilla: 20874]: STLinuxTV: Fix stmvout_buffers.c to avoid ioremap related warnings on the kernel log
+- [Bugzilla: 21089]: stm_fe_ip: integration of FEC object and related functionalities
+- [Bugzilla: 21101]: HDMIRx Implementation for STLinuxTV
+- [Bugzilla: 21103]: STLinuxTV: need to enhance portway code to be able to tunnel the PCR data as well
+- [Bugzilla: 21367]: Unable to Dynamically configure Video path with Media Controller.
+- [Bugzilla: 21376]: Can use V4L2 video0 for both overlay and capture same time
+- [Bugzilla: 21432]: New private controls for setting AUTO/MANUAL mode for input/output windows
+- [Bugzilla: 21630]: STM_SE_CTRL_AUDIO_PROGRAM_PLAYBACK_LEVEL implemenation
+- [Bugzilla: 21747]: Deprecate DMX_SET_PCR_FILTER and use DMX_SET_PES_FILTER instead
+- [Bugzilla: 21859]: STKPI:stm_display_source_get_interface() updated in STLinuxTV
+- [Bugzilla: 22044]: Problems with some PSEUDO_COMPOUND controls in ALSA
+
+* Tue Aug 28 2012 Alain Volmat <alain.volmat@st.com> - int52-1
+- [Bugzilla: 21139]: Fix STLINUXTV Index filtering due to change in TE INDEX_TRANSPORT enum
+- [Bugzilla: 21812]: STLinuxTV: v4l2 grab/overlay input names should be based on the LinuxDVB naming
+- [Bugzilla: 21826]: STLinuxTV video device related links should be IMMUTABLE
+- [Bugzilla: 21846]: Update 7108 default alsa topology
+- [Bugzilla: 21854]: STlinuxtV: Oops in VideoRelease()
+
+* Fri Aug 24 2012 Alain Volmat <alain.volmat@st.com> - int51-1
+- [Bugzilla: 21792]: Fix STLINUXTV Index filtering due to change in TE INDEX_TRANSPORT enum
+
+* Fri Aug 24 2012 Alain Volmat <alain.volmat@st.com> - int50-1
+- [Bugzilla: 16745]: Implement indexing support into dvb_adaptation
+- [Bugzilla: 18873]: extension of LinuxDVB to adjust the control of AAC decoder
+- [Bugzilla: 20178]: Add error check for KPI function calls from dvb_adaptation
+- [Bugzilla: 20526]: snd_pseudo_unregister_mixer_entity doesn't seem to do enough. Should remove the entity as well
+- [Bugzilla: 20579]: each amixer -Dhw:MIXER0 sset attempts to detach/reattach players.
+- [Bugzilla: 20769]: V4L2 Encoder: Number of encoder device should be configurable via module parameter
+- [Bugzilla: 20783]: Allow triggering of the HVA encode on both DQBUF on capture AND output side of the driver
+- [Bugzilla: 20895]: STLinuxTV: video grab sometimes fails due to a wrongly aligned internal buffer passed to blitter
+- [Bugzilla: 21025]: Time discontinuity correctly propagated but no new GOP and no 'GOP closed'
+- [Bugzilla: 21086]: Media Controller updates to the pseudocard module
+- [Bugzilla: 21149]: [Samsung] Crash during boot (stm_v4l2_encoder_ioctl)
+- [Bugzilla: 21538]: Should STLinuxTV return error when attempting to continue a stopped stream?
+
+* Tue Aug 14 2012 Andy Gardner <andrew.gardner@st.com> - int49-1
+- [Bugzilla: 20723] VIBE STKPI API update about source in STLinuxTV
+
+* Mon Jul 30 2012 Alain Volmat <alain.volmat@st.com> - int48-1
+- [Bugzilla: 19885] Use v4l2_fh to store private data in V4L2 capture driver
+- [Bugzilla: 20776] V4L2 encoder: Split large function into smaller one & apply proper codying style
+
+* Thu Jul 26 2012 Alain Volmat <alain.volmat@st.com> - int47-1
+- [Bugzilla: 20770] V4L2 encoder: Avoid using numerical value directly into code
+- [Bugzilla: 20771] V4L2 encoder: printk level not properly specified
+- [Bugzilla: 20775] V4L2 encoder: VIDIOC_STREAMOFF should not reset the S_FMT settings
+- [Bugzilla: 20777] V4L2 encoder: STREAMON only allowed if at least one buffer as already been queued
+- [Bugzilla: 20779] V4L2 encoder: fix entity / input / output names to be in accordance with STLinuxTV user guide
+- [Bugzilla: 20780] V4L2 encoder: Create links between encoder related entities
+- [Bugzilla: 20784] V4L2 encoder: extended control count parameter handling
+- [Bugzilla: 20785] V4L2 encoder: Implement missing ioctls
+- [Bugzilla: 20786] V4L2 encoder: Implement kernel based buffer allocation (REQBUF, QUERYBUF, MMAP)
+- [Bugzilla: 20919] build failure in dvb adaptation-int46-1
+- [Bugzilla: 20938] [ca] Header limits.h removed accidentally from stm_ca.h...
+- [Bugzilla: 20939] [ca] MSC not set for legacy dvbcsav2 ioctl CA_SET_DESCR,
+- [Bugzilla: 20957] STLinuxTV H264 Encoder wrapper miss MODULE_LICENSE statement leading to tainted kernel
+- [Bugzilla: 20960] STLinuxTV: NULL ptr deref when doing user data streamoff
+- [Bugzilla: 20992] Replace Dvb_adaptation names into STLinuxTV in source code
+- [Bugzilla: 21011] Need mapping from V4L2 to driver for LevelIDC
+
+* Thu Jul 19 2012 Alain Volmat <alain.volmat@st.com> - int46-1
+- [Bugzilla: 20838] STLinuxTV: Disable compilation of the HVA encoder wrapper and encoder V4L2 device on platform that do not have the feature
+
+* Mon Jul 16 2012 Alain Volmat <alain.volmat@st.com> - int45-1
+- [Bugzilla: 19127] Implementation of video encoder support within STLinux (Step 1.1)
+- [Bugzilla: 20690] STLinuxTV should send IO windows request directly to CoreDisplay
+- [Bugzilla: 20609] Base implementation of AudioMixer STKPI controls in pseudo_mixer
+- [Bugzilla: 20608] implement STM_SE_AUDIO_SERVICE_TYPE control
+- [Bugzilla: 20375] DVB/V4L APIS DQBUF wrong
+- [Bugzilla: 16767] Portway (TE->SE tunneled connection) implementation within STLinuxTV
+- [Bugzilla: 20610] Replace the callback based audio/video grab by the memsink based implementation
+- [Bugzilla: 19250] [ca] Block based DMA descrambling/Scrambling support
+- [Bugzilla: 20382] modprobe stlinuxtv failed with crash in pseudo_mixer driver
+- [Bugzilla: 20140] System hung when using shared resource from multi-instances of gst-apps
+- [Bugzilla: 19880] frontend poll() does not notify UNLOCK on RF feed removal
+- [Bugzilla: 20416] Crash when rmmod stlinuxtv (regression)
+- [Bugzilla: 20566] stm_fe_ip:the private data structure needs to be corrected inside dvb_ipfe.h
+- [Bugzilla: 20525] VIBE STKPI API update about plane in APPS_STLinuxTV
+- [Bugzilla: 20383] Implement interface to SE API for jitter tolerance
+- [Bugzilla: 19189] V4L2 need to be updated to match new CD STKPI changes
+- [Bugzilla: 20645] Changes required in dvb_stm_fe.c due to stm_fe.h updates
+- [Bugzilla: 19045] [ca] MSC parameter in dvb_adaptation layer
+- [Bugzilla: 18542] [ca] Setting keys via the the ca ioctl, CA_SET_DESCR, applies cipher config on each call - erases existing key...
+- [Bugzilla: 18455] [ca] Duplicate residue mode can be removed or have same value...
+- [Bugzilla: 18610] MAKAO - [V4L2] Kernel crash when injecting buffer
+- [Bugzilla: 20435] Not able to build dvb_v4l2.c in debug mode
+
+* Mon Jul 09 2012 Alain Volmat <alain.volmat@st.com> - int44-1
+- [Bugzilla: 15813] __umoddi3 unavailable in 7108 compile toolchain and wrong in b2000 toolchain
+- [Bugzilla: 18873] extension of LinuxDVB to adjust the control of AAC decoder
+- [Bugzilla: 20161] Adpcm encoding type should be added.
+- [Bugzilla: 20346] pseudo mixer updates to support audio player & attach to audio mixer new functions
+- [Bugzilla: 20407] STLinuxTV: Unproper parameter passed to DvbEventUnsubscribe
+- [Bugzilla: 20528] STLinuxTV: Remove stm_se_display_delete call
+- [Bugzilla: 20532] HDMI via SPDIF player broken on 7108v2
+
+* Tue Jul 03 2012 Alain Volmat <alain.volmat@st.com> - int43.1-1
+- Fix wrong changelog entry in the SPEC file preventing proper automatic nightly compilation
+
+* Tue Jul 03 2012 Alain Volmat <alain.volmat@st.com> - int43-1
+- Fix wrong changelog entry in the SPEC file preventing proper automatic nightly compilation
+
+* Tue Jul 03 2012 Alain Volmat <alain.volmat@st.com> - int42-1
+- [Bugzilla: 19168] warning in stlinuxtv adaptation due to __must_check attribute in stm_fe api functions
+- [Bugzilla: 20147] 7108 doesn't issue audio on HDMI by default.
+- [Bugzilla: 20155] STLinuxTV: read from a PCR filter return 0 instead of EAGAIN in case of O_NONBLOCK & no data available
+- [Bugzilla: 20319] STLinuxTV: Add V4L2 VIDIOC_QUERYCAP support in STLinuxTV video0 and video1
+- [Bugzilla: 20194] Aspect ratio conversion mode changed while we play with Show/Hide command
+
+* Mon Jun 25 2012 Alain Volmat <alain.volmat@st.com> - int41-1
+- [Bugzilla: 20008] stlinuxtv_adaptation output "Display is not connected" to the console
+- [Bugzilla: 18469] dvb_adapter register in case of Unknown Tuner Device with native fe driver
+- [Bugzilla: 19597] Maximum number of video & audio decoder shouldn't be hardcoded within STLinuxTV
+- [Bugzilla: 17048] MAKAO - V4L get control values is not working on some controls
+- [Bugzilla: 16899] LinuxDVB: Move audio/video devices from the stmdvb (adapter0) into dvb_adaptation (adapter1). After that adapter1 will become adapter0 as the default.
+- [Bugzilla: 19654] stm_se_play_stream_set_input_window, stm_se_play_stream_set_output_window should be removed from stlinuxtv_adaptation
+
+* Fri Jun 22 2012 Alain Volmat <alain.volmat@st.com> - int40-1
+- [Bugzilla: 20055] dvb_adaptation_headers int39-1: RPMBuild failure: stmedia_export.h not found
+
+* Wed Jun 20 2012 Alain Volmat <alain.volmat@st.com> - int39-1
+- [Bugzilla: 19333] Hide public APIs of CoreDisplay was renamed
+- [Bugzilla: 19651] Proprietary media controller type should be exported to user space
+- [Bugzilla: 19665] Fix stlinuxtv_adaptation drivers warnings
+- [Bugzilla: 19710] Crash in hdk7108v2 on 3rd channel zap
+- [Bugzilla: 19722] Target clean not defined in root Makefile
+- [Bugzilla: 19779] Add mixer-grain control to pseudocard
+- [Bugzilla: 19835] Remove unused stm_v4l2.h header from the target
+- [Bugzilla: 19839] audio/video decoder entities are not of proper types
+- [Bugzilla: 19931] STLinuxDVB capture device input list should be based on LinuxDVB decoders numbers
+- [Bugzilla: 19954] [dvb_adaptation] Unitialized/Corrupted variable in stmvout_driver.c ?
+
+* Mon Jun 11 2012 Alain Volmat <alain.volmat@st.com> - int38-1
+- [Bugzilla: 18383] MAKAO - [V4L2] EINVAL with Cropcap / Crop ioctls on a CAPTURE device
+- [Bugzilla: 19277] Name of audio source issue
+- [Bugzilla: 19383] pseudo_mixer: section mismatch warnings
+- [Bugzilla: 19394] Not possible to launch live first time, front end (release SDK2-04.94)
+- [Bugzilla: 19395] [SDK2-04.94] Not able to play TS file from HDD with dvbtest
+- [Bugzilla: 19406] Build failure in dvb adaptation
+- [Bugzilla: 19470] Need to add Main-VBI entity for VBIPlane support on analog_hdout0 output
+- [Bugzilla: 19471] Removing some confusing code in Media Controller
+- [Bugzilla: 19518] stlinuxtv_adaptation is not forwarding output aspect ratio configuration to CoreDisplay
+- [Bugzilla: 19556] re_tune flag check required in dvb_stm_fe_tune
+- [Bugzilla: 19588] [STLinuxTV]: Code cleanup and mutex handling correction within the LinuxDVB backend code
+- [Bugzilla: 19605] Fix V4L2 output ctrl regression after introduction of the media controller
+- [Bugzilla: 19621] Media controller link for user data not properly functional
+- [Bugzilla: 19621] Media controller link for user data not properly functional
+- [Bugzilla: 19736] CoreDisplay IO window handling are not working from stlinuxtv_adaptation
+
+* Tue May 29 2012 Alain Volmat <alain.volmat@st.com> - int37-1
+- [Bugzilla: 16834] update dvb_adaptation layer with respect to stm_se_mixer_{new,delete}
+- [Bugzilla: 18641] Expose the PolicyAudioApplicationType through STLinuxTV
+- [Bugzilla: 19212] v4l2-stmvout: Allow Output Rectangle with negative offset values for VBIPlane
+
+* Fri May 25 2012 Alain Volmat <alain.volmat@st.com> - int36-1
+- Temporary fix to allow the ALSA MC code to run on both kernel 2.6 with MC backport and kernel 3.3 with latest MC code
+
+* Thu May 24 2012 Alain Volmat <alain.volmat@st.com> - int35-1
+- [Bugzilla: 17807] [STLinuxTV V4L2 dev model & MC] Step 1 targetting SDK2.05
+- [Bugzilla: 19138] [STLinuxTV V4L2 dev model & MC] Implement a common thin layer to hold context for single V4L2 device and media controller
+- [Bugzilla: 19139] [STLinuxTV V4L2 dev model & MC] "video0" video&audio capture video device support
+- [Bugzilla: 19140] [STLinuxTV V4L2 dev model & MC] "video1" plane data injection video device support
+- [Bugzilla: 19141] [STLinuxTV V4L2 dev model & MC] ALSA media controller support
+
+* Wed May 23 2012 Alain Volmat <alain.volmat@st.com> - int34-1
+- [Bugzilla: 18931] LinuxDVB: SMP: Correct frontend and demux log levels to KERN_DEBUG
+
+* Wed May 23 2012 André Draszik <andre.draszik@st.com> - int33-1
+- [Bugzilla: 18857] stlinuxtv_adaptation does not compile against linux-3.3 headers
+- [Spec] fix some changelogs
+
+* Fri May 18 2012 Alain Volmat <alain.volmat@st.com> - int32-1
+- [Bugzilla: 16201] MAKAO - Regression of section filtering creating some video/audio freeze
+- [Bugzilla: 16913] dvb_adaptation has non re-entrant behaviour of start and stop feed.
+- [Bugzilla: 17997] Audio channel assignment wrong
+- [Bugzilla: 18279] MAKAO - [V4L2] 'disabled' flag reliability
+- [Bugzilla: 18539] Remove STM_BUFFER_SRC_REPEAT_FIRST_FIELD flag
+- [Bugzilla: 18599] Deprecate old PCR interface and implement new read based pcr data reading
+- [Bugzilla: 18704] stlinuxtv module should report its version information
+- [Bugzilla: 18931] LinuxDVB: SMP: Correct frontend and demux log levels to KERN_DEBUG
+
+* Tue May 08 2012 Alain Volmat <alain.volmat@st.com> - int31-1
+- [Bugzilla: 14192] Need to add supprt for basic ip frontend in dvb adaptation.
+- [Bugzilla: 15813] __umoddi3 unavailable in 7108 compile toolchain and wrong in b2000 toolchain
+- [Bugzilla: 17990] The flag CONFIG_DVB_OPTLEVEL is not working
+- [Bugzilla: 18278] ALSA: Moving of alsa drivers out of player2 into stlinuxtv_adaptation
+- [Bugzilla: 18521] gst-apps: use of HW demux causes hang in player2
+- [Bugzilla: 18618] stm_se_video_display_synchronize is to be removed from stkpi/se
+- [Bugzilla: 18665] Update mandatory due to change of parent of streaming engine for type objects
+- [Bugzilla: 18679] [SDK2-03.9.98] Fix dvbtest playback with stlinuxtv
+- [Bugzilla: 18729] SMP: LinuxDVB: Better DVB_ERROR printk rate limiting
+- [Bugzilla: 18730] SMP: Stop write() from injecting data after a STOP has started
+- [Bugzilla: 18797] Change KERN_ERR to KERN_INFO on non error paths
+
+* Thu Apr 26 2012 Alain Volmat <alain.volmat@st.com> - int30-1
+- [Bugzilla: 16201] MAKAO - Regression of section filtering creating some video/audio freeze
+- [Bugzilla: 16913] dvb_adaptation has non re-entrant behaviour of start and stop feed.
+- [Bugzilla: 18521] gst-apps: use of HW demux causes hang in player2
+
+* Thu Apr 19 2012 Alain Volmat <alain.volmat@st.com> - int29-1
+- [Bugzilla: 17966] PIP should displayed in a small window
+- [Bugzilla: 17967] System crash when doing a dvbtest and no display source is available
+- [Bugzilla: 18168] [V4L2] STKPI Plane and source should only be connected when doing VIDIOC_S_STREAMON rather VIDIOC_S_OUTPUT
+- [Bugzilla: 18221] STih415: Same video displayed on MAIN and PIP
+- [Bugzilla: 18276] V4L2 user data: doing twice the same S_INPUT and STREAMON succeed even if it should fails
+- [Bugzilla: 18407] V4L2: capture/overlay driver ioctl return value are not correct
+
+* Thu Apr 12 2012 Alain Volmat <alain.volmat@st.com> - int28-1
+- [Bugzilla: 17690] dvb-adaptation fails to build for 7106 with stmfb-4.0_stm24-236
+- [Bugzilla: 18056] dvb_adaptation doesn't build properly for newman
+- [Bugzilla: 18157] Stopping gst-apps live or TS file playback cause kernel oops when closing /dev/dvb/adapter1/demuxX
+- [Bugzilla: 18224] LinuxDVB-V4L2: Remove dead code (mainly #if 0)
+- [Bugzilla: 18243] [PATCH] dvb adaptation failed to find the right output capabilites for newman
+- [Bugzilla: 18280] V4L2: Capture VIDIOC_REQBUFS ioctl is missing but mandatory
+
+* Thu Apr 05 2012 Alain Volmat <alain.volmat@st.com> - int27-1
+- [Bugzilla: 17000] MAKAO - V4L2_PIX_FMT_ARGB8565 or V4L2_PIX_FMT_BGRA5658 is not implemented
+- [Bugzilla: 17481] Missing of AUDIO_STEP
+- [Bugzilla: 17851] Single module for STLinuxTV adaptation layer
+
+* Mon Apr 02 2012 Alain Volmat <alain.volmat@st.com> - int26-1
+- [Bugzilla: 18037] dvb_adaptation_headers:rpm install error: stmvout.h not found
+
+* Fri Mar 30 2012 Alain Volmat <alain.volmat@st.com> - int25-1
+- [Bugzilla: 17920] [DVBTEST] Perfom stop then play with any video stream always crash the system
+- [Bugzilla: 17309] V4L2: New Input/Output window management based on plane controls
+- [Bugzilla: 17847] V4L2: Add IOCTL for the output display aspect ratio
+- [Bugzilla: 17269] V4L2: Add IOCTL for the aspect ratio conversion mode
+- [Bugzilla: 17744] Dispatch IO windows request to CoreDisplay and SE for decimation
+- [Bugzilla: 17838] Need to be able to enumerate demux device usage
+- [Bugzilla: 17729] v4l2 capture broken in wavefront
+- [Bugzilla: 16014] [STKPI] Remove display source handles registration with the STKPI registry
+- [Bugzilla: 17514] Implement V4L2 interface for user data
+- [Bugzilla: 17741] Add STMFB V4L2 code into dvb_adaptation
+- [Bugzilla: 17806] V4L2 overlay / capture driver cleanup - step1
+- [Bugzilla: 17629] Issue in AudioIoctlSetSpeed called from AUDIO_FREEZE
+
+* Thu Mar 22 2012 Alain Volmat <andrew.gardner@st.com> - int24-1
+- [Bugzilla: 16257] DMX_STOP not working for adapter0
+- [Bugzilla: 16748] Dispatch IO windows request to CoreDisplay too
+- [Bugzilla: 17714] dvb_adaptation: Fix NULL-pointer dereference in filter_set_ca_channel
+
+* Fri Mar 16 2012 Alain Volmat <alain.volmat@st.com> - int23-1
+- [Bugzilla: 17433] Update V4L2 grab pts field to use player2 capture NativePresentationTime instead of PresentationTime
+- [Bugzilla: 17434] DVB Adaptation could do with a break
+- [Bugzilla: 17359] calls to Ioctl FE_SET_TONE and FE_SET_VOLTAGE crash the kernel when no LNB is declared
+- [Bugzilla: 17391] dvb_adaptation does not compile with crypto support
+- [Bugzilla: 16346] dvb_adaptation: Add LDVB-CA support for Secure DVR featureset
+- [Bugzilla: 17013] Allow displaying on various conf (MAIN, PIP, AUX, MAIN+PIP, MAIN+AUX) and fix plane used in case of PIP
+- [Bugzilla: 17425] Writing to adapter1/dvrX will failed if no pes_type DMX_PES_VIDEO
+- [Bugzilla: 17468] Update dvb_adaptation for the new stm_se_play_stream_attach param (SE)
+- [Bugzilla: 16014] [STKPI] Remove display source handles registration with the STKPI registry
+
+* Thu Mar 01 2012 Andy Gardner <andrew.gardner@st.com> - int22-1
+- [Bugzilla: 17173] Audio/Video allow filling the injection buffer while in PAUSEZ/FREEZED status
+- [Bugzilla: 17172] Regression in VIDEO_GET_STATUS and AUDIO_GET_STATUS
+- [Bugzilla: 17156] Remove old debug function from dvb_adaptation
+- [Bugzilla: 15589] PTI blocks for NULL packets even if demux device is O_NONBLOCK mode
+- [Bugzilla: 17064] dvb_adaptation does not disable CRC checking of sections
+- [Bugzilla: 15792] Do not divide the filters between demuxes but use a pool of filters
+- [Bugzilla: 17111] Increase the number of audio/video device in dvb_adaptation to allow more decode+grab
+- [Bugzilla: 17012] dvb_adaptation reading from multiple file descriptors
+- [Bugzilla: 16078] dvb_adaptation of player2 is using v4l2?
+- [Bugzilla: 15661] STKPI/SE : Add PICTURE_CHANGED event to KPI
+
+* Wed Feb 15 2012 Alain Volmat <alain.volmat@st.com> - int21-1
+- [Bugzilla: 16805] dvb_adaptation's does not always create unique memsink names
+- [Bugzilla: 16873] gst-apps: No audio output on TS streams
+- [Bugzilla: 16890] Creating twice the same PES filter with TS_TAP output will generate a TS file with twice the same PID in it
+- [Bugzilla: 15970] write adapter1/dvrX and read adapter1/demux0 not working
+
+* Mon Feb 13 2012 Alain Volmat <alain.volmat@st.com> - int20-1
+- [Bugzilla: 16840] dvb_adaptation INT19 doesn't compile on linux 3.x
+- [Bugzilla: 16162] ioctl VIDEO_FREEZE following by a ioctl VIDEO_SET_SPEED resume the video
+- [Bugzilla: 16649] dvb_adaptation compile warning remaining in case of B2000 build
+- [Bugzilla: 16644] fixes to bug #15920 patch needed
+
+* Fri Feb 10 2012 Alain Volmat <alain.volmat@st.com> - int19-1
+- [Bugzilla: 16303] audio grab ALSA update
+- [Bugzilla: 16382] Source file header template
+- [Bugzilla: 16729] Add environment variable to allow non optimized dvb_adaptation compilation
+- [Bugzilla: 15553] Overnight test - PCR filtering: DMX_SET_PCR_FILTER/DMX_GET_PCR ioctl need to be implemented
+- [Bugzilla: 16448] Remove call to temporary_function_test_for_data
+
+* Thu Feb 02 2012 Alain Volmat <alain.volmat@st.com> - int18-1
+- [Bugzilla: 15483] STih415: PIP is not working
+- [Bugzilla: 16444] Conform to infrastructure memsink api change
+- [Bugzilla: 16326] incorrectly returned Hierarchy in case of STM_FE_DEMOD_HIERARCHY_ALPHA_NONE
+- [Bugzilla: 16407] dvb_adaptation chains management should be improved
+- [Bugzilla: 16584] dvb_adaptation's stm_dvb_stop_feed always returns –EINVAL
+
+* Thu Jan 19 2012 Andy Gardner <andrew.gardner@st.com> - int17-1
+- [Bugzilla: 16207] utils does not compile anymore due to missing stm-dmx.h include file missing
+- [Bugzilla: 15920] dvb_adaptation make install should also export headers into the target FS
+- [Bugzilla: 15923] dvb adaptation headers spec file cleanup
+- [Bugzilla: 16259] Ioctl FE_GET_FRONTEND returns frequency in kHz for OFDM and QAM (linux_dvb in Hz)
+- [Bugzilla: 16261] OFDM tuning QPSK rturns DQPSK constellation
+- [Bugzilla: 16169] DVB adaptation layer needs to extend the list of player policies exported to userland
+- [Bugzilla: 16235] Unknown symbols in 7105 build
+- [Bugzilla: 16254] Reference to "Shark" or "Havana" to be removed from the code for SDK2-04: APPS adaptation layer
+- [Bugzilla: 13992] Coding style in dvb_adaptation files needs to be Linux coding style
+
+* Thu Jan 05 2012 Andy Gardner <andrew.gardner@st.com> - int16-1
+- [Bugzilla: 15812] Update dvb_adaptation build file in order to use KConfig
+- [Bugzilla: 15754] Cleanup makefiles of dvb_adaptation
+- [Bugzilla: 15913] dvb_adaption using incorrect pixel format when setting up capture
+- [Bugzilla: 15178] [V4L2] VIDIOC_DQBUF on a CAPTURE buffer should return a timestamp associated to this frame
+- [Bugzilla: 15789] FE_GET_FRONTEND and FE_READ_UNCORRECTED_BLOCKS don't work
+- [Bugzilla: 16028] dvb_adaptation modules are misplaced under the module folder on the target
+- [Bugzilla: 16139] Return value not checked when connecting plane to output
+- [Bugzilla: 15744] Need to correct warning during compilation of dvb_adaptation
+
+* Wed Dec 14 2011 Andy Gardner <andrew.gardner@st.com> - int15-1
+- [Bugzilla: 13246] BPA2_Region0/BPA2_Region1 should be split into finer grained partition names
+- [Bugzilla: 15720] Broken video grab on wavefront (failure to find grab object from registry)
+- [Bugzilla: 15682] Introduced API inconsistency between memsink/memsrc documentation and code
+- [Bugzilla: 15561] Linux-3.1: DVB_Adaptation layer needs updates to compile with latest kernel
+- [Bugzilla: 14633] Update header files to not use relative paths
+- [Bugzilla: 13985] [V4L2] Invalid implementation of VIDIOC_S_CROP/VIDIOC_S_FMT for specifying crop/scaling size
+- [Bugzilla: 15434] Orly can not support more than 4 demuxes
+
+* Thu Dec 01 2011 Andy Gardner <andrew.gardner@st.com> - int14-1
+- [Bugzilla: 15491] Remove SurfaceId from Linux DVB
+- [Bugzilla: 12456] Incomplete Capture Buffer Information 
+- [Bugzilla: 14567] STKPI/SE : update of stm_se_play_stream_get_info, 
+                    stm_se_play_stream_inject_data, stm_se_play_stream_inject_discontinuity
+- [Bugzilla: 14536] LinuxDVB : Use of STKPI/SE event manager API -step 3 : 
+                    Convert LinuxDVB to use the official STKPI events
+- [Bugzilla: 15066] [V4L2] Protect dvb_v4l2 ioctls calls due to change to unlocked_ioctl in stm_v4l2
+- [Bugzilla: 15401] STKPI/SE removal of : stm_se_play_stream_set_alarm & 
+                    stm_se_play_stream_alloc_decode_bufferPoolStatus
+- [Bugzilla: 11940] Audio In Sync Event
+- [Bugzilla: 15402] Move of player2/wrapper/player_api.h to player2/include/stm_se.h
+
+* Fri Nov 18 2011 Andy Gardner <andrew.gardner@st.com> - int13-1
+- [Bugzilla: 15091] STKPI/SE : Api functions parameters renaming
+- [Bugzilla: 14567] STKPI Vs stm_te : Status of stm_te implementation w.r.t STKPI document
+- [Bugzilla: 14561] STKPI/SE: Remove media type argument from stm_se_play_stream_new()
+- [Bugzilla: 13942] STKPI/SE: Rename cascaded controls and provide stub implementations of other controls
+
+* Fri Nov 18 2011 Stuart Hodgson <stuart.hodgson@gmail.com> - int13-1
+- [Bugzilla: 13913] Change demod name for stv0367
+- [Bugzilla: 13959] BW mapping update as per new enum
+- [Bugzilla: 14313] Reduce CPU load
+- [Bugzilla: 14527] Add demod stop to sleep
+- [Bugzilla: 14578] Implement DMX_SET_SOURCE
+- [Bugzilla: 15320] Update to read and write from userspace to use src sink
+
+* Thu Nov 17 2011 Stephen Gallimore <stephen.gallimore@st.com> - int12-1
+- [Bugzilla: 15195] update to match api changes in 14945
+
+* Mon Nov 14 2011 Stuart Hodgson <stuart.hodgson@st.com> - int11-1
+- [Bugzilla: 14661] Applied player2 linuxdvb to dvb_adaptation
+
+* Fri Nov 11 2011 Hermann Picot <hermann.picot@st.com> - int11-1
+- [Spec; Bugzilla: 14661] create 2 separate spec files
+
+* Mon Oct 24 2011 André Draszik <andre.draszik@st.com> - int10-1
+- [Spec; Bugzilla: 14889] spec file update needed
+
+* Thu Oct 13 2011 Stuart H <hodgsons@st.com> - int9-1
+- [Bugzilla: 14101 "PLL" Not a device specific name for tuner
+- [Bugzilla: 14281 add ca support
+- [Bugzilla: 14296 NIM-TS board support
+- [Bugzilla: 14327 incorrect modprobe of dvb_adaptation causes kernel crash
+- [Bugzilla: 14634 Add dvr poll support in the same way as dmx was done
+
+* Mon Oct 10 2011 Stuart H <hodgsons@st.com> - int8-1
+- [Bugzilla: 14321 open source scan utility not working
+
+* Fri Sep 23 2011 Stuart H <hodgsons@st.com> - int7-1
+- [Bugzilla: 13862 Add ter and cab support in stm_fe_wrapper
+- [Bugzilla: 13866 Implement direct read and write for dvr device
+- [Bugzilla: 13995 Split frontend and demux code
+
+* Wed Sep 07 2011 Stuart H <hodgsons@st.com> - int6-1
+- [Bugzilla: 13653 I2C address in config are no longer shifted
+- [Bugzilla: 13722 More robust logic to select drivers
+- [Bugzilla: 13751 Removed frontend from include path
+- [Bugzilla: 13904 Object creation/deletion null pointer checks
+
+* Thu Aug 25 2011 Stuart H <hodgsons@st.com> - int5-1
+- [Bugzilla: 13792] Override read calls from linux dvb demux device
+- [Bugzilla: 13618] Add section filtering support
+- [Bugzilla: 13722] stm_te_demod_attach is called for each added filter
+
+* Mon Aug 08 2011 Stuart H <hodgsons@st.com> - int4-1
+- [Bugzilla: 13499] Support for multiple frontends
+
+* Mon Aug 08 2011 Stuart H <hodgsons@st.com>
+- [Bugzilla: 13490] Initial integration of stm_te, stm_fe
+
+* Thu Jul 28 2011 Rahul V <rahul.v@st.com> - int3-1
+- Linux DVB on stm_fe generic wrapper implementation
+
+* Wed Jul 20 2011 André Draszik <andre.draszik@st.com> - int2-1
+- [Bugzilla: 13223] dvb_adaptation source rpm does not build for non-sh4 arches
+- [Spec] heavy cleanup
+- [Bugzilla: 13279] dvb adaptation build system does not work for non-sh
+  cpu type or sh4-glibc ARCH
+
+* Fri Jul 15 2011 Andy Gardner <andrew.gardner@st.com> - int1-2
+- [Makefile] Fix tar command adding include that did not exist.
+
+* Tue Jun 21 2011 Subrata Chatterjee <subrata.chatterjee@st.com> - int1-1
+- First rpm version
+

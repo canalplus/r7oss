@@ -1,0 +1,26 @@
+* change char *(*rec_func)(struct ir_remote *remotes) to indicate ignored input
+
+* HAL
+
+* GUI for irrecord
+
+* RC-5X support
+
+* fix tool command line options for config file
+
+* on_enter, on_leave in .lircrc modes
+
+* irrecord: fancy Kenwood repeat code 78 11243 78: repeat_tail?
+
+* Grundig/Motorola (context?) protocol (maybe?)
+
+* echostar protocol reported by John.colburn@shaw.ca:
+  there's no gap and no ptrail although it is space encoded
+
+* internationalization
+
+* IrDA support (SIR support is available, real CIR support is still missing)
+
+* integrate lircrc_config with lirc source package.
+
+* consider min_code_repeat on transmit

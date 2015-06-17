@@ -1,0 +1,22 @@
+--- ../../alsa-kernel/isa/wavefront/wavefront_fx.c	2007-12-20 10:23:25.000000000 +0100
++++ wavefront_fx.c	2007-12-20 11:22:16.000000000 +0100
+@@ -1,3 +1,5 @@
++#define __NO_VERSION__
++#include "adriver.h"
+ /*
+  *  Copyright (c) 1998-2002 by Paul Davis <pbd@op.net>
+  *
+@@ -263,8 +265,13 @@
+ #ifdef CONFIG_SND_WAVEFRONT_FIRMWARE_IN_KERNEL
+ 	firmware = &yss225_registers_firmware;
+ #else
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
+ 	err = request_firmware(&firmware, "yamaha/yss225_registers.bin",
+ 			       dev->card->dev);
++#else
++	err = request_firmware(&firmware, "yamaha/yss225_registers.bin",
++			       "yss225");
++#endif
+ 	if (err < 0) {
+ 		err = -1;
+ 		goto out;

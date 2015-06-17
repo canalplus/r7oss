@@ -1,0 +1,22 @@
+/*
+ * Copyright (C) 2014 STMicroelectronics Limited.
+ * Author: Patrice Chotard <patrice.chotard@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * publishhed by the Free Software Foundation.
+ */
+/dts-v1/;
+#include "stid127-b2163x.dtsi"
+
+/ {
+	model = "STiD127 B2163 Rev B Board";
+
+	soc {
+		rtl8367rb {
+			gpio-sck = <&PIO7 6 0>;
+			gpio-sda = <&PIO7 5 0>;
+			gpio-reset = <&PIO21 2 0>;
+		};
+	};
+};

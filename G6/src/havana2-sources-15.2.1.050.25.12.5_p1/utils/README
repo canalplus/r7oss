@@ -1,0 +1,38 @@
+======================== Streaming Engine utilities ===========================
+
+Streaming Engine utilities is a set of scripts whose goal is to better :
+- Understand
+- Monitor
+- Analyze
+streaming engine activities, especially when it comes to handle large traces
+Most of those utilities use parseNplot (and GNUPlot, its graph backend) to
+generate a data visualization fitted for specific purposes
+
+===============================================================================
+
+# Requirements :
+    - parseNplot.pl in PATH
+    - parseNplot in its very latest version
+    - gnuplot installed
+
+# Note : details on each script (--help is available for most of them)
+
+------------------------------- se-pipeline.pl --------------------------------
+    - Goal
+        Monitoring Streaming Engine pipeline and AVSync
+        It represents, for each frame, the date it came through selected stages
+        of the processing pipeline
+    - Data source :
+        Live feed using a ssh connection to a running target
+        It first connects to a target, activates necessary traces and launches
+        parseNplot to display a live monitoring window
+        (--tv display it on target main display)
+        (--help for details)
+
+------------------------------ devlog-bitrate.sh ------------------------------
+    - Goal :
+        Visualization of the bitrates of write operations on video and audio
+        devices
+    - Data source :
+        Devlog file of a usecase
+

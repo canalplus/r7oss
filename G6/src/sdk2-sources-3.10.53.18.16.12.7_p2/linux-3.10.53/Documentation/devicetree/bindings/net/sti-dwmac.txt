@@ -1,0 +1,50 @@
+STMicroelectronics SoC DWMAC controller
+
+The device node has following properties.
+
+Required properties:
+ - compatible	: Can be "st,stih415-dwmac", "st,stih416-dwmac" or
+   "st,stid127-dwmac".
+ - reg		: Offset of the glue configuration register map in system
+   configuration regmap pointed by st,syscon property and size.
+ - st,syscon	: Should be phandle to system configuration node which
+   encompases this glue registers.
+ - st,gmac_en: this is to enable the gmac into a dedicated sysctl control
+   register available on STiH407 SoC.
+
+Optional properties:
+ - resets	: phandle pointing to the system reset controller with correct
+   reset line index for ethernet reset.
+ - st,ext-phyclk: valid only for RMII where PHY can generate 50MHz clock or
+   MAC can generate it.
+ - st,tx-retime-src: This specifies which clk is wired up to the mac for
+   retimeing tx lines. This is totally board dependent and can take one of the
+   posssible values from "txclk", "clk_125" or "clkgen".
+   If not passed, the internal clock will be used by default.
+
+Sub-nodes:
+The dwmac core should be added as subnode to STMicroelectronics dwmac glue.
+- dwmac :	The binding details of dwmac can be found in
+  Documentation/devicetree/bindings/net/stmmac.txt
+
+Example:
+
+ethernet0: ethernet0{
+	#address-cells = <1>;
+	#size-cells = <1>;
+	compatible		= "st,stih415-dwmac";
+	reg			= <0x148 0x4>;
+	resets			= <&softreset STIH415_ETH0_SOFTRESET>;
+	st,syscon		= <&syscfg_rear>;
+	st,tx-retime-src	= "clk_125";
+	ranges;
+
+	dwmac0:dwmac@fe810000 {
+		device_type 	= "network";
+		compatible	= "snps,dwmac", "snps,dwmac-3.610";
+		reg 		= <0xfe810000 0x8000>;
+		interrupts 	= <0 147 0>;
+		interrupt-names = "macirq";
+		...
+	};
+};

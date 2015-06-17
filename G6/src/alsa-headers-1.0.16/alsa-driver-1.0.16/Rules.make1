@@ -1,0 +1,79 @@
+#
+# Shared rules
+#
+
+#
+# Parse directories
+#
+
+__subdir-y      := $(patsubst %/,%,$(filter %/, $(obj-y)))
+subdir-y        += $(__subdir-y)
+__subdir-m      := $(patsubst %/,%,$(filter %/, $(obj-m)))
+subdir-m        += $(__subdir-m) $(__subdir-y)
+__subdir-n      := $(patsubst %/,%,$(filter %/, $(obj-n)))
+subdir-n        += $(__subdir-n)
+__subdir-       := $(patsubst %/,%,$(filter %/, $(obj-)))
+subdir-         += $(__subdir-)
+obj-y           := $(patsubst %/, %/built-in.o, $(obj-y))
+obj-m           := $(filter-out %/, $(obj-m))
+
+#
+# ALSA hacks for extra code
+#
+
+subdir-y	+= $(extra-subdir-y)
+subdir-m	+= $(extra-subdir-m)
+subdir-n	+= $(extra-subdir-n)
+
+obj-y		+= $(extra-obj-y)
+obj-m		+= $(extra-obj-m)
+obj-n		+= $(extra-obj-n)
+
+#
+#
+#
+
+both-m          := $(filter $(mod-subdirs), $(subdir-y))
+SUB_DIRS	:= $(subdir-y)
+MOD_SUB_DIRS	:= $(sort $(subdir-m) $(both-m))
+ALL_SUB_DIRS	:= $(sort $(subdir-y) $(subdir-m) $(subdir-n) $(subdir-))
+
+#
+#
+#
+
+#
+# A rule to do nothing
+#
+dummy:
+
+#
+# This is useful for testing
+#
+script:
+	$(SCRIPT)
+
+#
+#
+#
+
+.PHONY: clean1
+clean1:
+	rm -f .depend *.[oas] *.ko .*.cmd .*.tmp *.mod.c *.isapnp $(clean-files)
+
+.PHONY: clean
+clean: $(patsubst %,_sfclean_%,$(ALL_SUB_DIRS)) clean1
+
+.PHONY: mrproper
+mrproper: $(patsubst %,_sfmrproper_%,$(ALL_SUB_DIRS)) clean1
+	rm -f *~ out.txt *.orig *.rej .#* .gdb_history
+
+ifneq "$(strip $(ALL_SUB_DIRS))" ""
+$(patsubst %,_sfclean_%,$(ALL_SUB_DIRS)):
+	$(MAKE) -C $(patsubst _sfclean_%,%,$@) clean
+endif
+
+ifneq "$(strip $(ALL_SUB_DIRS))" ""
+$(patsubst %,_sfmrproper_%,$(ALL_SUB_DIRS)):
+	$(MAKE) -C $(patsubst _sfmrproper_%,%,$@) mrproper
+endif

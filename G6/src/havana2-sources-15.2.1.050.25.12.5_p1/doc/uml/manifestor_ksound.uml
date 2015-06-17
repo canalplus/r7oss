@@ -1,0 +1,26 @@
+@startuml
+title Manifestor_Audio_ksound_c::QueueDecodeBuffer
+
+hide footbox
+participant "Manifestor_Audio_ksound_c" as manifestor_ksound
+participant "StreamBufferQueue" as bufferQueue
+
+
+[-> manifestor_ksound: QueueDecodeBuffer(Buffer)
+note left
+    Manifestation Coordinator calls QueueDecodeBuffer
+    on each manifestor attached to it
+end note
+activate  manifestor_ksound
+manifestor_ksound -> bufferQueue: Insert(Buffer)
+note left
+    the manifestor_ksound puts the buffer in an internal
+    queue that is monitored by the Mixer_MME_c::PlaybackThread
+end note
+activate bufferQueue
+deactivate bufferQueue
+
+[<-- manifestor_ksound
+deactivate manifestor_ksound
+
+@enduml

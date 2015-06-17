@@ -1,0 +1,24 @@
+ST Voltage regulator for FlashSS vsense
+
+This is the voltage regulator driver to manage the vsense inside the ST flash
+sub-system that is used for configuring MMC, NAND, SPI voltages.
+
+Required properties:
+- compatible: can be "st,vmmc", "st,vnand" or "st,vspi" because it is shared
+  among these devices inside the ST FlashSS. Currently it is only tested on
+  MMC.
+
+Required properties:
+- regulator-name: regulator name.
+- reg: is the vsense top config base address in the flashSS hardware.
+
+Any property defined as part of the core regulator
+binding, defined in regulator.txt, can also be used.
+
+Example:
+
+vmmc_reg: voltage-regulator {
+	compatible = "st,vmmc";
+	regulator-name = "vmmc0";
+	reg = <0x9061004 0x4>;
+};

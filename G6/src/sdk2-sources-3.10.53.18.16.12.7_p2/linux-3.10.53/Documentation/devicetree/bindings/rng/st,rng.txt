@@ -1,0 +1,13 @@
+Random number generator driver for STMicroelectronics STiH41x series of SoCs.
+
+Required parameters:
+1) compatible	: should be "st,rng"
+2) reg		: Base address of the HW IP and Size of its memory map.
+3) clock	: Input Clock
+
+Example:
+rng0{
+	compatible      = "st,rng";
+	reg		= <0xfee80000 0x1000>;
+	clocks          = <&CLK_SYSIN>;
+}

@@ -1,0 +1,16 @@
+/sys/devices/soc.2/fd800000.stm-lx-cpu
+/sys/devices/soc.2/fda00000.stm-lx-cpu
+/sys/devices/soc.2/fdb00000.stm-lx-cpu
+/sys/devices/soc.2/fdc00000.stm-lx-cpu
+/sys/devices/soc.2/snd_uni_player.1
+/sys/devices/soc.2/snd_uni_player.2
+/sys/devices/soc.2/snd_uni_player.3
+/sys/devices/soc.2/snd_uni_reader.4
+/sys/devices/soc.2/fed41000.i2c/displaylink.3
+/sys/devices/soc.2/fdda0000.h264pp
+/sys/devices/soc.2/fd681000.mali
+/sys/devices/soc.2/fd341000.bdispII
+/sys/devices/soc.2/fd342000.bdispII
+/sys/devices/platform/stm-fb.0
+/sys/devices/platform/stm-fb.1
+/sys/devices/soc.2/fd000000.stm-display

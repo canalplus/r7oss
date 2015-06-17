@@ -1,0 +1,11 @@
+          name : env_parser
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : 
+      commands : 
+       options : env_file, env_file_required
+   description : After a service is parsed, initng may parse an environment
+                 file and add these entries to the db.  Files specified by
+                 env_file should contain variable declarations only, in the
+                 form FOO="bar".  Shellscript in an env_file will NOT be
+                 processed, to use a file with scripting, you will need to
+                 source it within an 'exec start' or similar code block.

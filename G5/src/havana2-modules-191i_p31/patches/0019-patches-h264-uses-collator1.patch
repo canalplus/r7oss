@@ -1,0 +1,34 @@
+From 95c8105b09511a07bbd85d3401caabbe068ddab4 Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:19:59 +0100
+Subject: [PATCH 19/36] patches/h264-uses-collator1
+
+---
+ .../media/dvb/stm/backend/player_factory.cpp       |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/linux/drivers/media/dvb/stm/backend/player_factory.cpp b/linux/drivers/media/dvb/stm/backend/player_factory.cpp
+index 5d6d87d..089fa21 100644
+--- a/linux/drivers/media/dvb/stm/backend/player_factory.cpp
++++ b/linux/drivers/media/dvb/stm/backend/player_factory.cpp
+@@ -14,7 +14,7 @@
+ #include "backend_ops.h"
+ #include "player.h"
+ #include "collator_pes_video_mpeg2.h"
+-#include "collator2_pes_video_h264.h"
++#include "collator_pes_video_h264.h"
+ #include "collator_pes_video_vc1.h"
+ #include "collator_pes_video_wmv.h"
+ #include "collator_pes_video_divx.h"
+@@ -112,7 +112,7 @@ static void* CollatorPesVideoMpeg2Factory  (void)
+ static void* CollatorPesVideoH264Factory  (void)
+ {
+     PLAYER_DEBUG("\n");
+-    return new Collator2_PesVideoH264_c ();
++    return new Collator_PesVideoH264_c ();
+ }
+ 
+ static void* CollatorPesVideoVc1Factory  (void)
+-- 
+1.7.9.5
+

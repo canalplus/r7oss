@@ -1,0 +1,48 @@
+ifeq ($(HDMI_148MHZ_PRE_EMPHASIS),)
+HDMI_148MHZ_PRE_EMPHASIS=3
+endif
+ifeq ($(HDMI_148MHZ_PRE_EMPHASIS_ON),)
+HDMI_148MHZ_PRE_EMPHASIS_ON=1
+endif
+
+CFLAGS += \
+	'-DHDMI_I2C_ADAPTER_ID=$(HDMI_I2C_ADAPTER_ID)' \
+	'-DHDMI_HOTPLUG_PIO_PORTNO=$(HDMI_HOTPLUG_PIO_PORTNO)' \
+	'-DHDMI_HOTPLUG_PIO_PINNO=$(HDMI_HOTPLUG_PIO_PINNO)' \
+	'-DHDMI_HOTPLUG_PIO_NAME=$(HDMI_HOTPLUG_PIO_NAME)' \
+	'-DHDMI_HOTPLUG_PIO_DIRECTION=$(HDMI_HOTPLUG_PIO_DIRECTION)' \
+	'-DHDMI_HOTPLUG_PIO_INVERT=$(HDMI_HOTPLUG_PIO_INVERT)' \
+	'-DSTMFB_CLOCK_REF_30MHZ_ERROR=$(STMFB_CLOCK_REF_30MHZ_ERROR)' \
+	'-DSTMFB_MAX_DAC123_VOLTAGE=$(STMFB_MAX_DAC123_VOLTAGE)' \
+	'-DSTMFB_MAX_DAC456_VOLTAGE=$(STMFB_MAX_DAC456_VOLTAGE)' \
+	'-DHDMI_148MHZ_PRE_EMPHASIS=$(HDMI_148MHZ_PRE_EMPHASIS)' \
+	'-DHDMI_148MHZ_PRE_EMPHASIS_ON=$(HDMI_148MHZ_PRE_EMPHASIS_ON)'
+
+EXTRA_CFLAGS := -I$(STG_TOPDIR) -I$(STG_TOPDIR)/include -I$(STG_TOPDIR)/linux/include
+#EXTRA_CFLAGS += -O0
+
+ifeq ($(CONFIG_STG_DEBUG),y)
+EXTRA_CFLAGS += -DDEBUG
+endif
+
+ifneq ($(CONFIG_STG_DEBUG_LEVEL),)
+EXTRA_CFLAGS += -DDEBUG_LEVEL=$(CONFIG_STG_DEBUG_LEVEL)
+endif
+
+ifeq ($(CONFIG_ST_BIOS),y)
+EXTRA_CFLAGS += -DHAVE_BIOS
+endif
+
+BUILD_SYSTEM_INFO = $(shell /bin/uname -a)
+BUILD_USER = $(shell /usr/bin/whoami)
+BUILD_DATE = $(shell /bin/date)
+STMFB_ORIGINAL_SOURCE_PATH ?= <unknown - are you using a foreign build system?>
+
+# We need the source paths to be relative for the 2.6 build
+# system as they get appended to the full directory path of
+# this makefile.
+SRC_TOPDIR := ../..
+
+include $(STG_TOPDIR)/linux/drivers/stm/coredisplay/Makefile
+include $(STG_TOPDIR)/linux/drivers/media/video/Makefile
+include $(STG_TOPDIR)/linux/drivers/video/Makefile

@@ -1,0 +1,113 @@
+Setting hardware watchpoints programatically on SH4
+---------------------------------------------------
+
+An interface is provided to allow a single hardware watchpoint to be set using
+the SH4 User Break Controller. To enable this functionality, turn on:
+
+Kernel Hacking -> Enable Hardware Watchpoints
+
+To set a watchpoint:
+
+1) include <asm/watchpoint.h>,
+2) create a struct hw_watchpoint,
+3) initialize it with hw_watch_init()
+4) fill in the fields to specify the watchpoint required
+4) pass it to add_hw_watch().
+
+Only one member of struct hw_watchpoint is mandatory:
+
+u32 rw:		The watchpoint access type
+
+The access type can be either WP_READ (break when the address is read),
+WP_WRITE (break when the address is written to) or WP_ACCESS (break on both
+reads and writes).
+
+Then either specify:
+
+u32 addr:	The address to be watched
+
+or
+
+u32 addr_mask:	Setting this to 0xffffffff means that the address is ignored,
+                only the value (the val field, see below) is checked.
+
+There are three other members than can be optionally set:
+
+u32 val:	The value to match
+
+In this case, the watchpoint will only fire if the access is of this value.
+
+u32 oneshot:	If this member is set to 1, the watchpoint will be removed
+                after it is first hit
+
+void (*handler) (unsigned long r4, unsigned long r5,
+		 unsigned long r6, unsigned long r7,
+		 struct pt_regs *regs); 
+
+This is a pointer to a function that will be called when the watchpoint fires.
+If this is not set, the registers, stack and a backtrace will be dumped to the
+console.
+
+A set watchpoint can be disabled with disable_hw_watch(), and re-enabled
+with reenable_hw_watch().
+
+If add_hw_watch is called when a watchpoint is present, the first watchpoint
+will be lost. 
+
+Simple example:
+--------------------8<-------------------------8<--------------------
+	struct hw_watchpoint wp;
+	hw_watch_init(&wp);
+	wp.addr = &empty_zero_page;
+	wp.rw = WP_READ;
+
+	add_hw_watch(&wp);
+--------------------8<-------------------------8<--------------------
+
+The above code fragment will cause the registers and stack to be dumped
+whenever the word of memory at empty_zero_page is read from. 
+
+Arbitary address example:
+--------------------8<-------------------------8<--------------------
+	struct hw_watchpoint wp;
+
+	hw_watch_init(&wp);
+	wp.addr_mask = 0xffffffff;
+	wp.rw = WP_ACCESS;
+	wp.val = 0xdead0042;
+	add_hw_watch(&wp);
+--------------------8<-------------------------8<--------------------
+
+This will trigger on any long word reads or writes that use the data
+value 0xdead0042.
+
+Slightly less simple example:
+
+--------------------8<-------------------------8<--------------------
+asmlinkage void user_watch_trap(unsigned long r4, unsigned long r5,
+				 unsigned long r6, unsigned long r7,
+				 struct pt_regs *regs)
+{
+	printk("User watch trap at 0x%.8x\n", regs->pc);
+}
+
+<...>
+
+	struct hw_watchpoint wp;
+	hw_watch_init(&wp);
+	wp.addr = &empty_zero_page;
+	wp.val = 0xdeadbeef;
+	wp.rw = WP_WRITE;
+	wp.oneshot = 1;
+	wp.handler = user_watch_trap;
+
+	add_hw_watch(&wp);
+	
+<...>
+--------------------8<-------------------------8<--------------------
+
+The above code fragment will set a watchpoint on the word at empty_zero_page,
+entering the user-defined handler user_watch_trap() the first time 0xdeadbeef
+is written to that address.
+
+Chris Smith <chris.smith@st.com>, August 2009

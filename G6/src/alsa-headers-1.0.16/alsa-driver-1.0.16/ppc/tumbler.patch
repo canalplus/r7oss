@@ -1,0 +1,53 @@
+--- ../alsa-kernel/ppc/tumbler.c	2007-12-20 11:47:37.000000000 +0100
++++ tumbler.c	2007-12-20 12:25:05.000000000 +0100
+@@ -1,3 +1,5 @@
++#define __NO_VERSION__
++#include "adriver.h"
+ /*
+  * PMac Tumbler/Snapper lowlevel functions
+  *
+@@ -38,6 +40,8 @@
+ #include "pmac.h"
+ #include "tumbler_volume.h"
+ 
++#include "ppc-prom-hack.h"
++
+ #undef DEBUG
+ 
+ #ifdef DEBUG
+@@ -965,7 +969,11 @@
+ 	}
+ }
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
++static struct tq_struct device_change;
++#else
+ static struct work_struct device_change;
++#endif
+ static struct snd_pmac *device_change_chip;
+ 
+ static void device_change_handler(struct work_struct *work)
+@@ -1035,7 +1043,11 @@
+ 		mix = chip->mixer_data;
+ 		snd_assert(mix, return);
+ 		mix->auto_mute_notify = do_notify;
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
++		schedule_task(&device_change);
++#else
+ 		schedule_work(&device_change);
++#endif
+ 	}
+ }
+ #endif /* PMAC_SUPPORT_AUTOMUTE */
+@@ -1455,7 +1467,11 @@
+ 	chip->resume = tumbler_resume;
+ #endif
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
++	INIT_TQUEUE(&device_change, device_change_handler, (void *)chip);
++#else
+ 	INIT_WORK(&device_change, device_change_handler);
++#endif
+ 	device_change_chip = chip;
+ 
+ #ifdef PMAC_SUPPORT_AUTOMUTE

@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+#
+# Generate file/line specific annotations
+# from a given annotation pattern file.
+#
+# Ref to -h or --help for usage
+#
+
+base=$(basename $0)
+dir=$(cd $(dirname $(readlink -e $0)) && pwd)
+set -e
+[ "$DEBUG" = "" ] || set -x
+
+# Globals
+declare tmpdir=""
+declare srcdir=""
+declare output=""
+declare patterns=""
+declare sources=""
+declare rekind=""
+declare -i keep=0
+declare -i quiet=0
+
+error() { echo "error: $*" >&2; exit 1; }
+msg() { [[ $quiet = 1 ]] || echo "$@"; }
+
+version()
+{
+    echo "$base version $(git hash-object $0)"
+}
+
+usage()
+{
+    cat <<EOF
+usage: $base --src <src_dir> --patterns <annotations_pattern_file> -o <annotations_file>
+EOF
+}
+
+help()
+{
+    local less=$(which less 2>/dev/null || true)
+    [[ -n $less ]] || less=more
+
+    cat | $less <<EOF
+Usage: $base --src <src_dir> --patterns <annotations_pattern_file> -o <annotations_file>
+EOF
+}
+
+cleanup()
+{
+    trap - INT QUIT TERM EXIT
+    [[ -d $tmpdir && $keep = 0 ]] && rm -rf $tmpdir
+    true
+}
+
+generate_annotations()
+{
+    rm -f $tmpdir/matches.txt
+    touch $tmpdir/matches.txt
+    cat $patterns > $tmpdir/input.txt
+    local IFS=$'\n'
+    local line
+    local reopts
+    cat $tmpdir/input.txt | while read -r line; do
+        [[ -n $line && ${line::1} != "#" ]] || continue
+        local ok=$(echo "$line" | cut -f1 -d:)
+        # TODO, handle KO after handling OK
+        [[ $ok = "OK" ]] || continue
+        local kind=$(echo "$line" | cut -f2 -d:)
+        local file_pat=$(echo "$line" | cut -f3 -d:)
+        local lnum=$(echo "$line" | cut -f4 -d:)
+        local comment=$(echo "$line" | cut -f5 -d:)
+        local content=$(echo "$line" | cut -f6- -d:)
+        [[ $file_pat != "" && $lnum = '*' ]] || error "wrong pattern description"
+        [[ $rekind = path ]] && reopts=-path
+        [[ $rekind = find ]] && reopts=-regex
+        # TODO: don't know how to handle line continuation, hence sed '/\\$/d' to remove them
+        (cd $srcdir && \
+            find $sources \( -type f -o -type l \) $reopts "./$file_pat" -exec fgrep -wnIH "$content" \{\} \; 2>/dev/null \
+            | sed '/\\$/d'  | cut -f-2 -d: \
+            | sed 's|^./\(.*\)$|'"$ok:$kind:\1:$comment:$content"'|') >> $tmpdir/matches.txt
+    done
+
+    cp $tmpdir/matches.txt $output
+}
+
+# Main processing
+trap cleanup INT QUIT TERM EXIT
+declare -a args=( ${1+"$@"} )
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --src) shift; srcdir="$1";;
+        --patterns) shift; patterns="$patterns $1";;
+        --rekind) shift; rekind="$1";;
+        -o|--output) shift; output="$1";;
+        --sources) shift; sources="$sources $1";;
+        --keep) keep=1;;
+        -q|--quiet) quiet=1;;
+        --help) help; exit 0;;
+        -h) usage; exit 0;;
+        -v) version; exit 0;;
+        --) shift; break;;
+        -*) error "unkown option; $1";;
+        *) break;;
+    esac
+    shift || true
+done
+
+msg Running $base "${args[@]}"
+
+[[ -n $srcdir ]] || error "missing --src <src_dir> option"
+[[ -d $srcdir ]] || error "src dir does not exist"
+[[ -n $patterns ]] || error "missing --patterns <annotations_patterns_file> option"
+[[ -n $output ]] || error "missing --output <annotations_file> option"
+[[ -n $rekind ]] || rekind=path
+[[ $rekind = path || $rekind=find ]] || error "unknown rekind: $rekind, must be one of: path, find"
+[[ -n $sources ]] || sources=.
+
+tmpdir=`mktemp -d`
+msg "Generating annotations in: $output"
+generate_annotations
+
+true

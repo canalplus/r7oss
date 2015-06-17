@@ -1,0 +1,9 @@
+          name : event
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : Ismael Luceno <ismael.luceno@gmail.com>
+      commands : 
+       options : trigger reset_trigger
+ service_types : event
+ process_types : run_event
+        states : EVENT_WAITING EVENT_RUNNING EVENT_DONE EVENT_FAILED
+   description : This plugin register the event service type, this will run events when trigger-requirements are met.

@@ -1,0 +1,36 @@
+--- ../../alsa-kernel/usb/caiaq/caiaq-device.c	2007-12-20 11:47:37.000000000 +0100
++++ caiaq-device.c	2007-12-20 12:31:32.000000000 +0100
+@@ -1,3 +1,4 @@
++#include "adriver.h"
+ /*
+  * caiaq.c: ALSA driver for caiaq/NativeInstruments devices
+  *
+@@ -113,7 +114,11 @@
+ 	{ /* terminator */ }
+ };
+ 
++#if !defined(OLD_USB) && !defined(CONFIG_SND_NEW_IRQ_HANDLER)
++static void usb_ep1_command_reply_dispatch (struct urb* urb, struct pt_regs *regs)
++#else
+ static void usb_ep1_command_reply_dispatch (struct urb* urb)
++#endif
+ {
+ 	int ret;
+ 	struct snd_usb_caiaqdev *dev = urb->context;
+@@ -359,6 +364,16 @@
+ 	return card;
+ }
+ 
++#if !defined(OLD_USB) && !defined(CONFIG_SND_NEW_IRQ_HANDLER)
++static void snd_usb_caiaq_midi_output_done_wrapper(struct urb* urb,
++						   struct pt_regs *regs)
++{
++	snd_usb_caiaq_midi_output_done(urb);
++}
++#undef snd_usb_caiaq_midi_output_done
++#define snd_usb_caiaq_midi_output_done snd_usb_caiaq_midi_output_done_wrapper
++#endif
++
+ static int init_card(struct snd_usb_caiaqdev *dev)
+ {
+ 	char *c;

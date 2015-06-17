@@ -1,0 +1,29 @@
+From 8819b623c06928fda110ae5850e640ce195bfb04 Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:19:59 +0100
+Subject: [PATCH 22/36] patches/0004-10585-PerformOnePartition-after-flush-fix
+
+---
+ player/collator2/collator2_base.cpp |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/player/collator2/collator2_base.cpp b/player/collator2/collator2_base.cpp
+index 8f20650..e659d7d 100644
+--- a/player/collator2/collator2_base.cpp
++++ b/player/collator2/collator2_base.cpp
+@@ -998,7 +998,11 @@ bool			PreservedNonBlocking;
+     OS_LockMutex( &PartitionLock );
+     AccumulateOnePartition();
+ 
+-    PartitionPointSafeToOutputCount	= PartitionPointMarkerCount;		// If we are flushing, then we should move the marker and safe to output pointers
++    if( PlayDirection == PlayForward )
++	PartitionPointSafeToOutputCount	= 0;
++    else
++	PartitionPointSafeToOutputCount	= PartitionPointMarkerCount;	// If we are flushing, then we should move the marker and safe to output pointers
++
+     PartitionPointMarkerCount		= PartitionPointUsedCount;
+ 
+     PreservedNonBlocking	= NonBlockingInput;
+-- 
+1.7.9.5
+

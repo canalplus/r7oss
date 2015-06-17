@@ -1,0 +1,7 @@
+CROSS_COMPILE ?= armv6-linux-
+STM_TARGET_CPU := arm
+
+CC  := $(CROSS_COMPILE)gcc
+CXX := $(CROSS_COMPILE)g++
+LD  := $(CROSS_COMPILE)ld
+AR  := $(CROSS_COMPILE)ar

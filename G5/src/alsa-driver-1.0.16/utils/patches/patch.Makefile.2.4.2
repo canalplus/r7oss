@@ -1,0 +1,14 @@
+--- Makefile.old	Mon Mar 19 20:19:24 2001
++++ Makefile	Fri Mar 23 23:28:04 2001
+@@ -83,6 +83,11 @@
+   obj-y += dmasound/dmasound.o
+ endif
+ 
++subdir-$(CONFIG_SND) += alsa lowlevel cards
++
++ifeq ($(CONFIG_SND),y)
++  obj-y += alsa/s.o lowlevel/lowlevel.o cards/cards.o
++endif
+ 
+ # Declare multi-part drivers.
+ 

@@ -1,0 +1,181 @@
+#
+# this config file was automatically generated
+# using lirc-0.8.2(samsung) on Sat Dec 22 08:38:51 2007
+#
+# contributed by Robert Schedel <r.schedel | yahoo.de>
+#
+# brand:                       Satelco (Samsung IrDA remote)
+# model no. of remote control: RE49C
+# devices being controlled by this remote: Satelco EasyWatch DVB-C
+#
+# Basically this should handle all remotes reporting as Samsung IrDA
+# (0419:0001), but for now only the Satelco remote is tested.
+# 
+
+begin remote
+
+  name  Samsung
+  bits           32
+  eps            30
+  aeps          100
+
+  one             0     0
+  zero            0     0
+  gap          203831
+  pre_data_bits   0
+  pre_data      0x0
+  toggle_bit      0
+
+      begin codes
+### Standard keyboard report, type 1
+          OK                       0x70028
+          Right                    0x7004f
+          Left                     0x70050
+          Up                       0x70052
+          Down                     0x70051
+
+### Standard generic desktop report, type 3
+          Power                    0x10001
+
+### Propietary Samsung report, type 4
+          Mute                     0xffcc0001
+          Video_Archive            0xffcc0002
+          1                        0xffcc0003
+          2                        0xffcc0004
+          3                        0xffcc0005
+          Sleep                    0xffcc0006
+          4                        0xffcc0007
+          5                        0xffcc0008
+          6                        0xffcc0009
+          Last                     0xffcc000a
+          7                        0xffcc000b
+          8                        0xffcc000c
+          9                        0xffcc000d
+          Subtitle                 0xffcc000e
+          Full                     0xffcc000f
+          0                        0xffcc0010
+          PIP                      0xffcc0011
+          Timer                    0xffcc0012
+          Source                   0xffcc0013
+          TV_Menu                  0xffcc0014
+          EPG                      0xffcc0015
+          Text                     0xffcc0016
+# gap 17..1b: probably cursor keys were previously planned here
+          TV                       0xffcc001c
+          Radio                    0xffcc001d
+          DVD                      0xffcc001e
+          Ch+                      0xffcc001f
+          Menu                     0xffcc0020
+          Vol+                     0xffcc0021
+          Ch-                      0xffcc0022
+          Back                     0xffcc0023
+          Vol-                     0xffcc0024
+          Play                     0xffcc0025
+          Pause                    0xffcc0026
+          Stop                     0xffcc0027
+          Record                   0xffcc0028
+          Prev                     0xffcc0029
+          Rewind                   0xffcc002a
+          Forward                  0xffcc002b
+          Next                     0xffcc002c
+          Red                      0xffcc002d
+          Green                    0xffcc002e
+          Yellow                   0xffcc002f
+          Blue                     0xffcc0030
+      end codes
+
+end remote
+
+#
+#
+# Contributor: Rene Bartsch <reneATbartschnet.de>
+#
+#
+# Brand: Terratec                          (Samsung Info. Systems America, Inc.)
+# Model: Fernbedienung Set incl. USB Bulk  (IrDA Remote Controller, USB-ID 0419:0001)
+#        (grey handset)
+#
+#
+# Devices being controlled by this remote:
+#	- Stand-alone remote
+#	- Terratec DVB devices (please add approved ones)
+#
+#
+# LIRC  version: >= 0.8.3
+# LIRC  driver:  Samsung
+# LIRCD_OPTS="-H samsung -d /dev/hiddevX"
+#
+# Linux version: >= 2.6.25
+# Kernel config: CONFIG_USB_HIDDEV=y|m
+#		 USB controllers, ...
+
+
+begin remote
+    name		Terratec
+    bits		32
+    eps			30
+    aeps		100
+    one			0	0
+    zero		0	0
+    gap			203831
+    pre_data_bits	0
+    pre_data		0x0
+    toggle_bit		0
+
+    begin codes
+
+###    Standard generic desktop report, type 3  ###
+	Power		0x10001
+
+
+###    Propietary Samsung report, type 4    ###
+	HOME		0xffcc0001
+	DVD_Menu	0xffcc0002
+	1		0xffcc0003
+	2		0xffcc0004
+	3		0xffcc0005
+	Subtitles	0xffcc0006
+	4		0xffcc0007
+	5		0xffcc0008
+	6		0xffcc0009
+	Teletext	0xffcc000a
+	7		0xffcc000b
+	8		0xffcc000c
+	9		0xffcc000d
+	Delete		0xffcc000e
+	AV		0xffcc000f
+	0		0xffcc0010
+	A.B		0xffcc0011
+	TV		0xffcc0012
+	DVD		0xffcc0013
+	VIDEO		0xffcc0014
+	MUSIC		0xffcc0015
+	PIC		0xffcc0016
+	UP		0xffcc0017
+	LEFT		0xffcc0018
+	OK		0xffcc0019
+	RIGHT		0xffcc001a
+	DOWN		0xffcc001b
+	EPG_GUIDE	0xffcc001c
+	INFO		0xffcc001d
+	BACK		0xffcc001e
+	VOL+		0xffcc001f
+	PLAY		0xffcc0020
+	CH+		0xffcc0021
+	VOL-		0xffcc0022
+	MUTE		0xffcc0023
+	CH-		0xffcc0024
+	RED		0xffcc0025
+	GREEN		0xffcc0026
+	YELLOW		0xffcc0027
+	BLUE		0xffcc0028
+	REC		0xffcc0029
+	STOP		0xffcc002a
+	PAUSE		0xffcc002b
+	LAST		0xffcc002c
+	FR		0xffcc002d
+	FF		0xffcc002e
+	NEXT		0xffcc002f
+	Blue		0xffcc0030
+    end codes
+end remote

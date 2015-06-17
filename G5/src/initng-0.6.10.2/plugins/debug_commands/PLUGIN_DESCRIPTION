@@ -1,0 +1,9 @@
+          name : debug_commands
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : 
+      commands : list_filedescriptors, quit, print_service_db, print_active_db
+                 verbose, add_verbose, del_verbose.
+       options : 
+   description : This plugin contains commands usable when writing .i files or
+                 developing with initng (running fake mode, etc).  These tools
+                 can cause no harm to a system other than memory consumption.

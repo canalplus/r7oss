@@ -1,0 +1,12 @@
+#ifndef MSS_MAGIC_NO
+#define MSS_MAGIC_NO   'l'
+#endif
+
+enum {
+	IOCTL_SINK_CONNECT = 0x1,
+	IOCTL_SINK_DISCONNECT
+};
+
+#define MSS_SINK_CONNECT	      _IOWR(MSS_MAGIC_NO, IOCTL_SINK_CONNECT, unsigned int)
+#define MSS_SINK_DISCONNECT	 _IOWR(MSS_MAGIC_NO, IOCTL_SINK_DISCONNECT, unsigned int)
+

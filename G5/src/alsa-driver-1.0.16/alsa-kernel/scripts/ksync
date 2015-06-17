@@ -1,0 +1,1584 @@
+#! /usr/bin/python
+#  -*- Python -*-
+
+"""Kernel synchronization utility
+
+This script allows synchronization between ALSA CVS repository and 
+standard kernel sources stored in local BK repository.
+
+This tool is intended mainly for internal use of Jaroslav Kysela.
+
+Usage:
+	%(PROGRAM)s [options] command
+
+Where options is:
+
+	-h
+	--help
+		Print this help
+
+	-C <path>
+	--cvsroot=<path>
+		Set root of ALSA CVS repository
+
+	-G <path>
+	--gitroot=<path>
+		Set root of Linux kernel GIT repository
+
+Where command is:
+
+	diffall
+		Diff between ALSA and Linux kernel repositories
+	diffall -r
+		Reverse diff between ALSA and Linux kernel repositories
+
+"""
+
+import os
+import sys
+import string
+import time
+import datetime
+import dircache
+import getopt
+import re
+
+# define for documentation
+PROGRAM = sys.argv[0]
+
+# Global variables
+KERNEL_MAP = {}
+LAST_CVS_TIME = 0
+FATAL_LSYNC_ERROR = 0
+GERRORS = 0
+IGNORE_ASAP = False
+ONLY_ASAP = False
+
+def usage(code, msg=''):
+	print __doc__ % globals()
+	if msg:
+		print msg
+	sys.exit(code)
+
+def get_cvs_root():
+	return os.path.expanduser(CVSROOT + '/alsa-kernel')
+
+def get_cvs_root_top():
+	return os.path.expanduser(CVSROOT)
+
+def get_git_root(root=''):
+	if root == '':
+		root = GITROOT
+	return os.path.expanduser(root)
+
+def my_popen(cmd):
+	fp = os.popen(cmd)
+	lines = fp.readlines()
+	fp.close()
+	return lines
+
+def my_popen2(cmd):
+	fp = os.popen('{ ' + cmd + '; } 2>&1', 'r')
+	lines = fp.readlines()
+	sts = fp.close()
+	if sts == None:
+		sts = 0
+	return sts, lines
+
+def print_file(fp, lines):
+	for line in lines:
+		fp.write(line)
+
+def print_file_comment(fp, lines, space=''):
+	for line in lines:
+		fp.write('# %s' % space)
+		fp.write(line)
+
+def extract_name(full):
+	x, y = string.split(full, '<')
+	return x[:-1]
+
+def extract_email(full):
+	x, y = string.split(full, '<')
+	return y[:-1]
+
+def get_cvs_version():
+	filename = get_cvs_root() + '/include/version.h'
+	fp = open(filename)
+	lines = fp.readlines()
+	fp.close()
+	version = "unknown"
+	for line in lines:
+		str = '#define CONFIG_SND_VERSION'
+		if line[0:len(str)] == str:
+			d = string.split(line, '"')
+			version = d[1]
+			return version
+	return version
+
+def modify_version_file():
+	filename = get_cvs_root() + '/include/version.h'
+	fp = open(filename)
+	lines = fp.readlines()
+	fp.close()
+	fp = open(filename + '.new', 'w')
+	for line in lines:
+		str = '#define CONFIG_SND_DATE'
+		if line[0:len(str)] == str:
+			t = time.gmtime(LAST_CVS_TIME)
+			ts = time.strftime('%a %b %d %H:%M:%S %Y', t)
+			str = str + ' " (%s UTC)"\n' % ts
+			fp.write(str)
+		else:
+			fp.write(line)
+	fp.close()
+	os.rename(filename + '.new', filename)
+
+def update_cvs_file(file, destfile = '', params = ''):
+	path, file = os.path.split(file)
+	print get_cvs_root() + file
+	try:
+		os.chdir(get_cvs_root() + '/' + path)
+	except OSError, msg:
+		os.mkdir(get_cvs_root() + '/' + path)
+		pass
+	if destfile == '':
+		cmd = 'cvs -z3 update %s' % file
+	else:
+		cmd = 'cvs -z3 update -p %s %s' % (params, file)
+	fp = os.popen(cmd)
+	lines = fp.readlines()
+	fp.close()
+	if destfile == '':
+		print_file(sys.stderr, lines)
+	else:
+		fp = open(destfile, 'w')
+		print_file(fp, lines)
+		fp.close()
+
+def update_git_file(file, root=''):
+	# empty
+	root =''
+
+def change_diff_line(line, file):
+	if line[:6] == 'Index:':
+		return 'Index: ' + file + '\n'
+	if line[:7] == 'diff -u':
+		return 'diff -u ' + file + '.old ' + file + '\n'
+	if line[:4] == '--- ':
+		file = file + '.old'
+	if line[:4] == '--- ' or line[:4] == '+++ ':
+		idx = string.find(line[4:], '\t')
+		nline = line[:4] + file + line[4+idx:]
+		return nline
+	return line
+
+def change_diff_lines(lines, file):
+	if len(lines) > 1:
+		lines[0] = change_diff_line(lines[0], file)
+		lines[1] = change_diff_line(lines[1], file)
+	return lines
+
+def update_last_cvs_time(stime):
+	global LAST_CVS_TIME
+	# mktime returns local time, and we need to convert
+	# the result to GMT (UTC) time, so substract the difference
+	# in seconds between local time and GMT (time.timezone)	
+	gm_time = time.mktime(time.strptime(stime)) - time.timezone
+	if (LAST_CVS_TIME < gm_time):
+		LAST_CVS_TIME = gm_time
+
+def get_cvs_files(base, dir):
+	dlist = []
+	flist = []
+
+	# Read all entries
+	fp = open(base + dir + 'CVS/Entries')
+	entries = fp.readlines()
+	fp.close()
+
+	# Process files entries
+	for e in entries:
+		try:
+			flags, name, rev, time, unk1, unk2 = string.split(e, '/')
+			if string.count(flags, 'D') <= 0:
+				update_last_cvs_time(time)
+				flist.append(dir + name);
+		except ValueError, msg:
+			pass
+
+	# Process directory entries
+	for e in entries:
+		try:
+			flags, name, rev, time, unk1, unk2 = string.split(e, '/')
+			if string.count(flags, 'D') > 0 and not ALSA_EXCLUDE_DIR.count(dir + name):
+				dlist1, flist1 = get_cvs_files(base, dir + name + '/');
+				dlist.append(dir + name);
+				dlist = dlist + dlist1
+				flist = flist + flist1
+		except ValueError, msg:
+			pass
+
+	return dlist, flist
+
+def get_git_files(base, dir):
+	dlist = []
+	flist = []
+
+	# merge files and directories
+	dir1 = base + dir
+	l = dircache.listdir(dir1)
+	for f in l:
+		if f[:-1] == '~' or f == '.git':
+			continue
+		if os.path.isdir(dir1 + f):
+			if not KERNEL_EXCLUDE_DIR.count(dir + f):
+				dlist1, flist1 = get_git_files(base, dir + f + '/')
+				dlist.append(dir + f)
+				dlist = dlist + dlist1
+				flist = flist + flist1
+		else:
+			flist.append(dir + f)
+	del l
+	return dlist, flist
+
+def remap_engine(dir, dict):
+	comp = string.split(dir, '/')
+	add = ''
+	while len(comp) > 0:
+		tmp = string.join(comp, '/');
+		if tmp == '':
+			tmp = '/'
+		if dict.has_key(tmp):
+			if add != '' and dict[tmp] != '/':
+				add = '/' + add
+			return dict[tmp] + add;
+		if add == '':
+			add = comp.pop();
+		else:
+			add = comp.pop() + '/' + add;
+	return dir
+
+def remap_alsa(dir):
+	return remap_engine(dir, ALSA_MAP);
+
+def remap_kernel(dir):
+	return remap_engine(dir, KERNEL_MAP);
+
+def remap_alsa_file(file):
+	comp = string.split(file, '/')
+	path = string.join(comp[:len(comp)-1],'/')
+	if path == '':
+		path = '/'
+	path = remap_alsa(path)
+	if path[-1] != '/':
+		path = path + '/'
+	return path + comp[-1]
+
+def remap_kernel_file(file):
+	comp = string.split(file, '/')
+	path = string.join(comp[:len(comp)-1],'/')
+	if path == '':
+		path = '/'
+	path = remap_kernel(path)
+	if path[-1] != '/':
+		path = path + '/'
+	return path + comp[-1]
+
+def get_cvs_date_param(from_cvs_time, to_cvs_time):
+	if from_cvs_time:
+		xtime1 = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(from_cvs_time))
+	if to_cvs_time:
+		xtime2 = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(to_cvs_time))
+	if from_cvs_time and not to_cvs_time:
+		return "-d'%s<'" % xtime1
+	elif not from_cvs_time and to_cvs_time:
+		return "-d'%s>'" % xtime2
+	else:
+		return "-d'%s<%s'" % (xtime1, xtime2)
+
+def get_cvs_date_param1(to_cvs_time):
+	if to_cvs_time:
+		xtime1 = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(to_cvs_time))
+		return "-D'%s'" % xtime1
+	else:
+		return ''
+
+def collect_cvs_logs(file, from_cvs_time, to_cvs_time):
+	path, file = os.path.split(file)
+	os.chdir(get_cvs_root() + '/' + path)
+	cmd = "cvs -z3 log %s %s" % (get_cvs_date_param(from_cvs_time, to_cvs_time), file)
+	fp = os.popen(cmd)
+	lines = fp.readlines()
+	fp.close()
+	i = 0
+	fdead = 1
+	dead = 0
+	next_is_comment = 0
+	result = ''
+	while i < len(lines):
+		if lines[i][0:11] == 'revision ':
+			revision = line[i][11:]
+			i = i + 1
+		elif lines[i][0:6] == 'date: ':
+			date, author, state, xlines = string.split(lines[i], ';')
+			date = date[6:]
+			author = string.lstrip(author)[8:]
+			state = string.lstrip(state)[7:]
+			if state == 'dead' and fdead:
+				dead = 1
+			i = i + 1
+			next_is_comment = 1
+			fdead = 0
+		elif next_is_comment:
+			next_is_comment = 0
+			comment = ''
+			while i < len(lines) and lines[i][0:6] != '------' and lines[i][0:6] != '======':
+				if lines[i][0:9] == 'branches:' or lines[i][0:11] == '*BK_IGNORE*':
+					while i < len(lines) and lines[i][0:6] != '------' and lines[i][0:6] != '======':
+						i = i + 1
+				else:
+					comment = comment + '  ' + lines[i]
+					i = i + 1
+			result = result + '%s, %s :\n' % (CVS_USER[author], date) + comment
+		else:
+			i = i + 1
+	return result, dead
+
+def write_to_patch_update_file(lines):
+	global PATCH_UPDATE
+	fp = open(os.path.expanduser(PATCH_UPDATE), 'a+')
+	print_file(fp, lines)
+	fp.close()
+
+def do_alsa_kernel_diff(alsa, kernel, from_cvs_time, to_cvs_time, ofile=sys.stdout):
+	global FATAL_LSYNC_ERROR
+	ncvsflag = 0
+	ngitflag = 0
+	lsyncflag = 0
+	if from_cvs_time or to_cvs_time:
+		lsyncflag = 1
+#		ncvsflag = 1
+#		afile = '/tmp/ksync_kernel_diff'
+#		params = get_cvs_date_param1(to_cvs_time)
+#		update_cvs_file(alsa, afile, params)
+#	else:
+	afile = get_cvs_root() + alsa;
+	if not os.path.exists(afile):
+		update_cvs_file(alsa)
+		if not os.path.exists(afile):
+			ncvsflag = 1
+			os.system('touch %s' % afile)
+	kfile = get_git_root() + kernel;
+	if not os.path.exists(kfile):
+		update_git_file(kfile)
+		if not os.path.exists(kfile):
+			ngitflag = 1
+			os.system('touch %s' % kfile)
+	if lsyncflag > 0:
+		cmd = 'diff -uN %s %s' % (afile, kfile)
+	else:
+		cmd = 'diff -uN %s %s' % (kfile, afile)
+	fp = os.popen(cmd)
+	lines = fp.readlines()
+	fp.close()
+	lines = change_diff_lines(lines, "linux" + kernel)
+	if len(lines) > 1:
+		if lsyncflag > 0:
+			collected_logs, dead = collect_cvs_logs(alsa, from_cvs_time, to_cvs_time)
+			os.chdir(get_git_root())
+			print 'Updating file %s' % kfile
+			if not ngitflag and not dead:
+				if os.system('git edit %s' % kfile):
+					sys.exit(1)
+			if ngitflag:
+				if os.system('cp -avf %s %s' % (afile, kfile)):
+					sys.exit(1)
+				if os.system('cg-add %s' % kfile):
+					sys.exit(1)
+				ngitflag = 0
+			elif dead:
+				if os.system('cg-rm %s' % kfile):
+					sys.exit(1)
+			else:
+				if os.system('cp -avf %s %s' % (afile, kfile)):
+					sys.exit(1)
+			tmpfile = '/tmp/ksyncABCD1234'
+			fp = open(tmpfile, 'w+')
+			if alsa == '/include/version.h':
+				collected_logs = 'Updated date/time/version from the ALSA CVS tree'
+			fp.write(collected_logs)
+			fp.close()
+			os.remove(tmpfile)
+		else:
+			print_file(ofile, lines)
+	if ncvsflag:
+		os.remove(afile)
+	if ngitflag:
+		os.remove(kfile)
+
+def do_kernel_alsa_diff(kernel, alsa):
+	afile = get_cvs_root() + alsa;
+	kfile = get_git_root() + kernel;
+	if not os.path.exists(afile):
+		update_cvs_file(alsa)
+	if not os.path.exists(kfile):
+		update_git_file(kfile)
+	cmd = 'diff -uN %s %s' % (afile, kfile)
+	fp = os.popen(cmd)
+	lines = fp.readlines()
+	fp.close()
+	lines = change_diff_lines(lines, alsa)
+	print_file(sys.stdout, lines)
+
+def diffall(reverse, from_cvs_time = 0, to_cvs_time = 0):
+	lsyncflag = 0
+	if from_cvs_time or to_cvs_time:
+		lsyncflag = 1
+	cdirs, cfiles = get_cvs_files(get_cvs_root(), '/')
+	bdirs, bfiles = get_git_files(get_git_root(), '/')
+	print 'GITROOT = %s' % GITROOT
+	for d in ALSA_FORCE_DIR:
+		if len(d) == 0:
+			continue
+		if cdirs.count(d) == 0:
+			cdirs.append(d)
+			if d[-1] != '/':
+				d = d + '/'
+			if d != '/':
+				cdirs1, cfiles1 = get_cvs_files(get_cvs_root(), d)
+				cdirs = cdirs + cdirs1
+				cfiles = cfiles + cfiles1
+	for d in KERNEL_FORCE_DIR:
+		if len(d) == 0:
+			continue
+		if bdirs.count(d) == 0:
+			bdirs.append(d)
+			if d[-1] != '/':
+				d = d + '/'
+			if d != '/':
+				bdirs1, bfiles1 = get_git_files(get_git_root(), d)
+				bdirs = bdirs + bdirs1
+				bfiles = bfiles + bfiles1
+	cfiles = cfiles + ALSA_FORCE
+	bfiles = bfiles + KERNEL_FORCE
+	for f in ALSA_EXCLUDE:
+		cfiles.remove(f)
+	for f in KERNEL_EXCLUDE:
+		bfiles.remove(f)
+	first = 1
+	for d in cdirs:
+	        if d == '/kernel':
+	                continue
+		dm = d
+		d = remap_alsa(dm)
+		if not bdirs.count(d):
+			if first:
+				print '# Added directories to Kernel Tree:'
+				first = 0
+			print '#   %s (%s)' % (dm, d)
+	first = 1
+	for d in bdirs:
+		dm = d
+		d = remap_kernel(dm)
+		if not cdirs.count(d):
+			if first:
+				print '# Removed directories from Kernel Tree:'
+				first = 0
+			print '#   %s (%s)' % (dm, d)
+	first = 1
+	for f in cfiles:
+		df = f
+		f = remap_alsa_file(df)
+		if not bfiles.count(f):
+			if first:
+				print '# Added files to Kernel Tree:'
+				first = 0
+			print '#   %s (%s)' % (df, f)
+	first = 1
+	for f in bfiles:
+		df = f
+		f = remap_kernel_file(df)
+		if not cfiles.count(f):
+			if first:
+				print '# Removed files from Kernel Tree:'
+				first = 0
+			print '#   %s (%s)' % (df, f)
+	print '\n'
+	for f in cfiles:
+		df = f
+		f = remap_alsa_file(df)
+		if not reverse:
+			do_alsa_kernel_diff(df, f, from_cvs_time, to_cvs_time)
+		else:
+			do_kernel_alsa_diff(f, df)
+		if bfiles.count(f):
+			bfiles.remove(f)
+	for f in bfiles:
+		df = f
+		f = remap_kernel_file(df)
+		if not reverse:
+			do_alsa_kernel_diff(f, df, from_cvs_time, to_cvs_time)
+		else:
+			do_kernel_alsa_diff(df, f)
+		if cfiles.count(f):
+			cfiles.remove(f)
+	update_cvs_file('include/version.h')
+	modify_version_file()
+	if not reverse:
+		do_alsa_kernel_diff('/include/version.h', '/include/sound/version.h', from_cvs_time, to_cvs_time)
+	else:
+		do_kernel_alsa_diff('/include/sound/version.h', '/include/version.h')
+	os.remove(get_cvs_root() + '/include/version.h')
+	update_cvs_file('include/version.h')
+
+def get_last_lsync_time():
+	os.chdir(get_git_root())
+	os.system('bk get -q include/sound/version.h')
+	fp = open('include/sound/version.h', 'r')
+	lines = fp.readlines()
+	fp.close()
+	if lines[2][0:24] != '#define CONFIG_SND_DATE ':
+		print 'Error, unexpected include/sound/version.h in git directory'
+		print lines[2]
+		sys.exit(1)
+	str = lines[2][27:-7]
+	t = time.mktime(time.strptime(str, '%a %b %d %H:%M:%S %Y'))
+	return t + time.timezone
+
+def get_last_changeset():
+	os.chdir(get_git_root())
+	os.system('bk get -q Makefile')
+	fp = open('Makefile', 'r')
+	lines = fp.readlines()
+	fp.close()
+	kernel1 = '?'
+	kernel2 = '?'
+	kernel3 = '?'
+	kernel4 = ''
+	for line in lines:
+		if line[0:10] == 'VERSION = ':
+			kernel1 = line[10:-1]
+		elif line[0:13] == 'PATCHLEVEL = ':
+			kernel2 = line[13:-1]
+		elif line[0:11] == 'SUBLEVEL = ':
+			kernel3 = line[11:-1]
+		elif line[0:15] == 'EXTRAVERSION = ':
+			kernel4 = line[15:-1]
+	kernel = kernel1 + '.' + kernel2 + '.' + kernel3 + kernel4
+	cmd = 'bk prs -r+ ChangeSet'
+	fp = os.popen(cmd)
+	lines = fp.readlines()
+	fp.close()
+	cs = '0.0'
+	for line in lines:
+		line = line[:-1]
+		words = string.split(line, ' ')
+		if words[0] == 'D':
+			cs = words[1]
+		elif words[0] == 'S':
+			kernel = words[1][1:]
+	return cs, kernel
+
+def filename(ver = 1):
+	cs, kernel = get_last_changeset()
+        print 'alsa-%s-%s-linux-%s-cs%s.patch' % (time.strftime("%Y-%m-%d", time.gmtime(time.time())), ver, kernel, cs)	
+
+def parse_time(str):
+	args = string.split(str, '/')
+	if len(args) < 3:
+		args.insert(0, time.strftime("%Y", time.gmtime(time.time())))
+	if len(args) != 3:
+		print 'Bad date syntax'
+		sys.exit(0)
+	str = args[0] + ' ' + args[1] + ' ' + args[2]
+	t = time.mktime(time.strptime(str, '%Y %m %d'))
+	return t - time.timezone
+
+def cvsps(changeset):
+	os.chdir(get_cvs_root())
+	lines = my_popen("cvsps -Z 3 -u | grep PatchSet | tail -n 1")
+	dummy, endchangeset = string.split(lines[0][0:-2], ' ')
+	changeset = int(changeset)
+	endchangeset = int(endchangeset)
+	print 'Generating CVS changesets %s..%s' % (changeset, endchangeset)
+	try:
+		os.mkdir(get_cvs_root() + '/scripts/changesets')
+	except OSError, msg:
+		a = 0
+	while changeset <= endchangeset:
+		print 'ChangeSet %s' % changeset
+		fp = open(get_cvs_root() + '/scripts/changesets/%s.patch' % changeset, 'w+')
+		lines = my_popen('cvsps -Z 3 -g -s %s' % changeset)
+		idx = 0
+		bkfile = ''
+		for i in lines:
+			if i[0:6] == 'Index:':
+				bkfile = remap_alsa_file(i[string.find(i, '/'):-1])
+				fp.write(change_diff_line(i, bkfile))
+				idx = 1
+			elif i[0:13] == '--- /dev/null':
+				prevline = i
+				idx = 100
+			elif idx > 0 and idx < 4:
+				fp.write(change_diff_line(i, bkfile))
+				idx += 1
+			elif idx == 100:
+				str = string.expandtabs(i[string.find(i, '/'):-1])
+				str = str[0:string.find(str, ' ')]
+				bkfile = remap_alsa_file(str)
+				fp.write('Index: %s\n' % bkfile)
+				fp.write('diff -u %s.old %s\n' % (bkfile, bkfile))
+				fp.write(change_diff_line(prevline, bkfile))
+				fp.write(change_diff_line(i, bkfile))
+				idx = 3
+			else:
+				fp.write(i)
+		fp.close()
+		changeset += 1				
+
+def cvsps_merge_members1(file, module):
+	global COMMENT_MAP
+	map = COMMENT_MAP[module]
+	if module == 'alsa-driver' and file[:6] == '/acore':
+		file = '/' + file[2:]
+	for i in map:
+		if re.compile("^" + i[0]).search(file):
+			if i[1] == 'ERROR':
+				break
+			return i[1]
+	if file[-11:] == '/.cvsignore':
+		return 'IGNORE'
+	if file[-12:] == '/Makefile.am':
+		return file
+	if file[-9:] == '/Makefile':
+		return file
+	return 'ERROR'
+
+def cvsps_merge_members(members, module='alsa-driver', nice=False):
+	global GERRORS
+
+	changes = []
+	result = []
+	for member in members:
+		file, other = string.split(member, ':')
+		file = "/" + file
+		while file != '':
+			result1 = cvsps_merge_members1(file, module)
+			if result1 == 'ERROR':
+				GERRORS += 1
+				str = 'Cannot identify file "%s" from module %s' % (file, module)
+				fp = open("/tmp/cvsps-changes.txt", "a+")
+				fp.write(str + "\n")
+				fp.close()
+				print str, ' {see /tmp/cvsps-changes.txt file}'
+				result1 = ''
+			if result1 != '':
+				file = ''
+				changes.append(result1)
+			else:
+				i = string.rfind(file, '/')
+				if i < 0:
+					file = ''
+				else:
+					file = file[0:i]
+	i = 0
+	while i < len(changes):
+		j = 0
+		while j < len(changes):
+			if i != j and changes[i] == changes[j]:
+				del changes[j]
+				i = -1
+				break
+			j += 1
+		i += 1
+	xresult = ''
+	maxc = 70
+	if nice:
+	        maxc = 61
+	for i in changes:
+		if len(i) + len(xresult) > maxc:
+			result.append(xresult)
+			xresult = ''
+		if xresult == '':
+			xresult = i
+		else:
+			xresult = xresult + ',' + i
+	if xresult != '':
+		result.append(xresult)
+        if len(result) > 1 and nice:
+                return []
+        elif len(result) > 0 and nice:
+              result[0] = "Modules: " + result[0]
+              result.append('')
+	return result
+
+def cvsps_merge1(f,t=0):
+	if not t:
+		print 'Trying merge patch ' + f
+	ff = get_cvs_root() + '/scripts/changesets/' + f
+	fp = open(ff, 'r')
+	diffs = fp.readlines()
+	fp.close()
+	files = []
+	pline = ''
+	for line in diffs:
+		if line[:14] == "+++ /dev/null\t":
+			continue
+		if line[0:3] == '+++':
+			xx1 = string.split(line, ' ')
+			xx1 = string.split(xx1[1], '\t')
+			xx2 = string.split(xx1[0], '/')
+			a = 0
+			file = ''
+			for i in xx2:
+				a += 1
+				if a < 2:
+					continue
+				if file != '':
+					file = file + '/' + i
+				else:
+					file = i
+			files.append(file)
+		pline = line
+	summary = ''
+	signed = []
+	log = []
+	members = []
+	ok = 0
+	idx = 0
+	author = ''
+	date = ''
+	level = 'Devel'
+	branch = 'HEAD'
+	xfrom = ''
+	for line in diffs:
+		if line[:-1] == 'Log:' and ok == 0:
+			ok = 1
+		elif line[:-1] == 'Members: ':
+			ok = 2
+		elif line[:6] == 'Index:':
+			ok = 0
+		elif line[:3] == '---':
+			ok = 0
+		elif line[:5] == 'Date:' and ok == 0:
+			date = line[6:-1]
+		elif line[:7] == 'Author:' and ok == 0:
+			author = CVS_USER[line[8:-1]]
+		elif line[:8] == 'Members:':
+			ok = 2
+		elif line[:8] == 'Branch: ' and ok == 0:
+		        branch = line[8:-1]
+		        if branch == '':
+		                branch = 'HEAD'
+		elif ok == 1:
+			if line[:14] == "Signed-off-by:":
+				signed.append(line)
+			elif line[:14] == "Signed-Off-By:":
+				signed.append(line)
+			elif line[:9] == "Summary: ":
+				summary = line[9:]
+			elif line[:8] == "Summary:":
+				summary = line[8:]
+			elif line[:9] == "Subject: ":
+				summary = line[9:]
+			elif line[:8] == "Subject:":
+				summary = line[8:]
+			elif line[:13] == "Patch-level: ":
+				level = line[13:-1]
+			elif line[:13] == "Patch-Level: ":
+				level = line[13:-1]
+			elif line[:6] == "From: ":
+				xfrom = line[6:-1]
+			else:
+				log.append(line)
+		elif ok == 2:
+			if line != '\n':
+				members.append(line[1:])
+	while len(log) > 1 and log[0] == '\n':
+		del log[0]
+	if level == 'Low':
+		level = 'Devel'
+	elif level == 'High':
+		level = 'ASAP'
+	if level == 'merged':
+		level = 'Merged'
+	while len(log) > 1 and log[len(log)-1] == '\n':
+		del log[len(log)-1]
+	if summary != '':
+		lines = '[ALSA] ' + summary + '\n'
+	else:
+		lines = 'ALSA CVS update\n'
+	nlines = lines
+	if date != '':
+		lines = lines + 'D:' + date + '\n'
+	changes = cvsps_merge_members(members, nice=True)
+	for i in changes:
+		lines = lines + 'C:' + i + '\n'
+	#if author != '':
+	#	lines = lines + 'A:' + author + '\n'
+	for i in changes:
+		nlines = nlines + i + '\n'
+	for i in members:
+		lines = lines + 'F:' + i
+	for i in log:
+		lines = lines + 'L:' + i
+		nlines = nlines + i
+	signed_flag = 0
+	if xfrom != '':
+		real_author = xfrom
+	else:
+		real_author = author
+	for i in signed:
+		if not signed_flag:
+			if xfrom == '':
+				real_author = i[15:]
+			nlines = nlines + '\n'
+			signed_flag = 1
+		lines = lines + i
+		nlines = nlines + i
+	if not signed_flag:
+		nlines = nlines + '\n'
+		signed_flag = 1
+	lines = lines + 'Signed-off-by: %s\n' % author
+	nlines = nlines + 'Signed-off-by: %s\n' % author
+	if t:
+		print lines
+		if branch != BRANCH:
+		        print '^^^^^^ Branch does not match (%s != %s)' % (branch, BRANCH)
+		elif level == 'Merged':
+			print '^^^^^^ Already merged to mainstream...'
+			print
+		return
+
+	if branch != BRANCH:
+		print 'Branch does not match (%s != %s)...' % (branch, BRANCH)
+		return
+
+	if level == 'Merged':
+		print 'Already merged to mainstream...'
+		return
+
+	nlines = string.replace(nlines, '"', "'")
+	nlines = string.replace(nlines, '`', "'")
+	lines = string.replace(lines, '"', "'")
+	lines = string.replace(lines, '`', "'")
+
+	nfiles = []
+	for file in files:
+		if not os.path.exists(file):
+			nfiles.append(file)
+	print 'New files: %s' % nfiles
+
+	os.system('find . -name "*.orig" -exec rm {} \;')
+	os.system('find . -name "*.rej" -exec rm {} \;')
+	os.system('find . -name "*~" -exec rm {} \;')
+
+	while 1:
+		sts, out = my_popen2('cat ' + ff + ' | cg-patch')
+		for o in out:
+			print o[:-1]
+			if string.find(o, 'FAILED') > 0:
+				sts = 1
+		if sts == 0:
+			break
+		print 'Patch failed...'
+		os.system('cg-reset')
+		sys.exit(1)
+	for file in nfiles:
+		print 'Adding file %s...' % file
+		os.system('cg-add %s' % file)
+	pline = ''
+	for line in diffs:
+		if line[:14] == "+++ /dev/null\t" and pline != '':
+			file = pline[4:string.find(pline, '\t')]
+			file1 = remap_alsa_file(file[11:])[1:]
+			print 'Removing file %s...' % file1
+			os.system('cg-rm %s' % file1)
+		pline = line
+
+	print 'Commiting...'
+	os.environ['GIT_AUTHOR_NAME'] = extract_name(real_author)
+	os.environ['GIT_AUTHOR_EMAIL'] = extract_email(real_author)
+	os.environ['GIT_AUTHOR_DATE'] = date
+	os.environ['GIT_COMMITTER_NAME'] = GIT_COMMITTER_NAME
+	os.environ['GIT_COMMITTER_EMAIL'] = GIT_COMMITTER_EMAIL
+	cmd = 'echo -n "' + nlines + '" | cg-commit'
+	while os.system(cmd):
+		print 'cg-commit failed'
+		os.system('cg-reset')
+		sys.exit(1)
+	if False:
+		for file in files:
+			os.system('bk get %s' % file)
+			if not os.path.exists(file):
+				continue
+			if os.system('bk comment -y"' + lines + '" %s' % file):
+				print 'BK comment change failed'
+				sys.exit(1)
+	#sys.exit(1)
+
+def get_asap(start = 0, end = 9999999999):
+	filename = get_cvs_root() + '/scripts/changesets/asap.txt'	
+        if not os.path.exists(filename):
+                return []
+	fp = open(filename) 
+	csl = fp.readlines()
+	fp.close()
+	
+	cs = []
+	for l in csl:
+		if l[:1] == "#":
+			continue
+		if int(l) < start:
+			continue
+		if int(l) > end:
+			continue
+		cs.append(int(l))
+	cs.sort()
+	del csl
+	
+	return cs
+
+def cvsps_merge(start, end):
+        if IGNORE_ASAP or ONLY_ASAP:
+                cs = get_asap()
+	os.chdir(get_git_root())
+	l = dircache.listdir(get_cvs_root() + '/scripts/changesets')
+	for f in l:
+		if string.find(f, '.') > 0:
+			file, suff = string.split(f, '.')
+			if suff != 'patch':
+				continue
+			y = int(file)
+			if y < start:
+				continue
+                        if y > end:
+                                continue
+                        if IGNORE_ASAP and int(y) in cs:
+                                continue
+                        if ONLY_ASAP and not int(y) in cs:
+                                continue
+			cvsps_merge1(f, t=1)
+	print 'Is this ok? Press Ctrl-C to abort...'
+	sys.stdin.readline()
+	for f in l:
+		if string.find(f, '.') > 0:
+			file, suff = string.split(f, '.')
+			if suff != 'patch':
+				continue
+			y = int(file)
+			if y < start:
+				continue
+                        if y > end:
+                                continue
+                        if IGNORE_ASAP and int(y) in cs:
+                                continue
+                        if ONLY_ASAP and not int(y) in cs:
+                                continue
+			cvsps_merge1(f, t=0)
+		print 'Is this ok? Press Ctrl-C to abort...'
+		sys.stdin.readline()
+	del l
+
+def cvsps_merges(start, end):
+        cs = get_asap(start, end)
+	os.chdir(get_git_root())
+	for l in cs:
+		f = str(l) + '.patch'
+		cvsps_merge1(f, t=1)
+	print 'Is this ok? Press Ctrl-C to abort...'
+	sys.stdin.readline()
+	for l in cs:
+		f = str(l) + '.patch'
+		cvsps_merge1(f, t=0)
+		print 'Is this ok? Press Ctrl-C to abort...'
+		sys.stdin.readline()
+	del cs
+
+def git_version_patch():
+	get_cvs_files(get_cvs_root(), '/')
+	update_cvs_file('include/version.h')
+	modify_version_file()
+	do_alsa_kernel_diff('/include/version.h', '/include/sound/version.h', 0, 0)
+	os.remove(get_cvs_root() + '/include/version.h')
+	update_cvs_file('include/version.h')
+
+def git_version():
+	os.chdir(get_git_root())
+	os.system(get_cvs_root() + '/scripts/ksync git-version-patch | cg-patch')
+	log = '[ALSA] version %s' % get_cvs_version()
+	print log
+	os.environ['GIT_AUTHOR_NAME'] = GIT_COMMITTER_NAME
+	os.environ['GIT_AUTHOR_EMAIL'] = GIT_COMMITTER_EMAIL
+	os.environ['GIT_COMMITTER_NAME'] = GIT_COMMITTER_NAME
+	os.environ['GIT_COMMITTER_EMAIL'] = GIT_COMMITTER_EMAIL
+	os.system('echo "' + log + '" | cg-commit')
+
+def cvsps_changes1(changes, lines, module):
+	if module == 'alsa-kernel':
+		module = 'alsa-driver'
+	idx = 0
+	delim = '---------------------\n'
+	while idx < len(lines):
+		while idx < len(lines) and lines[idx] != delim:
+			idx += 1
+		idx += 1
+		patchset = 0
+		date = ''
+		author = ''
+		log = []
+		logflag = False
+		memflag = False
+		members = []
+		branch = 'HEAD'
+		while idx < len(lines) and lines[idx] != delim:
+			line = lines[idx]
+			# print line
+			if line[:8] == 'Members:':
+				logflag = False
+				memflag = True
+			elif logflag:
+				if len(line) > 1:
+					log.append(line[:-1])
+			elif memflag:
+				if len(line) > 2:
+					members.append(line[1:-1])
+			elif line[:9] == 'PatchSet ':
+				patchset = long(string.replace(line[9:-1], " FNK_SHOW_ALL", ""))
+				#print 'patchset: %s' % patchset
+			elif line[:6] == 'Date: ':
+				date = line[6:-1]
+				#print 'date: %s' % date
+			elif line[:8] == 'Author: ':
+				author = line[8:-1]
+				#print 'author: %s' % author
+                        elif line[:8] == 'Branch: ':
+                                branch = line[8:-1]
+                                if branch == '':
+                                        branch = 'HEAD'
+			elif line[:4] == 'Log:':
+				logflag = True
+			idx += 1
+		a = {}
+		a['patchset'] = patchset
+		a['date'] = date
+		a['author'] = author
+		a['log'] = log
+		a['members'] = members
+		a['module'] = module
+		a['branch'] = branch
+		already = False
+		idx1 = 0
+		for change in changes:
+			if a['date'] == change['date'] and \
+			   a['author'] == change['author'] and \
+			   a['log'] == change['log']:
+				# print 'SAME!!!'
+				already = True
+				break
+			if a['date'] < change['date']:
+				changes.insert(idx1, a)
+				# print 'INSERTED!!!'
+				already = True
+				break
+			idx1 += 1
+		if not already:
+			changes.append(a)
+		del log
+		del members
+
+def cvsps_changes2(changes):
+	global GERRORS
+
+	res = {}
+	try:
+		os.remove("/tmp/cvsps-changes.txt")
+	except OSError:
+		pass
+	for change in changes:
+		module = change['module']
+		if not res.has_key(module):
+			res[module] = {}
+		members = cvsps_merge_members(change['members'], module)
+		if len(members) == 0:
+			continue
+		members = members[0]
+		mems = string.split(members, ',')
+		for mem in mems:
+			if mem == 'IGNORE':
+				continue
+			if not res[module].has_key(mem):
+				res[module][mem] = []
+			res[module][mem].append(change)
+	if GERRORS > 0:
+		print 'Bailing out...'
+		sys.exit(1);
+	return res
+
+def cvsps_changes3(allitems):
+	items = []
+	idx = 0
+	for item in ['Sound Core', 'ALSA Core']:
+		items.append([item])
+		idx += 1
+	core = idx
+	items.append([])	# Core
+	midlevel = idx + 1
+	items.append([])	# Midlevel
+	all = idx + 2
+	items.append(allitems)
+	items[all].sort()
+	for item in items[all]:
+		if string.find(item, 'Core') >= 0:
+			items[core].append(item)
+		if string.find(item, 'Midlevel') >= 0:
+			items[midlevel].append(item)
+		if string.find(item, 'API') >= 0:
+			items[midlevel].append(item)
+	idx1 = core
+	while idx1 < all:
+		for item in items[idx1]:
+			items[all].remove(item)
+		idx1 += 1
+	for items1 in items[:idx]:
+		for item in items1:
+			idx1 = idx
+			while idx1 < len(items):
+				if item in items[idx1]:
+					items[idx1].remove(item)
+				idx1 += 1
+	return items
+
+def rev_to_dot(rev):
+	major, minor, subminor = string.split(rev, '-')
+	major = major[1:]
+	return "%s.%s.%s" % (major, minor, subminor)
+
+def print_underline(c, str):
+	i = 0
+	while i < len(str):
+		sys.stdout.write(c)
+		i += 1
+	print
+
+def cvsps_changes(rev1, rev2, update=False):
+	changes = []
+	os.chdir(get_cvs_root_top())
+	fullset = ['alsa-driver', 'alsa-kernel', 'alsa-lib',
+		   'alsa-utils', 'alsa-tools', 'alsa-firmware',
+		   'alsa-oss', 'alsa-plugins']
+	for module in fullset:
+	#for module in ['alsa-oss']:
+		os.chdir(get_cvs_root_top() + '/' + module)
+		if update:
+			os.system("cvsps -Z 3 -u > /dev/null 2> /dev/null")
+		xrev = rev1
+		while True:
+			#print "%s: cvsps -Z 3 -r %s -r %s" % (module, xrev, rev2)
+			lines = my_popen("cvsps -Z 3 -r %s -r %s" % (xrev, rev2))
+			if len(lines) == 0:
+				if ord(xrev[-1:]) > ord('a'):
+					last = chr(ord(xrev[-1:]) - 1)
+					xrev = xrev[:-1] + last
+				elif xrev[-1:] == "a":
+					xrev = xrev[:-1]
+				else:
+					break
+			else:
+				break
+		#lines = my_popen("cvsps -Z 3 -u -r %s -r %s" % (rev1, rev2))
+		cvsps_changes1(changes, lines, module)
+	res = cvsps_changes2(changes)
+	modules1 = res.keys()
+	modules = []
+	for module in fullset:
+		if module in modules1:
+			modules.append(module)
+	print
+	print
+	str = 'Changelog between %s and %s releases' % (rev_to_dot(rev1), rev_to_dot(rev2))
+	print str
+	print_underline('*', str)
+	print
+	for module in modules:
+		print '* %s' % module
+		items = cvsps_changes3(res[module].keys())
+		for items1 in items:
+			for b in items1:
+				if not res[module].has_key(b):
+					continue
+				print '  + %s' % b
+				for a in res[module][b]:
+					log = a['log'][0]
+					if log[:9] == 'Summary: ':
+						log = log[9:]
+					elif log[:8] == 'Summary:':
+						log = log[8:]
+					print '    - %s' % log
+	print
+	print
+	str = 'Detailed changelog between %s and %s releases' % (rev_to_dot(rev1), rev_to_dot(rev2))
+	print str
+	print_underline('*', str)
+	print
+	for module in modules:
+		print '* %s' % module
+		items = cvsps_changes3(res[module].keys())
+		for items1 in items:
+			for b in items1:
+				if not res[module].has_key(b):
+					continue
+				print '  + %s' % b
+				for a in res[module][b]:
+					log = a['log']
+					first = "-"
+					for l in log:
+						if l[:13] == "Patch-level: ":
+							continue
+						if l[:13] == "Patch-Level: ":
+							continue
+						print '    %s %s' % (first, l)
+						first = " "
+
+def tocvsps_patch1():
+        print
+        print 'Members:'
+        print '	xxx/xxx.c:1.1->1.2 '
+        print
+        print 'Index: something'
+
+def tocvsps_patch(filename, author):
+	fp = open(filename)
+	lines = fp.readlines()
+	fp.close()
+	state = 'none'
+	members = False
+	print '---------------------'
+	print 'PatchSet UNKNOWN'
+	print 'Date: %s' % datetime.datetime.today().strftime('%Y/%m/%d %H:%M:%S')
+	print 'Author: %s' % author
+	print 'Branch: HEAD'
+	print 'Tag: (none)'
+	print 'Log:'
+        for line in lines:
+                if state == 'none' and line[:8] == 'Summary:':
+                        print line[:-1]
+                        state = 'info'
+                elif state == 'info' and line[:3] == '---':
+                        state = 'patch0'
+                elif (state == 'info' or state == 'patch0') and line[:4] == 'diff':
+                        tocvsps_patch1()
+                        members = True
+                        print line[:-1]
+                        state = 'patch'
+                elif state == 'info':
+                        print line[:-1]
+                elif state == 'patch':
+                        if not members:
+                                tocvsps_patch1()
+                                members = True
+                        print line[:-1]
+
+def configuration(profile=None):
+
+        def two(val):
+                pos = val.find(':')
+                if pos <= 0:
+                        raise ValueError, "Wrong pair"
+                v1 = val[:pos].strip()
+                v2 = val[pos+1:].strip()
+                if v2[0] == '"' and v2[-1] == '"':
+                        v2 = v2[1:-1]
+                if v2[0] == '\'' and v2[-1] == '\'':
+                        v2 = v2[1:-1]
+                return [v1, v2]
+
+        def assign1(name, type, val):
+                if val[0] == '"' and val[-1] == '"':
+                        val = val[1:-1]
+                if val[0] == '\'' and val[-1] == '\'':
+                        val = val[1:-1]
+                if type == 'maparray':
+                        key = name.split('.')[-1]
+                        name = name[:-len(key)-1]
+                name = name.replace('.', '_').upper()
+                if not globals().has_key(name):
+                        if type == 'maparray' or type == 'map':
+                                globals()[name] = {}
+                        elif type == 'array':
+                                globals()[name] = []
+                if type == 'maparray':
+                        if not globals()[name].has_key(key):
+                                globals()[name][key] = []
+                        globals()[name][key].append(two(val))
+                elif type == 'map':
+                        x = two(val)
+                        globals()[name][x[0]] = x[1]
+                elif type == 'array':
+                        globals()[name].append(val)
+                elif type == 'assign':
+                        globals()[name] = val
+                else:
+                        raise ValueError, "type"
+
+        def assign(name, type, val):
+                idx = 0
+                last = 0
+                while idx < len(val):
+                        if val[idx] == ' ' or val[idx] == '\t':
+                                assign1(name, type, val[last:idx])
+                                idx += 1
+                                while idx < len(val):
+                                        if val[idx] != ' ' and val[idx] != '\t':
+                                                break
+                                        idx += 1
+                                last = idx
+                                continue
+                        elif val[idx] == '"' or val[idx] == "'":
+                                c = val[idx]
+                                idx += 1
+                                while idx < len(val):
+                                        if val[idx] == '\\':
+                                                idx += 1
+                                                continue
+                                        if val[idx] == c:
+                                                break
+                                        idx += 1
+                        else:
+                                idx += 1
+                if idx > last:
+                        assign1(name, type, val[last:])
+
+        def readprofile(profile):
+                conf = os.path.dirname(sys.argv[0]) + '/ksync.conf'
+                fp = open(conf)
+                p = '???'
+                next = False
+                for line in fp.readlines():
+                        line = line.strip()
+                        if len(line) == 0 or line[0] == '#':
+                                continue
+                        if line.startswith('[profile-') and line.endswith(']'):
+                                p = line[9:-1]
+                                continue
+                        if p != profile:
+                                continue
+                        if next:
+                                val = line
+                                if val[-1] != '\\':
+                                        next = False
+                                else:
+                                        val = val[:-1].strip()
+                                assign(name, type, val)
+                                continue
+                        pos = line.find('::=')
+                        plen = 3
+                        type = 'maparray'
+                        if pos < 0:
+                                pos = line.find(':=')
+                                plen = 2
+                                type = 'map'
+                        if pos < 0:
+                                pos = line.find('+=')
+                                plen = 2
+                                type = 'array'
+                        if pos < 0:
+                                pos = line.find('=')
+                                plen = 1
+                                type = 'assign'
+                        if pos < 0:
+                                raise ValueError, "Wrong syntax for configuration file"
+                        name = line[:pos].strip()
+                        val = line[pos+plen:].strip()
+                        if val[-1] == '\\':
+                                next = True
+                                val = val[:-1].strip()
+                        if len(val) > 0:
+                                assign(name, type, val)
+                fp.close()
+
+        readprofile('default')
+        if profile:
+                readprofile(profile)
+
+def main():
+	global CVSROOT, GITROOT, PATCH_UPDATE, ALSA_MAP, KERNEL_MAP
+        global IGNORE_ASAP, ONLY_ASAP
+	try:
+		opts, args = getopt.getopt(sys.argv[1:], 'hB:C:b:ilp:',
+					   ['help', 'bkroot=', 'cvsroot=',
+					    'bkroot=', 'branch=', 'ignore',
+					    'only', 'profile=']);
+	except getopt.error, msg:
+		usage(1, msg)
+
+	cwd = os.getcwd()
+	profile = None
+
+	for opt, arg, in opts:
+	        if opt in ('-p', '--profile'):
+	                profile = arg
+	
+        configuration(profile)
+
+	# parse the options
+	for opt, arg in opts:
+		if opt in ('-h', '--help'):
+			usage(0)
+		elif opt in ('-B', '--cvsroot'):
+			CVSROOT = arg
+		elif opt in ('-C', '--gitroot'):
+			GITROOT = arg
+		elif opt in ('-b', '--branch'):
+			BRANCH = arg
+                elif opt in ('-g', '--ignore'):
+                        IGNORE_ASAP = True
+                elif opt in ('-l', '--only'):
+                        ONLY_ASAP = True
+
+	for k in ALSA_MAP.keys():
+		KERNEL_MAP[ALSA_MAP[k]] = k
+
+	if not args:
+		print 'Command not specified'
+		sys.exit(1)
+	if args[0] == 'diffall' or args[0] == 'work':
+		reverse=0
+		if args[0] == 'work':
+			GITROOT = '~/git/repos/work'
+		if len(args) > 1:
+			if args[1] == '-r':
+				reverse=1
+			else:
+				print 'Ignoring extra arguments %s' % args[1:]
+		diffall(reverse)
+	elif args[0] == 'cvsps':
+		reverse=0
+		if len(args) < 2:
+			print 'Please, give a starting changeset'
+			return
+		cvsps(args[1])
+	elif args[0] == 'cvsps-merge':
+		GITROOT = '~/git/repos/work'
+		if len(args) < 2:
+			x = 0
+		else:
+			x = int(args[1])
+                if len(args) < 3:
+                        y = 999999999
+                else:
+                        y = int(args[2])
+		cvsps_merge(x, y)
+	elif args[0] == 'cvsps-merges':
+		GITROOT = '~/git/repos/stable'
+		if len(args) < 2:
+			x = 0
+		else:
+			x = int(args[1])
+                if len(args) < 3:
+                        y = 999999999
+                else:
+                        y = int(args[2])
+		cvsps_merges(x, y)
+	elif args[0] == 'cvsps-changes':
+		if len(args) < 3:
+			print 'Please, give a start and end revision'
+			print 'Example: ksync cvsps-changes v1-0-7 v1-0-8'
+			return
+		update = False
+		if len(args) > 3:
+			update = True
+		cvsps_changes(args[1], args[2], update)
+	elif args[0] == 'lsync':
+		to_cvs_time = 0
+		patch = ''
+		if len(args) > 1:
+			if args[1] == "last":
+				BKROOT = '~/bk/linux-sound/linux-sound'
+				xtime = get_last_lsync_time()
+				print time.strftime('%Y/%m/%d %H:%M:%S', time.gmtime(xtime))
+				return
+			to_cvs_time = parse_time(args[1])
+		if len(args) > 2:
+			patch = os.path.abspath(os.path.expanduser(args[2]))
+		else:
+			npatch = os.path.abspath('kchanges/%s' % time.strftime("%Y-%m-%d", time.gmtime(to_cvs_time)))
+			if os.path.exists(npatch):
+				print 'Using kernel patch %s' % npatch
+				patch = npatch
+
+		if to_cvs_time > 0:
+			CVSROOT = '~/alsa.local'
+			os.chdir(os.path.expanduser('~/'))
+			os.system('rm -rf alsa.local')
+			os.system('mkdir alsa.local')
+			os.chdir(os.path.expanduser('~/alsa.local'))
+			os.system('cvs -d/home/src/alsa co -P %s alsa-driver alsa-kernel' % get_cvs_date_param1(to_cvs_time))
+			if os.path.exists(patch):
+				os.chdir(os.path.expanduser('~/alsa.local/alsa-kernel'))
+				os.system('patch -p2 < %s' % patch)
+				print 'Is this ok? Press Ctrl-C to abort...'
+				sys.stdin.readline()
+
+		BKROOT = '~/bk/linux-sound/work'
+		os.chdir(os.path.expanduser('~/bk/linux-sound'))
+		os.system('rm -rf work')
+		os.system('bk clone -l linux-sound work')
+
+		if os.path.exists(os.path.expanduser(PATCH_UPDATE)):
+			os.remove(os.path.expanduser(PATCH_UPDATE))
+
+		from_cvs_time = get_last_lsync_time()
+		if to_cvs_time > 0 and to_cvs_time <= from_cvs_time:
+			print 'Time < last_lsync_time (%s)' % time.strftime('%Y/%m/%d %H:%M:%S', time.gmtime(from_cvs_time))
+			sys.exit(1)
+		diffall(0, from_cvs_time, to_cvs_time)
+		if FATAL_LSYNC_ERROR > 0:
+			print 'Error during merge, see %s file...' % PATCH_UPDATE
+	elif args[0] == 'cvslocal':
+		if len(args) <= 1:
+			print 'Specify time, please'
+			sys.exit(1)
+		to_cvs_time = parse_time(args[1])
+		CVSROOT = '~/alsa.local'
+		os.chdir(os.path.expanduser('~/'))
+		os.system('rm -rf alsa.local')
+		os.system('mkdir alsa.local')
+		os.chdir(os.path.expanduser('~/alsa.local'))
+		os.system('cvs -d/home/src/alsa co -P %s alsa-driver alsa-kernel' % get_cvs_date_param1(to_cvs_time))
+	elif args[0] == 'git-version-patch':
+		GITROOT = '~/git/repos/work'
+		git_version_patch()
+	elif args[0] == 'git-version':
+		GITROOT = '~/git/repos/work'
+		git_version()
+	elif args[0] == 'filename':
+		ver = 1
+		if len(args) > 1:
+			ver = args[1]
+		filename(ver)
+        elif args[0] == 'tocvsps':
+                if len(args) < 1:
+                        print 'Specify patch file, please'
+                author = 'perex'
+                if len(args) > 2:
+                        author = args[2]
+                tocvsps_patch(args[1], author)
+        elif args[0] == "map":
+                for i in COMMENT_MAP:
+                        print "comment.map.%s::= \\" % i
+                        for j in COMMENT_MAP[i]:
+                                a = j[0]
+                                b = j[1]
+                                if j[1].find(' ') > 0:
+                                        print "\t%s:\"%s\" \\" % (a, b)
+                                else:
+                                        print "\t%s:%s \\" % (a, b)
+	else:
+		print 'Unknown command %s' % args[0]
+		sys.exit(1)
+
+if __name__ == '__main__':
+	main()
+	sys.exit(0)

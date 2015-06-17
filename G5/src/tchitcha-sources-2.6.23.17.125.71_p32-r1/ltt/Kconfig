@@ -1,0 +1,207 @@
+config LTT_TIMESTAMP
+	bool "LTTng fine-grained timestamping"
+	default y
+	help
+	  Allow fine-grained timestamps to be taken from tracing applications.
+
+config LTT
+	bool "Linux Trace Toolkit Instrumentation Support"
+	depends on EXPERIMENTAL
+	depends on MARKERS
+	depends on LTT_TIMESTAMP
+	default n
+	help
+	  It is possible for the kernel to log important events to a trace
+	  facility. Doing so enables the use of the generated traces in order
+	  to reconstruct the dynamic behavior of the kernel, and hence the
+	  whole system.
+
+	  The tracing process contains 4 parts :
+	      1) The logging of events by key parts of the kernel.
+	      2) The tracer that keeps the events in a data buffer (uses
+	         relay).
+	      3) A trace daemon that interacts with the tracer and is
+	         notified every time there is a certain quantity of data to
+	         read from the tracer.
+	      4) A trace event data decoder that reads the accumulated data
+	         and formats it in a human-readable format.
+
+	  If you say Y, the first component will be built into the kernel.
+
+	  For more information on kernel tracing, the trace daemon or the event
+	  decoder, please check the following address :
+	       http://www.opersys.com/ltt
+	  See also the experimental page of the project :
+	       http://ltt.polymtl.ca
+
+config LTT_RELAY
+	tristate "Linux Trace Toolkit Relay+DebugFS Support"
+	select RELAY
+	select DEBUG_FS
+	depends on LTT_TRACER
+	default y
+	help
+	  Support using relay and debugfs to log the data obtained through LTT.
+
+	  If you don't have special hardware, you almost certainly want
+	  to say Y here.
+
+config LTT_SERIALIZE
+	tristate "Linux Trace Toolkit Serializer"
+	default y
+	depends on LTT
+	help
+	  Library for serializing information from format string and argument
+	  list to the trace buffers.
+
+config LTT_MARKER_CONTROL
+	tristate "Linux Trace Toolkit Marker Control"
+	depends on LTT_SERIALIZE
+	default y
+	help
+	  Interface (/proc/ltt) to enable markers.
+
+config LTT_TRACER
+	tristate "Linux Trace Toolkit Tracer"
+	depends on LTT
+	depends on LTT_MARKER_CONTROL
+	default y
+	help
+	  If you enable this option, the Linux Trace Toolkit Tracer will be
+	  either built in the kernel or as module.
+
+	  Critical parts of the kernel will call upon the kernel tracing
+	  function. The data is then recorded by the tracer if a trace daemon
+	  is running in user-space and has issued a "start" command.
+
+	  For more information on kernel tracing, the trace daemon or the event
+	  decoder, please check the following address :
+	       http://www.opersys.com/ltt
+	  See also the experimental page of the project :
+	       http://ltt.polymtl.ca
+
+config LTT_ALIGNMENT
+	bool "Align Linux Trace Toolkit Traces"
+	depends on LTT
+	default y
+	help
+	  This option enables dynamic alignment of data in buffers. The
+	  alignment is made on the smallest size between architecture size
+	  and the size of the value to be written.
+
+	  Dynamically calculating the offset of the data has a performance cost,
+	  but it is more efficient on some architectures (especially 64 bits) to
+	  align data than to write it unaligned.
+
+config LTT_VMCORE
+	bool "Support trace extraction from crash dump"
+	depends on LTT
+	default y
+	help
+	  If you enable this option, the Linux Trace Toolkit Tracer will
+	  support extacting ltt log from vmcore, which can be generated with
+	  kdump or LKCD tools.
+
+	  Special crash extension should be used to extract ltt buffers.
+
+config LTT_HEARTBEAT
+	bool "Write heartbeat event to shrink traces (EXPERIMENTAL)"
+	depends on EXPERIMENTAL
+	depends on LTT
+	default n
+	help
+	  The Linux Trace Toolkit Heartbeat Timer fires at an interval small
+	  enough to guarantee that the 32 bits truncated TSC won't overflow
+	  between two timer executions. An event is written in the active
+	  traces each time the timer is executed.
+
+	  Note : it is currently broken with CPU hotplug and does not support
+	  trace stop / restart correctly.
+
+config LTT_NETLINK_CONTROL
+	tristate "Linux Trace Toolkit Netlink Controller"
+	depends on LTT_TRACER
+	depends on NET
+	default m
+	help
+	  If you enable this option, the Linux Trace Toolkit Netlink Controller
+	  will be either built in the kernel or as module.
+
+config LTT_STATEDUMP
+	tristate "Linux Trace Toolkit State Dump"
+	depends on LTT_TRACER
+	default m
+	help
+	  If you enable this option, the Linux Trace Toolkit State Dump will
+	  be either built in the kernel or as module.
+
+	  This module saves the state of the running kernel at trace start
+	  into the trace buffers along with the ongoing tracing information.
+
+menu "Probes"
+	depends on LTT_MARKER_CONTROL
+
+config LTT_PROBE_FS
+	tristate "Linux Trace Toolkit File System Probe"
+	depends on LTT_MARKER_CONTROL
+	depends on CRC32
+	default m
+	help
+	  Activate per facility LTT probes. This is the dynamic mechanism
+	  where the data gathering is. Probes connect to markers when their
+	  module is loaded.
+
+	  Probe file system events. It instruments the file operations and
+	  dumps the beginning of data sent through read and write system calls.
+
+config LTT_PROBE_STACK
+	tristate "Sample process or kernel stacks (EXPERIMENTAL)"
+	depends on LTT_MARKER_CONTROL
+	depends on X86 || X86_64
+	depends on CRC32
+	default n
+	help
+	  Get complete process and/or kernel stack (architecture specific)
+
+config LTT_PROCESS_STACK
+	bool "Get complete process stack"
+	depends on LTT_MARKER_CONTROL
+	depends on X86
+	depends on CRC32
+	depends on UNWIND_INFO || !X86_64
+	depends on STACK_UNWIND || !X86_64
+	default n
+	help
+	  Get complete process stack.
+
+	  It has three limitations : it only considers functions in the loaded
+	  executable (not libraries) to be actual function pointers.
+	  Furthermore, it will dump the stack of many threads at once for
+	  multithreaded processes (it is protected from races between threads
+	  though). It can also believe that arbitrary data on the stack
+	  "looks like" a function pointer.
+
+config LTT_PROCESS_MAX_FUNCTION_STACK
+	int "Maximum number of longs on the stack between functions"
+	depends on LTT_PROCESS_STACK
+	default 100
+	help
+	  Maximum threshold over which, if we do not find a function pointer on
+	  the process stack, we stop dumping the pointers on the stack.
+
+config LTT_PROCESS_MAX_STACK_LEN
+	int "Maximum number of longs on the stack to read"
+	depends on LTT_PROCESS_STACK
+	default 250
+	help
+	  Maximum threshold of stack size over which we stop looking for
+	  function pointers.
+
+config LTT_KERNEL_STACK
+	bool "Get complete kernel stack"
+	depends on LTT_PROBE_STACK
+	default n
+	help
+	  Get complete kernel stack
+
+endmenu

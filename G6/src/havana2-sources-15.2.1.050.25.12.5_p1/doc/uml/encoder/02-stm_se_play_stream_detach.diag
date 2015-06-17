@@ -1,0 +1,63 @@
+seqdiag {
+	// Define the logical order of components
+	Wrapper;	 Manifestor;	Inject;		Stream;		Preproc;
+
+
+	// Tidy up some labels
+	Wrapper [label = "STKPI/Wrapper"];
+	Manifestor [label = "Encode\nManifestor"];
+	Inject [label = "Encode Inject\nThread"];
+	Stream [label = "Encode Stream"];
+	Preproc [label = "PreProcessor"];
+
+	=== Encode Manifestor (Tunnelled) Disconnect Sequence\nstm_se_play_stream_detach() ===
+
+	Wrapper -> 	Manifestor							[label = "Disconnect()"]
+											[leftnote = "stm_se_play_stream_detach()"]
+											[rightnote = "At the end of the stream, the\ncoordinator disconnects the outputs"]
+
+			Manifestor =>	Inject						[label = "InputRing->Insert(EOS)"]
+											[rightnote = "Inject EOS Marker"]
+
+			Manifestor ->	Inject						[label = "OS_WaitForEvent()"]
+											[rightnote = "Wait for EncoderInjectThreadTerminated"]
+
+					Inject =>	Stream				[label = "EncodeFrame(Buffer)"]
+											[rightnote = "Continues to Encode\nFrames until EOS"]
+
+					Inject ->	Stream				[label = "InjectDiscontinuity(EOS)"]
+											[rightnote = "The EOS marker is injected\ninto the stream and Preproc"]
+
+							Stream  =>	Preproc		[label = "InjectDiscontinuity(EOS)"]
+
+					Inject <-	Stream
+
+			Manifestor <-	Inject						[rightnote = "EncoderInjectThreadTerminated\nCompletes or Timesout"]
+
+			Manifestor =>			Stream				[label = "EncodeStream->Flush()"]
+											[rightnote = "Forcefully flush (discard) stream\nin the event of timeout"]
+
+	Wrapper <-	Manifestor
+
+	=== Once disconnected, the objects can be deleted ... ===
+
+
+
+
+
+
+/// Nothing to see here ...
+
+//	Eventually we can signal an EOS
+//	Wrapper =>					EncodeStream	[label = "EncodeStream->InjectDiscontinuity()"]
+//									[leftnote = "stm_se_encode_stream_inject_discontinuity()"]
+//									[rightnote = "Signal the\nEnd Of Stream"];
+//
+	// Remove the stream at the end
+//	Wrapper <--					EncodeStream	[leftnote = "stkpi_encode_stream_delete()"]
+//									[rightnote = "Remove objects"];
+
+//	// Finally clean up the left over Encode Instance
+//	Wrapper <--			Encode				[leftnote = "stkpi_encode_delete()"];
+
+}

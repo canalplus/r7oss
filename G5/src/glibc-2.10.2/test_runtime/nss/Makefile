@@ -1,0 +1,39 @@
+# Copyright (C) 1996-1998,2000-2002,2007,2009 Free Software Foundation, Inc.
+# This file is part of the GNU C Library.
+
+# The GNU C Library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+
+# The GNU C Library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with the GNU C Library; if not, write to the Free
+# Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# 02111-1307 USA.
+
+#
+#	Makefile for name service switch.
+#
+
+# These are the databases that go through nss dispatch.
+# Caution: if you add a database here, you must add its real name
+# in databases.def, too.
+include ../config.make
+
+TESTS			= test-netdb bug-erange
+#xtests			= bug-erange
+
+include ../Test.mak
+
+TOBEINSTALLED=$(TOBEINSTALLED_BIN) $(TOBEINSTALLED_SH)
+
+.PHONY: $(TOBEINSTALLED)
+
+install: $(TOBEINSTALLED)
+	@echo "Installing nss...."
+	@cp -fr $(foreach f,$^, $(OBJPFX)/$f) .

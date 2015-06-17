@@ -1,0 +1,28 @@
+config DVB_FRONTEND_STM
+       bool "Enable STMicroelectronics frontends"
+       depends on DVB_CORE
+       ---help---
+         Support for ST frontends.
+
+	 Enables automatic and manual connection to PTI/FEI
+	 with STV299, STV360 and NIM299, NIM360, Thomson DTF,
+	 STEM299, STB6000.
+
+	 Also allows direct connection to the Havana player.
+	 
+config DVB_STFEI
+	tristate "ST FEI Support"
+	depends on DVB_FRONTEND_STM && CPU_SUBTYPE_STX7200
+	select DVB_STV0299
+	select DVB_STV0360
+	---help---
+	  Support for ST front-end interfaces.
+
+config DVB_STPTI
+	tristate "ST-PTI Driver"
+	depends on DVB_FRONTEND_STM && (CPU_SUBTYPE_STB5301 || CPU_SUBTYPE_STB7100)
+	help
+	  Support for the PTI
+
+	  Say Y if you own such a device and want to use it.
+

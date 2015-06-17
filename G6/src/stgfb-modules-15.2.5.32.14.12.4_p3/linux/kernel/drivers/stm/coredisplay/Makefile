@@ -1,0 +1,10 @@
+ifeq ($(CONFIG_STM_FMDSW),y)
+KBUILD_CPPFLAGS += -DUSE_FMD -DBUILTIN_FMD
+else
+ifeq ($(CONFIG_ST_BIOS),y)
+KBUILD_CPPFLAGS += -DUSE_FMD
+endif
+endif
+
+obj-m += stiH407/
+

@@ -1,0 +1,3 @@
+ The STM blitter driver. Currently features a linux kernel driver
+ and a DirectFB graphics driver.
+ It supports the BDispII, as found in many ST SoCs.

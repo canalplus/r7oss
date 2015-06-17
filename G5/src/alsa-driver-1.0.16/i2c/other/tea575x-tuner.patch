@@ -1,0 +1,97 @@
+--- ../../alsa-kernel/i2c/other/tea575x-tuner.c	2007-12-20 10:21:09.000000000 +0100
++++ tea575x-tuner.c	2007-12-20 11:15:05.000000000 +0100
+@@ -1,3 +1,4 @@
++#include "adriver.h"
+ /*
+  *   ALSA driver for TEA5757/5759 Philips AM/FM radio tuner chips
+  *
+@@ -53,6 +54,19 @@
+ #define TEA575X_BIT_DUMMY	(1<<15)		/* buffer */
+ #define TEA575X_BIT_FREQ_MASK	0x7fff
+ 
++#ifndef CONFIG_HAVE_VIDEO_GET_DRVDATA
++/* helper functions to access driver private data. */
++static inline void *video_get_drvdata(struct video_device *dev)
++{
++	return dev->priv;
++}
++
++static inline void video_set_drvdata(struct video_device *dev, void *data)
++{
++	dev->priv = data;
++}
++#endif
++
+ /*
+  * lowlevel part
+  */
+@@ -84,12 +98,32 @@
+  * Linux Video interface
+  */
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)
++static int snd_tea575x_open(struct video_device *dev, int flags)
++{
++	return 0;
++}
++
++static void snd_tea575x_close(struct video_device *dev)
++{
++}
++#endif
++
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
+ static int snd_tea575x_ioctl(struct inode *inode, struct file *file,
+ 			     unsigned int cmd, unsigned long data)
++#else
++static int snd_tea575x_ioctl(struct video_device *dev,
++			     unsigned int cmd, void __user *arg)
++#endif
+ {
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
+ 	struct video_device *dev = video_devdata(file);
++#endif
+ 	struct snd_tea575x *tea = video_get_drvdata(dev);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
+ 	void __user *arg = (void __user *)data;
++#endif
+ 	
+ 	switch(cmd) {
+ 		case VIDIOCGCAP:
+@@ -167,9 +201,11 @@
+ 	}
+ }
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 8)
+ static void snd_tea575x_release(struct video_device *vfd)
+ {
+ }
++#endif
+ 
+ /*
+  * initialize all the tea575x chips
+@@ -188,13 +224,24 @@
+ 	tea->vd.owner = tea->card->module;
+ 	strcpy(tea->vd.name, tea->tea5759 ? "TEA5759 radio" : "TEA5757 radio");
+ 	tea->vd.type = VID_TYPE_TUNER;
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24)
++	tea->vd.hardware = VID_HARDWARE_RTRACK;	/* FIXME: assign new number */
++#endif
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 8)
+ 	tea->vd.release = snd_tea575x_release;
++#endif
+ 	video_set_drvdata(&tea->vd, tea);
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)
++	tea->vd.open = snd_tea575x_open;
++	tea->vd.close = snd_tea575x_close;
++	tea->vd.ioctl = snd_tea575x_ioctl;
++#else
+ 	tea->vd.fops = &tea->fops;
+ 	tea->fops.owner = tea->card->module;
+ 	tea->fops.open = video_exclusive_open;
+ 	tea->fops.release = video_exclusive_release;
+ 	tea->fops.ioctl = snd_tea575x_ioctl;
++#endif
+ 	if (video_register_device(&tea->vd, VFL_TYPE_RADIO, tea->dev_nr - 1) < 0) {
+ 		snd_printk(KERN_ERR "unable to register tea575x tuner\n");
+ 		return;

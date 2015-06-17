@@ -1,0 +1,37 @@
+/*
+ * Copyright (C) 2014 STMicroelectronics Limited.
+ * Author: Giuseppe Condorelli <giuseppe.condorelli@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * publishhed by the Free Software Foundation.
+ */
+/dts-v1/;
+
+#include "stih410.dtsi"
+#include "stihxxx-b2148.dtsi"
+
+/ {
+	model = "STiH310 B2148";
+	compatible = "st,stih310-b2148", "st,stih310", "st,stih410";
+
+	aliases {
+		usb0 = &usb0;
+		usb1 = &usb1;
+	};
+
+	memory {
+		device_type = "memory";
+		reg = <0x40000000 0x40000000>;
+	};
+
+	soc {
+		usb0: usb@9A00000 {
+			status = "okay";
+		};
+
+		usb1: usb@9A80000 {
+			status = "okay";
+		};
+	};
+};

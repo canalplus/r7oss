@@ -1,0 +1,32 @@
+Aug-18-04 WH
+
+SMSC9118 beta driver 0.56 for Xscale on Linux 2.4.21-rmk1-pxa1-intc2
+
+This driver is built and tested on Intel Mainstone II board (Rev.B, PXA270 B0/C0).
+
+Linux Kernel is from ARM Linux Site (http://www.arm.linux.org.uk) and
+SMSC modified some of kernel files to be able to support SMSC9118 100/10 Ethernet chip
+connected to Expansion slot of Intel Mainstone Board.
+*NOTE*
+Original Mainstone Board has issue in CPLD code to access Expansion slot.
+To use expansion slot on Mainstone, CPLD should be reprogrammed.
+Unfortunately, there is no official release for that.
+SMSC got help from Intel and resolved the issue in house.
+
+The issues to port to another platform.
+- Current beta driver is built to run on Mainstone II board.
+   To make it run on the other systems, some part of driver need to be changed.
+
+- Physical Address of SMSC9118
+   CS5 is used for Expansion slot on Mainstone II board, SMSC9118 is mapped to CS5 area of PXA270 processor
+   CS5 is mapped to 0xF2000000~0xF20FFFFF (virtual address)
+
+- Interrupt
+   It uses irq number of 198.
+   User can modifiy PLATFORM_IRQ in xscale.h for different value.
+
+- DMA channels
+   This driver uses DMA channel 1 as Rx DMA and 2 as Tx DMA.
+   (See PLATFORM_RX_DMA and PLATFORM_TX_DMA in xscale.h)
+   If those channels are assigned to other devices, these should be changed not to be conflict to other systems.
+   *NOTE* This part will be updated.

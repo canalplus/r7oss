@@ -1,0 +1,6 @@
+          name : pause
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : 
+      commands : 
+       options : exec_delay, exec_m_delay
+   description : This adds sleep of some seconds or so before a process is launched.

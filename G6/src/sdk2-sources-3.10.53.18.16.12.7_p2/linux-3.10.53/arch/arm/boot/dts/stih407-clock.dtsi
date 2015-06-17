@@ -1,0 +1,308 @@
+/*
+ * Copyright (C) 2013 STMicroelectronics R&D Limited
+ * Author: Giuseppe Cavallaro <peppe.cavallaro@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+#include "stih407-clks.h"
+/ {
+	clocks {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		compatible = "st,stih407-clk", "simple-bus";
+
+		/*
+		 * Fixed 30MHz oscillator inputs to SoC
+		 */
+		CLK_SYSIN: CLK_SYSIN {
+			#clock-cells = <0>;
+			compatible = "fixed-clock";
+			clock-frequency = <30000000>;
+			clock-output-names = "CLK_SYSIN";
+		};
+
+		/*
+		 * ARM Peripheral clock for timers
+		 */
+		arm_periph_clk: CLK_M_A9_PERIPHS {
+			#clock-cells = <0>;
+			compatible = "fixed-factor-clock";
+			clocks = <&CLK_M_A9>;
+			clock-div = <2>;
+			clock-mult = <1>;
+		};
+
+		/*
+		 * A9 PLL.
+		 *
+		 */
+		clockgenA9 {
+			compatible = "st,clkgen-c32";
+			reg = <0x92b0000 0xffff>;
+
+			CLOCKGEN_A9_PLL: CLOCKGEN_A9_PLL {
+				compatible = "st,stih407-plls-c32-a9", "st,clkgen-plls-c32";
+
+				#clock-cells = <1>;
+				clocks = <&CLK_SYSIN>;
+				clock-output-names = "CLOCKGEN_A9_PLL_ODF";
+			};
+		};
+
+		/*
+		 * ARM CPU related clocks.
+		 */
+		CLK_M_A9: CLK_M_A9 {
+			compatible = "st,stih407-clkgen-a9-mux", "st,clkgen-mux";
+			#clock-cells = <0>;
+			reg = <0x92b0000 0x10000>;
+			clocks = <&CLOCKGEN_A9_PLL 0>,
+				 <&CLOCKGEN_A9_PLL 0>,
+				 <&CLK_S_C0_FLEXGEN 13>,
+				 <&CLK_M_A9_EXT2F_DIV2>;
+		};
+
+		/*
+		 * ARM Peripheral clock for timers
+		 */
+
+		CLK_M_A9_EXT2F_DIV2: CLK_M_A9_EXT2F_DIV2S {
+			compatible = "fixed-factor-clock";
+
+			#clock-cells = <0>;
+			clock-output-names = "CLK_M_A9_EXT2F_DIV2";
+			clocks = <&CLK_S_C0_FLEXGEN 13>;
+			clock-div = <2>;
+			clock-mult = <1>;
+		};
+
+		/*
+		 * ClockGenAs on SASG2
+		 */
+
+		clockgenA@090ff000 {
+			compatible = "st,clkgen-c32";
+			reg = <0x90ff000 0x1000>;
+
+			CLK_S_A0_PLL: CLK_S_A0_PLL {
+				compatible = "st,stih407-plls-c32-a0", "st,clkgen-plls-c32";
+
+				#clock-cells = <1>;
+				clocks = <&CLK_SYSIN>;
+				clock-output-names = "CLK_S_A0_PLL_ODF_0";
+			};
+
+			CLK_S_A0_FLEXGEN: CLK_S_A0_FLEXGEN {
+				compatible = "st,flexgen";
+
+				#clock-cells = <1>;
+				clocks = <&CLK_S_A0_PLL 0>, <&CLK_SYSIN>;
+				clock-output-names = "CLK_IC_LMI0";
+			};
+		};
+
+		CLK_S_C0_QUADFS: CLK_S_C0_QUADFS {
+			compatible = "st,quadfs660-C", "st,quadfs";
+			reg = <0x9103000 0x1000>;
+
+			#clock-cells = <1>;
+			clocks = <&CLK_SYSIN>;
+			clock-output-names = "CLK_S_C0_FS0_CH0",
+					     "CLK_S_C0_FS0_CH1",
+					     "CLK_S_C0_FS0_CH2",
+					     "CLK_S_C0_FS0_CH3";
+		};
+
+		CLK_S_C0: clockgenC@09103000 {
+			compatible = "st,clkgen-c32";
+			reg = <0x9103000 0x1000>;
+
+			CLK_S_C0_PLL0: CLK_S_C0_PLL0 {
+				compatible = "st,plls-c32-cx_0", "st,clkgen-plls-c32";
+
+				#clock-cells = <1>;
+				clocks = <&CLK_SYSIN>;
+				clock-output-names = "CLK_S_C0_PLL0_ODF_0";
+			};
+
+			CLK_S_C0_PLL1: CLK_S_C0_PLL1 {
+				compatible = "st,stih407-plls-conf-c32-c0_1", "st,plls-c32-cx_1", "st,clkgen-plls-c32";
+
+				#clock-cells = <1>;
+				clocks = <&CLK_SYSIN>;
+				clock-output-names = "CLK_S_C0_PLL1_ODF_0";
+			};
+
+			CLK_S_C0_FLEXGEN: CLK_S_C0_FLEXGEN {
+				compatible = "st,stih407-flexgen-conf-c0", "st,stih407-clkgenc0", "st,flexgen";
+
+				#clock-cells = <1>;
+				clocks = <&CLK_S_C0_PLL0 0>,
+					 <&CLK_S_C0_PLL1 0>,
+					 <&CLK_S_C0_QUADFS 0>,
+					 <&CLK_S_C0_QUADFS 1>,
+					 <&CLK_S_C0_QUADFS 2>,
+					 <&CLK_S_C0_QUADFS 3>,
+					 <&CLK_SYSIN>;
+
+				clock-output-names = "CLK_ICN_GPU",
+						     "CLK_FDMA",
+						     "CLK_NAND",
+						     "CLK_HVA",
+						     "CLK_PROC_STFE",
+						     "CLK_PROC_TP",
+						     "CLK_RX_ICN_DMU",
+						     "CLK_RX_ICN_HVA",
+						     "CLK_ICN_CPU",
+						     "CLK_TX_ICN_DMU",
+						     "CLK_MMC_0",
+						     "CLK_MMC_1",
+						     "CLK_JPEGDEC",
+						     "CLK_EXT2FA9",
+						     "CLK_IC_BDISP_0",
+						     "CLK_IC_BDISP_1",
+						     "CLK_PP_DMU",
+						     "CLK_VID_DMU",
+						     "CLK_DSS_LPC",
+						     "CLK_ST231_AUD_0",
+						     "CLK_ST231_GP_1",
+						     "CLK_ST231_DMU",
+						     "CLK_ICN_LMI",
+						     "CLK_TX_ICN_DISP_1",
+						     "CLK_ICN_SBC",
+						     "CLK_STFE_FRC2",
+						     "CLK_ETH_PHY",
+						     "CLK_ETH_REF_PHYCLK",
+						     "CLK_FLASH_PROMIP",
+						     "CLK_MAIN_DISP",
+						     "CLK_AUX_DISP",
+						     "CLK_COMPO_DVP";
+			};
+		};
+
+		CLK_S_D0_QUADFS: CLK_S_D0_QUADFS {
+			compatible = "st,stih407-quadfs660-D0", "st,quadfs";
+			reg = <0x9104000 0x1000>;
+
+			#clock-cells = <1>;
+			clocks = <&CLK_SYSIN>;
+			clock-output-names = "CLK_S_D0_FS0_CH0",
+					     "CLK_S_D0_FS0_CH1",
+					     "CLK_S_D0_FS0_CH2",
+					     "CLK_S_D0_FS0_CH3";
+		};
+
+		clockgenD0@09104000 {
+			compatible = "st,clkgen-c32";
+			reg = <0x9104000 0x1000>;
+
+			CLK_S_D0_FLEXGEN: CLK_S_D0_FLEXGEN {
+				compatible = "st,stih407-clkgend0", "st,flexgen";
+				#clock-cells = <1>;
+				clocks = <&CLK_S_D0_QUADFS 0>,
+					 <&CLK_S_D0_QUADFS 1>,
+					 <&CLK_S_D0_QUADFS 2>,
+					 <&CLK_S_D0_QUADFS 3>,
+					 <&CLK_SYSIN>;
+				clock-output-names = "CLK_PCM_0",
+						     "CLK_PCM_1",
+						     "CLK_PCM_2",
+						     "CLK_SPDIFF";
+			};
+		};
+
+		CLK_S_D2_QUADFS: CLK_S_D2_QUADFS {
+			compatible = "st,stih407-quadfs660-conf-D2", "st,stih407-quadfs660-D2", "st,quadfs";
+			reg = <0x9106000 0x1000>;
+
+			#clock-cells = <1>;
+			clocks = <&CLK_SYSIN>;
+			clock-output-names = "CLK_S_D2_FS0_CH0",
+					     "CLK_S_D2_FS0_CH1",
+					     "CLK_S_D2_FS0_CH2",
+					     "CLK_S_D2_FS0_CH3";
+		};
+
+		CLK_TMDSOUT_HDMI: CLK_TMDSOUT_HDMI {
+			#clock-cells = <0>;
+			compatible = "fixed-clock";
+			clock-frequency = <0>;
+		};
+
+		clockgenD2@x9106000 {
+			compatible = "st,clkgen-c32";
+			reg = <0x9106000 0x1000>;
+
+			CLK_S_D2_FLEXGEN: CLK_S_D2_FLEXGEN {
+				compatible = "st,stih407-flexgen-conf-d2", "st,stih407-clkgend2", "st,flexgen";
+				#clock-cells = <1>;
+
+				clocks = <&CLK_S_D2_QUADFS 0>,
+					 <&CLK_S_D2_QUADFS 1>,
+					 <&CLK_S_D2_QUADFS 2>,
+					 <&CLK_S_D2_QUADFS 3>,
+					 <&CLK_SYSIN>,
+					 <&CLK_SYSIN>,
+					 <&CLK_TMDSOUT_HDMI>;
+
+				clock-output-names = "CLK_PIX_MAIN_DISP",
+						     "CLK_PIX_PIP",
+						     "CLK_PIX_GDP1",
+						     "CLK_PIX_GDP2",
+						     "CLK_PIX_GDP3",
+						     "CLK_PIX_GDP4",
+						     "CLK_PIX_AUX_DISP",
+						     "CLK_DENC",
+						     "CLK_PIX_HDDAC",
+						     "CLK_HDDAC",
+						     "CLK_SDDAC",
+						     "CLK_PIX_DVO",
+						     "CLK_DVO",
+						     "CLK_PIX_HDMI",
+						     "CLK_TMDS_HDMI",
+						     "CLK_REF_HDMIPHY";
+			};
+		};
+
+		CLK_S_D3_QUADFS: CLK_S_D3_QUADFS {
+			compatible = "st,quadfs660-D", "st,quadfs";
+			reg = <0x9107000 0x1000>;
+
+			#clock-cells = <1>;
+			clocks = <&CLK_SYSIN>;
+			clock-output-names = "CLK_S_D3_FS0_CH0",
+					     "CLK_S_D3_FS0_CH1",
+					     "CLK_S_D3_FS0_CH2",
+					     "CLK_S_D3_FS0_CH3";
+		};
+
+		clockgenD3@9107000 {
+			compatible = "st,clkgen-c32";
+			reg = <0x9107000 0x1000>;
+
+			CLK_S_D3_FLEXGEN: CLK_S_D3_FLEXGEN {
+				compatible = "st,flexgen";
+				#clock-cells = <1>;
+
+				clocks = <&CLK_S_D3_QUADFS 0>,
+					 <&CLK_S_D3_QUADFS 1>,
+					 <&CLK_S_D3_QUADFS 2>,
+					 <&CLK_S_D3_QUADFS 3>,
+					 <&CLK_SYSIN>;
+
+				clock-output-names = "CLK_STFE_FRC1",
+						     "CLK_TSOUT_0",
+						     "CLK_TSOUT_1",
+						     "CLK_MCHI",
+						     "CLK_VSENS_COMPO",
+						     "CLK_FRC1_REMOTE",
+						     "CLK_LPC_0",
+						     "CLK_LPC_1";
+			};
+		};
+	};
+};

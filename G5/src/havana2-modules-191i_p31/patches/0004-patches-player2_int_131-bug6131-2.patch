@@ -1,0 +1,27 @@
+From 24be682a78ecc2b28ff28751542a5483c724341c Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:19:59 +0100
+Subject: [PATCH 04/36] patches/player2_int_131-bug6131-2
+
+ST bug #6131 2nd patch
+---
+ linux/components/inline/osinline.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/linux/components/inline/osinline.c b/linux/components/inline/osinline.c
+index b9785cf..f274c81 100644
+--- a/linux/components/inline/osinline.c
++++ b/linux/components/inline/osinline.c
+@@ -517,6 +517,9 @@ void* __builtin_new(size_t size)
+ #ifdef ENABLE_MALLOC_POISONING
+ 	if (p)
+ 	    memset(p, 0xcc, size);
++#else
++	if (p)
++	    memset(p, 0, size);
+ #endif
+ 
+ 	return p;
+-- 
+1.7.9.5
+

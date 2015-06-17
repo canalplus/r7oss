@@ -1,0 +1,3 @@
+/sys/devices/soc.3/9f01000.mali
+/sys/devices/soc.3/8c00000.h264pp
+/sys/devices/soc.3/8c85000.h264encoder

@@ -1,0 +1,18 @@
+#
+# STMFP network device configuration
+#
+
+config FASTPATH_ST
+	tristate "ST FastPath Network Device Driver"
+	select NET_CORE
+	select MII
+	select PHYLIB
+	select FIXED_PHY
+	depends on ARCH_STI && OF
+	---help---
+	  Driver for ST FastPath Ethernet device. This hardware is used
+	  on some ST embedded platforms to route packets from multiple on
+	  chip devices to external Ethernet ports. This driver implements a
+	  simple Ethernet interface on each of the hardware ports.
+	  If you have a controller with this interface, say Y or M here.
+	  If unsure, say N.

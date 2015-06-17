@@ -1,0 +1,23 @@
+/*
+ * Copyright (C) 2014 STMicroelectronics Limited.
+ * Author: Giuseppe Cavallaro <peppe.cavallaro@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+#include "stih410cut1.dtsi"
+
+/ {
+	cpus {
+		cpu@0 {
+			operating-points = <
+				/* kHz     uV */
+				1500000  1147000
+				1200000  1010000
+				800000   900000
+				400000   900000
+			>;
+		};
+	};
+};

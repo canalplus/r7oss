@@ -1,0 +1,26 @@
+diff -ur a/linux/drivers/media/dvb/stm/backend/havana_stream.cpp b/linux/drivers/media/dvb/stm/backend/havana_stream.cpp
+--- a/linux/drivers/media/dvb/stm/backend/havana_stream.cpp
++++ b/linux/drivers/media/dvb/stm/backend/havana_stream.cpp
+@@ -24,6 +24,7 @@
+ #include "codec_mme_base.h"
+ #include "manifestor_audio.h"
+ #include "manifestor_video.h"
++#include "manifestor_video_stmfb.h"
+ #include "demultiplexor_ts.h"
+ #include "havana_player.h"
+ #include "havana_playback.h"
+@@ -1068,6 +1069,14 @@
+     //STREAM_DEBUG("\n");
+     if (PlayerStreamType == StreamTypeVideo)
+     {
++        /* update SurfaceDescriptor just before setting output window,
++         * needed to have correct Display Size when player is paused */
++        class Manifestor_VideoStmfb_c* VideoStmfbManifestor = (class Manifestor_VideoStmfb_c*)Manifestor;
++
++        ManifestorStatus        = VideoStmfbManifestor->UpdateOutputSurfaceDescriptor();
++        if (ManifestorStatus != ManifestorNoError)
++            STREAM_ERROR("Failed to update Display Size\n");
++
+         class Manifestor_Video_c*       VideoManifestor = (class Manifestor_Video_c*)Manifestor;
+ 
+         ManifestorStatus        = VideoManifestor->SetOutputWindow (X, Y, Width, Height);

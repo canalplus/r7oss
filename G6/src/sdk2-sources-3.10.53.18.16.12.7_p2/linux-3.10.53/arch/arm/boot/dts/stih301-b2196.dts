@@ -1,0 +1,34 @@
+/*
+ * Copyright (C) 2014 STMicroelectronics Limited.
+ * Author: Seraphin Bonnaffe <seraphin.bonnaffe@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+#include "stih301-b21xx.dts"
+/ {
+	model = "STiH301 B2196";
+	compatible = "st,stih301-b2196", "st,stih301", "st,stih410";
+
+	soc {
+		snd_uni_player0: snd-uni-player@0 {
+			status = "okay";
+		};
+		snd_uni_player2: snd-uni-player@2 {
+			status = "okay";
+		};
+
+		snd_uni_player3: snd-uni-player@3 {
+			status = "okay";
+		};
+
+		snd_conv_dac_sc: snd-conv-dac-sc {
+			status = "okay";
+		};
+
+		snd_conv_biphase: snd-conv-biphase {
+			status = "okay";
+		};
+	};
+};

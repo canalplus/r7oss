@@ -1,0 +1,10 @@
+
+if SH_ST_CUSTOM002012
+
+config SH_G5_SPLASH
+	bool "Splash screen"
+	default y
+	help
+	  This enable splash for G5 boards.
+
+endif

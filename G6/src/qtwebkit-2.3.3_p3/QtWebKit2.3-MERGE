@@ -1,0 +1,373 @@
+This file contains a log of merges from WebKit trunk to the QtWebKit 2.3 branch.
+
+1. First find a build-version of trunk where the bot is green.
+You can do this by looking at http://build.webkit.sed.hu/builders/x86-64 Linux Qt Release/
+or browsing older build version by version number http://build.webkit.sed.hu/builders/x86-64 Linux Qt Release/builds/43099.
+
+2. Once you find a good build version, find the SVN version and look that up that commit in the git log on gitorius, and
+copy the header and footer of the commit to this file.
+Personally I also keep a local branch called backstage that I reset to this commit. This can be used to make diffs against 
+and thereby monitor the differences between the trees.
+
+3. Merge in one of the following two ways.
+
+3.1 git merge <git-version> -Xpatience
+This is usually recommended, fix any merge errors, revert commits that shouldn't have been merged, and ensure everything builds before pushing.
+
+3.2 git cherry-pick <former git-version>..<new git-version>
+This cherry-picks an entire range of commits one commit at a time. If there is a lot of conflicts in the merge, this can help by making it 
+possible to merge one commit at a time, or skip entire commits. Unfortunately it is prone to memory-leaks and will crash with out of memory
+errors if merging more than a 100 commits at a time. So only cherry-pick a few days of commits. 
+Since cherry-pick does not update the merge point, you need to follow this up with a git merge -sours <git-version> commmit, which performs
+a virtual merge without changing anything. If you don't do this later merging will fail in ugly ways.
+
+4. Wait for bots to report the tree green before merging qtwebkit-2.3-staging to qtwebkit-2.3. Also do not update qtwebkit-2.3 more than once
+every few weeks, it is supposed to be more stable for other parties to build and test against.
+
+>>>>> qtwebkit-2.3-staging
+>>>>> qtwebkit-2.3
+commit 49351b5e6e3923e970770e0dbeb586298f2fd775
+Author: Simon Hausmann <hausmann@webkit.org>
+Date:   Fri Nov 30 17:06:40 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@136247 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #250    Build successful
+commit a6c0829e07e4b6d7182f47b114090ffb6afaa86d
+Author: commit-queue <commit-queue@webkit.org>
+Date:   Fri Nov 30 00:47:44 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@136184 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #249    Build successful
+commit 0b2b89dc8ace9df305af7e11e43b8228eac6cd7d
+Author: commit-queue <commit-queue@webkit.org>
+Date:   Thu Nov 29 11:40:47 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@136121 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #247    Build successful
+commit 21bb0a83d02e317ee71fae0882e4c621031041b0
+Author: zandobersek <zandobersek@gmail.com>
+Date:   Wed Nov 28 07:42:36 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@135980 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #244    Build successful
+commit 3fb8681126c4ed0f58d5d3656a4d72ae548a0815
+Author: Simon Hausmann <hausmann@webkit.org>
+Date:   Mon Nov 26 11:06:55 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@135701 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #239    Build successful
+>>>>> build #236    Failed 1 failures 1 new passes
+commit 8180956e714523294391e1efdb3f33bededf31be
+Author: rjkroege <rjkroege@chromium.org>
+Date:   Fri Nov 23 16:15:51 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@135614 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #233    Build successful
+commit 59d76049b0e5dbb760d3964f619d3dd0d82dcf1c
+Author: Csaba Osztrogonác <ossy@webkit.org>
+Date:   Thu Nov 22 16:26:02 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@135526 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+commit 5ad9839d898ac4581229519ef3edd1a5f5ff8e84
+Author: commit-queue <commit-queue@webkit.org>
+Date:   Thu Nov 22 13:16:48 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@135506 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #231    Failed 2 failures 1 new passes
+commit 8850b69db31b44eae1516fe29818507bd9242a39
+Author: Michael Saboff <msaboff@apple.com>
+Date:   Thu Nov 22 09:37:06 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@135495 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #229    Build successful
+commit a8faa6427cfb67faebe969d737a5543fe3a99472
+Author: Csaba Osztrogonác <ossy@webkit.org>
+Date:   Wed Nov 21 12:19:57 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@135382 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #220    Build successful
+>>>>> build #219    Failed 3 failures 1 new passes 1 flakes
+commit 84cb8e614359a408f74b964576d13a622fa9165c
+Author: Kentaro Hara <haraken@chromium.org>
+Date:   Mon Nov 19 13:43:21 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@135147 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #211    Failed 3 failures 1 new passes 1 flakes
+commit 479d76d4de7490ee4a1556360c236d892c1619e6
+Author: Csaba Osztrogonác <ossy@webkit.org>
+Date:   Fri Nov 16 11:11:07 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@134923 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #209    Failed 1 failures 1 new passes 1 flakes
+commit 5bf2ff4127a8c406d0c941ca8799387bf7a0c4ae
+Author: schenney <schenney@chromium.org>
+Date:   Thu Nov 15 14:18:41 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@134770 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #189    Failed 1 failures 1 new passes
+commit faeb7cee0f019cc57ce5f4aa5c05da7e4cf6bdc7
+Author: commit-queue <commit-queue@webkit.org>
+Date:   Mon Nov 12 18:19:51 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@134254 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #186    Build successful
+>>>>> build #185    Failed 3 failures 1 new passes
+commit 87f8fb82abfa4c850ee4beab7f36869ad73095e3
+Author: yael <yael@webkit.org>
+Date:   Thu Nov 8 23:41:49 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@133962 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #176    Failed 2 failures 1 new passes
+commit 25da5415b1e3bc55772dfa4cc7b1f7e76bb295e8
+Author: commit-queue <commit-queue@webkit.org>
+Date:   Tue Nov 6 12:56:57 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@133588 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #163    Build successful
+>>>>> build #162    Failed 2 failures 1 new passes
+commit 1776384262436960c1dbf85b04f5efb143e2eea8
+Author: Csaba Osztrogonác <ossy@webkit.org>
+Date:   Sun Nov 4 12:30:46 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@133419 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #154    Failed 37 failures 23 new passes 1 missing results
+>>>>> build #152    Build successful
+commit f268d5598525a5e05ab97aafaa25107e25c6c4ff
+Author: Eric Seidel <eric@webkit.org>
+Date:   Fri Nov 2 00:07:35 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@133243 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #150    Build successful
+commit f85fd0e22665163f8a78c2ca99d99b5c06754a66
+Author: zeno.albisser <zeno.albisser@digia.com>
+Date:   Tue Oct 30 12:23:15 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@132897 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #148    Build successful
+>>>>> build #147    Failed 5 failures 1 new passes 2 flakes 1 missing results
+commit 96754555c256e134e3e675da4a63680dd8387287
+Author: Balazs Kelemen <kbalazs@webkit.org>
+Date:   Sat Oct 27 18:16:01 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@132733 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #143    Failed 1 failures 3 new passes 2 flakes 1 missing results
+commit cda49604538b0f4765dc43d69299429755280553
+Author: kkristof <kkristof@inf.u-szeged.hu>
+Date:   Thu Oct 25 08:48:46 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@132460 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #140    Failed 2 failures 1 new passes 2 flakes
+>>>>> build #135    Failed 5 failures 1 new passes 2 flakes 1 missing results
+commit 329c32c19a24e8e1da44f995612cd78bf19eed56
+Author: Alexander Pavlov <apavlov@chromium.org>
+Date:   Tue Oct 23 15:57:30 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@132229 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #128    Failed 2 failures 1 new passes 1 flakes
+>>>>> build #127    Failed 1 failures 28 new passes
+commit 662d2542af74c0706065b2a1ded9786641d03df2
+Author: Balazs Kelemen <kbalazs@webkit.org>
+Date:   Fri Oct 19 15:38:13 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@131904 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #124    Failed 504 failures 27 new passes
+commit 89b33acac9fd4b349735c441b96fc98609fc4945
+Author: roger_fong <roger_fong@apple.com>
+Date:   Fri Oct 19 04:02:23 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@131850 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #119    Build successful
+commit 72c9383973969f718914cc5920a179ffd98fbff9
+Author: danakj <danakj@chromium.org>
+Date:   Wed Oct 17 16:55:08 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@131614 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+commit 51a5f3a6e39c946b08d5c00093cd8d7cd7b8650b
+Author: Adam Barth <abarth@webkit.org>
+Date:   Tue Oct 16 21:17:37 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@131500 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #110    Build successful
+>>>>> build #109    Failed 3 failures 1 new passes
+commit b3909f779e9be4014933dddbcb8e550f900b5d1b
+Author: shinyak <shinyak@chromium.org>
+Date:   Tue Oct 16 09:12:29 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@131431 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #108    Failed 3 failures
+commit 65f0f73bb474bc0e91bf050f93787b06c3d6c005
+Author: Simon Hausmann <hausmann@webkit.org>
+Date:   Mon Oct 15 14:06:06 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@131300 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #107    Build successful
+>>>>> build #104    Failed 51 failures 1 flakes 4 missing results
+commit 768b38de4b58d31d2d1b5c809a924ab79bd9aeb5
+Author: jsbell <jsbell@chromium.org>
+Date:   Fri Oct 12 20:36:35 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@131219 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #96     Failed 1 failures
+>>>>> build #92     Failed 29 failures 4 new passes 1 missing results
+commit f399e5fc7ccc436176198570478213a8dc2d29e4
+Author: commit-queue <commit-queue@webkit.org>
+Date:   Wed Oct 10 08:46:36 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@130874 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #81     Failed 1 failures
+>>>>> build #77     Failed 32 failures 16 new passes 1 flakes 2 missing results
+commit f60986195e670e9ccbc17c86b02e4a41d9572f4f
+Author: Csaba Osztrogonác <ossy@webkit.org>
+Date:   Mon Oct 8 12:51:34 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@130635 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #61     Build successful
+commit cc3af8babe96ed8edc09c26d2c3bf09ac0b58189
+Author: Sam Weinig <weinig@webkit.org>
+Date:   Wed Oct 3 05:12:10 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@130248 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #113    Build successful
+>>>>> build #60     Build successful
+commit 2fca38ecf1d8c8fb632f497a36a21ff0b2dca493
+Author: Anders Carlsson <andersca@apple.com>
+Date:   Tue Oct 2 22:25:05 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@130219 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #56     Build successful
+>>>>> build #54     Failed 9 failures 1 missing results
+commit 3353cb89e1f2722b3238b76e0e9014fcecd39219
+Author: Ojan Vafai <ojan@chromium.org>
+Date:   Sat Sep 29 02:00:46 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@129967 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #46     Build successful
+commit b1485d3e8b871eb5c9edd04de7f621d6e457b537
+Author: commit-queue <commit-queue@webkit.org>
+Date:   Tue Sep 25 14:56:51 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@129507 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #44     Build successful
+commit ed593956c3f0a2e141af8d58c87da833a1cbd222
+Author: Csaba Osztrogonác <ossy@webkit.org>
+Date:   Sat Sep 22 12:10:50 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@129307 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #34    Failed 6 failures 1 new passes 1 flakes 18 missing results
+commit e1b303fa2dc099967284be187d4e09a1145376fd
+Author: commit-queue <commit-queue@webkit.org>
+Date:   Tue Sep 18 13:23:07 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@128883 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #25    Failed 5 failures 1 new passes 1 flakes 18 missing results
+commit 5dccac6e9dfa7aff6cba40988d1f2bcd7018f278
+Author: commit-queue <commit-queue@webkit.org>
+Date:   Mon Sep 17 07:13:00 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@128720 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #22    Failed 4 failures 1 new passes 2 flakes 18 missing results
+commit 7861c13eac75b6769bb489ad384f6ca8ec30eb26
+Author: Sergio Villar Senin <svillar@igalia.com>
+Date:   Fri Sep 14 16:30:27 2012 +0000
+    
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@128620 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build failure
+commit 6ec4319ca273f0e60cffc9deb68bd3a337bcbd8c
+Author: Csaba Osztrogonác <ossy@webkit.org>
+Date:   Fri Sep 14 09:37:27 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@128574 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #9      Failed 4 failures 1 new passes 2 flakes 18 missing results
+commit 1a513b2d62d7ff272dee4b544734aa3e56ac64f1
+Author: commit-queue <commit-queue@webkit.org>
+Date:   Thu Sep 13 18:16:59 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@128484 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #1      Failed 5 failures 1 new passes 1 flakes 18 missing results
+commit fcf96c8406082a7de5ce6060cb8385c0bab63a4a
+Author: commit-queue <commit-queue@webkit.org>
+Date:   Tue Sep 11 11:21:52 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@128169 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #78 - Failed 3 failures 1 new passes 2 flakes 18 missing results
+commit fc2863115e3401a2dea66a2bb9702fad581099bf
+Author: Gyuyoung Kim <gyuyoung.kim@samsung.com>
+Date:   Fri Sep 7 09:59:59 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@127848 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+>>>>> build #73 - Failed 1 failures 1 new passes 2 flakes 8 missing results
+commit 5ef92035b430fd57f3889050a8e32e7161bde0f6
+Author: commit-queue <commit-queue@webkit.org>
+Date:   Wed Sep 5 10:56:12 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@127572 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+commit c9b7ec10de92b43ef9ce7594db2e4b4faf54db16
+Author: Balazs Kelemen <kbalazs@webkit.org>
+Date:   Fri Aug 31 17:08:41 2012 +0000
+
+    git-svn-id: http://svn.webkit.org/repository/webkit/trunk@127275 268f45cc-cd09-0410-ab3c-d52691b4dbfc
+
+commit 8c642a6b267d806faf9911c265f239d90e782c2d
+Author: commit-queue <commit-queue@webkit.org>
+Date:   Mon Aug 27 09:45:36 2012 +0000
+
+commit 24d8a9bf0506b1057a328ed6faf8c1c8ef213020
+Author: commit-queue <commit-queue@webkit.org>
+Date:   Fri Aug 24 22:30:16 2012 +0000
+
+commit ce0e0a17f2a8c3fd00347fa7a58047fe222030a6
+Author: MORITA Hajime <morrita@google.com>
+Date:   Thu Aug 23 09:42:53 2012 +0000
+
+commit b85d33aee8f7a437815d6fa4ff928f2fe2a3669f
+Author: Csaba Osztrogonác <ossy@webkit.org>
+Date:   Tue Aug 21 09:50:12 2012 +0000
+
+commit cc31751ea3c52bd8fd3d102a7a1862b345ba61fe
+Author: Dan Bernstein <mitz@webkit.org>
+Date:   Sun Aug 19 19:12:28 2012 +0000
+

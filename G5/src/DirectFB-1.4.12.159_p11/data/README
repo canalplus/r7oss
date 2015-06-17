@@ -1,0 +1,22 @@
+INTRODUCTION
+------------
+This directory contains image files.
+
+
+DESCRIPTION
+-----------
+
+BD-RLE8 subdirectory contains a collection of BD-RLE8 encoded files only
+(after extracting from BD-RLE8.tar.gz ... e.g  # tar -zxvf BD-RLE8.tar.gz)
+
+ *.BDRLE8.rle	:	BD-RLE8 compressed payload files, "RL" comaptible header
+					without palette table
+ *.BDRLE8.pal	:	Palette table files (typically 256 entries for e.g. BD-RLE8)
+ *.BDRLE8.RLE	:	BD-RLE8 compressed payload files, "RL" comaptible header
+					with palette table and correct compression ID
+
+The following files contain DirectFB logo in various common formats:
+
+ directfb.rle   :   legacy RLE8 format using "RL" header ID
+ directfb.bmp   :   legacy BMP format and header using RLE compression
+ directfb.png   :   legacy PNG (unrelated / test for other ImageProvider)

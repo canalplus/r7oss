@@ -1,0 +1,68 @@
+CONFIG_KERNEL_BUILD?=$(KERNELDIR)
+CONFIG_KERNEL_PATH?=$(KERNELDIR)
+
+TREE_ROOT := $(shell pwd)
+
+export TREE_ROOT
+
+dir-y += player/
+
+all:
+
+clean: unittests-clean
+
+distclean: clean
+	-find . -name "*.o" | xargs rm -f
+	-find . -name ".*.o.cmd" | xargs rm -f
+	-find . -name ".*.ko.cmd" | xargs rm -f
+	-find . -name "*.ko" | xargs rm -f
+	-find . -name "*.mod.c" | xargs rm -f
+	rm -rf linux/.tmp_versions/*
+	rm -rf doc/api/html doc/api/latex doc/internals/html doc/api/se_api.pdf
+
+KBUILD_PATH := $(shell pwd)/linux
+ifneq ($(STM_TARGET_CPU),)
+MYARCH := $(STM_TARGET_CPU)
+else
+ifneq ($(ARCH),)
+MYARCH := $(ARCH)
+else
+MYARCH := sh
+endif
+endif
+
+modules:
+	$(MAKE) -C $(CONFIG_KERNEL_PATH) O=$(CONFIG_KERNEL_BUILD) M="$(KBUILD_PATH)" CROSS_COMPILE=$(CROSS_COMPILE) ARCH=$(MYARCH) modules
+
+modules_install:
+	$(MAKE) -C $(CONFIG_KERNEL_PATH) O=$(CONFIG_KERNEL_BUILD) M="$(KBUILD_PATH)" CROSS_COMPILE=$(CROSS_COMPILE) ARCH=$(MYARCH) INSTALL_MOD_DIR=player2 modules_install
+
+docs : doxygen apidoc
+
+doxygen :
+	$(MAKE) -C doc/internals
+
+apidoc :
+	$(MAKE) -C doc/api
+
+unittests:
+	$(MAKE) -C unittests check
+
+unittests-full:
+	$(MAKE) -C unittests check-full
+
+unittests-clean:
+	$(MAKE) -C unittests clean
+
+style:
+	@./runastyle.sh 2>&1 | tee tmpastyleoutput.txt
+	@./runastyle.sh check tmpastyleoutput.txt
+	@rm -f tmpastyleoutput.txt
+
+check: unittests style
+	@echo "basic checks passed"
+
+check-full: unittests-full style
+	@echo "full checks passed"
+
+.PHONY : docs doxygen apidoc check check-full unittests unittests-full unittests-clean style

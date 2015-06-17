@@ -1,0 +1,928 @@
+* Fri Sep 12 2014 Sumit Sharma <sumit.sharma2@st.com> - 2.87.7-1
+- [Bugzilla: 55218] Call to SE_DRAIN Stuck
+- [Bugzilla: 56762] TSMUX Muxer Crash in pull data when app calls muxer stop
+- [Bugzilla: 54152] Handling of param next_stream_id of te_tsmux is not done for te_tsg_filter_delete
+
+* Thu Sep 04 2014 Nidhi Chadha <nidhi.chadha@st.com> - 2.87.6-1
+-[Bugzilla: 56507] [CUC] TC_SYS_STRESS_CUC_12.2 - Artifacts on recorded and transcoded files
+-[Bugzilla: 53535] Getting tsmux error after adding STM_TE_TSG_FILTER_CONTROL_NUM_INPUT_BUFFERS to 64 for audio
+
+* Thu Aug 21 2014 Bharat Jauhari <bharat.jauhari@st.com> - 2.87.5-1
+- [Bugzilla: 51054] Power platform Customization (Dmx_transport engine)
+
+* Thu Aug 14 2014 Naresh Kumar Agarwala <naresh.agarwal@st.com> - 2.87.4-1
+- [Bugzilla: 55401] FOSH: Kernel oops on XTV PNR ADV test 2.3.8.2.3-Mpeg2-HD_Scr_HBR 
+- [Bugzilla: 53500] Crash in te_demux_analyse_input when handling rubbish data 
+ 
+* Fri Aug 01 2014 Nidhi Chadha <nidhi.chadha@st.com>> - 2.87.3-1
+- [Bugzilla: 51535] Make file syntax not followed
+- [Bugzilla: 52274] Deprecate the use of down_timeout in TE
+- [Bugzilla: 54093] TE is aborting injection in Live Playback (Playback at x1) due to timeout
+- [Bugzilla: 54530] SW/IP injection : Add debug support for timing statistics in TE sysfs
+
+* Mon Jul 28 2014 Nidhi Chadha <nidhi.chadha@st.com> - 2.87.2-1
+- Remove extra dash char from changelog for correct rpm generation
+
+* Thu Jul 24 2014 Nidhi Chadha <nidhi.chadha@st.com> - 2.87.1-1
+- [Bugzilla: 53888] Customer names present in driver logs
+
+* Tue Jul 08 2014 Bharat Jauhari <bharat.jauhari@st.com> - 2.87.0-1
+- [Bugzilla: 53707] [PM][DPM] FE/TE clocks enabled after CPS cycles
+- [Bugzilla: 53927] Coverity Fixes for SDK2-15 
+
+* Wed Jun 25 2014 Nidhi Chadha <nidhi.chadha@st.com> - 2.86.0-1
+- [Bugzilla: 51264] S3 Review: kern.log swamped by te_section_filter calls to print_section_info
+- [Bugzilla: 52633] STFE clock enable/disable per IB basis
+
+* Thu Jun 19 2014 Naresh Kumar Agarwala <naresh.agarwal@st.com> - 2.85.0-1
+- [Bugzilla: 52614] CLOCK_MONOTONIC vs CLOCK_MONOTONIC_RAW for stm_te te_time.c
+- [Bugzilla: 52350] fix race condition when detaching play_stream from demux
+
+* Wed Jun 18 2014 Naresh Kumar Agarwala <naresh.agarwal@st.com> - 2.84.0-1
+- [Bugzilla: 52633] STFE clock enable/disable per IB basis 
+- [Bugzilla: 50897] [PM][CPS][H410][K3.10-STI] FE clocks not restored after CPS cycle 
+- [Bugzilla: 50629] -Wall build option mandatory to be activated in Demux 
+- [Bugzilla: 50252] [TSMUX] [transcode][discontinuity] Transcode doesn't work well with a input file having a 20s video cut 
+- [Bugzilla: 46915] TSMUX: Set discontinuity indicator in TS packet in cas of discontinuity in PTS 
+ 
+* Fri Jun 06 2014 Nidhi Chadha <nidhi.chadha@st.com> - 2.83.0-1
+- [Bugzilla: 51389] In IP streaming, TE is no longer providing PCRs to SE
+
+* Wed Jun 04 2014 Bharat Jauhari <bharat.jauhari@st.com> - 2.82.0-1
+- [Bugzilla: 47504] [CDI] [AdSmart] CDI Live->Ad->Ad->Live Demux injection issue
+
+* Tue Jun 03 2014 Bharat Jauhari <bharat.jauhari@st.com> - 2.81.0-1
+- [Bugzilla: 50513] STM_IOMODE_NON_BLOCKING_IO not working properly
+- [Bugzilla: 51024] [CDI] Non Blocking Injection : TE should return a proper error if no sink attached to receive injected data via memsrc
+- [Bugzilla: 51463] Div by Zero in te_demux_inject_data when Output Filter Buffer Size is small
+- [Bugzilla: 50586] [CDI] PES header and payload not indexed for Scrambled streams even when recording is in clear
+- [Bugzilla: 46904] Packets discarding due to corrupted PES should be counted
+- [Bugzilla: 50957] [Security] Transport firmware does not used information given by SC firmware
+- [Bugzilla: 51122] [CUC][Transcode]: Internal error: Oops [PREEMPT SMP ARM]
+- [Bugzilla: 51660] validate the upstream obj before notifying it
+
+* Mon May 26 2014 Naresh Kumar Agarwala <naresh.agarwal@st.com> - 2.80.0-1
+- [Bugzilla: 51197] TSMUX : Fix for st_relay compilation issue
+
+* Thu May 22 2014 Nidhi Chadha <nidhi.chadha@st.com> - 2.79.0-1
+- [Bugzilla: 45154] TSMUX statistics should be implemented
+- [Bugzilla: 45156] Data dump on TSMUX data path
+- [Bugzilla: 50494] [PM]Run Time idle power management issue with Demux subsystem
+- [Bugzilla: 50954] Fix coverity errors on TE version TE_EXT_ML_2.79.0
+
+* Thu May 08 2014 Bharat Jauhari <bharat.jauhari@st.com> - 2.78.0-1
+- [Bugzilla: 49997] do not disable the STFE - CE shared clock during suspend
+
+* Thu May 08 2014 Bharat Jauhari <bharat.jauhari@st.com> - 2.77.0-1
+- [Bugzilla: 46291] TDT data never returned if TOT filter is opened at the same time
+- [Bugzilla: 49350] [ORLY][416][Mainline] TSMUX Burst on MUX output on PVR file transcoding [TSMUX]
+- [Bugzilla: 48935] [Clone-ML][TSMUX] Releasing the lock before calling tsmux_ready()
+- [Bugzilla: 48752] TSMUX: Reset ftd parameters after stop function call
+- [Bugzilla: 48651] TSMUX: Fix for SIT section insertion after FTD.
+- [Bugzilla: 47883] Support for single packet DACK firmware
+- [Bugzilla: 48997] [CDI] setting ECM corruption control prior to PID filter and TS filter attachment is ineffective
+- [Bugzilla: 49557] CDI: Can we define the size of the section filter internal queue
+- [Bugzilla: 47245] [TP]Support for single packet DACK firmware
+- [Bugzilla: 47885] Section buffer not getting reset on firmware load
+- [Bugzilla: 42878] Debug in Transport Processor Firmware incorrectly shows CAMs space used
+
+* Thu Apr 24 2014 Nidhi Chadha <nidhi.chadha@st.com> - 2.76.0-1
+- [Bugzilla: 46255] [TSMUX] Implement V4L2-compatible buffer flow control, allowing data-driven streaming
+- [Bugzilla: 47080] [TE][CONTROL]: __set_control needs some updations
+- [Bugzilla: 47154] CDI:[TSMUX]: PCR timebase should be different than the incoming/original timebase
+- [Bugzilla: 47778] Div by Zero in te_out_filter_wait when Output Filter Buffer Size is small
+- [Bugzilla: 48079] CDI: Mainline TSMUX Crash observed while executing Muxing use case with FOSH application
+- [Bugzilla: 48080] CDI [TSMUX]: Mainline tsmux fails on second run due to incorrect state
+- [Bugzilla: 48081] CDI [TSMUX] : Mainline Allow to set control when mux is stopped
+- [Bugzilla: 48751] TSMUX: Additional logic for FTD robustness
+- [Bugzilla: 48754] TSMUX: FTD code update to support dual PTS
+- [Bugzilla: 48763] rework the oops management fixes to sync with SDK2-10
+- [Bugzilla: 48764] fix demux errors reported by Klocwork for SDK2-13
+- [Bugzilla: 48771] [TSMUX] - Support for DATA_AVAILABLE event on tsmux
+- [Bugzilla: 48772] Need notification from the TSMUX for each EOS event
+- [Bugzilla: 48774] [SDK2-14]STFE Clock Management
+- [Bugzilla: 48839] Make thread priorities for all sub-systems tuneable using module parameters
+
+* Fri Mar 28 2014 Naresh Kumar Agarwala <naresh.agarwal@st.com> - 2.75.0-1
+- [Bugzilla: 46620] TSMUX: Insert DIT table after FTD
+- [Bugzilla: 46751] [TSMUX] Missing 'ULL' in last_PCR calculation
+- [Bugzilla: 46602] TSMUX: Fix for SIT insertion during restart of tsmux after FTD
+- [Bugzilla: 39617] TSMUX - Support For Full Time Discontinuity on All Input Streams
+- [Bugzilla: 41863] [MW:Nagra] TSMUX TSG Index requirement for Nagra Middleware
+- Revert [Bugzilla: 39707] STFE Clock Management
+
+* Wed Mar 12 2014 Nidhi Chadha <nidhi.chadha@st.com> - 2.74.0-1
+- [Bugzilla: 39707] STFE Clock Management
+- [Bugzilla :43291] [CPS] STFE clock is not restored to same freq after CPS
+- [Bugzilla :45404] HAL debugfs files are not created for pdevice
+- [Bugzilla :45574] transport engine can't be built if TE source directory != kernel source directory
+- [Bugzilla :46020] [ORLY][SC#127956] endurance zapping : kernel oops after 3871 zappings of 8s each (8.6 hours)
+- [Bugzilla :46566] [ORLY] endurance zapping : kernel oops during "te_read_section_buffer"
+- [Bugzilla :46376] [sti310] [TE] power functionality for Kernel STI-3.10
+- [Bugzilla :46395] [sdk2-13] : Coverity errors in demux
+- [Bugzilla :45908] [kernel 3.10-sti] sanity issues: sound issues in sat Live sanity
+
+* Tue Mar 04 2014 Nidhi Chadha <nidhi.chadha@st.com> - 2.73.0-2
+- Add product_* files for RPM generation
+- Remove SPEC file
+
+* Fri Feb 21 2014 Nidhi Chadha <nidhi.chadha@st.com> - 2.73.0-1
+- [Bugzilla :43979] [Demux]: STI 3.10 porting for Demux
+- [Bugzilla :44303] TSMUX - End of stream flags should only be required for audio/video streams
+- [Bugzilla :45097] [MW:Nagra] TSMUX Tsg buffer queue hangs after tsg_sec_filter is starting
+
+* Tue Feb 18 2014 Bharat Jauhari <bharat.jauhari@st.com> - 2.72.0-1
+- [Bugzilla: 44779] Coverity Fixes for DEMUX
+- [Bugzilla: 44748] [ORLY][SC #124591] PMT data not returned by filter
+- [Bugzilla: 44124] tsmux - send buffer errors on subtitle streams
+- [Bugzilla: 44093] TSMUX: Flow control "API and signalling for indicating availablitiy of buffers
+- [Bugzilla: 44088] tsmux: Remove error check for zero length buffer on release
+- [Bugzilla: 43704] TE_MAX_DEMUX_PER_PDEVICE should be a device tree parameter
+- [Bugzilla: 43587] tsmux control ignore_auto_pause failure
+- [Bugzilla: 43489] CDI::Transcode [TSMUX]::Mux:Need stream_id and stream_type of the stream in which Meta data was discovered.
+- [Bugzilla: 41849] [MW:Nagra] stm_te_pid_filter_set_pid() does not update the remote frontend's pid filter
+- [Bugzilla: 31669] [CDI] Need an event indicating availability of buffers
+
+* Tue Jan 14 2014 Bharat Jauhari <bharat.jauhari@st.com> - 2.71.0-1
+- [Bugzilla: 35319] Tango Lite HAL should be cleaned up
+- [Bugzilla: 41110] Investigate Coverity results from TE_ML_2.69.0
+- [Bugzilla: 41314] SDK2 port on kernel 3.10 step1 - TransportEngine (forecast SDK2-13)
+- [Bugzilla: 42139] TSMUX] [Transcode] - How to insert different SIT in specific time interval
+- [Bugzilla: 42140] TSMUX - The stop and start calls do not operate correctly when repeated on same tsmux
+- [Bugziila: 42141] TSMUX - Add API call to pause a tsg_filter
+- [Bugzilla: 42142] [TSMUX] Subtitle injection with other streams failed PCR timestamp check
+- [Bugzilla: 42143] TSMUX - PTS index data does not include offset
+- [Bugzilla: 42145] [TSMUX] Audio bypass injection to tsmux fails with PCR timestamps failure
+- [Bugzilla: 42148] TSMUX: Flow control "API and signalling for indicating availablitiy of buffers"
+- [Bugzilla: 42427] TSMUX - Change Initial DTS Check To Cope With Staggered Startup
+- [Bugzilla: 42668] extension to bug 39702 : TSMUX - Add API call to pause a tsg_filter
+- [Bugzilla: 34166] Calling stm_te_filter_set_control with STM_TE_OUTPUT_FILTER_CONTROL_READ_IN_QUANTISATION_UNITS return an error
+- [Bugzilla: 26308] Rename STM_TE_CNTRL_INPUT_TYPE
+- [Bugziila: 26801] Deprecate STM_TE_PCR_FILTER_CONTROL_CLK_RCV_LOOP
+- [Bugzilla: 26701] STM_TE_FILTER_CONTROL_STATUS should be STM_TE_INPUT_FILTER_CONTROL_STATUS & STM_TE_OUTPUT_FILTER_STATUS
+- [Bugzilla: 41316] Remove unsupported PES_INDEX and STATUS filter types from API
+- [Bugzilla: 38756] STFE: when setting Wildcard PID possibly lose of packets
+- [Bugzilla: 38479] Facing issue in recording on 3rd tuner in ISTB Setup
+- [Bugziila: 39729] API required for TS packet corruption
+- [Bugzilla: 41460] TSMUX - Need to change compound controls API to include a size
+
+* Thu Dec 12 2013 Nidhi Chadha<nidhi.chadha@st.com> - 2.70.0-1
+- Remove stm_te_test from the delivery
+
+* Fri Nov 22 2013 Bharat Jauhari <bharat.jauhari@st.com> - 2.69.0-1
+- [Bugzilla: 29000] Need to add index startcode detection to component test
+- [Bugzilla: 29730] Default TSInput destination should be a platform device option
+- [Bugzilla: 29869] TE HAL should report capabilities
+- [Bugzilla: 36839] Start code splitted between two packets
+- [Bugzilla: 39999] TSMUX - Kernel oops when running out of multiplexor buffers
+- [Bugziila: 40112] [ORLY][SC #116231][Clockrecovery] Invalid Synchro : Errors Clockrecovery
+- [Bugzilla: 40156] [HPS][STFE] Hang in loading pti_fe f/w if HPS is run before loading module
+- [Bugzilla: 40489] Update Makefile.fw to embed git hash into pti_tp_api.h following SVN->GIT
+- [Bugzilla: 40638] [TE/FE/PM] rmmod for stm_te_hal hangs in fe
+
+* Thu Nov 14 2013 Bharat Jauhari <bharat.jauhari@st.com> - 2.68.0-1
+- [Bugzilla: 33612] TSMUX tolerance to DTS discontinuity
+- [Bugzilla: 35915] TSMUX - Need to memcpy input stream data into internal pool
+- [Bugzilla: 36568] Remove TE platform device registration
+- [Bugzilla: 38692] [ORLY] PCR Management issue in stptiHAL_SlotSetPID
+- [Bugzilla: 39004] avoid using TREE_ROOT variable in the makefile to determine code's parent directory
+- [Bugziila: 39089] [MW:Nagra] Continuous "stm_te_api.te_ts_index_filter_read_bytes() - error in converting arrival to systime -22" reported
+- [Bugzilla: 39553] Investigate Coverity results from TE_ML_2.67.0
+- [Bugzilla: 39901] TSMUX tests needs to be updated due to bug 33612
+- [Bugzilla: 38271] [H407-PD] First live playback takes long time to exit
+- [Bugzilla: 39791] Firmware Access violation for DMAPointers_p / dma_rp_pointers
+
+* Tue Oct 08 2013 Jonathan Brett <jonathan.brett@st.com> - 2.67.0-1
+- [Bugzilla: 32520] Frequent enable/disable of TP clock causes system hang
+- [Bugzilla: 32688] Make current buffer levels available in sysfs
+- [Bugzilla: 37003] pti_debug.h makes use of dynamic debug
+- [Bugzilla: 37718] STFE driver does not configure PID table correctly on h416 if only a single TP is active
+- [Bugzilla: 37798] Regression in remote PID filter unit test on TE_ML_2.66.0
+- [Bugziila: 37898] Remove obsolete dummy stm-te platform device from stm_te_pm.c
+
+* Thu Sep 26 2013 Jonathan Brett <jonathan.brett@st.com> - 2.66.0-1
+- [Bugzilla: 31510] Ensure all TE API sleeps are interruptible
+- [Bugzilla: 35091] Transport engine build system doesn't respect INSTALL_MOD_DIR
+- [Bugzilla: 36572] stm_te_filter_delete fails for PID filter that has been attached via stm_te_pid_attach
+- [Bugzilla: 36594] STPTI_Driver.cachedTPFW.data is NULL if pDeviceInit fails, which leads to kernel oops on multi-TP platforms
+- [Bugzilla: 36832] Intermittent failure to intialise TP firmware (firmware init params corruption)
+- [Bugzilla: 37094] Make STKPI object underlying HAL handles available in sysfs
+- [Bugzilla: 37316] pDeviceInit returns incorrect error code for incompatible firmware
+
+* Thu Sep 12 2013 Jonathan Brett <jonathan.brett@st.com> - 2.65.0-1
+- [Bugzilla: 26796] Rename stm_te_ts_index_Data_t clk member to system_time
+- [Bugzilla: 31924] TE registry tag name too generic
+- [Bugzilla: 33667] Homogenize thread names
+- [Bugzilla: 34901] Fix division by zero in vDeviceGetStreamStatistics
+- [Bugzilla: 35038] Fix sh4/kernel 2.6.32 compilation
+- [Bugzilla: 35687] Tango HAL has a tight loops in xp70 reset
+- [Bugzilla: 35811] Abort injection on all injector error
+- [Bugzilla: 35946] Robustness test for corrupted TS streams
+- [Bugzilla: 36150] TSMUX: Muxer failed to mux in time for DTS error at start of stream
+- [Bugzilla: 35830] Revise Tango TP version identification
+
+* Thu Sep 05 2013 Jonathan Brett <jonathan.brett@st.com> - 2.64.0-1
+- [Bugzilla: 30599] TE tango_lite HAL has coupling to tango HAL
+- [Bugzilla: 33611] TE drops frames during recording
+- [Bugzilla: 33899] TSMUX: Fix sh4 build
+- [Bugzilla: 34449] TSMUX: Transcode A/V and subtitle with HLS HD profile and output as MPEG TS file with PAT/PMT user-defined
+- [Bugzilla: 35156] STM_TE_TSG_FILTER_CONTROL_INCLUDE_RAP is ignored
+- [Bugzilla: 35458] CPS for STFE is performed in a disordered way
+- [Bugzilla: 35752] TP messages in ISR should indicate pDevice index
+
+* Mon Sep 02 2013 Jonathan Brett <jonathan.brett@st.com> - 2.63.0-1
+- [Bugzilla: 35792] Crash on Alicante (stxd127) when probing tango_lite device
+
+* Fri Aug 23 2013 Steve Wheatstone <stephen.wheatstone@st.com> - 2.62.0-1
+- [Bugzilla: 35248] Can't load firmware during resume
+- [Bugzilla: 35101] TANGO HAL and TS HAL should block calls when Powering down
+- [Bugzilla: 28274] Tidy platform-specific test code in STFE
+- [Bugzilla: 32021] CDI:PES filter buffer Flush at PID disconnection
+- [Bugzilla: 34642] CCSC Reserved bits accessed in pti_stfe_v2.c
+- [Bugzilla: 35372] [MAT] module unloading failing with TE_ML_2.61.0
+
+* Fri Aug 16 2013 Jonathan Brett <jonathan.brett@st.com> - 2.61.0-1
+- [Bugzilla: 34279] Demux open hangs agter exiting CPS powerdown
+- [Bugzilla: 34547] TSMUX: Need index test to validate index data relative to TS output
+- [Bugzilla: 34555] Convert HAL coding style
+- [Bugzilla: 34626] Investigate ambiguous assignments found by indent
+- [Bugzilla: 34890] TSMUX: Ensure that pre-wrapped audio timestamps are correctly handled
+- [Bugzilla: 34989] STFE doesn't restore PIDs after suspend
+- [Bugzilla: 35089] Terminate memdma when going to sleep
+- [Bugzilla: 35115] TSMUX: No PTS in index output
+- [Bugzilla: 35119] TSMUX: RAP bit not set when generating seperate PCR stream
+
+* Tue Aug 13 2013 Jonathan Brett <jonathan.brett@st.com> - 2.60.0-1
+- [Bugzilla: 35008] Failure to probe devices from devicetree after module unload/reload
+
+* Thu Aug 08 2013 Jonathan Brett <jonathan.brett@st.com> - 2.59.0-1
+- [Bugzilla: 25045] Switch to Linux firmware loader for TP and MEMDMA firmware
+- [Bugzilla: 33006] Device tree support
+- [Bugzilla: 33436] Improve stm_te_filter_get/set_control unit test coverage
+- [Bugzilla: 33921] te_out_filter_pull_data API is always blocking
+- [Bugzilla: 34204] TSMUX: Change unit test validation to use demux and ignore PCR values
+- [Bugzilla: 34605] Warn when pacing filter overflow is possible
+- [Bugzilla: 34684] Reparent FRC0 clock on stih416 to allow setting correct frequency
+- [Bugzilla: 31667] Add overflow status to TE buffer object
+
+* Thu Aug 01 2013 Jonathan Brett <jonathan.brett@st.com> - 2.58.0-1
+- [Bugzilla: 23555] New counter in firmare for buffer overflows
+- [Bugzilla: 30208] TSMUX: Add offsets to PTS/DTS values to prevent PCR wrap-around
+- [Bugzilla: 30474] TSMUX: Buffers with bad timestamps should be rejected immediately
+- [Bugzilla: 31611] Component test needs test ID field added
+- [Bugzilla: 32289] Fix locking in push_data function
+- [Bugzilla: 32792] Fix coverity errors
+- [Bugzilla: 33957] CC fixup for secondary PID performed on wrong slot/pid
+- [Bugzilla: 34475] Add SPEC file to generate transport_engine firmware RPMs
+
+* Thu Jul 25 2013 Jonathan Brett <jonathan.brett@st.com> - 2.57.0-1
+- [Bugzilla: 26786] Reduce timeout for checking buffer (100ms -> 30ms)
+- [Bugzilla: 28732] Add stm_te_filter_get_control STKPI function
+- [Bugzilla: 31584] TSMUX: Need to be able to output PCR and PES start within a single TS packet for RAP
+- [Bugzilla: 31585] TSMUX: Add control to TSG filter for RAP generation
+- [Bugzilla: 32069] Sync te_out_filter_wait and te_out_filter_detach
+- [Bugzilla: 32210] TSMUX: Tsmux pcr wrap test someimtes failes reference comparison
+- [Bugzilla: 32222] Unable to perform descrambling on secondary PIDs
+- [Bugzilla: 32295] TSMUX: Repetition rate 0 doesn't work for section table insertion
+- [Bugzilla: 32517] Add STFE MEMDMA debug output
+- [Bugzilla: 32997] TSMUX: Invalid indices received after first index
+- [Bugzilla: 33085] Incorrect name used to register TE object in stm_registry
+- [Bugzilla: 33201] Permit multiple replacement filters in one demux
+- [Bugzilla: 33228] TSMUX: Table period of 0 causes kernel oops
+- [Bugzilla: 33731] TSMUX: Add TTS output to component test
+- [Bugzilla: 33751] TSMUX: Add PTS timestamp to index output for PTS/RAP indices
+- [Bugzilla: 33755] Add STID127 macro for IRQ definitions
+- [Bugzilla: 33757] Fix HAL_BufferGetWriteOffset for Tango Lite HAL (Alicante)
+
+* Thu Jun 27 2013 Jonathan Brett <jonathan.brett@st.com> - 2.56-1
+- [Bugzilla: 24487] Unit test: Add connection ordering test
+- [Bugzilla: 31855] Fix miscellaneouse Coverity errors
+- [Bugzilla: 32026] STFE returns hardware error during dvbdemux ageing zap test 602
+- [Bugzilla: 32070] Avoid registry error trace when detaching PCR filter from push sink
+- [Bugzilla: 32194] Unit test: Reduced memory usage and avoid test failure on 1G platforms
+- [Bugzilla: 32385] TSMUX: Fix for multiple section streams
+- [Bugzilla: 32569] Add STFE IB error IRQ
+- [Bugzilla: 32560] Detach auto targets from stm_te_pid_attach on PID filter deletion
+- [Bugzilla: 32570] STFE code rework
+- [Bugzilla: 32571] Erroneous signalling on incomplete section in buffer
+
+* Mon Jun 24 2013 Jonathan Brett <jonathan.brett@st.com> - 2.55-1
+- [Bugzilla: 30210] TSMUX: Cleanup old v4l2 tsmux module and stm_te_tsmux_test area
+- [Bugzilla: 30662] Implement CPS low-power support in Tango HAL
+- [Bugzilla: 30666] Implement CPS low-power support in TSHAL
+- [Bugzilla: 30889] TSMUX: DTS integrity check is failing on test stream
+- [Bugzilla: 31193] Need to remove comment from stm_te.h regarding index alignment
+- [Bugzilla: 31222] Bugfixes for Alicante based on testing
+- [Bugzilla: 31589] Avoid calling te_bwq_unregister with NULL buffer
+- [Bugzilla: 31608] Comments to aid HAL error number identification in pti_stpti.h
+- [Bugzilla: 31692] Specify TSOUT used by STFE
+- [Bugzilla: 32023] Successive calls to TSInputConfigure causes memory leak
+- [Bugzilla: 32024] STFE deallocate error ignored in memory allocate function
+- [Bugzilla: 32025] STFE shutdown function does not free memory in case of hardware error
+- [Bugzilla: 32182] Error in pcr read function return value
+
+* Wed Jun 05 2013 Jonathan Brett <jonathan.brett@st.com> - 2.54-1
+- [Bugzilla: 25905] TSMUX: Need the offset of the TS packet carrying Random Access Point
+- [Bugzilla: 26946] Update pull_data interface to match pull interface redesign
+- [Bugzilla: 30206] TSMUX: Replace tsmux-specific metadata
+- [Bugzilla: 30377] T3 address range register (GOOLO) pokes not in keeping and should be done after every xp70 reset
+- [Bugzilla: 30447] Remove DOS line endings in stm_te_hal/tango/pti_vdevice.c
+- [Bugzilla: 30692] TSMUX: Muxer fails with ran out of data in PCR period error
+- [Bugzilla: 30807] Error return code not tested leading to kernel panic
+- [Bugzilla: 31308] Buffer overflow_update flag not used of cleared properly
+
+* Thu May 30 2013 Jonathan Brett <jonathan.brett@st.com> - 2.53-1
+- [Bugzilla: 25910] TSMUX: Need offset of TS packet carrying DIT information
+- [Bugzilla: 27588] TSMUX: Generate output indexing information
+- [Bugzilla: 28926] Reattaching the index filter to the PID filter fails as objects already associated
+- [Bugzilla: 29611] Performance test unable to get stats without debugfs. Move cycle_count statistic to sysfs
+- [Bugzilla: 30327] Unit test: tsmux warp unit test reference stream needs updating
+- [Bugzilla: 30473] TSMUX: Calculation of output buffer size is in bits instead of bytes
+- [Bugzilla: 30560] H407 VSOC platform config file is not selected
+- [Bugzilla: 30604] te_obj deinit does not clean up the obj properly when maximum number of TE out filters (64) reached
+- [Bugzilla: 30729] TSMUX: Can't start TSG Section filter unless section data is provided
+- [Bugzilla: 30873] Delete .software_leaky_pid from d127 and h407 platform config fil
+- [Bugzilla: 31022] STFE driver adaptations for Alicante
+- [Bugzilla: 31172] TSMUX: Need to generate I frame index
+
+* Tue May 28 2013 Jonathan Brett <jonathan.brett@st.com> - 2.52-1
+- [Bugzilla: 30703] Crash in te_out_filter_get_free during channel zap
+
+* Thu May 16 2013 Jonathan Brett <jonathan.brett@st.com> - 2.51-1
+- [Bugzilla: 24352] Add control to force flush of filter buffers
+- [Bugzilla: 27587] TSMUX - Provide section data stream input capability
+- [Bugzilla: 30400] Pacing filter wait function leaks references to HAL buffer
+
+* Mon May 13 2013 Jonathan Brett <jonathan.brett@st.com> - 2.50-1
+- [Bugzilla: 27598] TSMUX - Bad Debug Messages Corrupting Console Log
+- [Bugzilla: 27910] TSMUX - Add A max_tsg_filters_per_tsmux Field To The TE Capabilities
+- [Bugzilla: 28461] TSMUX - Default stream PIDs start at 0x200 instead of 0x100
+- [Bugzilla: 28992] Add d127 (Alicante) support
+- [Bugzilla: 29548] Section filter crash in section filter work
+- [Bugzilla: 29711] STFE platform device irq not correcly ignored on STFE v1 devices
+- [Bugzilla: 29858] Use of Internal xp70 internal Timer should be decided by FrontEnd attach
+- [Bugzilla: 30173] TSMUX - Calculation Of Initial PCR Value Is Wrong In MME Wrapper
+- [Bugzilla: 30269] Programming T3 req filter address range incorrect
+
+* Thu May 02 2013 Jonathan Brett <jonathan.brett@st.com> - 2.49-1
+- [Bugzilla: 14677] stm_te options configurable via module parameters
+- [Bugzilla: 17928] Introduce __must_check for all STKPI functions
+- [Bugzilla: 28714] Fix SASC1 clock names
+- [Bugzilla: 29668] Large SW injections can overflow the output buffer
+- [Bugzilla: 29823] Correctly report bpa allocation failures in HAL
+- [Bugzilla: 29860] Select TP (TCU) timestamping via HAL vDevice flag
+
+* Thu Apr 25 2013 Jonathan Brett <jonathan.brett@st.com> - 2.48-1
+- [Bugzilla: 28405] Kernel oops when CONFIG_DMA_API_DEBUG is enabled
+- [Bugzilla: 29693] MemoryAllocateForDMA error path failure
+- [Bugzilla: 29732] Fix 7108 platform build
+
+* Thu Apr 18 2013 Jonathan Brett <jonathan.brett@st.com> - 2.47-1
+- [Bugzilla: 28260] Cleanup software_leaky_pid usage in platform device struct
+- [Bugzilla: 28445] Unit test: Update tsmux_simple_test to test early end of stream
+- [Bugzilla: 29591] Add buffer work unregister in section filter disconnect
+
+* Thu Apr 11 2013 Jonathan Brett <jonathan.brett@st.com> - 2.46-1
+- [Bugzilla: 16476] Add statistics reset interface in sysfs
+- [Bugzilla: 21795] Add PES PTS indexing support
+- [Bugzilla: 26069] Remove tsinhw interface typedefs from stm_te.h
+- [Bugzilla: 27887] Addition of TP utilitisation statistics in sysfs and STKPI
+- [Bugzilla: 29091] Fix detection of connection type in te_out_filter_detach
+- [Bugzilla: 29114] Fix build warning in te_time on Android
+- [Bugzilla: 29238] TSDMA pacing must be disabled for non-tagged SWTS
+- [Bugzilla: 29277] Function stptiTSHAL_StfePckRAMDump error for STFE with more than 1 internal RAM
+- [Bugzilla: 29012] Add initial Monaco/Cannes support (stih407)
+
+* Wed Mar 27 2013 Jonathan Brett <jonathan.brett@st.com> - 2.45-1
+- [Bugzilla: 28270] Force HAL software injector to flush partial packets
+- [Bugzilla: 28334] Generate STC/monotonic clock pairs safely
+- [Bugzilla: 24814] Section filter pull_data reads data as bytestream
+- [Bugzilla: 28756] Unit test: section filter reconfigure test failure
+- [Bugzilla: 28768] Section filter reattachment causes crash
+
+* Wed Mar 27 2013 Jonathan Brett <jonathan.brett@st.com> - 2.44-2
+- Fix error in SPEC file version
+
+* Fri Mar 22 2013 Jonathan Brett <jonathan.brett@st.com> - 2.44-1
+- [Bugzilla: 25053] Add stm_te capture points for strelaytool
+- [Bugzilla: 26834] Unit test: add performance test
+- [Bugzilla: 27948] Unit test: add a simple tsmux functional test
+- [Bugzilla: 28159] Unit test: making logging all API calls off by default
+- [Bugzilla: 28205] 4 Tsmuxes not possible due to incorrect increment of program id
+- [Bugzilla: 28209] Early end of stream causes error messages in muxer
+- [Bugzilla: 28231] Force CRC control update has dependency of filter attach sequence
+- [Bugzilla: 28259] Regression in channel zap - stale data read from buffers
+- [Bugzilla: 28265] te_out_filter_get_pkt_count will not work for index buffer
+- [Bugzilla: 28277] Fix 2.6.32/sh4 kernel build
+- [Bugzilla: 28289] Unit test: add PES marker test
+
+* Thu Mar 14 2013 Jonathan Brett <jonathan.brett@st.com> - 2.43-1
+- [Bugzilla: 26790] Rework of memory handling between TP and host
+- [Bugzilla: 27797] Reduce number of registry calls in te_out_filter_pull_data
+- [Bugzilla: 28118] Firmware shared memory size calculation fixed
+- [Bugzilla: 21084] Supply TE configuration data via platform device
+
+* Mon Mar 11 2013 Jonathan Brett <jonathan.brett@st.com> - 2.42-1
+- [Bugzilla: 25978] Add unit test for remote PID filtering
+- [Bugzilla: 27004] Firmware fix for PES split header processing
+- [Bugzilla: 27248] Fix Coverity warnings from ML_0035
+- [Bugzilla: 27259] STFE Leaky PID filter value is too low (STFE HAL)
+- [Bugzilla: 27497] Remove redundant makefiles from stm_te_hal
+- [Bugzilla: 27581] TSMUX - Setting "Include PCR" In A Stream Causes CC Errors
+- [Bugzilla: 27582] TSMUX - Setting Compound Controls Is Not Working Properly
+- [Bugzilla: 27635] STFE v1: RAM size always 0x4000
+- [Bugzilla: 27646] With cable card routing TS stops when connecting 2 demuxes to same frontend
+- [Bugzilla: 27819] Add initial TSMUX unit tests
+- [Bugzilla: 27874] TSMUX - Rename esd_filter object to tsg_filter
+
+* Thu Feb 28 2013 Jonathan Brett <jonathan.brett@st.com> - 2.41-1
+- [Bugzilla: 25634] TS time stamps to support MXL and SASC1
+- [Bugzilla: 26021] Additional PES unit test for CC errors
+- [Bugzilla: 26778] Additional section filter reconfigure unit test
+- [Bugzilla: 27769] Data insertion sometimes fails (2nd patch)
+- [Bugzilla: 27226] Intermittent crash in stptiTSHAL_StfeGetIBEnableStatus
+- [Bugzilla: 27457] Crash when detaching TS filter with data entry attached
+- [Bugzilla: 27571] TSMUX: Corruption of ES data in output muxed stream
+- [Bugzilla: 27579] TSMUX: Remove OS indirection code
+- [Bugzilla: 27580] TSMUX: Oops when sending buffer with bad PTS value
+- [Bugzilla: 27606] Missing pointer field in data insertion
+- [Bugzilla: 27653] Add checksum to software injector nodes
+- [Bugzilla: 27760] TSMUX: Fix compilation for 2.6.32 kernel
+
+* Mon Feb 25 2013 Jonathan Brett <jonathan.brett@st.com> - 2.40-2
+- SPEC update to include tsmux files
+
+* Wed Feb 20 2013 Jonathan Brett <jonathan.brett@st.com> - 2.40-1
+- [Bugzilla: 26224] Add initial TS mux functionality
+- [Bugzilla: 26985] Get control status exceptions on filters without associated buffers
+- [Bugzilla: 27216] Wrong condition in enabling remote PID filtering
+
+* Thu Feb 14 2013 Jonathan Brett <jonathan.brett@st.com> - 2.39-1
+- [Bugzilla: 26126] Firmware change - TE should not discard scrambled packets for PES, sections
+- [Bugzilla: 26188] PID insertion unit test fix. Avoid reuse of HAL data entry object
+- [Bugzilla: 26561] TE pushes zero-size blocks from output filter to push sink
+- [Bugzilla: 26658] Fix return value check in PCR filters
+- [Bugzilla: 26816] HAL ReturnIndexZone doesn't always set a valid slot handle
+- [Bugzilla: 26930] Data insertion sometimes fails
+
+* Thu Jan 31 2013 Jonathan Brett <jonathan.brett@st.com> - 2.38-1
+- [Bugzilla: 26442] Compilation failure on kernels 3.0 to 3.3
+- [Bugzilla: 26564] Update registry print handler function signature
+- [Bugzilla: 26594] Data insertion fails if length is less than 4k
+
+* Thu Jan 24 2013 Jonathan Brett <jonathan.brett@st.com> - 2.37-1
+- [Bugzilla: 23279] Support reading multiple indexes in single read
+- [Bugzilla: 25940] Crash while reattaching PID filter to PES filter
+- [Bugzilla: 26111] Unit test: Get statistics test files incorrect
+- [Bugzilla: 26131] Handle stale indexes in buffer cleanly
+- [Bugzilla: 26141] Missing break in te_demux_get_control
+- [Bugzilla: 26166] Unit test: Get statistics test closes file handles multiple times
+- [Bugzilla: 26184] Running unit test twice gives failed to create push sink type warning
+- [Bugzilla: 26223] Enable H416 clocks for STFE CC routing
+- [Bugzilla: 26282] HAL termination failed with timeout. Fixup SubMilliSecondWait function
+- [Bugzilla: 26303] Module version incorrect for stm_te_hal module
+
+* Thu Jan 17 2013 Jonathan Brett <jonathan.brett@st.com> - 2.36-1
+- [Bugzilla: 19818] Add new status compound control
+- [Bugzilla: 23667] Add remote PID filtering interface for stm_fe
+- [Bugzilla: 24294] Support multiple transport processors on H416
+- [Bugzilla: 24303] Implement stm_te_pid_filter_link_primary_to_secondary_pid
+- [Bugzilla: 24477] Add STFE HAL mutex
+- [Bugzilla: 24796] Reduce thread count by migrating to per-demux workqueues
+- [Bugzilla: 24853] stptiTSHAL_StfeDisableInput called twice for some input types
+- [Bugzilla: 25016] Pushing invalid packets into demux causes infinite loop
+- [Bugzilla: 25274] PCR error message on H416. Enable correct clocks on H416
+- [Bugzilla: 25439] Transport Engine Control Passive Standby (low power) support
+- [Bugzilla: 25868] Add duplicate packet detection control to TE demux object
+- [Bugzilla: 25996] PNMM_VNMM_FILTER filter will not work in HAL filter allocation
+
+* Fri Jan 04 2013 Jonathan Brett <jonathan.brett@st.com> - 2.35-1
+- [Bugzilla: 23164] Add support for VSOC platform execution (targets STiH416)
+- [Bugzilla: 24300] Replace sprintf with bounded snprintf
+- [Bugzilla: 24402] Enable/disable STFE HW workaround based on STFE version
+- [Bugzilla: 24503] Remove STOS references in TE HAL
+- [Bugzilla: 24641] STiH416 start/stop/start live playback failure
+- [Bugzilla: 25086] Avoid dereferencing invalid pacing filter object
+- [Bugzilla: 25409] Make stm_te control naming more consistent
+
+* Mon Dec 17 2012 Jonathan Brett <jonathan.brett@st.com> - 2.34-1
+- Fix 7108 build
+
+* Fri Dec 14 2012 Jonathan Brett <jonathan.brett@st.com> - 2.33-1
+- [Bugzilla: 21413] Add unit test for start code indexing
+- [Bugzilla: 24374] Multiple carousel data insertion fails
+- [Bugzilla: 25203] Incorrect TSIN number in te_demux_connect_tsin
+
+* Thu Dec 06 2012 Jonathan Brett <jonathan.brett@st.com> - 2.32-1
+- [Bugzilla: 19118] Do not stop output filter push task when disconnecting input filter
+- [Bugzilla: 24681] Add PID range check on all STKPI functions that set a PID
+- [Bugzilla: 24948] Allow disconnection of frontend to allow pending injections to abort
+- [Bugzilla: 24923] Allow injection of more than TE_MAX_INJECTOR_NODES in a single data push
+
+* Fri Nov 30 2012 Jonathan Brett <jonathan.brett@st.com> - 2.31-1
+- [Bugzilla: 21375] Bad sync byte in packet: 0x0 with changes for cable card routing
+- [Bugzilla: 23942] Scatter gather list handling is incorrectly passed to HAL software injector
+- [Bugzilla: 24392] te_sink_read_index() - error in converting arrival to systime -22
+- [Bugzilla: 24612] Demux injection function locking to avoid disconnect during injection
+- [Bugzilla: 24621] STFE pointer alignment problem resulting in loss of av decode
+- [Bugzilla: 24628] Output filter object state is not cleared during detach
+- [Bugzilla: 24645] MIB disabled when last MIB channel is release
+- [Bugzilla: 24678] stm_te_filter_attach error path causes oops in te_out_filter_disconnect_input
+- [Bugzilla: 24738] Allow connecting TSIN to multiple demuxes
+- [Bugzilla: 24803] Workaround for crash when disconnecting some TSInput types
+
+* Fri Nov 23 2012 Jonathan Brett <jonathan.brett@st.com> - 2.30-1
+- [Bugzilla: 21383] Add consistent translation of TE HAL errors to errno errors
+- [Bugzilla: 24270] Control STM_TE_PES_FILTER_CONTROL_STREAM_ID_FILTER value does not work once PES filter is attached
+- [Bugzilla: 24292] HAL debugfs print buffer unreliable
+- [Bugzilla: 24296] Remove redundant STFE comments from pti_tango.h
+- [Bugzilla: 24329] Remove inclusion of linux/kernel.h in stm_te.h
+- [Bugzilla: 24410] Control STM_TE_TS_FILTER_CONTROL_DLNA_OUTPUT value does not work once PES filter is attached
+- [Bugzilla: 24474] Fix whitespace in header files
+- [Bugzilla: 24533] Kernel oops when pull interface test_for_data called on disconnected output filter
+
+* Mon Nov 19 2012 Jonathan Brett <jonathan.brett@st.com> - 2.29-1
+- [Bugzilla: 24146] New unit test to test FE to demux connection
+- [Bugzilla: 24277] Remove workaround for demux push_data_disconnect function
+- [Bugzilla: 24395] STFE: MIB is configured only once. Pid filter MIB issue
+
+* Thu Nov 15 2012 Jonathan Brett <jonathan.brett@st.com> - 2.28-1
+- [Bugzilla: 20900] Index filter needs to be connected to pid filter when attaching memsink
+- [Bugzilla: 24002] Rename STM_TE_TS_FILTER_CONTROL_SECURITY_OUTPUT to STM_TE_TS_FILTER_CONTROL_SECURE_OUTPUT
+- [Bugzilla: 24057] Standardise stm_te thread names
+- [Bugzilla: 24244] stm_te debugfs entry, pDevice.0/vDeviceInfo, only prints one vDevice entry
+- [Bugzilla: 24249] Proprietary section filtering regression
+- [Bugzilla: 24255] Add EMM filtering unit test
+- [Bugzilla: 24304] NULL pointer dereference in section read task
+- [Bugzilla: 24349] stptiAPI_LiveMonitorTask never stopped
+
+* Thu Nov 08 2012 Jonathan Brett <jonathan.brett@st.com> - 2.27-1
+- [Bugzilla: 17094] Transport_engine should only allow one connection to demux object
+- [Bugzilla: 17724] Add stm_te_pid_attach for attaching PID to STKPI objects such as stm_ce_transform
+- [Bugzilla: 18531] Add output filter buffer size control
+- [Bugzilla: 18778] TE doesn't allow connecting output filter to SE if that filter isn't yet connected to an input filter
+- [Bugzilla: 20122] ECM filter object is deprecated. Use section filter object + ECM control instead
+- [Bugzilla: 22948] Warning during unload of stm_te_api module (missing release function)
+- [Bugzilla: 23011] Map and unmap should be symmetrical in OS-wrapper
+- [Bugzilla: 23330] Demux should not drop any video data due to CC errors (during PES)
+- [Bugzilla: 23481] Remove references to proprietary middleware
+- [Bugzilla: 23719] Section task continues on all errors, but warns on non-timeout errors
+- [Bugzilla: 23720] Add additional HAL NULL pointer checks
+- [Bugzilla: 23730] Software Injector packet synchronisation feature
+- [Bugzilla: 23790] STFE DACK/DREQ workaround resulting in STFE/TANGO read pointer misalignment
+- [Bugzilla: 23815] STFE ioremap warning (observed on h416)
+- [Bugzilla: 23823] Merged Stream on an IB: no sync/drop
+- [Bugzilla: 23940] Need to use Arrival time from timer for TTS streams rather than tag
+- [Bugzilla: 23943] Combining Indexing and Slot ECM Corruption results in missing ECMs (RnDHV00047967)
+- [Bugzilla: 23995] HAL object leak for pes stream id filtering
+- [Bugzilla: 24006] Remove output filter -> input filter backlinks
+- [Bugzilla: 24024] Setting a pid value of 0x1fff fails
+- [Bugzilla: 24047] Demux stop is checking the wrong object state
+- [Bugzilla: 24100] Index buffer allocate fails on first attempt
+
+* Mon Nov 05 2012 Jonathan Brett <jonathan.brett@st.com> - 2.26-1
+- [Bugzilla: 24001] 7108 build fixes for 2.25-1
+
+* Mon Oct 29 2012 Jonathan Brett <jonathan.brett@st.com> - 2.25-1
+- [Bugzilla: 17424] Dynamic slot across demuxes
+- [Bugzilla: 20506] stm_te_filter_get_status time to microseconds
+- [Bugzilla: 22213] TE object refactor stage 2: Struct embedding and object vtables
+- [Bugzilla: 22771] CCSC needs different configuration for STFE v1 and v2
+- [Bugzilla: 22827] STFE IB packet length is wrong when receiving a merged input stream
+- [Bugzilla: 22893] TP firware needs to support up to 32 live streams
+- [Bugzilla: 22984] Memory leak (ioremap) in STFE code
+- [Bugzilla: 23356] Kernel panic with CONFIG_DEBUG_SC is defined
+- [Bugzilla: 23362] Recovery from unexpected trailing section (port of RnDHV00048881)
+- [Bugzilla: 23386] Ensure all infrastructure return codes are checked
+- [Bugzilla: 23392] Support for STFE path (tagged stream) -> IB -> MEMDMA -> TP
+- [Bugzilla: 23501] Add firmware counter for packets with bad sync byte
+- [Bugzilla: 23522] Use STFE timer 1 instead of timer 0
+- [Bugzilla: 23594] G125 needs to be compiled in SC-bypass mode (-DSTPTI_NO_STTKD)
+- [Bugzilla: 23658] Can only associate one proprietary filter
+- [Bugzilla: 23685] Various STFE updates for H416
+- [Bugzilla: 23766] Use makefile switch CONFIG_MACH_STM_STIG125 instead of CONFIG_CPU_SUBTYPE_STIG125
+- [Bugzilla: 23814] Orly2 (h416) bringup modifications
+- [Bugzilla: 23863] Add HAL object reference counting
+
+* Fri Oct 12 2012 Jonathan Brett <jonathan.brett@st.com> - 2.24-1
+- [Bugzilla: 22612] Avoid kernel oops when detaching index filter from pid filter
+- [Bugzilla: 22919] Finish current demux injection if pacing filter becomes invalid
+- [Bugzilla: 23102] TE object refactor stage 1: Move functions into files by object
+- [Bugzilla: 23161] STFE compilation error when STPTI_PRINT is defined
+- [Bugzilla: 23186] Include correct STFE firmware for g125
+- [Bugzilla: 23216] Use TP firmware v3, not v4, for g125
+- [Bugzilla: 23349] stptiHAL_EventTask may hang on TE HAL termination
+
+* Thu Oct 04 2012 Jonathan Brett <jonathan.brett@st.com> - 2.23-1
+- [Bugzilla: 22999] Add HAL support for Alicante platform
+- [Bugzilla: 22005] Inclusion of correct memdma slim cpu code based on hardware platform
+- [Bugzilla: 22934] STFE incorrectly disables and re-enables IB/MIB/SWTS at PID filter change
+- [Bugzilla: 23024] Fix preprocessor error in pti_debug.h
+
+* Fri Sep 28 2012 Jonathan Brett <jonathan.brett@st.com> - 2.22-1
+- [Bugzilla: 20562] New stream routing requirements in STFE for gateway products
+- [Bugzilla: 21559] MIB steram reconfiguration conflicts with other streams
+- [Bugzilla: 21735] TS packet size auto-detection on demux input
+- [Bugzilla: 22639] Transport engine STi7108 build problem (additional wavefront fix)
+
+* Thu Sep 20 2012 Jonathan Brett <jonathan.brett@st.com> - 2.21-1
+- [Bugzilla: 21528] Fix crash in HAL_SignalWait
+- [Bugzilla: 22103] Added CLKM_ICN_TS to stih415 te-managed clocks list
+- [Bugzilla: 22331] Proprietary section filter handling. Removed buffer size limitation
+- [Bugzilla: 22519] Fix extra index bytes inserted a downstream sink
+- [Bugzilla: 22539] Update te pacing function to avoid infinite loop with some disconnection sequences
+- [Bugzilla: 22547] Fix TSInput debugfs printout truncation
+- [Bugzilla: 22563] Section filter tweaks for scan-s2 issues (section buffer size and rate-limited warning prints)
+- [Bugzilla: 22578] Uninitialized variable in te_demux_suspend/resume
+- [Bugzilla: 22639] Fix STi7108 build issue with 2.6.32 kernel (linux/printk.h not available)
+
+* Fri Sep 14 2012 Jonathan Brett <jonathan.brett@st.com> - 2.20-1
+- [Bugzilla: 18739] Move HAL debug info from sysfs to debugfs
+- [Bugzilla: 21917] HAL start code indexing chaining fix
+- [Bugzilla: 21995] Packet replacenment sometimes inserts extra packets
+- [Bugzilla: 22048] Section filter memory leak if STM_TE_FILTER_CONTROL_FLUSH_ON_DETACH is disabled
+- [Bugzilla: 22084] Crash during pid filter update
+- [Bugzilla: 22192] Unit test: Push test crashes when file creation fails
+- [Bugzilla: 22215] Fix slot lookup functions in HAL
+- [Bugzilla: 22231] HAL efficiency changes for repeat data entries
+- [Bugzilla: 22236] Disconnection of filters in Portway mode causes crash
+- [Bugzilla: 22319] Setting control STM_TE_SECTION_FILTER_CONTROL_REPEATED has the opposite effect
+
+* Wed Sep 05 2012 Jonathan Brett <jonathan.brett@st.com> - 2.19-1
+- [Bugzilla: 19185] Support host passive standby and host active standby low-power modes
+- [Bugzilla: 20999] Need to be able to run different section filter modes on the same TS packet (HAL)
+- [Bugzilla: 21497] Refactor stm_te_filter_attach/detach functions
+- [Bugzilla: 21782] Section filter buffer deallocation issues
+
+* Thu Aug 30 2012 Mike Dyer <michael.dyer-ext@st.com> - 2.18-1
+- [Bugzilla: 20157] Invalid PCR buffer read size
+- [Bugzilla: 21196] Packet Insertion and Replacement
+
+* Thu Aug 23 2012 Mike Dyer <michael.dyer-ext@st.com> - 2.17-1
+- [Bugzilla: 21339] Need to program clocks for STFE CCSC/TSOUT
+- [Bugzilla: 20995] Need to add ability to force a CRC check on a section filter
+- [Bugzilla: 21634] Move HAL and firmware development from stpti5 to TE
+- [Bugzilla: 21597] Adaptation Field indexing not correct
+
+* Thu Aug 16 2012 Mike Dyer <michael.dyer-ext@st.com> - 2.16-1
+- [Bugzilla: 21492] Section list rework
+- [Bugzilla: 21582] STM_TE_INDEX_TRANSPORT_PRIORITY changed to STM_TE_INDEX_ES_PRIORITY
+- [Bugzilla: 21475] Fix HAL Newman build
+- [Bugzilla: 21565] Incorrect start code mask computation in indexing. Need to use 32 instead of 8 while pe
+- [Bugzilla: 21508] Kernel crash when stopping section filter. Add HAL buffer validity check before reading
+
+* Fri Aug 10 2012 Jonathan Brett <jonathan.brett@st.com> - 2.15-1
+- [Bugzilla: 21096] Fix parameter checking and parameter check tests
+- [Bugzilla: 21119] Apply internal object wrapper for output filter APIs
+- [Bugzilla: 21264] Apply internal object wrapper for STKPI data pull interfaces
+- [Bugzilla: 21275] Index flag status is wrong for startcode indexing
+- [Bugzilla: 21325] Remove redundant debug macros
+- [Bugzilla: 21446] Update TE HAL to 2012.08.09 - (bugfixes and preliminary H416/Orly2 support)
+- HAL: Provide preliminary support for H416 (software injection / Dual TP)
+- HAL: RnDHV00047458 - STPTI5: API ordering issue. STPTI_DeviceSetPidSecurityPath() vs STPTI_SlotSetPid()
+- HAL: RnDHV00047514 - WildCard pid not working (large amounts of packets discarded)
+- HAL: RnDHV00047073 - Video freezes in all H264 trick modes and Video jerks in MPEG2 playback
+- HAL: RnDHV00046851 - TSIN->TSOUT in CI mode results in enabling of TP (when it shouldn't)
+- HAL: RnDHV00046657 - Multiple PID detection not working correctly. Provide facilities for H416 TANGO simulation platform
+- HAL: RnDHV00045671 - Optimisation - Support for Multiple TPs means waste of memory on single TP systems
+- HAL: RnDHV00045674 - difficult playing stream with incorrectly specified PES packet sizes. swcdfifo now suppress checking. This improves changes of playing poorly DVB formatted streams
+- HAL: Fix for Secondary PID
+- HAL: RnDHV00045726 - Table_pat fail observed after power down. This was an issue caused when deallocating an active slot, resulting in the input becoming locked up
+
+* Thu Aug 02 2012 Jonathan Brett <jonathan.brett@st.com> - 2.14-1
+- [Bugzilla: 19531] Remove bug 19054 workaround
+- [Bugzilla: 21120] Fix incorrect use of MAX_SLOT_CHAIN
+- [Bugzilla: 21249] Fix uninitialised variable in te_obj_pid_filter_new
+
+* Fri Jul 27 2012 Jonathan Brett <jonathan.brett@st.com> - 2.13-1
+- [Bugzilla: 21109] Fix sh4 pr_warn compilation bug
+- [Bugzilla: 21114] Fix sh4 stack fram warning in te_api_to_hal_disconnect_and_destroy_filters
+
+* Thu Jul 26 2012 Jonathan Brett <jonathan.brett@st.com> - 2.12-1
+- [Bugzilla: 18537] Add STM_TE_PES_FILTER_CONTROL_STREAM_ID_FILTER control
+- [Bugzilla: 20199] Update stm_te debug trace to use pr_xxxx macros
+- [Bugzilla: 20687] EMM filtering support
+- [Bugzilla: 20970] Fix deadlock in error handler of attach_pid_to_sf
+- [Bugzilla: 20978] Add internal object wrapper for pid filter objects
+- [Bugzilla: 20984] Remove redundant definitions from stm_te.c
+
+* Mon Jul 23 2012 Jonathan Brett <jonathan.brett@st.com> - 2.11-1
+- [Bugzilla: 18705] Enable Tango SC routing of TS packets by default
+- [Bugzilla: 19155] Update API parameter unit tests
+- [Bugzilla: 20200] te_api_to_hal_create_demux does not clean-up on error
+- [Bugzilla: 20506] Add system time to stm_te_filter_status_t
+- [Bugzilla: 20527] Fix error checking in pm_te_probe function
+- [Bugzilla: 20596] Use correct array length for slot <-> buffer search
+- [Bugzilla: 20603] Correct loop logic in te_disconnect_all
+- [Bugzilla: 20737] Add internal object wrapper for demux objects
+- [Bugzilla: 20761] stm_te object is not freed on error for unimplemented filter types
+- [Bugzilla: 20782] Deadlock if stm_te_filter_set_compound_control is called with invalid parameters
+- [Bugzilla: 20789] Correct loop logic in te_obj_get_connections
+- [Bugzilla: 20862] Fix-up event-based section filter unit tests
+- [Bugzilla: 20865] Filter type is not set correctly if a section filter object is reconfigured
+
+* Wed Jul 11 2012 Jonathan Brett <jonathan.brett@st.com> - 2.10-1
+- [Bugzilla: 19296] Add TS filter output control to select between CLR and SCR SC outputs
+- [Bugzilla: 20486] Pulling data from index filter is resulting in error
+- [Bugzilla: 20594] stm_te is modifying pixel clocks - change clock used for timestamping
+
+* Thu Jul 05 2012 Jonathan Brett <jonathan.brett@st.com> - 2.9-1
+- [Bugzilla: 18557] Add DLNA output support (reopened)
+- [Bugzilla: 20123] TE uses stm_result_t typedef which is a local definition inside infrastructure code
+- [Bugzilla: 20288] stm_te update copyright headers in source files
+- [Bugzilla: 20302] Alternative fix for DIV0 in STC interpolator function
+- [Bugzilla: 20316] Set stm_te_api module version
+- [Bugzilla: 20361] Remove extraneous include paths from Makefiles
+- [Bugzilla: 20387] Fix file permissions
+- [Bugzilla: 20439] Remove redundant demod interface from stm_te.h
+- [Bugzilla: 20478] Enable all clocks required by stm_te
+- [Bugzilla: 20486] Pulling data from index filter results in error
+
+* Fri Jun 29 2012 Jonathan Brett <jonathan.brett@st.com> - 2.8-1
+- [Bugzilla: 16285] Demux injection deadlock for large buffers
+- [Bugzilla: 17411] Add support for proprietary section filtering
+- [Bugzilla: 18036] Attach one memsink to multiple index filters
+- [Bugzilla: 18557] Add DLNA output support
+- [Bugzilla: 18584] Add DLNA input support
+- [Bugzilla: 18803] Fixing memory leak in demux injection code
+- [Bugzilla: 18807] stm_te should use its own BPA partition name
+- [Bugzilla: 19054] No indexes received from index filter
+- [Bugzilla: 19198] Support for memsink notification on section arrival
+- [Bugzilla: 19207] stm_te_attach/stm_te_detach does not check return code of sink's connect/disconnect function
+- [Bugzilla: 19236] Build cleanup
+- [Bugzilla: 19345] Demux injection returns incorrect number of blocks pushed
+- [Bugzilla: 19370] Calling stm_te_demux_start/stop twice returns -EINVAL
+- [Bugzilla: 19373] stm_te_demux_set_control/stm_te_demux_get_control error returns do not match doc
+- [Bugzilla: 19411] stm_te streaming engine push task does not invalidate L2 cache correctly
+- [Bugzilla: 19771] 64-bits divides symbols exported by stream engine need to be replaced
+- [Bugzilla: 20131] TE PCR code uses uninitialised variable
+
+* Thu May 24 2012 Peter Griffin <peter.griffin@st.com> - 2.7-1
+- [Bugzilla: 19301] Fix transport_engine on mainline
+
+* Thu May 24 2012 Paul Wood <paul.wood@st.com> - 2.7-1
+- [Bugzilla: 18630] Hardwire TS filter output to select Tango SC output from DEMUX_SCR.
+
+* Wed May 23 2012 Paul Wood <paul.wood@st.com> - 2.6-1
+- [Bugzilla: 17394] clean up of test harness.
+- [Bugzilla: 18696] Index Filter detach fails.
+- [Bugzilla: 18930] Removal of unnecessary KERN_ALERT debug.
+- [Bugzilla: 19211] stm_te_attach calls sink connect twice.
+
+* Thu May 03 2012 Paul Wood <paul.wood@st.com> - 2.5-1
+- [Bugzilla: 18848] new HAL fixing RnDHV00045182 chanined slots drop data
+- [Bugzilla: 18705] temp workaround for - Can no longer channel zap
+- [Bugzilla: 18699] Transport Engine should report its module version information
+- [Bugzilla: 18580] te convert arrival to systime rewrite
+- [Bugzilla: 18564] gst-apps hang after doing CTRL-C on tennis TS stream
+- [Bugzilla: 17656] stptiSupport_MessageQueueDelete : Oops
+- [Bugzilla: 18435] kernel_Oops_in_stptiOBJMAN_AddToList
+- [Bugzilla: 17697] AV synch recovery not smooth with Live Satellite and audio cuts from time to time
+
+* Fri Apr 20 2012 Paul Wood <paul.wood@st.com> - 2.4-1
+- [Bugzilla: 17585] WAVE:Newman Patch for transport_engine.
+- [Bugzilla: 18488] New HAL integration-fixing: Cable Card, Tiny SFs, Data Entry FW hang, Supports Newman.
+
+* Fri Apr 20 2012 Stephen Wheatstone <stephen.wheatstone@st.com> - 2.3-1
+- [Bugzilla: 18022] HW_Demux_fails_to_perform_satisfactorily_on_high_bitrate_streams
+- [Bugzilla: 17735] Need_Information_about_current_packet_number
+- [Bugzilla: 18045] ECM_Filter_type_not_implemented
+- [Bugzilla: 17120] MAKAO-reading_less_than_a_section_at_a_time
+- [Bugzilla: 17866] stm_te_section_filter_set_can_cause_stale_sections_to_be_provided
+- [Bugzilla: 17955] Coverity_result_bug_analisys
+- [Bugzilla: 17569] Enable_Tango_SC_by_default
+
+* Wed Mar 28 2012 Stephen Wheatstone <stephen.wheatstone@st.com> - 2.2-1
+- [Bugzilla: 13102] Multiple_SF_Connections_Per_Pid
+- [Bugzilla: 17280] change_names_of_ambiguous_indexes
+- [Bugzilla: 17427] build_system_is_suboptimal
+
+* Fri Mar 23 2012 Paul Wood <paul.wood@st.com> - 2.1-1
+- [Bugzilla: 17716] bug_17716_filter_delete_causing_crash
+
+* Fri Mar 16 2012 Stephen Wheatstone <stephen.wheatstone@st.com> - 2.0-1
+- [Bugzilla: 16872] Use_Linux_kernel_dma_mapping_api_for_software_injection
+- [Bugzilla: 16707] ts_index_filter_output_changes
+- [Bugzilla: 17115] Clean_up_of_demux_print_entries_in_registry
+- [Bugzilla: 17158] cant_read_sections_if_more_than_one_section_filter_matches
+- [Bugzilla: 14321] Open_source_scan_utility_is_not_working_anymore
+- [Bugzilla: 17402] stm_te_output_filter_new_incorrect_error_reported
+- [Bugzilla: 17401] stm_te_demux_get_control_development
+- [Bugzilla: 17400] improvement_of_validation_of_input_parameter
+- [Bugzilla: 17398] stm_te_get_capabilities_returns_incorrect_values
+- [Bugzilla: 17397] demux_p->object_state_not_update_properly
+- [Bugzilla: 17390] lock_not_release_in_stm_te_filter_set_control
+- [Bugzilla: 17377] stm_te_return_types_should_be_int
+- [Bugzilla: 17394] Creation_of_the_TE_test_Suit
+- [Bugzilla: 17257] Audio_packets_injected_at_an_internal_of_1.5sec_to_SE
+- [Bugzilla: 15890] Kernel_only_routing_Portway_of_PCRs_from_TE_to_SE
+- [Bugzilla: 17551] stm_te_pull_data_functions_do_not_set_scatterlist_length_correctly
+- [Bugzilla: 17462] mem_leak_in_filter_creation
+- [Bugzilla: 17504] Delete_when_Busy_bug_fix
+
+* Fri Feb 10 2012 Stephen Wheatstone <stephen.wheatstone@st.com> - 1.9-1
+- [Bugzilla: 16782] import_of_1.6.1_snap20120207_HAL
+- [Bugzilla: 16242] build_warning_removal
+- [Bugzilla: 15535] TE_SE_Portway_implementation_is_unreliable
+- [Bugzilla: 16250] removal_of_shark_havana_references
+- [Bugzilla: 15793] Change_stm_te_internal_node_list_structure
+- [Bugzilla: 16445] fill_in_placeholder_for_test_for_data
+- [Bugzilla: 16707] ts_index_filter_output_changes
+
+* Fri Feb 03 2012 Stephen Wheatstone <stephen.wheatstone@st.com> - 1.8-1
+- [Bugzilla: 16567] Removal_of_set_bit_usage
+- [Bugzilla: 16454] implement_pcr_time_format_conversion
+- [Bugzilla: 16541] Indexing_fixes
+- [Bugzilla: 16572] stm_te_should_use_linux_iomemory_apis
+- [Bugzilla: 16242] build_warning_removal
+
+* Fri Jan 27 2012 Stephen Wheatstone <stephen.wheatstone@st.com> - 1.7-1
+- [Bugzilla: 15854] Flush_of_buffer_on_pid_change_only
+- [Bugzilla: 12155] Need_Indexing_Support_in_Transport_Engine
+- [Bugzilla: 14321] Open_source_scan_utility_is_not_working_anymore
+- [Bugzilla: 15365] first_attempt_at_live_play_via_dvbtest_fails
+- [Bugzilla: 14591] Add_wildcard_pid
+- [Bugzilla: 15791] te_object_add_internal_connections_fail_due_to_max_target_limitation
+- [Bugzilla: 15828] need_to_change_hardwired_driver_params
+
+* Fri Dec 09 2011 Stephen Wheatstone <stephen.wheatstone@st.com> - 1.6-1
+- [Bugzilla: 15682] Introduced_API_inconsitency_for_src_sink
+- [Bugzilla: 15597] Data injection crash if no pacing filter set
+- [Bugzilla: 15332] stm_te_filter_attach
+- [Bugzilla: 15478] Updates_required_for_latest_kernel
+- [Bugzilla: 15609] minor_parameter_tidy_up
+- [Bugzilla: 15547] Need_to_change_max_number_of_demuxes
+
+* Thu Dec 08 2011 Stephen Wheatstone <stephen.wheatstone@st.com> - 1.5-2
+- [Bugzilla: 15760] Transport Engine Rename/Censorship
+
+* Fri Nov 18 2011 Paul Wood <paul.wood@st.com> - 1.5-1
+- [Bugzilla: 15547] Need to change Max no of demuxes
+- [Bugzilla: 13675] te_hal_update_to_fix_portability_issues_moving_to_Orly
+- [Bugzilla: 14747] cache_flushing_not_L2_cache_compliant
+- [Bugzilla: 13558] Implementation_of_stm_te_get_capabilities
+- [Bugzilla: 14676] Need to add flow control mechanism for memory src data injection
+- [Bugzilla: 14995] change_stm_ce_interface -
+- [Bugzilla: 15311] add_initial_support_for_data_interface
+- [Bugzilla: 15005] Unable_to_allocate_more_than_16_section_filters
+- [Bugzilla: 15339] elf_files_need_removing
+
+* Fri Nov 04 2011 André Draszik <andre.draszik@st.com> - 1.4-2
+- rename spec file for compliance with rpmbuild infrastructure
+
+* Wed Oct 12 2011 Stephen Wheatstone <stephen.wheatstone@st.com> - 1.4-1
+- [Bugzilla: 14310] cannot_use_virt_to_phys_with_bpa2
+- [Bugzilla: 14467] Deadlock_within_stm_filter_attach
+- [Bugzilla: 14013] Add_functionality_for_CE_path_interface
+- [Bugzilla: 14530] Unable_to_create_more_than_two_PES_output_filters
+- [Bugzilla: 14576] TSIN_parameter_does_not_set_for_second_demux_with_shared_TSIN
+- [Bugzilla: 14533] load_and_unload_of_stm_api_api_attempts_to_free_a_denmux_that_was_not_created
+- [Bugzilla: 14581] Packets_dropped_by_transport_engine_on_live_satellite_decode
+- [Bugzilla: 14534] Closing_a_demux_object_attempts_to_remove_objects_from_the_registry_that_are_not_present
+
+* Fri Sep 23 2011 Stephen Wheatstone <stephen.wheatstone@st.com> - 1.3-1
+- [Bugzilla: 13900] read_write_lock_error
+- [Bugzilla: 13887] addition_of_pcr_output_filter
+- [Bugzilla: 13918] Add_STKPI_registry_print_handler_for_TE_objects
+- [Bugzilla: 13732] stm_te_pid_filter_disconnect
+- [Bugzilla: 13919] stm_te_demux_new_fails_with_no_memory
+- [Bugzilla: 14026] stm_te_pid_filter_new_returns_invalid_parameters Driver_Development
+- [Bugzilla: 14039] stm_te_demux_delete_fails_to_free_resources
+- [Bugzilla: 14189] Add_temporary_software_injector_support_for_dvb_adaptation
+- [Bugzilla: 14267] stm_pid_filter_set_fails_to_program_pid
+- [Bugzilla: 14013] Add_functionality_for_CE_path_interface
+- [Bugzilla: 14329] Import_latest_version_of_HAL_with_Orly_STAC_interface_delay
+
+* Wed Aug 24 2011 Stephen Wheatstone <stephen.wheatstone@st.com> - 1.2-1
+- [Bugzilla: 13839] Add PES filtering support from stm_te
+- [Bugzilla: 13732] stm_te ->ce interface update
+- [Bugzilla: 13710] Calling temporary_function_output_filter_readsection ignores requested data size
+- [Bugzilla: 13657] fe->te interface is generic but doesn't work for stm_fe_ip objects
+- [Bugzilla: 13655] Detach of pid filters from output filter does not seem to remove connection
+- [Bugzilla: 13470] Implement stm_te -> stm_ce private interface
+- [Bugzilla: 13494] Addition of section filtering support on stm_te_api
+- [Bugzilla: 13859] Add debug level control to modules parameters for runtime control
+- [Bugzilla: 13870] Section Output Filter to use SWCDFIFO
+
+* Tue Aug 09 2011 Stephen Wheatstone <stephen.wheatstone@st.com> - 1.1-1
+- Update of version number to include transport_engine STKPI
+
+* Thu Jul 21 2011 André Draszik <andre.draszik@st.com> - 1.0-5
+- [Spec] really rename srpm to host-havana-transport_engine-source
+
+* Wed Jul 20 2011 André Draszik <andre.draszik@st.com> - 1.0-4
+- [Bugzilla: 13234] modules can not be compiled for non-sh cpu type or
+  sh4-glibc ARCH
+- [Spec] rename srpm to host-havana-transport_engine-source and let it
+  obsolete the old incorrect name
+
+* Thu Jul 14 2011 André Draszik <andre.draszik@st.com> - 1.0-3
+- [Spec; Bugzilla: 13184] can't create host-transport-engine-source
+  rpm when building in a non-sh4 environment
+
+* Tue Jul 12 2011 Andy Gardner <andrew.gardner@st.com> - 1.0-2
+- [Spec] Update license requirements.
+
+* Fri May 13 2011 James Covey-Crump <james.covey-crump@st.com> - 1.0-1
+- Initial revision
+

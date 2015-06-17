@@ -1,0 +1,26 @@
+#ifdef OLD_USB
+/*
+ * 2.4 USB kernel API
+ */
+static void *usb_audio_probe(struct usb_device *dev, unsigned int ifnum,
+			     const struct usb_device_id *id)
+{
+	return snd_usb_audio_probe(dev, usb_ifnum_to_if(dev, ifnum), id);
+}
+                                       
+static void usb_audio_disconnect(struct usb_device *dev, void *ptr)
+{
+	snd_usb_audio_disconnect(dev, ptr);
+}
+
+static int usb_reset_configuration(struct usb_device *dev)
+{
+	struct usb_host_config *config = dev->actconfig;
+
+	/* FIXME: replace with something more useful like in 2.6 code? */
+	return usb_set_configuration(dev, get_cfg_desc(config)->bConfigurationValue);
+}
+#endif
+
+EXPORT_NO_SYMBOLS;
+// vim: ft=c

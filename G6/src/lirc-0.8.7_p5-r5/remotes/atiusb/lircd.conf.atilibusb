@@ -1,0 +1,574 @@
+#
+# this config file was automatically generated
+# using lirc-0.8.1(default) on Sun Apr 29 14:48:54 2007
+#
+# contributed by Joshua Watt
+#
+# brand: ATI
+# model no. of remote control: 5000024400
+# devices being controlled by this remote:
+#	ATI Remote Wonder II
+#
+#	Full use of all buttons except the
+#	Aux 1-4, ATI, and PC buttons
+#
+#	Mouse Pad works as well
+#
+#	use atilibusb driver
+
+begin remote
+
+  name  ATI_Remote_Wonder_II
+  bits           24
+  eps            30
+  aeps          100
+
+  one             0     0
+  zero            0     0
+  gap          203970
+  toggle_bit      0
+
+
+      begin codes
+          stop                     0x000231
+          pause                    0x000230
+          fforward                 0x000228
+          rec                      0x000237
+          rewind                   0x000229
+          play                     0x00022C
+          d                        0x00027B
+          c                        0x00027A
+          e                        0x00027C
+          f                        0x00027D
+          right                    0x00025B
+          left                     0x00025A
+          up                       0x000258
+          down                     0x000259
+          ok                       0x00025C
+          info                     0x0002F9
+          timer                    0x000296
+          menu                     0x000254
+          check                    0x000282
+          0                        0x000200
+          1                        0x000201
+          2                        0x000202
+          3                        0x000203
+          4                        0x000204
+          5                        0x000205
+          6                        0x000206
+          7                        0x000207
+          8                        0x000208
+          9                        0x000209
+          volup                    0x000210
+          voldown                  0x000211
+          mute                     0x00020D
+          chup                     0x000220
+          chdown                   0x000221
+          mouse_up                 0x0001FF
+          mouse_down               0x0002FF
+          mouse_left               0x0020FF
+          mouse_right              0x0010FF
+          mouse_up_right           0x0011FF
+          mouse_down_right         0x0012FF
+          mouse_up_left            0x0021FF
+          mouse_down_left          0x0022FF
+          right_click              0x0002AA
+          left_click               0x0002A9
+          hand                     0x0002D0
+          shrink_resize            0x0002D5
+          ?                        0x0002BE
+          dvd                      0x000238
+          tv                       0x000239
+          a                        0x000278
+          b                        0x000279
+          power                    0x00020C
+      end codes
+
+end remote
+#
+# this config file was automatically generated
+# using lirc-0.8.2(atilibusb) on Sat Jun 30 23:20:59 2007
+#
+# contributed by 
+#
+# brand:                       Medion
+# model no. of remote control: MD8800
+# devices being controlled by this remote: Medion X10 MD8800
+#
+
+begin remote
+
+  name  Medion_MD8800
+  bits           16
+  eps            30
+  aeps          100
+
+  one             0     0
+  zero            0     0
+  pre_data_bits   8
+  pre_data       0x14
+  post_data_bits  16
+  post_data      0x0
+  gap          139995
+  min_repeat      2
+  toggle_bit_mask 0x80800000
+
+      begin codes
+          Live_TV                  0xF11C
+          Photo                    0x5A85
+          DVD_Menu                 0xD904
+          Rec_TV                   0x6D98
+          Music                    0xDB06
+          Video                    0x82AD
+          Audio                    0x0732
+          Title                    0x8AB5
+          Angle                    0x0934
+          Subtitle                 0x88B3
+          Power                    0xD702
+          Guide                    0x86B1
+          Text                     0xEB16
+          Up                       0x6F9A
+          Down                     0xF722
+          Left                     0x729D
+          Right                    0xF41F
+          Vol_Up                   0x5E89
+          Vol_Down                 0xDD08
+          OK                       0x739E
+          Mute                     0xD500
+          Prog_Up                  0x608B
+          Prog_Down                0xE10C
+          1                        0x628D
+          2                        0xE30E
+          3                        0x648F
+          4                        0xE510
+          5                        0x6691
+          6                        0xE712
+          7                        0x6893
+          8                        0xE914
+          9                        0x6A95
+          0                        0xEC17
+          D*                       0x8CB7
+          D#                       0x0D38
+          World                    0x709B
+          Back                     0xF520
+          Info                     0x84AF
+          Rewind                   0xF924
+          Play                     0x7AA5
+          Forward                  0xFB26
+          Pause                    0x7EA9
+          Prev                     0xF621
+          Next                     0x78A3
+          Stop                     0xFD28
+          Rec                      0x7CA7
+      end codes
+
+end remote
+
+
+#
+# this config file was automatically generated
+# using lirc-0.8.2(atilibusb) on Tue Aug 28 13:18:03 2007
+#
+# contributed by Michael Haas
+#
+# brand: ATI "RF Remote Control" (first generation)                    
+# model no. of remote control: Part #: 5000023600
+# FCC ID: B4SUR84A
+# picture: http://www.mythtv.org/wiki/index.php/Image:Remotewonder1.jpg
+# receiver: http://www.mythtv.org/wiki/index.php/Image:Remotewonder2.jpg
+#
+# I created this new config file because the one for the ati remote wonder II
+# did not work for me.
+
+begin remote
+
+  name ati_remote_wonder_rf
+  bits           40
+  eps            30
+  aeps          100
+
+  one             0     0
+  zero            0     0
+  gap          147991
+  toggle_bit	0
+
+      begin codes
+          0                        0x14DC170000
+          1                        0x14D20D0000
+          2                        0x14D30E0000
+          3                        0x14D40F0000
+          4                        0x14D5100000
+          5                        0x14D6110000
+          6                        0x14D7120000
+          7                        0x14D8130000
+          8                        0x14D9140000
+          9                        0x14DA150000
+          volup                    0x14CD080000
+          voldown                  0x14CE090000
+          mute                     0x14CF0A0000
+          chup                     0x14D00B0000
+          chdown                   0x14D10C0000
+          mouse_up                 0x1437720000
+          mouse_down               0x1438730000
+          mouse_left               0x1435700000
+          mouse_right              0x1436710000
+          mouse_up_right           0x143A750000
+          mouse_down_right         0x143B760000
+          mouse_up_left            0x1439740000
+          mouse_down_left          0x143C770000
+          right_click              0x14417C0000
+          left_click               0x143D780000
+          hand                     0x14CC070000
+          book                     0x14CB060000
+          ?                        0x14CA050000
+          dvd                      0x14C9040000
+          tv                       0x14C8030000
+          a                        0x14C5000000
+          b                        0x14C6010000
+          power                    0x14C7020000
+          stop                     0x14ED280000
+          pause                    0x14EE290000
+          fforward                 0x14EB260000
+          rec                      0x14EC270000
+          rewind                   0x14E9240000
+          play                     0x14EA250000
+          d                        0x14E01B0000
+          c                        0x14DE190000
+          e                        0x14E6210000
+          f                        0x14E8230000
+          right                    0x14E41F0000
+          left                     0x14E21D0000
+          up                       0x14DF1A0000
+          down                     0x14E7220000
+          ok                       0x14E31E0000
+          timer                    0x14E11C0000
+          shrink_resize            0x14E5200000
+          menu                     0x14DB160000
+          check                    0x14DD180000
+      end codes
+
+end remote
+
+# this config file was automatically generated
+# using lirc-0.8.2(atilibusb) on Sat Jun 30 23:20:59 2007
+#
+# contributed by Nizar Souissi
+#
+# brand:                       nVidia
+# model no. of remote control: UR88A
+# devices being controlled by this remote: CM21A USB RF Receiver
+#
+# This file is based on an already existing file for the Medion MD8800
+
+begin remote
+
+  name  nVidia_UR88A
+  bits           16
+  eps            30
+  aeps          100
+
+  one             0     0
+  zero            0     0
+  pre_data_bits   8
+  pre_data       0x14
+  post_data_bits  16
+  post_data      0x0
+  gap          139995
+  min_repeat      2
+  toggle_bit_mask 0x80800000
+
+      begin codes
+
+          PLAYLIST                 0xD601
+          CH.SURF                  0xD702
+          Live_TV                  0xF11C
+          Photo                    0x5A85
+          MUSIC                    0xDB06
+          DVD                      0xD904
+          DVR                      0xD803
+          PHOTO                    0xDA05
+          WEB                      0xDC07
+          ZOOM                     0xFF2A
+          Rec_TV                   0x6D98
+          Video                    0x82AD
+          Audio                    0x0732
+          Title                    0x8AB5
+          Angle                    0x0934
+          Subtitle                 0x88B3
+          Power                    0xD702
+          Guide                    0x86B1
+          Text                     0xEB16
+          Up                       0x6F9A
+          Down                     0xF722
+          Left                     0x729D
+          Right                    0xF41F
+          Vol_Up                   0x5E89
+          Vol_Down                 0xDD08
+          OK                       0x739E
+          Mute                     0xD500
+          Prog_Up                  0x608B
+          Prog_Down                0xE10C
+          1                        0x628D
+          2                        0xE30E
+          3                        0x648F
+          4                        0xE510
+          5                        0x6691
+          6                        0xE712
+          7                        0x6893
+          8                        0xE914
+          9                        0x6A95
+          0                        0xEC17
+          Setup                    0x709B
+          Back                     0xF520
+          Info                     0x84AF
+          Rewind                   0xF924
+          Play                     0x7AA5
+          Forward                  0xFB26
+          Pause                    0x7EA9
+          Prev                     0xF621
+          Next                     0x78A3
+          Stop                     0xFD28
+          Rec                      0x7CA7
+          MOUSEUP                  0x4772
+          MOUSEDOWN                0x4873
+          MOUSERIGHT               0x4671
+          MOUSELEFT                0x4570
+          LCLICK                   0x4E79
+          RCLICK                   0x527D
+          X                        0xDF0A
+          ANGLE                    0x002B
+          SNAPSHOT                 0xED18
+          SETUP                    0xF01B
+          DVDMENU                  0xEE19
+          SLOW                     0xF520
+      end codes
+end remote
+
+#
+# this config file was automatically generated
+# using lirc-0.8.4a(atilibusb) on Thu Jan  1 22:00:59 2009
+#
+# contributed by Tomas Aronsson, d0malaga|gmail.com
+#
+# brand: X10 WTI MCE Remote control
+# url: http://www.x10europe.com/pdf/OR22E-23E.pdf
+# model no. of remote control: OR22V 
+# devices being controlled by this remote: mythtv
+#
+
+begin remote
+
+  name          X10_OR22V
+  bits           16
+  eps            30
+  aeps          100
+
+  one             0     0
+  zero            0     0
+  pre_data_bits   8
+  pre_data       0x14
+  post_data_bits  16
+  post_data      0x0
+  gap          139984
+  min_repeat      2
+  toggle_bit_mask 0x80800000
+
+      begin codes
+          KEY_POWER                0xD702
+          KEY_RED                  0x0732
+          KEY_YELLOW               0x89B4
+          KEY_GREEN                0x0833
+          KEY_TEXT                 0x6B96
+          KEY_BLUE                 0x0A35
+          KEY_BACK                 0x75A0
+          KEY_INFO                 0x042F
+          KEY_UP                   0x6F9A
+          KEY_LEFT                 0xF21D
+          KEY_OK                   0x739E
+          KEY_RIGHT                0xF41F
+          KEY_DOWN                 0x77A2
+          KEY_TIMESHIFTING         0xED18
+          KEY_EPG                  0x86B1
+          KEY_DVDMENU              0xD904
+          KEY_LIVETV               0x719C
+          KEY_VOLUMEUP             0xDE09
+          KEY_WINDOWS              0x709B
+          KEY_CHANNELUP            0xE00B
+          KEY_VOLUMEDOWN           0x5D88
+          KEY_CHANNELDOWN          0xE10C
+          KEY_MUTE                 0x5580
+          KEY_PREVIOUS             0xF621
+          KEY_NEXT                 0x78A3
+          KEY_REWIND               0xF924
+          KEY_PLAY                 0x7AA5
+          KEY_FASTFORWARD          0xFB26
+          KEY_RECORD               0x7CA7
+          KEY_STOP                 0xFD28
+          KEY_PAUSE                0x7EA9
+          KEY_1                    0xE20D
+          KEY_2                    0x638E
+          KEY_3                    0x648F
+          KEY_4                    0xE510
+          KEY_5                    0x6691
+          KEY_6                    0xE712
+          KEY_7                    0x6893
+          KEY_8                    0xE914
+          KEY_9                    0x6A95
+          KEY_*                    0x0C37
+          KEY_0                    0x6C97
+          KEY_#                    0x0D38
+          KEY_CLEAR                0x85B0
+          KEY_ENTER                0x0B36
+      end codes
+
+end remote
+
+
+#
+# this config file was automatically generated
+# using lirc-0.8.4a(atilibusb) on Sat Jan 10 12:55:29 2009
+#
+# contributed by Tom Laermans <tom.laermans|powersource.cx>
+#
+# brand:                       Medion
+# model no. of remote control: Medion P/N 20016096
+# devices being controlled by this remote: MythTV
+#
+# ID 0bc7:0006 X10 Wireless Technology, Inc. Wireless Transceiver (ACPI-compliant)
+
+begin remote
+
+  name  Medion_20016096
+  bits           16
+  eps            30
+  aeps          100
+
+  one             0     0
+  zero            0     0
+  pre_data_bits   8
+  pre_data       0x14
+  post_data_bits  16
+  post_data      0x0
+  gap          139992
+  toggle_bit_mask 0x0
+
+      begin codes
+          TV                       0x012C
+          VCR                      0x022D
+          DVD                      0xD904
+          Music                    0xDB06
+          Radio                    0x032E
+          Photo                    0xDA05
+          TV_Preview               0x042F
+          Channel_List             0x0530
+          Setup                    0xF01B
+          Video_Desktop            0x0631
+          Channel_Up               0xE00B
+          Channel_Down             0xE10C
+          Volume_Up                0xDE09
+          Volume_Down              0xDD08
+          Mute                     0xD500
+          Red                      0x0732
+          Green                    0x0833
+          Yellow                   0x0934
+          Blue                     0x0A35
+          Text                     0xEB16
+          1                        0xE20D
+          2                        0xE30E
+          3                        0xE40F
+          4                        0xE510
+          5                        0xE611
+          6                        0xE712
+          7                        0xE813
+          8                        0xE914
+          9                        0xEA15
+          0                        0xEC17
+          Channel_Search           0xF11C
+          Back                     0xF520
+          Rename                   0x0B36
+          Snapshot                 0xED18
+          Up                       0xEF1A
+          Down                     0xF722
+          Left                     0xF21D
+          Right                    0xF41F
+          Acquire_Image            0x0C37
+          Edit_Image               0x0D38
+          Rewind                   0xF924
+          Forward                  0xFB26
+          Play                     0xFA25
+          Stop                     0xFD28
+          Record                   0xFC27
+          Pause                    0xFE29
+          Previous                 0xF621
+          Next                     0xF823
+          Fullscreen               0x0E39
+          Menu                     0xEE19
+          Audio                    0x0F3A
+          Power                    0xD702
+          OK                       0xF31E
+      end codes
+
+end remote
+
+
+#
+# http://www.pollin.de/shop/dt/NDY1ODcyOTk-/Computer_und_Zubehoer/Hardware/Maeuse_Unterlagen_Joystick/PC_Funkfernbedienung_40005929.html
+#
+# "Medion", "P/N: 40005927" und "NBC Remote Control".
+#
+
+begin remote
+
+  name  Medion_MD8800_X10
+  bits           16
+  eps            30
+  aeps          100
+
+  one             0     0
+  zero            0     0
+  pre_data_bits   8
+  pre_data       0x14
+  post_data_bits  16
+  post_data      0x0
+  gap          139995
+  min_repeat      2
+  toggle_bit_mask 0x80800000
+
+      begin codes
+          TV                       0x81AC
+          Video                    0x82AD
+          Photo                    0x5984
+          Music                    0x5B86
+          PC                       0x83AE
+          Text                     0xEB16
+          Up                       0x6F9A
+          Down                     0xF722
+          Left                     0x729D
+          Right                    0xF41F
+          Vol_Up                   0x5E89
+          Vol_Down                 0xDD08
+          OK                       0x739E
+          Mute                     0xD500
+          Prog_Up                  0x608B
+          Prog_Down                0xE10C
+          1                        0x628D
+          2                        0xE30E
+          3                        0x648F
+          4                        0xE510
+          5                        0x6691
+          6                        0xE712
+          7                        0x6893
+          8                        0xE914
+          9                        0x6A95
+          0                        0xEC17
+          Info                     0x84AF
+          Rewind                   0xF924
+          Play                     0x7AA5
+          Forward                  0xFB26
+          Prev                     0xF621
+          Next                     0x78A3
+          Stop                     0xFD28
+          Rec                      0x7CA7
+      end codes
+end remote
+

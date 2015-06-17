@@ -1,0 +1,56 @@
+===============================================================================
+			stm uniperipheral player
+===============================================================================
+
+Required properties:
+- compatible		: Should be "st,snd_uni_player"
+- reg, reg-names, interrupts, interrupt-names	: Standard way to define device
+			resources with names. look in
+			Documentation/devicetree/bindings/resource-names.txt
+- version		: IP version
+- dmas			: phandle of FDMA serving this player
+- dma-names		: Name of FDMA serving this player
+- fdma-initiator	: Initiator type
+- fdma-direct-conn	: DREQ is connected directly to FDMA (i.e. no DREQ mux)
+- fdma-request-line	: Request line used by FDMA
+- description		: Player description
+- card-device		: ALSA card sub-device id
+- mode			: Player mode (hdmi or pcm or spdif)
+- iec958-lr-pol		: IEC958 device (hdmi/spdif) player LR polarity
+			  (0=low, 1=high). Not used for players in pcm mode!
+- iec958-i2s-mode	: IEC958 device (hdmi/spdif) player I2S mode.
+			  (0=I2S, 1=Sony). Not used for players in pcm mode!
+- channels		: Maximum number of output channels
+- parking		: Enable parking mode
+- standby		: Enable standby mode
+- underflow		: Enable underflow recovery mode
+- s16-swap-lr		: Swap left/right channels for S16 data
+- pinctrl-names		: pin control name
+- pinctrl-0		: pin control configuration defiend in pinctrl dtsi
+- clocks		: handle of the player clock defiend in clock dtsi
+- clock-names		: name of the player clock
+
+
+Typical usage example:
+
+snd_uni_player0: snd-uni-player@0xfe285000 {
+	compatible	= "st,snd_uni_player";
+	status		= "disabled";
+	reg		= <0xfe285000 0x150>;
+	interrupts	= <0 67 0>;
+	version		= <0>;
+	dmas		= <&fdma0_sas>;
+	dma-names	= "stm-fdma.3";
+	fdma-initiator	= <0>;
+	fdma-request-line = <37>;
+	description	= "Uni Player #0 (DAC)";
+	card-device	= <0>;
+	mode		= "PCM";
+	channels	= <2>;
+	parking		= <0>;
+	pinctrl-names	= "default";
+	pinctrl-0	= <&pinctrl_snd_uni_player3>;
+	clocks 		= <&CLK_S_PCM_0>;
+	clock-names 	= "uni_player_clk";
+};
+

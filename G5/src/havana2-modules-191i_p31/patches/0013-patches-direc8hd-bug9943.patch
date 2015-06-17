@@ -1,0 +1,120 @@
+From abf5adff228d66214f70affbc5df1a4258dd2ae4 Mon Sep 17 00:00:00 2001
+From: Allan Xavier <allan.xavier@mathembedded.com>
+Date: Tue, 2 Apr 2013 10:19:59 +0100
+Subject: [PATCH 13/36] patches/direc8hd-bug9943
+
+---
+ player/frame_parser/frame_parser_video_h264.cpp |   55 ++++++++++++++++++++++-
+ player/frame_parser/frame_parser_video_h264.h   |    1 +
+ 2 files changed, 54 insertions(+), 2 deletions(-)
+
+diff --git a/player/frame_parser/frame_parser_video_h264.cpp b/player/frame_parser/frame_parser_video_h264.cpp
+index e90c767..fb5b946 100644
+--- a/player/frame_parser/frame_parser_video_h264.cpp
++++ b/player/frame_parser/frame_parser_video_h264.cpp
+@@ -252,7 +252,9 @@ unsigned int	i;
+     PicOrderCntOffset		= 0x100000000ULL;		// Guarantee the extended value never goes negative
+     BaseDpbValue		= 0;
+     SeenDpbValue		= false;
++
+     DisplayOrderByDpbValues	= false;
++    DpbValuesInvalidatedByPTS	= false;
+ 
+     //
+     // We now reset the lower level, before resetting the two parameter set pools
+@@ -604,7 +606,7 @@ unsigned int		UnitLength;
+ 			    unsigned char ForcePicOrderCntValue;
+ 
+ 			    ForcePicOrderCntValue		= Player->PolicyValue( Playback, Stream, PolicyH264ForcePicOrderCntIgnoreDpbDisplayFrameOrdering );
+-			    DisplayOrderByDpbValues		= (ForcePicOrderCntValue != PolicyValueApply);
++			    DisplayOrderByDpbValues		= (ForcePicOrderCntValue != PolicyValueApply) && !DpbValuesInvalidatedByPTS;
+ 			}
+ 			break;
+ 
+@@ -1409,7 +1411,15 @@ unsigned int				*FallbackScalingList[8];
+     if( CpbDpbDelaysPresentFlag != LastCpbDpbDelaysPresentFlag )
+     {
+ 	if( CpbDpbDelaysPresentFlag )
+-	    report( severity_info, "H264 Output frame re-ordering is based on DPB values.\n" );
++	{
++	    unsigned char ForcePicOrderCntValue;
++
++	    ForcePicOrderCntValue		= Player->PolicyValue( Playback, Stream, PolicyH264ForcePicOrderCntIgnoreDpbDisplayFrameOrdering );
++	    if( ForcePicOrderCntValue == PolicyValueApply )
++		report( severity_info, "H264 Output frame re-ordering should be based on DPB values, \n     but these are being ignored and PicOrderCnt used instead.\n" );
++	    else
++		report( severity_info, "H264 Output frame re-ordering is based on DPB values.\n" );
++	}
+ 	else
+ 	    report( severity_info, "H264 Output frame re-ordering is based on PicOrderCnt values.\n" );
+ 
+@@ -5836,6 +5846,7 @@ unsigned int	i;
+ unsigned int 	Index;
+ unsigned char   SpecialCaseDpb;
+ unsigned int	MaxDeferals;
++unsigned int	InvalidPTSSequence;
+ 
+     //
+     // Adjust pic order cnt for fields given same pic order cnt
+@@ -5887,6 +5898,46 @@ unsigned int	MaxDeferals;
+     DeferredListEntries++;
+ 
+     //
++    // Perform PTS validation - check for a jump in PTS of the wrong direction
++    //				then range check it to less than 1 second to 
++    //				allow a major jump (IE loop, add insert etc)
++    //
++
++#if 1
++    if( ValidTime(ParsedFrameParameters->NormalizedPlaybackTime) )
++    {
++	unsigned long long	PTS = ParsedFrameParameters->NormalizedPlaybackTime;
++	bool			Jump;
++
++	InvalidPTSSequence	= false;
++
++	// Check those before me in the list
++	Jump	= (i != 0) && 
++		  ValidTime(DeferredList[OrderedDeferredList[i-1]].ParsedFrameParameters->NormalizedPlaybackTime) &&
++		  (PTS < DeferredList[OrderedDeferredList[i-1]].ParsedFrameParameters->NormalizedPlaybackTime);
++
++	if( Jump && ((DeferredList[OrderedDeferredList[i-1]].ParsedFrameParameters->NormalizedPlaybackTime - PTS) < 1000000) )
++	    InvalidPTSSequence	= true;
++    
++	// Check those after me in the list
++	Jump	= (i < (DeferredListEntries-1)) && 
++		  ValidTime(DeferredList[OrderedDeferredList[i+1]].ParsedFrameParameters->NormalizedPlaybackTime) &&
++		  (PTS > DeferredList[OrderedDeferredList[i+1]].ParsedFrameParameters->NormalizedPlaybackTime);
++
++	if( Jump && ((PTS - DeferredList[OrderedDeferredList[i+1]].ParsedFrameParameters->NormalizedPlaybackTime) < 1000000) )
++	    InvalidPTSSequence	= true;
++
++	if( InvalidPTSSequence && !DpbValuesInvalidatedByPTS )
++	{
++	    report( severity_error, "H264 Dpb values incompatible with PTS ordering, falling back to frame re-ordering based on PicOrderCnt values.\n" );
++	    DpbValuesInvalidatedByPTS		 = true;
++	    DisplayOrderByDpbValues		 = false;
++	    PicOrderCntOffset			+= PicOrderCntOffsetAdjust;
++	}
++    }
++#endif
++
++    //
+     // Limit the deferal process with respect to the number of available decode buffers
+     //
+ 
+diff --git a/player/frame_parser/frame_parser_video_h264.h b/player/frame_parser/frame_parser_video_h264.h
+index b29f54e..837ce3f 100644
+--- a/player/frame_parser/frame_parser_video_h264.h
++++ b/player/frame_parser/frame_parser_video_h264.h
+@@ -250,6 +250,7 @@ private:
+     unsigned int                                  LastCpbDpbDelaysPresentFlag;
+ 
+     bool					  DisplayOrderByDpbValues;
++    bool					  DpbValuesInvalidatedByPTS;
+ 
+     //
+     // Copies of context variables that are used when we 
+-- 
+1.7.9.5
+

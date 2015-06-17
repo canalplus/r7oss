@@ -1,0 +1,127 @@
+Title: System Trace Module (STM)
+Authors: Marc Titinger <marc.titinger@st.com>
+	 Serge De-Paoli <serge.de-paoli@st.com>
+
+CONTENTS
+
+1. About STP and MIPI
+2. Channel Allocation Policy
+3. Multi Target Trace integration and selection
+4. API
+5. Viewing/Analyzing the traces
+
+
+1. About STP and MIPI
+---------------------
+
+The System Trace Module supported by this driver (drivers/stm/systrace.c)
+complies to STM IP version 1.
+
+In terms of PIN MUX, the tool chain only supports STM/MIPI ouputs
+routed to CN44: PIO101(2..7) on B2000. Also tested ok with B2020.
+
+The System Trace Module IP exposes basically five or more pages of
+4k memory ranges (starting at the base address of the peripheral)
+that can be assigned freely to an ARM core, or an accelerator
+(XP70 or alike), or peculiar Bus Occupation Measurement IPs.
+
+These pages are typically assigned for use by a core or an accelerator which
+is then referred to as an "initiator" or "master" is the STM/STP literature.
+
+Within each page, each 2*64bit aligned offet corresponds to an STP channel.
+Writing to BASE + 0x00 will issue a message to Master0/Channel0
+Writing to BASE + 0x10 will issue a message to Master0/Channel1
+
+etc..
+
+Odd 8 byte aligned offsets allow to issue a message with an 'XTI' terminator.
+
+Writing to BASE + 0x08 will issue a message to Master0/Channel0 _with_
+termination bits.
+
+This can be used by software not dealing with a streaming scheme, that wish
+to wait for a specific message termination marker.
+
+The systrace driver in the contrary from other existing implementations
+does not provide a directly accessible chardev interface or a commodity
+to freely mapp any channel/master to usermode. This is choice of
+implementation, as SysTrace is part of the supported media in the MTT
+infrastructure. This is to insure:
+
+a) media abstraction in the tools.
+b) possible inter-working: trace from one core or app does not break traces
+from another.
+
+Please refer to MTT specification documents.
+
+
+2. Channel Allocation Policy
+----------------------------
+
+Channels and Masters are mapped to the cores via the MTT trace layer.
+
+MTT defines a default assignment for each SoC. In further versions of this
+software, the channel ranger will be configurable between cores. Currently
+this is not customizable for the end-user.
+
+Channels are used in conjunction with components IDs in MTT so that critical
+trace contexts like Context Switch or hard irqs are assign a dedicate channel
+to avoid locking and muxing of messages when possible.
+
+The trace layer do not assign any application semantic to a peculiar channel.
+Traces emitted from the trace API or KPTrace or printk are decoded the same
+way in the end nomatter if the transited though STM/ETHERNET/USB or UART.
+
+Free channels are assign to a client application of module upon calling
+mtt_open, in a best effort for not muxing and avoid serialization of trace
+output between applications.
+
+Please refer to MTT specification document or ask for support for details.
+
+
+3. Multi Target Trace integration and selection
+-----------------------------------------------
+
+As stated previously, tracing over Systrace Module is basically using the
+MTT powered tools like Application Trace Logger, like usual. You only
+need to select "probe" as the output media when configuring the trace
+session.
+
+a) From within Application Trace Logger:
+
+go to the session Menu/ Output Media, check "System Trace Module:
+
+b) From command line (Host Side):
+
+launch "mttatl -m probe"
+
+c) From command line target side, without GUI front-end (quick record to file)
+
+"mttcontrol -m probe" will setup the system for tracing to STM-Port.
+"mttcontrol -s" will start the session
+"mttcontrol -t" will stop the session
+
+"kptrace -m probe" is a shortcut to run a classical kptrace command line
+session will wait for ctr+c.
+
+
+4. API
+------
+
+the API is the mtt API:
+
+* if your wish to output printk over STM, just configure MTT to expose a tty
+console device, and setup the kernel to use it for console output:
+
+BOOTARGS += "console=mttS0"
+
+* if your intend is to instrument your code to output raw binary data for
+charting of analysis, use mtt_trace or mtt_print and configure MTT acquisition
+to use Systrace as described above.
+
+Please refer to Documentation/mtt.txt
+
+5. Viewing/Analyzing the traces
+-------------------------------
+
+Please refer to the manual of the Application Trace Logger.

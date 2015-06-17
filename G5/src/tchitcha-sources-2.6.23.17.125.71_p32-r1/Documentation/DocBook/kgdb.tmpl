@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+	"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" []>
+
+<book id="kgdbInternals">
+ <bookinfo>
+  <title>KGDB Internals</title>
+
+  <authorgroup>
+   <author>
+    <firstname>Tom</firstname>
+    <surname>Rini</surname>
+    <affiliation>
+     <address>
+      <email>trini@kernel.crashing.org</email>
+     </address>
+    </affiliation>
+   </author>
+  </authorgroup>
+
+  <authorgroup>
+   <author>
+    <firstname>Amit S.</firstname>
+    <surname>Kale</surname>
+    <affiliation>
+     <address>
+      <email>amitkale@linsyssoft.com</email>
+     </address>
+    </affiliation>
+   </author>
+  </authorgroup>
+
+  <copyright>
+   <year>2004-2005</year>
+   <holder>MontaVista Software, Inc.</holder>
+  </copyright>
+  <copyright>
+   <year>2004</year>
+   <holder>Amit S. Kale</holder>
+  </copyright>
+
+  <legalnotice>
+   <para>
+   This file is licensed under the terms of the GNU General Public License
+   version 2. This program is licensed "as is" without any warranty of any
+   kind, whether express or implied.
+   </para>
+
+  </legalnotice>
+ </bookinfo>
+
+<toc></toc>
+  <chapter id="Introduction">
+    <title>Introduction</title>
+    <para>
+    kgdb is a source level debugger for linux kernel. It is used along
+    with gdb to debug a linux kernel. Kernel developers can debug a kernel
+    similar to application programs with the use of kgdb. It makes it
+    possible to place breakpoints in kernel code, step through the code
+    and observe variables.
+    </para>
+    <para>
+    Two machines are required for using kgdb. One of these machines is a
+    development machine and the other is a test machine. The machines are
+    typically connected through a serial line, a null-modem cable which
+    connects their serial ports.  It is also possible however, to use an
+    ethernet connection between the machines.  The kernel to be debugged
+    runs on the test machine. gdb runs on the development machine. The
+    serial line or ethernet connection is used by gdb to communicate to
+    the kernel being debugged.
+    </para>
+  </chapter>
+  <chapter id="CompilingAKernel">
+    <title>Compiling a kernel</title>
+    <para>
+    To enable <symbol>CONFIG_KGDB</symbol>, look under the "Kernel debugging"
+    and then select "KGDB: kernel debugging with remote gdb".
+    </para>
+    <para>
+    The first choice for I/O is <symbol>CONFIG_KGDB_ONLY_MODULES</symbol>.
+    This means that you will only be able to use KGDB after loading a
+    kernel module that defines how you want to be able to talk with
+    KGDB.  There are two other choices (more on some architectures) that
+    can be enabled as modules later, if not picked here.
+    </para>
+    <para>The first of these is <symbol>CONFIG_KGDB_8250_NOMODULE</symbol>.
+    This has sub-options such as <symbol>CONFIG_KGDB_SIMPLE_SERIAL</symbol>
+    which toggles choosing the serial port by ttyS number or by specifying
+    a port and IRQ number.
+    </para>
+    <para>
+    The second of these choices on most systems for I/O is
+    <symbol>CONFIG_KGDBOE</symbol>. This requires that the machine to be
+    debugged has an ethernet card which supports the netpoll API, such as
+    the cards supported by <symbol>CONFIG_E100</symbol>.  There are no
+    sub-options for this, but a kernel command line option is required.
+    </para>
+  </chapter>
+  <chapter id="BootingTheKernel">
+    <title>Booting the kernel</title>
+    <para>
+    The Kernel command line option <constant>kgdbwait</constant> makes kgdb
+    wait for gdb connection during booting of a kernel.  If the
+    <symbol>CONFIG_KGDB_8250</symbol> driver is used (or if applicable,
+    another serial driver) this breakpoint will happen very early on, before
+    console output.  If you wish to change serial port information and you
+    have enabled both <symbol>CONFIG_KGDB_8250</symbol> and
+    <symbol>CONFIG_KGDB_SIMPLE_SERIAL</symbol> then you must pass the option
+    <constant>kgdb8250=&lt;io or mmio&gt;,&lt;address&gt;,&lt;baud
+    rate&gt;,&lt;irq&gt;</constant> before <constant>kgdbwait</constant>.
+    The values <constant>io</constant> or <constant>mmio</constant> refer to
+    if the address being passed next needs to be memory mapped
+    (<constant>mmio</constant>) or not. The <constant>address</constant> must
+    be passed in hex and is the hardware address and will be remapped if
+    passed as <constant>mmio</constant>. The value
+    <constant>baud rate</constant> and <constant>irq</constant> are base-10.
+    The supported values for <constant>baud rate</constant> are
+    <constant>9600</constant>, <constant>19200</constant>,
+    <constant>38400</constant>, <constant>57600</constant>, and
+    <constant>115200</constant>.
+    </para>
+    <para>
+    To have KGDB stop the kernel and wait, with the compiled values for the
+    serial driver, pass in: <constant>kgdbwait</constant>.
+    </para>
+    <para>
+    To specify the values of the SH SCI(F) serial port at boot:
+    <constant>kgdbsci=0,115200</constant>.
+    </para>
+    <para>
+    To specify the values of the serial port at boot:
+    <constant>kgdb8250=io,3f8,115200,3</constant>.
+    On IA64 this could also be:
+    <constant>kgdb8250=mmio,0xff5e0000,115200,74</constant>
+    And to have KGDB also stop the kernel and wait for GDB to connect, pass in
+    <constant>kgdbwait</constant> after this arguement.
+    </para>
+    <para>
+    To configure the <symbol>CONFIG_KGDBOE</symbol> driver, pass in
+    <constant>kgdboe=[src-port]@&lt;src-ip&gt;/[dev],[tgt-port]@&lt;tgt-ip&gt;/[tgt-macaddr]</constant>
+    where:
+    <itemizedlist>
+      <listitem><para>src-port (optional): source for UDP packets (defaults to <constant>6443</constant>)</para></listitem>
+      <listitem><para>src-ip: source IP to use (interface address)</para></listitem>
+      <listitem><para>dev (optional): network interface (<constant>eth0</constant>)</para></listitem>
+      <listitem><para>tgt-port (optional): port GDB will use (defaults to <constant>6442</constant>)</para></listitem>
+      <listitem><para>tgt-ip: IP address GDB will be connecting from</para></listitem>
+      <listitem><para>tgt-macaddr (optional): ethernet MAC address for logging agent (default is broadcast)</para></listitem>
+    </itemizedlist>
+    </para>
+    <para>
+    The <symbol>CONFIG_KGDBOE</symbol> driver can be reconfigured at run time,
+    if <symbol>CONFIG_SYSFS</symbol> and <symbol>CONFIG_MODULES</symbol>
+    are enabled, by echo'ing a new config string to
+    <constant>/sys/module/kgdboe/parameter/kgdboe</constant>.  The
+    driver can be unconfigured with the special string
+    <constant>not_configured</constant>.
+    </para>
+  </chapter>
+  <chapter id="ConnectingGDB">
+  <title>Connecting gdb</title>
+    <para>
+    If you have used any of the methods to have KGDB stop and create
+    an initial breakpoint described in the previous chapter, kgdb prints
+    the message "Waiting for connection from remote gdb..." on the console
+    and waits for connection from gdb. At this point you connect gdb to kgdb.
+    </para>
+    <para>
+    Example (serial):
+    </para>
+    <programlisting>
+    % gdb ./vmlinux
+    (gdb) set remotebaud 115200
+    (gdb) target remote /dev/ttyS0
+    </programlisting>
+    <para>
+    Example (ethernet):
+    </para>
+    <programlisting>
+    % gdb ./vmlinux
+    (gdb) target remote udp:192.168.2.2:6443
+    </programlisting>
+    <para>
+    Once connected, you can debug a kernel the way you would debug an
+    application program.
+    </para>
+  </chapter>
+  <chapter id="ArchitectureNotes">
+    <title>Architecture specific notes</title>
+      <para>
+      SuperH: The NMI switch found on some boards can be used to trigger an
+      initial breakpoint.  Subsequent triggers do nothing.  If console
+      is enabled on the SCI(F) serial port, and that is the port being used
+      for KGDB, then you must trigger a breakpoint via sysrq, NMI, or
+      some other method prior to connecting, or echo a control-c to the
+      serial port.  Also, to use the SCI(F) port for KGDB, the
+      <symbol>CONFIG_SERIAL_SH_SCI</symbol> driver must be enabled.
+      </para>
+  </chapter>
+  <chapter id="CommonBackEndReq">
+    <title>The common backend (required)</title>
+      <para>
+      There are a few flags which must be set on every architecture in
+      their &lt;asm/kgdb.h&gt; file.  These are:
+      <itemizedlist>
+        <listitem>
+	  <para>
+	  NUMREGBYTES: The size in bytes of all of the registers, so
+	  that we can ensure they will all fit into a packet.
+	  </para>
+	  <para>
+	  BUFMAX: The size in bytes of the buffer GDB will read into.
+	  This must be larger than NUMREGBYTES.
+	  </para>
+	  <para>
+	  CACHE_FLUSH_IS_SAFE: Set to one if it is always safe to call
+	  flush_cache_range or flush_icache_range.  On some architectures,
+	  these functions may not be safe to call on SMP since we keep other
+	  CPUs in a holding pattern.
+	  </para>
+	</listitem>
+      </itemizedlist>
+      </para>
+      <para>
+      There are also the following functions for the common backend,
+      found in kernel/kgdb.c, that must be supplied by the
+      architecture-specific backend.  No weak version of these is provided.
+      </para>
+!Iinclude/linux/kgdb.h
+  </chapter>
+  <chapter id="CommonBackEndOpt">
+    <title>The common backend (optional)</title>
+      <para>
+      These functions are part of the common backend, found in kernel/kgdb.c
+      and are optionally implemented.  Some functions (with _hw_ in the name)
+      end up being required on arches which use hardware breakpoints.
+      </para>
+<!--
+X!Ikernel/kgdb.c
+-->
+  </chapter>
+  <chapter id="DriverSpecificFunctions">
+    <title>Driver-Specific Functions</title>
+      <para>
+      Some of the I/O drivers have additional functions that can be
+      called, that are specific to the driver.  Calls from other places
+      to these functions must be wrapped in #ifdefs for the driver in
+      question.
+      </para>
+!Idrivers/serial/8250_kgdb.c
+   </chapter>
+</book>

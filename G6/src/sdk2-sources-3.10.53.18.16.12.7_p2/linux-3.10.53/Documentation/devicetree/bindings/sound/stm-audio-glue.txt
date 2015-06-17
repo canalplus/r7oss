@@ -1,0 +1,15 @@
+===============================================================================
+			stm audio glue
+===============================================================================
+
+Required properties:
+- compatible   : board type, Should be "st,snd_audio_glue_<soc>",
+- st,syscfg	: phandle to sysconf registers bank to power on/off the device
+
+Typical usage example:
+
+snd_audio_glue: snd-audio-glue {
+			compatible	= "st,snd_audio_glue_stih416";
+			status		= "okay";
+			st,syscfg	= <&syscfg_rear>;
+		};

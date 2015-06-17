@@ -1,0 +1,27 @@
+From 2dce823863df1722fd9d8eddd0fab1af0dbadc51 Mon Sep 17 00:00:00 2001
+From: Andrew Watkins <andrew.watkins@mathembedded.com>
+Date: Tue, 26 Mar 2013 15:17:31 +0000
+Subject: [PATCH 32/36] Add rpm Makefile and source directory.
+
+---
+ Makefile.rpm |    8 ++++++++
+ 1 file changed, 8 insertions(+)
+ create mode 100644 Makefile.rpm
+
+diff --git a/Makefile.rpm b/Makefile.rpm
+new file mode 100644
+index 0000000..2e50e47
+--- /dev/null
++++ b/Makefile.rpm
+@@ -0,0 +1,8 @@
++SPEC=SPECS/stm-noarchtarget-player2.spec
++BUILDAREA?=$(PWD)/..
++
++include $(BUILDAREA)/Makefile.rpm
++
++rpmpackage:
++	mkdir -p SOURCES
++	(tar cvfj SOURCES/player2.tar.bz2 components COPYING Doxyfile firmware genbox INSTALL linux makefile* Makefile patches player README )
+-- 
+1.7.9.5
+

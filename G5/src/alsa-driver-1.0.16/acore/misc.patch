@@ -1,0 +1,38 @@
+--- ../alsa-kernel/core/misc.c	2007-12-20 10:19:14.000000000 +0100
++++ misc.c	2007-12-20 10:44:41.000000000 +0100
+@@ -1,3 +1,5 @@
++#define __NO_VERSION__
++#include "adriver.h"
+ /*
+  *  Misc and compatibility things
+  *  Copyright (c) by Jaroslav Kysela <perex@perex.cz>
+@@ -28,7 +30,7 @@
+ {
+ 	if (res) {
+ 		release_resource(res);
+-		kfree(res);
++		kfree_nocheck(res);
+ 	}
+ }
+ 
+@@ -94,10 +96,18 @@
+ snd_pci_quirk_lookup(struct pci_dev *pci, const struct snd_pci_quirk *list)
+ {
+ 	const struct snd_pci_quirk *q;
++	unsigned short subsystem_vendor, subsystem_device;
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 3, 0)
++	subsystem_vendor = pci->subsystem_vendor;
++	subsystem_device = pci->subsystem_device;
++#else
++	pci_read_config_word(pci, PCI_SUBSYSTEM_VENDOR_ID, &subsystem_vendor);
++	pci_read_config_word(pci, PCI_SUBSYSTEM_ID, &subsystem_device);
++#endif
+ 	for (q = list; q->subvendor; q++)
+-		if (q->subvendor == pci->subsystem_vendor &&
+-		    (!q->subdevice || q->subdevice == pci->subsystem_device))
++		if (q->subvendor == subsystem_vendor &&
++		    (!q->subdevice || q->subdevice == subsystem_device))
+ 			return q;
+ 	return NULL;
+ }

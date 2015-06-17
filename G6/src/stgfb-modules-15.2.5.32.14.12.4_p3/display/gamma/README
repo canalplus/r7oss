@@ -1,0 +1,7 @@
+This directory contains a set of classes abstracting the functionality of a 
+display architecture containing a real-time hardware video mixer and hardware
+graphics, cursor and video display planes attached to it. Somewhere in the
+mists of time the basic kit of components for this display type was generically
+called "Gamma". Some of these files are the oldest remaining in the driver,
+from before it was owned by the STLinux development team, which is why some
+of the file names and class names are a bit baroque.
