@@ -8,3 +8,4 @@ Here is the of modules used in the webapp :
 - [Lodash](https://github.com/lodash/lodash)
 - [Webpack](https://github.com/webpack/webpack)
 - [CreateJS](https://github.com/CreateJS)
+- [mickey.js](https://github.com/canalplus/mickey.js)
