@@ -1,0 +1,32 @@
+* Broadcom BCM7xxx Ethernet Systemport Controller (SYSTEMPORT)
+
+Required properties:
+- compatible: should be one of "brcm,systemport-v1.00" or "brcm,systemport"
+- reg: address and length of the register set for the device.
+- interrupts: interrupt(s) for the device, 1 interrupt is the RX and misc
+  interrupts, the second is the TX queues interrupts. A 3rd optional interupt
+  is used for Wake-on-LAN
+- local-mac-address: Ethernet MAC address (48 bits) of this adapter
+- phy-mode: Should be a string describing the PHY interface to the
+  Ethernet switch/PHY
+- fixed-link: <a b c d e> where a is emulated phy id - choose any,
+  but unique to the all specified fixed-links, b is duplex - 0 half,
+  1 full, c is link speed - d#10/d#100/d#1000, d is pause - 0 no
+  pause, 1 pause, e is asym_pause - 0 no asym_pause, 1 asym_pause.
+
+Optional properties:
+- systemport,num-tier2-arb: number of tier 2 arbiters, an integer
+- systemport,num-tier1-arb: number of tier 1 arbiters, an integer
+- systemport,num-txq: number of HW transmit queues, an integer
+- systemport,num-rxq: number of HW receive queues, an integer
+
+Example:
+ethernet@f04a0000 {
+	compatible = "brcm,systemport-v1.00";
+	reg = <0xf04a0000 0x4650>;
+	local-mac-address = [ 00 11 22 33 44 55 ];
+	fixed-link = <0 1 1000 0 0>;
+	phy-mode = "gmii";
+	interrupts = <0x0 0x16 0x0>,
+		<0x0 0x17 0x0>;
+};

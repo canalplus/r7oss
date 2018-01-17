@@ -1,0 +1,61 @@
+diff --git content/browser/web_contents/web_contents_impl.cc content/browser/web_contents/web_contents_impl.cc
+index 3124d00..a915f17 100644
+--- content/browser/web_contents/web_contents_impl.cc
++++ content/browser/web_contents/web_contents_impl.cc
+@@ -1756,7 +1756,7 @@ bool WebContentsImpl::HandleWheelEvent(
+     // Count only integer cumulative scrolls as zoom events; this handles
+     // smooth scroll and regular scroll device behavior.
+     zoom_scroll_remainder_ += event.wheelTicksY;
+-    int whole_zoom_scroll_remainder_ = std::lround(zoom_scroll_remainder_);
++    int whole_zoom_scroll_remainder_ = ::lround(zoom_scroll_remainder_);
+     zoom_scroll_remainder_ -= whole_zoom_scroll_remainder_;
+     if (whole_zoom_scroll_remainder_ != 0) {
+       delegate_->ContentsZoomChange(whole_zoom_scroll_remainder_ > 0);
+diff --git media/filters/audio_clock.cc media/filters/audio_clock.cc
+index 0bd0a6c..17c9d94 100644
+--- media/filters/audio_clock.cc
++++ media/filters/audio_clock.cc
+@@ -121,7 +121,7 @@ base::TimeDelta AudioClock::TimeUntilPlayback(base::TimeDelta timestamp) const {
+   }
+ 
+   return base::TimeDelta::FromMicroseconds(
+-      std::round(frames_until_timestamp * microseconds_per_frame_));
++      ::round(frames_until_timestamp * microseconds_per_frame_));
+ }
+ 
+ void AudioClock::ContiguousAudioDataBufferedForTesting(
+diff --git media/filters/audio_clock.h media/filters/audio_clock.h
+index 42ee2b6..bceb8ef 100644
+--- media/filters/audio_clock.h
++++ media/filters/audio_clock.h
+@@ -92,11 +92,11 @@ class MEDIA_EXPORT AudioClock {
+   //                                             1000 + 500 + 250 = 1750 ms.
+   base::TimeDelta front_timestamp() const {
+     return base::TimeDelta::FromMicroseconds(
+-        std::round(front_timestamp_micros_));
++        ::round(front_timestamp_micros_));
+   }
+   base::TimeDelta back_timestamp() const {
+     return base::TimeDelta::FromMicroseconds(
+-        std::round(back_timestamp_micros_));
++        ::round(back_timestamp_micros_));
+   }
+ 
+   // Returns the amount of wall time until |timestamp| will be played by the
+diff --git ui/gfx/color_utils.cc ui/gfx/color_utils.cc
+index d64a8b3..a7e412f 100644
+--- ui/gfx/color_utils.cc
++++ ui/gfx/color_utils.cc
+@@ -223,9 +223,9 @@ SkColor HSLShift(SkColor color, const HSL& shift) {
+     b += (255.0 - b) * ((shift.l - 0.5) * 2.0);
+   }
+   return SkColorSetARGB(alpha,
+-                        static_cast<int>(std::round(r)),
+-                        static_cast<int>(std::round(g)),
+-                        static_cast<int>(std::round(b)));
++                        static_cast<int>(::round(r)),
++                        static_cast<int>(::round(g)),
++                        static_cast<int>(::round(b)));
+ }
+ 
+ void BuildLumaHistogram(const SkBitmap& bitmap, int histogram[256]) {

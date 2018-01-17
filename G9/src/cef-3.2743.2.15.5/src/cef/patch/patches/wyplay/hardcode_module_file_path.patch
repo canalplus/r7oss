@@ -1,0 +1,24 @@
+diff --git base/base_paths_posix.cc base/base_paths_posix.cc
+index a60e112..60461c2 100644
+--- base/base_paths_posix.cc
++++ base/base_paths_posix.cc
+@@ -36,8 +36,7 @@ namespace base {
+ bool PathProviderPosix(int key, FilePath* result) {
+   FilePath path;
+   switch (key) {
+-    case base::FILE_EXE:
+-    case base::FILE_MODULE: {  // TODO(evanm): is this correct?
++    case base::FILE_EXE: {
+ #if defined(OS_LINUX)
+       FilePath bin_dir;
+       if (!ReadSymbolicLink(FilePath(kProcSelfExe), &bin_dir)) {
+@@ -77,6 +76,9 @@ bool PathProviderPosix(int key, FilePath* result) {
+       return true;
+ #endif
+     }
++    case base::FILE_MODULE:
++      *result = FilePath("/usr/lib/libcef.so");
++      return true;
+     case base::DIR_SOURCE_ROOT: {
+       // Allow passing this in the environment, for more flexibility in build
+       // tree configurations (sub-project builds, gyp --output_dir, etc.)

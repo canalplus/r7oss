@@ -1,0 +1,4 @@
+sbin/
+lib/initng/lib*.so
+lib/lib*.so.*
+usr/share/doc/initng/initng.txt

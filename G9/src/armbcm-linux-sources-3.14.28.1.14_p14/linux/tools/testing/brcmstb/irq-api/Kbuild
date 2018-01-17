@@ -1,0 +1,1 @@
+obj-m := test-irq-api.o

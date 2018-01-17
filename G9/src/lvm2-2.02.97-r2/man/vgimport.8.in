@@ -1,0 +1,27 @@
+.TH VGIMPORT 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
+.SH NAME
+vgimport \- make exported volume groups known to the system
+.SH SYNOPSIS
+.B vgimport
+.RB [ \-a | \-\-all ]
+.RB [ \-d | \-\-debug ]
+.RB [ \-h | \-? | \-\-help ]
+.RB [ \-v | \-\-verbose ]
+.I VolumeGroupName
+.RI [ VolumeGroupName ...]
+.SH DESCRIPTION
+vgimport allows you to make a Volume Group that was previously
+exported using
+.BR vgexport (8)
+known to the system again, perhaps after moving its Physical Volumes
+from a different machine.
+.SH OPTIONS
+See \fBlvm\fP(8) for common options.
+.TP
+.BR \-a ", " \-\-all
+Import all exported Volume Groups.
+.SH SEE ALSO
+.BR lvm (8),
+.BR pvscan (8),
+.BR vgexport (8),
+.BR vgscan (8)

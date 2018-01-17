@@ -1,0 +1,41 @@
+diff --git build/common.gypi build/common.gypi
+index 64fed4e..e36cd73 100644
+--- build/common.gypi
++++ build/common.gypi
+@@ -2725,6 +2725,9 @@
+       ['use_ash==1', {
+         'defines': ['USE_ASH=1'],
+       }],
++      ['toolkit_views==1', {
++        'defines': ['TOOLKIT_VIEWS=1'],
++      }],
+       ['use_pango==1', {
+         'defines': ['USE_PANGO=1'],
+       }],
+diff --git ui/base/ui_base.gyp ui/base/ui_base.gyp
+index 8f5c646..0f61fb7 100644
+--- ui/base/ui_base.gyp
++++ ui/base/ui_base.gyp
+@@ -611,9 +611,6 @@
+         }],
+         ['toolkit_views==0', {
+           'sources!': [
+-            'dragdrop/drag_drop_types.h',
+-            'dragdrop/drop_target_event.cc',
+-            'dragdrop/drop_target_event.h',
+             'dragdrop/os_exchange_data.cc',
+             'dragdrop/os_exchange_data.h',
+             'nine_image_painter_factory.cc',
+diff --git ui/views/views_delegate.cc ui/views/views_delegate.cc
+index 082f2f1..37fa363 100644
+--- ui/views/views_delegate.cc
++++ ui/views/views_delegate.cc
+@@ -128,7 +128,7 @@ ViewsDelegate::ViewsDelegate()
+ 
+   ui::TouchEditingControllerFactory::SetInstance(views_tsc_factory_.get());
+ 
+-#if defined(USE_AURA)
++#if defined(USE_AURA) && defined(TOOLKIT_VIEWS)
+   touch_selection_menu_runner_.reset(new TouchSelectionMenuRunnerViews());
+ #endif
+ }

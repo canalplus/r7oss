@@ -1,0 +1,7 @@
+          name : idleprobe
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : 
+      commands : 
+       options : wait_for_cpu_idle, wait_for_cpu_below
+   description : For less important services, set this keyword, and initng
+                 will wait for cpu usage to drop before trying to start them.

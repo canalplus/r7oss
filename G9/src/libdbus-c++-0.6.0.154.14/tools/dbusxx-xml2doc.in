@@ -1,0 +1,12 @@
+#!/bin/bash
+
+prefix=@prefix@
+input=$1
+xsl="@datarootdir@/dbus-c++/dbusxx-xml2doc.xsl"
+
+if [ $# -eq 1 ]
+then
+  /usr/bin/xsltproc $xsl $input
+else
+  echo "Usage: $0 <xmlfile> <htmlfile>"
+fi

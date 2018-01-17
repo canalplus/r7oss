@@ -1,0 +1,26 @@
+Retrieved on 2013-09-19 from
+http://cgit.openembedded.org/openembedded-core/tree/meta/recipes-core/eglibc/eglibc-2.18/fileops-without-wchar-io.patch?id=9934141d5df9d334f7f7f76e1990234af8a25a63
+and refreshed for the brcmstb toolchain. -gregory
+
+Fix error like
+
+/home/kraj/work/angstrom/sources/openembedded-core/build/tmp-eglibc/work/mips64-oe-linux/eglibc-2.16-r2+svnr19383/build-mips64-oe-linux/libc_pic.os: In function `_IO_new_file_fopen':
+/home/kraj/work/angstrom/sources/openembedded-core/build/tmp-eglibc/work/mips64-oe-linux/eglibc-2.16-r2+svnr19383/eglibc-2_16/libc/libio/fileops.c:431: undefined reference to `_IO_file_close_it_internal'
+collect2: error: ld returned 1 exit status
+
+
+Signed-off-by: Khem Raj <raj.khem@gmail.com>
+Upstream-Status: Pending
+===================================================================
+diff -uNrp eglibc-2.18-20130829svn-orig/libio/fileops.c eglibc-2.18-20130829svn/libio/fileops.c
+--- eglibc-2.18-20130829svn-orig/libio/fileops.c	2013-09-20 17:50:52.711968071 -0400
++++ eglibc-2.18-20130829svn/libio/fileops.c	2013-09-20 17:51:45.552552259 -0400
+@@ -420,7 +420,7 @@ _IO_new_file_fopen (fp, filename, mode, 
+ 	  result->_mode = 1;
+ #else
+           /* Treat this as if we couldn't find the given character set.  */
+-          (void) INTUSE(_IO_file_close_it) (fp);
++          (void) _IO_file_close_it (fp);
+           __set_errno (EINVAL);
+           return NULL;
+ #endif

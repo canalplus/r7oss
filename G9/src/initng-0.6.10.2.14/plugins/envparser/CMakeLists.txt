@@ -1,0 +1,6 @@
+INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR}/src ${CMAKE_BINARY_DIR} )
+
+ADD_LIBRARY(envparser MODULE initng_envparser.c)
+TARGET_LINK_LIBRARIES(envparser initng)
+INSTALL_TARGETS(${LIB_INSTALL_DIR}/initng envparser)
+

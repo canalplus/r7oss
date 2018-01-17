@@ -1,0 +1,8 @@
+          name : simple_launcher
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : 
+      commands : 
+       options : exec, exec_path, exec_args
+   description : The exec command is for use where only a single command is
+                 needed for executing a daemon/service, rather than a
+                 multi-line script.

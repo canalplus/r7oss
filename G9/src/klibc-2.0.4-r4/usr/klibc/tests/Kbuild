@@ -1,0 +1,55 @@
+#
+# Kbuild file for all test files
+#
+
+test-files := $(wildcard $(srctree)/$(src)/*.c)
+test-files := $(notdir $(test-files))
+
+# This particular file uses a bunch of formats gcc don't know of, in order
+# to test the full range of our vsnprintf() function.  This outputs a bunch
+# of useless warnings unless we tell it not to.
+KLIBCCFLAGS_testvsnp.o := -Wno-format
+
+static-y := $(test-files:.c=)
+shared-y := $(addsuffix .shared, $(static-y))
+
+environ.shared-y	:= environ.o
+fcntl.shared-y		:= fcntl.o
+fnmatch.shared-y	:= fnmatch.o
+getopttest.shared-y	:= getopttest.o
+getoptlong.shared-y	:= getoptlong.o
+getpagesize.shared-y	:= getpagesize.o
+hello.shared-y		:= hello.o
+idtest.shared-y		:= idtest.o
+lseek.shared-y		:= lseek.o
+malloctest.shared-y	:= malloctest.o
+malloctest2.shared-y	:= malloctest2.o
+memstrtest.shared-y	:= memstrtest.o
+microhello.shared-y	:= microhello.o
+minihello.shared-y	:= minihello.o
+mmaptest.shared-y	:= mmaptest.o
+nfs_no_rpc.shared-y	:= nfs_no_rpc.o
+opentest.shared-y	:= opentest.o
+pipetest.shared-y	:= pipetest.o
+rtsig.shared-y		:= rtsig.o
+select.shared-y		:= select.o
+setenvtest.shared-y	:= setenvtest.o
+setjmptest.shared-y	:= setjmptest.o
+sigint.shared-y		:= sigint.o
+sig-nodefer.shared-y	:= sig-nodefer.o
+socket.shared-y		:= socket.o
+sscanf.shared-y		:= sscanf.o
+stat.shared-y		:= stat.o
+statfs.shared-y		:= statfs.o
+stdio.shared-y		:= stdio.o
+strlcpycat.shared-y	:= strlcpycat.o
+strtoimax.shared-y	:= strtoimax.o
+strtotime.shared-y	:= strtotime.o
+testrand48.shared-y	:= testrand48.o
+testvsnp.shared-y	:= testvsnp.o
+vfork.shared-y		:= vfork.o
+
+# Cleaning
+clean-files := $(static-y) $(shared-y) \
+	$(addsuffix .g, $(static-y) $(shared-y)) \
+	$(test-files:.c=.o)

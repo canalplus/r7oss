@@ -1,0 +1,8 @@
+- How to avoid data stores of temporary sessions to leak? If a renderer
+  crashes, temporary session data store files won't be deleted. How to detect
+  these files must be deleted and where can we do it? On the other side, if
+  the all browser crashes, we can easily delete them all by removing all files
+  with a `.thds' extension.
+- How to avoid a persistent session to be loaded in several documents? We could
+  use file locks. But we must carefully delete them and manage browser and
+  renderer crashes.

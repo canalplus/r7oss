@@ -1,0 +1,28 @@
+Description of InitNG versioning scheme
+
+    InitNG versions looks like this: x.y.z[_pre#|.p]
+
+    Where an change in:
+      x.o.o - means a complete or major rewrite of the core.
+      o.y.o - major changes to the core, and important plugin api changes.
+      o.o.z - minor changes to the core, changes in plugins, and fixes.
+      _pre# - a pre-release, it's unfinished, so use with care.
+      .p    - a bugfix release, doesn't introduces new features.
+
+    You should consider any release as unstable unless we say it's stable.
+    After a stable release, following releases of the same branch should be
+    considered stable too.
+
+    For example:
+        0.8.4   - unstable
+        0.8.4.1 - stable
+        0.8.4.2 - stable
+
+        0.8.5   - stable
+        0.8.5.1 - stable
+
+        0.8.6   - unstable
+        0.8.6.1 - unstable
+        0.8.6.2 - stable
+        0.8.6.3 - stable
+        ...

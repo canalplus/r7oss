@@ -1,0 +1,120 @@
+Device Tree Clock bindings for brcmstb
+
+In addition to the platform bindings provided in-tree, the brcmstb common
+clock driver supports the following clock providers/consumers:
+
+	- CPU clock dividers (provider/consumer)
+	- bcm_clk_gate
+	- bcm_clk_sw
+
+=== CPU clock divider ===
+
+The CPU divider node serves as the sole clock for the CPU complex. It supports
+power-of-2 clock division, with a divider of "1" as the default highest-speed
+setting.
+
+Required properties:
+- compatible : shall be one of the following:
+	"brcm,brcmstb-cpu-clk-div"
+- reg : address and width of the divider configuration register
+- #clock-cells : shall be set to 0
+- clocks : phandle of clock provider which provides the source clock
+	   (this would typically be a "fixed-clock" type PLL)
+- div-table : list of (raw_value,divider) ordered pairs that correspond to the
+	      allowed clock divider settings
+- div-shift-width : least-significant bit position and width of divider value
+
+example:
+	cpupll: cpupll@0 {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <1500000000>;
+	};
+
+	cpuclk: cpu-clk-div@0 {
+		compatible = "brcm,brcmstb-cpu-clk-div";
+		reg = <0xf03e257c 0x4>;
+		#clock-cells = <0>;
+		clocks = <&cpupll>;
+		div-table = <0x00 1 0x11 2 0x12 4 0x13 8 0x14 16>;
+		div-shift-width = <0 5>;
+	};
+
+	cpus {
+		cpu@0 {
+			clocks = <&cpuclk>;
+		};
+	};
+
+
+=== bcm_clk_gate ===
+
+bcm_clk_gate is a clock type very similar to the clk_gate defined in
+drivers/clk/clk-gate.  In fact, some of the code has been copied
+verbatim.  The main difference is that bcm_clk_gate may have a delay
+specified.  
+
+Required properties:
+- compatible: must be "brcm,brcmstb-gate-clk"
+- reg : the register address of the bit that gets set/unset.  The
+	register range will always have a size of four bytes.
+- #clock-cells : see clock-bindings.txt.
+- bit-shift -- the bit position of reg that enables/disables the clock.
+
+Optional properties:
+- clocks : see clock-bindings.txt.
+- clock-names : see clock-bindings.txt.
+- set-bit-to-disable : inverts default gate programming. Setting the bit
+	gates the clock and clearing the bit ungates the clock.
+- brcm,delay : this indicates that there must be a delay after the
+	bit is changed.  The first parameter is the delay in usec
+	after the bit is being set to 0.  The second parameter is the
+	delay in usec after the bit is being set to 1.  So for the
+	example of <0 200>, there must be a delay of 200 usec after
+	setting the bit to 1.  
+- clock-output-names : see clock-bindings.txt.
+- brcm,read-only : specified if a clock can whose enable and 
+	disable actions do nothing as they do not write the
+	register.  This is a boolean.
+- brcm,inhibit-disable : specified if a clock is allowed to
+	enable but not disable; ie the disable action does
+	nothing.  This is a boolean.
+
+example:
+	lc_pll_reseta : lc_pll_reseta@f04e014c {
+		compatible = "brcm,brcmstb-gate-clk";
+		#clock-cells = <0>;
+		reg = <0xf04e014c 0x4>;
+		bit-shift = <0>;
+		set-bit-to-disable;
+		brcm,delay = <0 200>;
+		clocks = <&iso_ck_pll_lc>; 
+		clock-names = "iso_ck_pll_lc"; 
+
+
+=== bcm_clk_sw ===
+
+bcm_clk_sw is a clock type which has no hardware counterpart: it
+is used solely to enable/disable one or more parent clocks in
+unison.  
+
+Required properties:
+- compatible : must be "brcm,brcmstb-sw-clk"
+- #clock-cells : see clock-bindings.txt.
+
+Optional properties:
+- clocks : the list of parent clocks.  
+- clock-names : the names of the parent clocks in the same order
+	as the 'clocks' property.
+
+Example:
+	top_usb21 : top_usb21 {
+		compatible = "brcm,brcmstb-sw-clk";
+		#clock-cells = <0>;
+		clocks = <&usb1_27_mdio_ck>, <&usb1_freerun_ck>, 
+		  <&usb1_gisb_ck>, <&usb1_scb_ck>, <&usb1_108_ck_ahb>, 
+		  <&usb1_108_ck_axi>, <&lc_pll_pst_div_hld_ch1>; 
+		clock-names = "usb1_27_mdio_ck", "usb1_freerun_ck", 
+		  "usb1_gisb_ck", "usb1_scb_ck", "usb1_108_ck_ahb", 
+		  "usb1_108_ck_axi", "lc_pll_pst_div_hld_ch1"; 
+	};

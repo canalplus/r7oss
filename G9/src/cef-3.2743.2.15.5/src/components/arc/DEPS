@@ -1,0 +1,13 @@
+include_rules = [
+  "+chromeos/arc",
+  "+chromeos/chromeos_switches.h",
+  "+chromeos/dbus",
+  "+components/exo",
+  "+components/prefs",
+  "+components/signin/core/account_id",
+  "+ipc",
+  "+mojo",
+  "+third_party/re2",
+  "+third_party/skia",
+  "+ui/arc",
+]

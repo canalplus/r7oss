@@ -1,0 +1,6 @@
+INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR}/src ${CMAKE_BINARY_DIR} )
+
+ADD_LIBRARY(ctrlaltdel MODULE initng_ctrlaltdel.c)
+TARGET_LINK_LIBRARIES(ctrlaltdel initng)
+INSTALL_TARGETS(${LIB_INSTALL_DIR}/initng ctrlaltdel)
+

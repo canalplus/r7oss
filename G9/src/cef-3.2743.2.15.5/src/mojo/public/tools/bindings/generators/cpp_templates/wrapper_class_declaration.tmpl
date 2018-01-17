@@ -1,0 +1,60 @@
+{% from "enum_macros.tmpl" import enum_decl -%}
+
+class {{struct.name}} {
+ public:
+  using Data_ = internal::{{struct.name}}_Data;
+
+{#--- Enums #}
+{%- for enum in struct.enums -%}
+  {{enum_decl(enum)|indent(2)}}
+{%- endfor %}
+
+{#--- Constants #}
+{%- for constant in struct.constants %}
+{%-   if constant.kind|is_integral_kind %}
+  static const {{constant.kind|cpp_pod_type}} {{constant.name}} = {{constant|constant_value}};
+{%-   else %}
+  static const {{constant.kind|cpp_pod_type}} {{constant.name}};
+{%-   endif %}
+{%- endfor %}
+
+  static {{struct.name}}Ptr New();
+
+  template <typename U>
+  static {{struct.name}}Ptr From(const U& u) {
+    return mojo::TypeConverter<{{struct.name}}Ptr, U>::Convert(u);
+  }
+
+  template <typename U>
+  U To() const {
+    return mojo::TypeConverter<U, {{struct.name}}>::Convert(*this);
+  }
+
+  {{struct.name}}();
+  ~{{struct.name}}();
+
+{%  if struct|is_cloneable_kind %}
+  {{struct.name}}Ptr Clone() const;
+{%- endif %}
+  // Equals() is a template so it is only instantiated if it is used. Thus, the
+  // bindings generator does not need to know whether typemapped native types
+  // support operator==.
+  template <typename T,
+            typename std::enable_if<std::is_same<
+                T, {{struct.name}}>::value>::type* = nullptr>
+  bool Equals(const T& other) const {
+  {%-  for field in struct.fields %}
+    if (!mojo::internal::ValueTraits<{{field.kind|cpp_wrapper_type}}>::Equals(this->{{field.name}}, other.{{field.name}}))
+      return false;
+  {%-  endfor %}
+    return true;
+  }
+
+{#--- Struct members #}
+{%  for field in struct.fields %}
+{%-   set type = field.kind|cpp_wrapper_type %}
+{%-   set name = field.name %}
+  {{type}} {{name}};
+{%- endfor %}
+};
+

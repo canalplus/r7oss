@@ -1,0 +1,6 @@
+          name : umask
+        author : Corneliu Cogeanu <ccogeanu@wyplay.com>
+  contributors : 
+      commands : 
+       options : umask
+   description : Set umask before launching.

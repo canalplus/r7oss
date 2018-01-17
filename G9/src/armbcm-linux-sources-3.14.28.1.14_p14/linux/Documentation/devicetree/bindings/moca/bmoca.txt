@@ -1,0 +1,36 @@
+* Broadcom STB MoCA driver bindings
+
+The Broadcom STB MoCA core driver provides access to the moca core
+for setting various moca properties and loading moca FW
+
+Required properties:
+ compatible     : should contain "brcm,bmoca-instance"
+ reg            : the register start and length for MoCA controller
+ interrupts     : The MoCA interrupt
+ #address-cells : <1>
+ #size-cells    : <1>
+ mac-address	: 6-byte mac address
+ rf-band	: rf band string, possible values "highrf, midrf, wanrf,
+		  ext_d, d_low, d_high, e, f, g
+ hw-rev		: HW revision number
+ enet-id	: phandle to the internal ethernet phy (bcmgenet)
+
+Optional properties:
+ use-dma	: boolean, indicating controller support for DMA
+ i2c-base	: MoCA i2c base register address
+ i2c-addr	: i2c slave address
+ use-spi	: boolean, indicating controller support for spi interface
+
+Example:
+
+	bmoca@f0e00000 {
+		compatible = "brcm,bmoca-instance";
+		#address-cells = <0x1>;
+		#size-cells = <0x1>;
+		mac-address = [ 00 10 18 03 25 d7 ];
+		rf-band = "highrf";
+		reg = <0xf0e00000 0x1ffda0>;
+		interrupts = <0x0 0x1d 0x0>;
+		hw-rev = <0x2003>;
+		enet-id = <0x7>;
+	};

@@ -1,0 +1,8 @@
+          name : dbus_event
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : 
+      commands : 
+       options : 
+   description : This plugin will send inting events like system state change,
+                 service state changes, program output and so over dbus.
+                 check http://www.freedesktop.org/ for more info about dbus.

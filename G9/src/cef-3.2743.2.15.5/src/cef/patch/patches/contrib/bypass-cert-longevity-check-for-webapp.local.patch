@@ -1,0 +1,12 @@
+--- a/net/cert/cert_verify_proc.cc	2016-02-12 15:34:44.506882689 +0100
++++ b/net/cert/cert_verify_proc.cc	2016-02-15 11:00:04.925424800 +0100
+@@ -308,7 +308,8 @@
+   }
+ 
+   // Flag certificates using too long validity periods.
+-  if (verify_result->is_issued_by_known_root && HasTooLongValidity(*cert)) {
++  if (verify_result->is_issued_by_known_root && HasTooLongValidity(*cert)
++      && cert->subject().common_name != "webapp.local") {
+     verify_result->cert_status |= CERT_STATUS_VALIDITY_TOO_LONG;
+     if (rv == OK)
+       rv = MapCertStatusToNetError(verify_result->cert_status);

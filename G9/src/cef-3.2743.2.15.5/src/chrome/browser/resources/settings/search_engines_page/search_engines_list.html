@@ -1,0 +1,16 @@
+<link rel="import" href="chrome://resources/html/polymer.html">
+<link rel="import" href="chrome://md-settings/search_engines_page/search_engine_entry.html">
+
+<dom-module id="settings-search-engines-list">
+  <link rel="import" type="css" href="search_engines_list.css">
+  <template>
+    <div>
+      <content></content>
+      <template is="dom-repeat" items="[[engines]]">
+        <settings-search-engine-entry engine="[[item]]">
+        </settings-search-engine-entry>
+      </template>
+    </div>
+  </template>
+  <script src="search_engines_list.js"></script>
+</dom-module>

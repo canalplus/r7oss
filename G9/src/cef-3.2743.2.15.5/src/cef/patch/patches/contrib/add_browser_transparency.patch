@@ -1,0 +1,54 @@
+diff --git cc/trees/layer_tree_host.cc cc/trees/layer_tree_host.cc
+index 794809f..02f8ade 100644
+--- cc/trees/layer_tree_host.cc
++++ cc/trees/layer_tree_host.cc
+@@ -233,8 +233,8 @@ LayerTreeHost::LayerTreeHost(InitParams* params, CompositorMode mode)
+       has_gpu_rasterization_trigger_(false),
+       content_is_suitable_for_gpu_rasterization_(true),
+       gpu_rasterization_histogram_recorded_(false),
+-      background_color_(SK_ColorWHITE),
+-      has_transparent_background_(false),
++      background_color_(0x0),
++      has_transparent_background_(true),
+       have_scroll_event_handlers_(false),
+       event_listener_properties_(),
+       did_complete_scale_animation_(false),
+diff --git content/browser/renderer_host/render_widget_host_view_base.cc content/browser/renderer_host/render_widget_host_view_base.cc
+index 0aaaf78..9f84231 100644
+--- content/browser/renderer_host/render_widget_host_view_base.cc
++++ content/browser/renderer_host/render_widget_host_view_base.cc
+@@ -32,7 +32,7 @@ const int kFlushInputRateInUs = 16666;
+ 
+ RenderWidgetHostViewBase::RenderWidgetHostViewBase()
+     : popup_type_(blink::WebPopupTypeNone),
+-      background_color_(SK_ColorWHITE),
++      background_color_(0x0),
+       mouse_locked_(false),
+       showing_context_menu_(false),
+       selection_text_offset_(0),
+diff --git third_party/WebKit/Source/web/WebViewImpl.cpp third_party/WebKit/Source/web/WebViewImpl.cpp
+index 910ba9a..b53eaa0 100644
+--- third_party/WebKit/Source/web/WebViewImpl.cpp
++++ third_party/WebKit/Source/web/WebViewImpl.cpp
+@@ -425,7 +425,7 @@ WebViewImpl::WebViewImpl(WebViewClient* client)
+     , m_operationsAllowed(WebDragOperationNone)
+     , m_dragOperation(WebDragOperationNone)
+     , m_devToolsEmulator(nullptr)
+-    , m_isTransparent(false)
++    , m_isTransparent(true)
+     , m_tabsToLinks(false)
+     , m_layerTreeView(nullptr)
+     , m_rootLayer(nullptr)
+diff --git ui/aura/window.cc ui/aura/window.cc
+index ca155d9..35ff10c 100644
+--- ui/aura/window.cc
++++ ui/aura/window.cc
+@@ -91,7 +91,7 @@ Window::Window(WindowDelegate* delegate)
+       parent_(NULL),
+       visible_(false),
+       id_(-1),
+-      transparent_(false),
++      transparent_(true),
+       user_data_(NULL),
+       ignore_events_(false),
+       // Don't notify newly added observers during notification. This causes

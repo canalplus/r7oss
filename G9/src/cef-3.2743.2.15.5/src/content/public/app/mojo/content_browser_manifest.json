@@ -1,0 +1,24 @@
+{
+  "manifest_version": 1,
+  "name": "exe:content_browser",
+  "process-group": "browser",
+  "display_name": "Content Browser",
+  "capabilities": {
+    "required": {
+      "*": { "classes": [ "app" ] },
+      "mojo:shell": {
+        "classes": [
+          "shell:client_process",
+          "shell:instance_name",
+          "shell:user_id"
+        ]
+      },
+      "mojo:user": {
+        "interfaces": [
+          "leveldb::mojom::LevelDBService",
+          "user_service::UserService"
+         ]
+      }
+    }
+  }
+}

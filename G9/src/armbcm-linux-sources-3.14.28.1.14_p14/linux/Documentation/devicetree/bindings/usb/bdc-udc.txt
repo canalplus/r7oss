@@ -1,0 +1,16 @@
+USB Device Controller (UDC) for Broadcom Device Controller (BDC)
+
+Required properties:
+
+- compatible: Must be "brcm,bdc-udc-v0.16" or "brcm,bdc-udc"
+
+- reg: Address and length of the register set for the device
+
+- interrupts: Interrupt number for this device
+
+Example:
+	bdc@f0472000 {                                          
+		compatible = "brcm,bdc-udc-v0.16", "brcm,bdc-udc";
+		reg = <0xf0472000 0xfc4>;
+		interrupts = <0x0 0x76 0x0>;
+	};

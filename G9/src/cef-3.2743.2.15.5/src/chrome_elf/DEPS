@@ -1,0 +1,6 @@
+include_rules = [
+  "+sandbox",
+  "+breakpad/src/client",
+  "+chrome/common/chrome_version.h",
+  "+chrome/install_static/install_util.h"
+]

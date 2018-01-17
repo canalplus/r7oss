@@ -1,0 +1,15 @@
+include_rules = [
+  # This file is generated but otherwise would be excluded because of the
+  # "-chrome" rule in a parent dir.
+  "+chrome/grit/chromium_strings.h",
+
+  "+chrome/install_static/install_util.h",
+
+  "+components/metrics",
+
+  # TODO(fdoray): Remove this once the PreRead field trial has expired.
+  # crbug.com/577698
+  "+components/startup_metric_utils/common",
+
+  "+third_party/crashpad",
+]

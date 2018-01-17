@@ -1,0 +1,13 @@
+diff --git media/base/key_systems.cc media/base/key_systems.cc
+index 675df7b..58d13b5 100644
+--- media/base/key_systems.cc
++++ media/base/key_systems.cc
+@@ -154,6 +154,8 @@ static bool IsPotentiallySupportedKeySystem(const std::string& key_system) {
+     return true;
+   if (key_system == kClearKeyKeySystem)
+     return true;
++  if (key_system == "com.microsoft.playready")
++    return true;
+ 
+   // External Clear Key is known and supports suffixes for testing.
+   if (IsExternalClearKey(key_system))

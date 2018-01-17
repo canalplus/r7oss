@@ -1,0 +1,8 @@
+          name : also
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors :
+      commands : 
+       options : also_start, also_stop
+   description : When a service is starting or stopping, services specified by
+                 "also_start = service;" and "also_stop = service;" will be
+		 started and stopped also.

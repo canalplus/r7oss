@@ -1,0 +1,4 @@
+#!/bin/bash
+
+echo "arm-linux-gnueabihf-g++ SHOULD NOT BE CALLED"
+exit 1

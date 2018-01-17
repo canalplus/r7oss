@@ -1,0 +1,71 @@
+FAQ: Next Generation Init System (initng)
+=========================================
+
+
+    NOTE: initng is in heavy development at present and the following may no
+    longer apply.  Even this document is likely to undergo major changes.
+
+    For installation instructions see the INSTALLATION and README files.
+
+
+Contents:
+    Q: It loads up to <service> and just sits there, at about 98% complete.
+    Q: How do I load [xdm/gdm/kdm] by default?
+    Q: When [xdm/gdm/kdm] tries to load, it gives an error and dies.
+    Q: LILO complains "invalid option"
+
+
+---------------
+
+Q: It loads up to <service> and just sits there, at about 98% complete.
+
+A: It may be finished booting. Initng doesn't load xdm/gdm/kdm by default,
+   and tty1 doesn't have an interactive terminal (getty) attached.
+
+   Press Alt+F2 to get to a login prompt.
+
+-----
+
+Q: How do I load [xdm/gdm/kdm] by default?
+
+A: After the system finished booting, press Alt-F2 to get a login prompt and
+   login as root. Use ng-update to add the display manager to your runlevel.
+
+# ng-update add daemon/xdm default
+# ng-update add daemon/gdm default
+# ng-update add daemon/kdm default
+
+   To launch the display manage without rebooting, use ngc.
+
+# ngc -u daemon/xdm
+# ngc -u daemon/gdm
+# ngc -u daemon/kdm
+
+-----
+
+Q: When [xdm/gdm/kdm] tries to load, it gives an error and dies.  If I wait
+   for the system to finish booting and manually start gdm, it works.
+
+A: The system needs to wait for the video drivers to load before starting gdm.
+
+   Possible answer: in my system, the nvidia binary must be loaded manually
+   before launching gdm. Try editing /etc/initng/daemon/gdm.i and change the
+   line:
+
+depends = system/initial system/checkroot system/hostname net/lo
+
+   to say:
+
+depends = system/initial system/checkroot system/hostname net/lo system/coldplug
+
+   [Note: changed since version 0.0.7; needs updating.]
+
+-----
+
+Q: If I add the line "init=/sbin/initng" to the end of the kernel line in
+   lilo.conf, running 'lilo' complains that it is an invalid configuration
+   option.
+
+A: You need to add it on the next line as: append="init=/sbin/initng".  See
+   the README for installation instructions and examples.
+

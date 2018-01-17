@@ -1,0 +1,143 @@
+This was retrieved 2013-09-19 from
+http://cgit.openembedded.org/openembedded-core/plain/meta/recipes-core/eglibc/eglibc-2.18/GLRO_dl_debug_mask.patch?id=9934141d5df9d334f7f7f76e1990234af8a25a63
+and refreshed for the brcmstb toolchain. -gregory
+
+Its controlled by __OPTION_EGLIBC_RTLD_DEBUG
+so we should use GLRO_dl_debug_mask
+
+Singed-off-by: Khem Raj <raj.khem@gmail.com>
+
+Upstream-Status: Pending
+
+diff -uNrp eglibc-2.18-20130829svn-orig/elf/dl-lookup.c eglibc-2.18-20130829svn/elf/dl-lookup.c
+--- eglibc-2.18-20130829svn-orig/elf/dl-lookup.c	2013-09-20 17:50:52.620967066 -0400
++++ eglibc-2.18-20130829svn/elf/dl-lookup.c	2013-09-20 17:57:25.451299120 -0400
+@@ -767,7 +767,7 @@ _dl_lookup_symbol_x (const char *undef_n
+     {
+       if ((*ref == NULL || ELFW(ST_BIND) ((*ref)->st_info) != STB_WEAK)
+ 	  && skip_map == NULL
+-	  && !(GLRO(dl_debug_mask) & DL_DEBUG_UNUSED))
++	  && !(GLRO_dl_debug_mask & DL_DEBUG_UNUSED))
+ 	{
+ 	  /* We could find no value for a strong reference.  */
+ 	  const char *reference_name = undef_map ? undef_map->l_name : "";
+diff -uNrp eglibc-2.18-20130829svn-orig/elf/dl-open.c eglibc-2.18-20130829svn/elf/dl-open.c
+--- eglibc-2.18-20130829svn-orig/elf/dl-open.c	2013-09-20 17:50:52.646967352 -0400
++++ eglibc-2.18-20130829svn/elf/dl-open.c	2013-09-20 17:57:25.447298754 -0400
+@@ -147,7 +147,7 @@ add_to_global (struct link_map *new)
+ 	  ns->_ns_main_searchlist->r_list[new_nlist++] = map;
+ 
+ 	  /* We modify the global scope.  Report this.  */
+-	  if (__builtin_expect (GLRO(dl_debug_mask) & DL_DEBUG_SCOPES, 0))
++	  if (__builtin_expect (GLRO_dl_debug_mask & DL_DEBUG_SCOPES, 0))
+ 	    _dl_debug_printf ("\nadd %s [%lu] to global scope\n",
+ 			      map->l_name, map->l_ns);
+ 	}
+@@ -294,7 +294,7 @@ dl_open_worker (void *a)
+   LIBC_PROBE (map_complete, 3, args->nsid, r, new);
+ 
+   /* Print scope information.  */
+-  if (__builtin_expect (GLRO(dl_debug_mask) & DL_DEBUG_SCOPES, 0))
++  if (__builtin_expect (GLRO_dl_debug_mask & DL_DEBUG_SCOPES, 0))
+     _dl_show_scope (new, 0);
+ 
+   /* Only do lazy relocation if `LD_BIND_NOW' is not set.  */
+@@ -511,7 +511,7 @@ dl_open_worker (void *a)
+ 	}
+ 
+       /* Print scope information.  */
+-      if (__builtin_expect (GLRO(dl_debug_mask) & DL_DEBUG_SCOPES, 0))
++      if (__builtin_expect (GLRO_dl_debug_mask & DL_DEBUG_SCOPES, 0))
+ 	_dl_show_scope (imap, from_scope);
+     }
+ 
+diff -uNrp eglibc-2.18-20130829svn-orig/elf/get-dynamic-info.h eglibc-2.18-20130829svn/elf/get-dynamic-info.h
+--- eglibc-2.18-20130829svn-orig/elf/get-dynamic-info.h	2013-09-20 17:50:52.618967042 -0400
++++ eglibc-2.18-20130829svn/elf/get-dynamic-info.h	2013-09-20 17:57:25.452299208 -0400
+@@ -157,7 +157,7 @@ elf_get_dynamic_info (struct link_map *l
+ 	 them. Therefore to avoid breaking existing applications the
+ 	 best we can do is add a warning during debugging with the
+ 	 intent of notifying the user of the problem.  */
+-      if (__builtin_expect (GLRO(dl_debug_mask) & DL_DEBUG_FILES, 0)
++      if (__builtin_expect (GLRO_dl_debug_mask & DL_DEBUG_FILES, 0)
+ 	  && l->l_flags_1 & ~DT_1_SUPPORTED_MASK)
+ 	_dl_debug_printf ("\nWARNING: Unsupported flag value(s) of 0x%x in DT_FLAGS_1.\n",
+ 			  l->l_flags_1 & ~DT_1_SUPPORTED_MASK);
+diff -uNrp eglibc-2.18-20130829svn-orig/elf/rtld.c eglibc-2.18-20130829svn/elf/rtld.c
+--- eglibc-2.18-20130829svn-orig/elf/rtld.c	2013-09-20 17:50:52.638967264 -0400
++++ eglibc-2.18-20130829svn/elf/rtld.c	2013-09-20 17:57:25.450299030 -0400
+@@ -2115,7 +2115,7 @@ ERROR: ld.so: object '%s' cannot be load
+   GLRO(dl_init_all_dirs) = GL(dl_all_dirs);
+ 
+   /* Print scope information.  */
+-  if (__builtin_expect (GLRO(dl_debug_mask) & DL_DEBUG_SCOPES, 0))
++  if (__builtin_expect (GLRO_dl_debug_mask & DL_DEBUG_SCOPES, 0))
+     {
+       _dl_debug_printf ("\nInitial object scopes\n");
+ 
+diff -uNrp eglibc-2.18-20130829svn-orig/ports/sysdeps/mips/dl-lookup.c eglibc-2.18-20130829svn/ports/sysdeps/mips/dl-lookup.c
+--- eglibc-2.18-20130829svn-orig/ports/sysdeps/mips/dl-lookup.c	2013-09-20 17:50:51.717957087 -0400
++++ eglibc-2.18-20130829svn/ports/sysdeps/mips/dl-lookup.c	2013-09-20 17:57:25.448298847 -0400
+@@ -111,7 +111,7 @@ do_lookup_x (const char *undef_name, uin
+ 	continue;
+ 
+       /* Print some debugging info if wanted.  */
+-      if (__builtin_expect (GLRO(dl_debug_mask) & DL_DEBUG_SYMBOLS, 0))
++      if (__builtin_expect (GLRO_dl_debug_mask & DL_DEBUG_SYMBOLS, 0))
+ 	_dl_debug_printf ("symbol=%s;  lookup in file=%s [%lu]\n",
+ 			  undef_name,
+ 			  DSO_FILENAME (map->l_name),
+@@ -432,7 +432,7 @@ do_lookup_x (const char *undef_name, uin
+ 		     hash table.  */
+ 		  if (__builtin_expect (tab->size, 0))
+ 		    {
+-		      assert (GLRO(dl_debug_mask) & DL_DEBUG_PRELINK);
++		      assert (GLRO_dl_debug_mask & DL_DEBUG_PRELINK);
+ 		      __rtld_lock_unlock_recursive (tab->lock);
+ 		      goto success;
+ 		    }
+@@ -681,7 +681,7 @@ add_dependency (struct link_map *undef_m
+ 	}
+ 
+       /* Display information if we are debugging.  */
+-      if (__builtin_expect (GLRO(dl_debug_mask) & DL_DEBUG_FILES, 0))
++      if (__builtin_expect (GLRO_dl_debug_mask & DL_DEBUG_FILES, 0))
+ 	_dl_debug_printf ("\
+ \nfile=%s [%lu];  needed by %s [%lu] (relocation dependency)\n\n",
+ 			  DSO_FILENAME (map->l_name),
+@@ -785,7 +785,7 @@ _dl_lookup_symbol_x (const char *undef_n
+     {
+       if ((*ref == NULL || ELFW(ST_BIND) ((*ref)->st_info) != STB_WEAK)
+ 	  && skip_map == NULL
+-	  && !(GLRO(dl_debug_mask) & DL_DEBUG_UNUSED))
++	  && !(GLRO_dl_debug_mask & DL_DEBUG_UNUSED))
+ 	{
+ 	  /* We could find no value for a strong reference.  */
+ 	  const char *reference_name = undef_map ? undef_map->l_name : "";
+@@ -856,7 +856,7 @@ _dl_lookup_symbol_x (const char *undef_n
+   if (__builtin_expect (current_value.m->l_used == 0, 0))
+     current_value.m->l_used = 1;
+ 
+-  if (__builtin_expect (GLRO(dl_debug_mask)
++  if (__builtin_expect (GLRO_dl_debug_mask
+ 			& (DL_DEBUG_BINDINGS|DL_DEBUG_PRELINK), 0))
+     _dl_debug_bindings (undef_name, undef_map, ref,
+ 			&current_value, version, type_class, protected);
+@@ -921,7 +921,7 @@ _dl_debug_bindings (const char *undef_na
+ {
+   const char *reference_name = undef_map->l_name;
+ 
+-  if (GLRO(dl_debug_mask) & DL_DEBUG_BINDINGS)
++  if (GLRO_dl_debug_mask & DL_DEBUG_BINDINGS)
+     {
+       _dl_debug_printf ("binding file %s [%lu] to %s [%lu]: %s symbol `%s'",
+ 			DSO_FILENAME (reference_name),
+@@ -935,7 +935,7 @@ _dl_debug_bindings (const char *undef_na
+ 	_dl_debug_printf_c ("\n");
+     }
+ #ifdef SHARED
+-  if (GLRO(dl_debug_mask) & DL_DEBUG_PRELINK)
++  if (GLRO_dl_debug_mask & DL_DEBUG_PRELINK)
+     {
+       int conflict = 0;
+       struct sym_val val = { NULL, NULL };

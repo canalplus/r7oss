@@ -1,0 +1,6 @@
+          name : rlparser
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : 
+      commands : 
+       options : 
+   description : Parses *.runlevel and *.virtual files from /etc/initng

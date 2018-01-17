@@ -1,0 +1,1350 @@
+\input texinfo @c                               -*-Texinfo-*-
+@c  Copyright 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
+@c  2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+@c  Free Software Foundation, Inc.
+@c UPDATE!!  On future updates--
+@c   (1)   check for new machine-dep cmdline options in
+@c         md_parse_option definitions in config/tc-*.c
+@c   (2)   for platform-specific directives, examine md_pseudo_op
+@c         in config/tc-*.c
+@c   (3)   for object-format specific directives, examine obj_pseudo_op
+@c         in config/obj-*.c
+@c   (4)   portable directives in potable[] in read.c
+@c %**start of header
+@setfilename as.info
+@c ---config---
+@macro gcctabopt{body}
+@code{\body\}
+@end macro
+@c defaults, config file may override:
+@set have-stabs
+@c ---
+@c man begin NAME
+@c ---
+@include asconfig.texi
+@include bfdver.texi
+@c ---
+@c man end
+@c ---
+@c common OR combinations of conditions
+@ifset COFF
+@set COFF-ELF
+@end ifset
+@ifset ELF
+@set COFF-ELF
+@end ifset
+@ifset AOUT
+@set aout-bout
+@end ifset
+@ifset ARM/Thumb
+@set ARM
+@end ifset
+@ifset Blackfin
+@set Blackfin
+@end ifset
+@ifset BOUT
+@set aout-bout
+@end ifset
+@ifset H8/300
+@set H8
+@end ifset
+@ifset SH
+@set H8
+@end ifset
+@ifset HPPA
+@set abnormal-separator
+@end ifset
+@c ------------
+@ifset GENERIC
+@settitle Using @value{AS}
+@end ifset
+@ifclear GENERIC
+@settitle Using @value{AS} (@value{TARGET})
+@end ifclear
+@setchapternewpage odd
+@c %**end of header
+
+@c @smallbook
+@c @set SMALL
+@c WARE! Some of the machine-dependent sections contain tables of machine
+@c instructions.  Except in multi-column format, these tables look silly.
+@c Unfortunately, Texinfo doesn't have a general-purpose multi-col format, so
+@c the multi-col format is faked within @example sections.
+@c
+@c Again unfortunately, the natural size that fits on a page, for these tables,
+@c is different depending on whether or not smallbook is turned on.
+@c This matters, because of order: text flow switches columns at each page
+@c break.
+@c
+@c The format faked in this source works reasonably well for smallbook,
+@c not well for the default large-page format.  This manual expects that if you
+@c turn on @smallbook, you will also uncomment the "@set SMALL" to enable the
+@c tables in question.  You can turn on one without the other at your
+@c discretion, of course.
+@ifinfo
+@set SMALL
+@c the insn tables look just as silly in info files regardless of smallbook,
+@c might as well show 'em anyways.
+@end ifinfo
+
+@ifnottex
+@dircategory Software development
+@direntry
+* As: (as).                     The GNU assembler.
+* Gas: (as).                    The GNU assembler.
+@end direntry
+@end ifnottex
+
+@finalout
+@syncodeindex ky cp
+
+@copying
+This file documents the GNU Assembler "@value{AS}".
+
+@c man begin COPYRIGHT
+Copyright @copyright{} 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
+2000, 2001, 2002, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3
+or any later version published by the Free Software Foundation;
+with no Invariant Sections, with no Front-Cover Texts, and with no
+Back-Cover Texts.  A copy of the license is included in the
+section entitled ``GNU Free Documentation License''.
+
+@c man end
+@end copying
+
+@titlepage
+@title Using @value{AS}
+@subtitle The @sc{gnu} Assembler
+@ifclear GENERIC
+@subtitle for the @value{TARGET} family
+@end ifclear
+@ifset VERSION_PACKAGE
+@sp 1
+@subtitle @value{VERSION_PACKAGE}
+@end ifset
+@sp 1
+@subtitle Version @value{VERSION}
+@sp 1
+@sp 13
+The Free Software Foundation Inc.@: thanks The Nice Computer
+Company of Australia for loaning Dean Elsner to write the
+first (Vax) version of @command{as} for Project @sc{gnu}.
+The proprietors, management and staff of TNCCA thank FSF for
+distracting the boss while they got some work
+done.
+@sp 3
+@author Dean Elsner, Jay Fenlason & friends
+@page
+@tex
+{\parskip=0pt
+\hfill {\it Using {\tt @value{AS}}}\par
+\hfill Edited by Cygnus Support\par
+}
+%"boxit" macro for figures:
+%Modified from Knuth's ``boxit'' macro from TeXbook (answer to exercise 21.3)
+\gdef\boxit#1#2{\vbox{\hrule\hbox{\vrule\kern3pt
+     \vbox{\parindent=0pt\parskip=0pt\hsize=#1\kern3pt\strut\hfil
+#2\hfil\strut\kern3pt}\kern3pt\vrule}\hrule}}%box with visible outline
+\gdef\ibox#1#2{\hbox to #1{#2\hfil}\kern8pt}% invisible box
+@end tex
+
+@vskip 0pt plus 1filll
+Copyright @copyright{} 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
+2000, 2001, 2002, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+
+      Permission is granted to copy, distribute and/or modify this document
+      under the terms of the GNU Free Documentation License, Version 1.3
+      or any later version published by the Free Software Foundation;
+      with no Invariant Sections, with no Front-Cover Texts, and with no
+      Back-Cover Texts.  A copy of the license is included in the
+      section entitled ``GNU Free Documentation License''.
+
+@end titlepage
+@contents
+
+@ifnottex
+@node Top
+@top Using @value{AS}
+
+This file is a user guide to the @sc{gnu} assembler @command{@value{AS}}
+@ifset VERSION_PACKAGE
+@value{VERSION_PACKAGE}
+@end ifset
+version @value{VERSION}.
+@ifclear GENERIC
+This version of the file describes @command{@value{AS}} configured to generate
+code for @value{TARGET} architectures.
+@end ifclear
+
+This document is distributed under the terms of the GNU Free
+Documentation License.  A copy of the license is included in the
+section entitled ``GNU Free Documentation License''.
+
+@menu
+* Overview::                    Overview
+* Invoking::                    Command-Line Options
+* Syntax::                      Syntax
+* Sections::                    Sections and Relocation
+* Symbols::                     Symbols
+* Expressions::                 Expressions
+* Pseudo Ops::                  Assembler Directives
+@ifset ELF
+* Object Attributes::           Object Attributes
+@end ifset
+* Machine Dependencies::        Machine Dependent Features
+* Reporting Bugs::              Reporting Bugs
+* Acknowledgements::            Who Did What
+* GNU Free Documentation License::  GNU Free Documentation License
+* AS Index::                    AS Index
+@end menu
+@end ifnottex
+
+@node Overview
+@chapter Overview
+@iftex
+This manual is a user guide to the @sc{gnu} assembler @command{@value{AS}}.
+@ifclear GENERIC
+This version of the manual describes @command{@value{AS}} configured to generate
+code for @value{TARGET} architectures.
+@end ifclear
+@end iftex
+
+@cindex invocation summary
+@cindex option summary
+@cindex summary of options
+Here is a brief summary of how to invoke @command{@value{AS}}.  For details,
+see @ref{Invoking,,Command-Line Options}.
+
+@c man title AS the portable GNU assembler.
+
+@ignore
+@c man begin SEEALSO
+gcc(1), ld(1), and the Info entries for @file{binutils} and @file{ld}.
+@c man end
+@end ignore
+
+@c We don't use deffn and friends for the following because they seem
+@c to be limited to one line for the header.
+@smallexample
+@c man begin SYNOPSIS
+@value{AS} [@b{-a}[@b{cdghlns}][=@var{file}]] [@b{--alternate}] [@b{-D}]
+ [@b{--compress-debug-sections}]  [@b{--nocompress-debug-sections}]
+ [@b{--debug-prefix-map} @var{old}=@var{new}]
+ [@b{--defsym} @var{sym}=@var{val}] [@b{-f}] [@b{-g}] [@b{--gstabs}]
+ [@b{--gstabs+}] [@b{--gdwarf-2}] [@b{--help}] [@b{-I} @var{dir}] [@b{-J}]
+ [@b{-K}] [@b{-L}] [@b{--listing-lhs-width}=@var{NUM}]
+ [@b{--listing-lhs-width2}=@var{NUM}] [@b{--listing-rhs-width}=@var{NUM}]
+ [@b{--listing-cont-lines}=@var{NUM}] [@b{--keep-locals}] [@b{-o}
+ @var{objfile}] [@b{-R}] [@b{--reduce-memory-overheads}] [@b{--statistics}]
+ [@b{-v}] [@b{-version}] [@b{--version}] [@b{-W}] [@b{--warn}]
+ [@b{--fatal-warnings}] [@b{-w}] [@b{-x}] [@b{-Z}] [@b{@@@var{FILE}}]
+ [@b{--target-help}] [@var{target-options}]
+ [@b{--}|@var{files} @dots{}]
+@c
+@c Target dependent options are listed below.  Keep the list sorted.
+@c Add an empty line for separation.
+@ifset ALPHA
+
+@emph{Target Alpha options:}
+   [@b{-m@var{cpu}}]
+   [@b{-mdebug} | @b{-no-mdebug}]
+   [@b{-replace} | @b{-noreplace}]
+   [@b{-relax}] [@b{-g}] [@b{-G@var{size}}]
+   [@b{-F}] [@b{-32addr}]
+@end ifset
+@ifset ARC
+
+@emph{Target ARC options:}
+   [@b{-marc[5|6|7|8]}]
+   [@b{-EB}|@b{-EL}]
+@end ifset
+@ifset ARM
+
+@emph{Target ARM options:}
+@c Don't document the deprecated options
+   [@b{-mcpu}=@var{processor}[+@var{extension}@dots{}]]
+   [@b{-march}=@var{architecture}[+@var{extension}@dots{}]]
+   [@b{-mfpu}=@var{floating-point-format}]
+   [@b{-mfloat-abi}=@var{abi}]
+   [@b{-meabi}=@var{ver}]
+   [@b{-mthumb}]
+   [@b{-EB}|@b{-EL}]
+   [@b{-mapcs-32}|@b{-mapcs-26}|@b{-mapcs-float}|
+    @b{-mapcs-reentrant}]
+   [@b{-mthumb-interwork}] [@b{-k}]
+@end ifset
+@ifset Blackfin
+
+@emph{Target Blackfin options:}
+   [@b{-mcpu}=@var{processor}[-@var{sirevision}]]
+   [@b{-mfdpic}]
+   [@b{-mno-fdpic}]
+   [@b{-mnopic}]
+@end ifset
+@ifset CRIS
+
+@emph{Target CRIS options:}
+   [@b{--underscore} | @b{--no-underscore}]
+   [@b{--pic}] [@b{-N}]
+   [@b{--emulation=criself} | @b{--emulation=crisaout}]
+   [@b{--march=v0_v10} | @b{--march=v10} | @b{--march=v32} | @b{--march=common_v10_v32}]
+@c Deprecated -- deliberately not documented.
+@c [@b{-h}] [@b{-H}]
+@end ifset
+@ifset D10V
+
+@emph{Target D10V options:}
+   [@b{-O}]
+@end ifset
+@ifset D30V
+
+@emph{Target D30V options:}
+   [@b{-O}|@b{-n}|@b{-N}]
+@end ifset
+@ifset H8
+
+@emph{Target H8/300 options:}
+   [-h-tick-hex]
+@end ifset
+@ifset HPPA
+@c HPPA has no machine-dependent assembler options (yet).
+@end ifset
+@ifset I80386
+
+@emph{Target i386 options:}
+   [@b{--32}|@b{--64}] [@b{-n}]
+   [@b{-march}=@var{CPU}[+@var{EXTENSION}@dots{}]] [@b{-mtune}=@var{CPU}]
+@end ifset
+@ifset I960
+
+@emph{Target i960 options:}
+@c see md_parse_option in tc-i960.c
+   [@b{-ACA}|@b{-ACA_A}|@b{-ACB}|@b{-ACC}|@b{-AKA}|@b{-AKB}|
+    @b{-AKC}|@b{-AMC}]
+   [@b{-b}] [@b{-no-relax}]
+@end ifset
+@ifset IA64
+
+@emph{Target IA-64 options:}
+   [@b{-mconstant-gp}|@b{-mauto-pic}]
+   [@b{-milp32}|@b{-milp64}|@b{-mlp64}|@b{-mp64}]
+   [@b{-mle}|@b{mbe}]
+   [@b{-mtune=itanium1}|@b{-mtune=itanium2}]
+   [@b{-munwind-check=warning}|@b{-munwind-check=error}]
+   [@b{-mhint.b=ok}|@b{-mhint.b=warning}|@b{-mhint.b=error}]
+   [@b{-x}|@b{-xexplicit}] [@b{-xauto}] [@b{-xdebug}]
+@end ifset
+@ifset IP2K
+
+@emph{Target IP2K options:}
+   [@b{-mip2022}|@b{-mip2022ext}]
+@end ifset
+@ifset M32C
+
+@emph{Target M32C options:}
+   [@b{-m32c}|@b{-m16c}] [-relax] [-h-tick-hex]
+@end ifset
+@ifset M32R
+
+@emph{Target M32R options:}
+   [@b{--m32rx}|@b{--[no-]warn-explicit-parallel-conflicts}|
+   @b{--W[n]p}]
+@end ifset
+@ifset M680X0
+
+@emph{Target M680X0 options:}
+   [@b{-l}] [@b{-m68000}|@b{-m68010}|@b{-m68020}|@dots{}]
+@end ifset
+@ifset M68HC11
+
+@emph{Target M68HC11 options:}
+   [@b{-m68hc11}|@b{-m68hc12}|@b{-m68hcs12}]
+   [@b{-mshort}|@b{-mlong}]
+   [@b{-mshort-double}|@b{-mlong-double}]
+   [@b{--force-long-branches}] [@b{--short-branches}]
+   [@b{--strict-direct-mode}] [@b{--print-insn-syntax}]
+   [@b{--print-opcodes}] [@b{--generate-example}]
+@end ifset
+@ifset MCORE
+
+@emph{Target MCORE options:}
+   [@b{-jsri2bsr}] [@b{-sifilter}] [@b{-relax}]
+   [@b{-mcpu=[210|340]}]
+@end ifset
+@ifset MICROBLAZE
+@emph{Target MICROBLAZE options:}
+@c MicroBlaze has no machine-dependent assembler options.
+@end ifset
+@ifset MIPS
+
+@emph{Target MIPS options:}
+   [@b{-nocpp}] [@b{-EL}] [@b{-EB}] [@b{-O}[@var{optimization level}]]
+   [@b{-g}[@var{debug level}]] [@b{-G} @var{num}] [@b{-KPIC}] [@b{-call_shared}]
+   [@b{-non_shared}] [@b{-xgot} [@b{-mvxworks-pic}]
+   [@b{-mabi}=@var{ABI}] [@b{-32}] [@b{-n32}] [@b{-64}] [@b{-mfp32}] [@b{-mgp32}]
+   [@b{-march}=@var{CPU}] [@b{-mtune}=@var{CPU}] [@b{-mips1}] [@b{-mips2}]
+   [@b{-mips3}] [@b{-mips4}] [@b{-mips5}] [@b{-mips32}] [@b{-mips32r2}]
+   [@b{-mips64}] [@b{-mips64r2}]
+   [@b{-construct-floats}] [@b{-no-construct-floats}]
+   [@b{-trap}] [@b{-no-break}] [@b{-break}] [@b{-no-trap}]
+   [@b{-mips16}] [@b{-no-mips16}]
+   [@b{-msmartmips}] [@b{-mno-smartmips}]
+   [@b{-mips3d}] [@b{-no-mips3d}]
+   [@b{-mdmx}] [@b{-no-mdmx}]
+   [@b{-mdsp}] [@b{-mno-dsp}]
+   [@b{-mdspr2}] [@b{-mno-dspr2}]
+   [@b{-mmt}] [@b{-mno-mt}]
+   [@b{-mfix7000}] [@b{-mno-fix7000}]
+   [@b{-mfix-vr4120}] [@b{-mno-fix-vr4120}]
+   [@b{-mfix-vr4130}] [@b{-mno-fix-vr4130}]
+   [@b{-mdebug}] [@b{-no-mdebug}]
+   [@b{-mpdr}] [@b{-mno-pdr}]
+@end ifset
+@ifset MMIX
+
+@emph{Target MMIX options:}
+   [@b{--fixed-special-register-names}] [@b{--globalize-symbols}]
+   [@b{--gnu-syntax}] [@b{--relax}] [@b{--no-predefined-symbols}]
+   [@b{--no-expand}] [@b{--no-merge-gregs}] [@b{-x}]
+   [@b{--linker-allocated-gregs}]
+@end ifset
+@ifset PDP11
+
+@emph{Target PDP11 options:}
+   [@b{-mpic}|@b{-mno-pic}] [@b{-mall}] [@b{-mno-extensions}]
+   [@b{-m}@var{extension}|@b{-mno-}@var{extension}]
+   [@b{-m}@var{cpu}] [@b{-m}@var{machine}]
+@end ifset
+@ifset PJ
+
+@emph{Target picoJava options:}
+   [@b{-mb}|@b{-me}]
+@end ifset
+@ifset PPC
+
+@emph{Target PowerPC options:}
+   [@b{-mpwrx}|@b{-mpwr2}|@b{-mpwr}|@b{-m601}|@b{-mppc}|@b{-mppc32}|@b{-m603}|@b{-m604}|
+    @b{-m403}|@b{-m405}|@b{-mppc64}|@b{-m620}|@b{-mppc64bridge}|@b{-mbooke}]
+   [@b{-mcom}|@b{-many}|@b{-maltivec}|@b{-mvsx}] [@b{-memb}]
+   [@b{-mregnames}|@b{-mno-regnames}]
+   [@b{-mrelocatable}|@b{-mrelocatable-lib}]
+   [@b{-mlittle}|@b{-mlittle-endian}|@b{-mbig}|@b{-mbig-endian}]
+   [@b{-msolaris}|@b{-mno-solaris}]
+@end ifset
+@ifset RX
+
+@emph{Target RX options:}
+   [@b{-mlittle-endian}|@b{-mbig-endian}]
+   [@b{-m32bit-ints}|@b{-m16bit-ints}]
+   [@b{-m32bit-doubles}|@b{-m64bit-doubles}]
+@end ifset
+@ifset S390
+
+@emph{Target s390 options:}
+   [@b{-m31}|@b{-m64}] [@b{-mesa}|@b{-mzarch}] [@b{-march}=@var{CPU}]
+   [@b{-mregnames}|@b{-mno-regnames}]
+   [@b{-mwarn-areg-zero}]
+@end ifset
+@ifset SCORE
+
+@emph{Target SCORE options:}
+   [@b{-EB}][@b{-EL}][@b{-FIXDD}][@b{-NWARN}]
+   [@b{-SCORE5}][@b{-SCORE5U}][@b{-SCORE7}][@b{-SCORE3}]
+   [@b{-march=score7}][@b{-march=score3}]
+   [@b{-USE_R1}][@b{-KPIC}][@b{-O0}][@b{-G} @var{num}][@b{-V}]
+@end ifset
+@ifset SPARC
+
+@emph{Target SPARC options:}
+@c The order here is important.  See c-sparc.texi.
+   [@b{-Av6}|@b{-Av7}|@b{-Av8}|@b{-Asparclet}|@b{-Asparclite}
+    @b{-Av8plus}|@b{-Av8plusa}|@b{-Av9}|@b{-Av9a}]
+   [@b{-xarch=v8plus}|@b{-xarch=v8plusa}] [@b{-bump}]
+   [@b{-32}|@b{-64}]
+@end ifset
+@ifset TIC54X
+
+@emph{Target TIC54X options:}
+ [@b{-mcpu=54[123589]}|@b{-mcpu=54[56]lp}] [@b{-mfar-mode}|@b{-mf}]
+ [@b{-merrors-to-file} @var{<filename>}|@b{-me} @var{<filename>}]
+@end ifset
+
+@ifset TIC6X
+
+@emph{Target TIC6X options:}
+   [@b{-march=@var{arch}}] [@b{-matomic}|@b{-mno-atomic}]
+   [@b{-mbig-endian}|@b{-mlittle-endian}] [@b{-mdsbt}|@b{-mno-dsbt}]
+   [@b{-mpid=no}|@b{-mpid=near}|@b{-mpid=far}] [@b{-mpic}|@b{-mno-pic}]
+@end ifset
+
+@ifset Z80
+
+@emph{Target Z80 options:}
+  [@b{-z80}] [@b{-r800}]
+  [@b{ -ignore-undocumented-instructions}] [@b{-Wnud}]
+  [@b{ -ignore-unportable-instructions}] [@b{-Wnup}]
+  [@b{ -warn-undocumented-instructions}] [@b{-Wud}]
+  [@b{ -warn-unportable-instructions}] [@b{-Wup}]
+  [@b{ -forbid-undocumented-instructions}] [@b{-Fud}]
+  [@b{ -forbid-unportable-instructions}] [@b{-Fup}]
+@end ifset
+
+@ifset Z8000
+@c Z8000 has no machine-dependent assembler options
+@end ifset
+@ifset XTENSA
+
+@emph{Target Xtensa options:}
+ [@b{--[no-]text-section-literals}] [@b{--[no-]absolute-literals}]
+ [@b{--[no-]target-align}] [@b{--[no-]longcalls}]
+ [@b{--[no-]transform}]
+ [@b{--rename-section} @var{oldname}=@var{newname}]
+@end ifset
+@c man end
+@end smallexample
+
+@c man begin OPTIONS
+
+@table @gcctabopt
+@include at-file.texi
+
+@item -a[cdghlmns]
+Turn on listings, in any of a variety of ways:
+
+@table @gcctabopt
+@item -ac
+omit false conditionals
+
+@item -ad
+omit debugging directives
+
+@item -ag
+include general information, like @value{AS} version and options passed
+
+@item -ah
+include high-level source
+
+@item -al
+include assembly
+
+@item -am
+include macro expansions
+
+@item -an
+omit forms processing
+
+@item -as
+include symbols
+
+@item =file
+set the name of the listing file
+@end table
+
+You may combine these options; for example, use @samp{-aln} for assembly
+listing without forms processing.  The @samp{=file} option, if used, must be
+the last one.  By itself, @samp{-a} defaults to @samp{-ahls}.
+
+@item --alternate
+Begin in alternate macro mode.
+@ifclear man
+@xref{Altmacro,,@code{.altmacro}}.
+@end ifclear
+
+@item --compress-debug-sections
+Compress DWARF debug sections using zlib.  The debug sections are renamed
+to begin with @samp{.zdebug}, and the resulting object file may not be
+compatible with older linkers and object file utilities.
+
+@item --nocompress-debug-sections
+Do not compress DWARF debug sections.  This is the default.
+
+@item -D
+Ignored.  This option is accepted for script compatibility with calls to
+other assemblers.
+
+@item --debug-prefix-map @var{old}=@var{new}
+When assembling files in directory @file{@var{old}}, record debugging
+information describing them as in @file{@var{new}} instead.
+
+@item --defsym @var{sym}=@var{value}
+Define the symbol @var{sym} to be @var{value} before assembling the input file.
+@var{value} must be an integer constant.  As in C, a leading @samp{0x}
+indicates a hexadecimal value, and a leading @samp{0} indicates an octal
+value.  The value of the symbol can be overridden inside a source file via the
+use of a @code{.set} pseudo-op.
+
+@item -f
+``fast''---skip whitespace and comment preprocessing (assume source is
+compiler output).
+
+@item -g
+@itemx --gen-debug
+Generate debugging information for each assembler source line using whichever
+debug format is preferred by the target.  This currently means either STABS,
+ECOFF or DWARF2.
+
+@item --gstabs
+Generate stabs debugging information for each assembler line.  This
+may help debugging assembler code, if the debugger can handle it.
+
+@item --gstabs+
+Generate stabs debugging information for each assembler line, with GNU
+extensions that probably only gdb can handle, and that could make other
+debuggers crash or refuse to read your program.  This
+may help debugging assembler code.  Currently the only GNU extension is
+the location of the current working directory at assembling time.
+
+@item --gdwarf-2
+Generate DWARF2 debugging information for each assembler line.  This
+may help debugging assembler code, if the debugger can handle it.  Note---this
+option is only supported by some targets, not all of them.
+
+@item --help
+Print a summary of the command line options and exit.
+
+@item --target-help
+Print a summary of all target specific options and exit.
+
+@item -I @var{dir}
+Add directory @var{dir} to the search list for @code{.include} directives.
+
+@item -J
+Don't warn about signed overflow.
+
+@item -K
+@ifclear DIFF-TBL-KLUGE
+This option is accepted but has no effect on the @value{TARGET} family.
+@end ifclear
+@ifset DIFF-TBL-KLUGE
+Issue warnings when difference tables altered for long displacements.
+@end ifset
+
+@item -L
+@itemx --keep-locals
+Keep (in the symbol table) local symbols.  These symbols start with
+system-specific local label prefixes, typically @samp{.L} for ELF systems
+or @samp{L} for traditional a.out systems.
+@ifclear man
+@xref{Symbol Names}.
+@end ifclear
+
+@item --listing-lhs-width=@var{number}
+Set the maximum width, in words, of the output data column for an assembler
+listing to @var{number}.
+
+@item --listing-lhs-width2=@var{number}
+Set the maximum width, in words, of the output data column for continuation
+lines in an assembler listing to @var{number}.
+
+@item --listing-rhs-width=@var{number}
+Set the maximum width of an input source line, as displayed in a listing, to
+@var{number} bytes.
+
+@item --listing-cont-lines=@var{number}
+Set the maximum number of lines printed in a listing for a single line of input
+to @var{number} + 1.
+
+@item -o @var{objfile}
+Name the object-file output from @command{@value{AS}} @var{objfile}.
+
+@item -R
+Fold the data section into the text section.
+
+@kindex --hash-size=@var{number}
+Set the default size of GAS's hash tables to a prime number close to
+@var{number}.  Increasing this value can reduce the length of time it takes the
+assembler to perform its tasks, at the expense of increasing the assembler's
+memory requirements.  Similarly reducing this value can reduce the memory
+requirements at the expense of speed.
+
+@item --reduce-memory-overheads
+This option reduces GAS's memory requirements, at the expense of making the
+assembly processes slower.  Currently this switch is a synonym for
+@samp{--hash-size=4051}, but in the future it may have other effects as well.
+
+@item --statistics
+Print the maximum space (in bytes) and total time (in seconds) used by
+assembly.
+
+@item --strip-local-absolute
+Remove local absolute symbols from the outgoing symbol table.
+
+@item -v
+@itemx -version
+Print the @command{as} version.
+
+@item --version
+Print the @command{as} version and exit.
+
+@item -W
+@itemx --no-warn
+Suppress warning messages.
+
+@item --fatal-warnings
+Treat warnings as errors.
+
+@item --warn
+Don't suppress warning messages or treat them as errors.
+
+@item -w
+Ignored.
+
+@item -x
+Ignored.
+
+@item -Z
+Generate an object file even after errors.
+
+@item -- | @var{files} @dots{}
+Standard input, or source files to assemble.
+
+@end table
+
+@ifset ARC
+The following options are available when @value{AS} is configured for
+an ARC processor.
+
+@table @gcctabopt
+@item -marc[5|6|7|8]
+This option selects the core processor variant.
+@item -EB | -EL
+Select either big-endian (-EB) or little-endian (-EL) output.
+@end table
+@end ifset
+
+@ifset ARM
+The following options are available when @value{AS} is configured for the ARM
+processor family.
+
+@table @gcctabopt
+@item -mcpu=@var{processor}[+@var{extension}@dots{}]
+Specify which ARM processor variant is the target.
+@item -march=@var{architecture}[+@var{extension}@dots{}]
+Specify which ARM architecture variant is used by the target.
+@item -mfpu=@var{floating-point-format}
+Select which Floating Point architecture is the target.
+@item -mfloat-abi=@var{abi}
+Select which floating point ABI is in use.
+@item -mthumb
+Enable Thumb only instruction decoding.
+@item -mapcs-32 | -mapcs-26 | -mapcs-float | -mapcs-reentrant
+Select which procedure calling convention is in use.
+@item -EB | -EL
+Select either big-endian (-EB) or little-endian (-EL) output.
+@item -mthumb-interwork
+Specify that the code has been generated with interworking between Thumb and
+ARM code in mind.
+@item -k
+Specify that PIC code has been generated.
+@end table
+@end ifset
+
+@ifset Blackfin
+The following options are available when @value{AS} is configured for
+the Blackfin processor family.
+
+@table @gcctabopt
+@item -mcpu=@var{processor}@r{[}-@var{sirevision}@r{]}
+This option specifies the target processor.  The optional @var{sirevision}
+is not used in assembler.
+@item -mfdpic
+Assemble for the FDPIC ABI.
+@item -mno-fdpic
+@itemx -mnopic
+Disable -mfdpic.
+@end table
+@end ifset
+
+@ifset CRIS
+See the info pages for documentation of the CRIS-specific options.
+@end ifset
+
+@ifset D10V
+The following options are available when @value{AS} is configured for
+a D10V processor.
+@table @gcctabopt
+@cindex D10V optimization
+@cindex optimization, D10V
+@item -O
+Optimize output by parallelizing instructions.
+@end table
+@end ifset
+
+@ifset D30V
+The following options are available when @value{AS} is configured for a D30V
+processor.
+@table @gcctabopt
+@cindex D30V optimization
+@cindex optimization, D30V
+@item -O
+Optimize output by parallelizing instructions.
+
+@cindex D30V nops
+@item -n
+Warn when nops are generated.
+
+@cindex D30V nops after 32-bit multiply
+@item -N
+Warn when a nop after a 32-bit multiply instruction is generated.
+@end table
+@end ifset
+
+@ifset I960
+The following options are available when @value{AS} is configured for the
+Intel 80960 processor.
+
+@table @gcctabopt
+@item -ACA | -ACA_A | -ACB | -ACC | -AKA | -AKB | -AKC | -AMC
+Specify which variant of the 960 architecture is the target.
+
+@item -b
+Add code to collect statistics about branches taken.
+
+@item -no-relax
+Do not alter compare-and-branch instructions for long displacements;
+error if necessary.
+
+@end table
+@end ifset
+
+@ifset IP2K
+The following options are available when @value{AS} is configured for the
+Ubicom IP2K series.
+
+@table @gcctabopt
+
+@item -mip2022ext
+Specifies that the extended IP2022 instructions are allowed.
+
+@item -mip2022
+Restores the default behaviour, which restricts the permitted instructions to
+just the basic IP2022 ones.
+
+@end table
+@end ifset
+
+@ifset M32C
+The following options are available when @value{AS} is configured for the
+Renesas M32C and M16C processors.
+
+@table @gcctabopt
+
+@item -m32c
+Assemble M32C instructions.
+
+@item -m16c
+Assemble M16C instructions (the default).
+
+@item -relax
+Enable support for link-time relaxations.
+
+@item -h-tick-hex
+Support H'00 style hex constants in addition to 0x00 style.
+
+@end table
+@end ifset
+
+@ifset M32R
+The following options are available when @value{AS} is configured for the
+Renesas M32R (formerly Mitsubishi M32R) series.
+
+@table @gcctabopt
+
+@item --m32rx
+Specify which processor in the M32R family is the target.  The default
+is normally the M32R, but this option changes it to the M32RX.
+
+@item --warn-explicit-parallel-conflicts or --Wp
+Produce warning messages when questionable parallel constructs are
+encountered.
+
+@item --no-warn-explicit-parallel-conflicts or --Wnp
+Do not produce warning messages when questionable parallel constructs are
+encountered.
+
+@end table
+@end ifset
+
+@ifset M680X0
+The following options are available when @value{AS} is configured for the
+Motorola 68000 series.
+
+@table @gcctabopt
+
+@item -l
+Shorten references to undefined symbols, to one word instead of two.
+
+@item -m68000 | -m68008 | -m68010 | -m68020 | -m68030
+@itemx | -m68040 | -m68060 | -m68302 | -m68331 | -m68332
+@itemx | -m68333 | -m68340 | -mcpu32 | -m5200
+Specify what processor in the 68000 family is the target.  The default
+is normally the 68020, but this can be changed at configuration time.
+
+@item -m68881 | -m68882 | -mno-68881 | -mno-68882
+The target machine does (or does not) have a floating-point coprocessor.
+The default is to assume a coprocessor for 68020, 68030, and cpu32.  Although
+the basic 68000 is not compatible with the 68881, a combination of the
+two can be specified, since it's possible to do emulation of the
+coprocessor instructions with the main processor.
+
+@item -m68851 | -mno-68851
+The target machine does (or does not) have a memory-management
+unit coprocessor.  The default is to assume an MMU for 68020 and up.
+
+@end table
+@end ifset
+
+@ifset PDP11
+
+For details about the PDP-11 machine dependent features options,
+see @ref{PDP-11-Options}.
+
+@table @gcctabopt
+@item -mpic | -mno-pic
+Generate position-independent (or position-dependent) code.  The
+default is @option{-mpic}.
+
+@item -mall
+@itemx -mall-extensions
+Enable all instruction set extensions.  This is the default.
+
+@item -mno-extensions
+Disable all instruction set extensions.
+
+@item -m@var{extension} | -mno-@var{extension}
+Enable (or disable) a particular instruction set extension.
+
+@item -m@var{cpu}
+Enable the instruction set extensions supported by a particular CPU, and
+disable all other extensions.
+
+@item -m@var{machine}
+Enable the instruction set extensions supported by a particular machine
+model, and disable all other extensions.
+@end table
+
+@end ifset
+
+@ifset PJ
+The following options are available when @value{AS} is configured for
+a picoJava processor.
+
+@table @gcctabopt
+
+@cindex PJ endianness
+@cindex endianness, PJ
+@cindex big endian output, PJ
+@item -mb
+Generate ``big endian'' format output.
+
+@cindex little endian output, PJ
+@item -ml
+Generate ``little endian'' format output.
+
+@end table
+@end ifset
+
+@ifset M68HC11
+The following options are available when @value{AS} is configured for the
+Motorola 68HC11 or 68HC12 series.
+
+@table @gcctabopt
+
+@item -m68hc11 | -m68hc12 | -m68hcs12
+Specify what processor is the target.  The default is
+defined by the configuration option when building the assembler.
+
+@item -mshort
+Specify to use the 16-bit integer ABI.
+
+@item -mlong
+Specify to use the 32-bit integer ABI.
+
+@item -mshort-double
+Specify to use the 32-bit double ABI.
+
+@item -mlong-double
+Specify to use the 64-bit double ABI.
+
+@item --force-long-branches
+Relative branches are turned into absolute ones. This concerns
+conditional branches, unconditional branches and branches to a
+sub routine.
+
+@item -S | --short-branches
+Do not turn relative branches into absolute ones
+when the offset is out of range.
+
+@item --strict-direct-mode
+Do not turn the direct addressing mode into extended addressing mode
+when the instruction does not support direct addressing mode.
+
+@item --print-insn-syntax
+Print the syntax of instruction in case of error.
+
+@item --print-opcodes
+print the list of instructions with syntax and then exit.
+
+@item --generate-example
+print an example of instruction for each possible instruction and then exit.
+This option is only useful for testing @command{@value{AS}}.
+
+@end table
+@end ifset
+
+@ifset SPARC
+The following options are available when @command{@value{AS}} is configured
+for the SPARC architecture:
+
+@table @gcctabopt
+@item -Av6 | -Av7 | -Av8 | -Asparclet | -Asparclite
+@itemx -Av8plus | -Av8plusa | -Av9 | -Av9a
+Explicitly select a variant of the SPARC architecture.
+
+@samp{-Av8plus} and @samp{-Av8plusa} select a 32 bit environment.
+@samp{-Av9} and @samp{-Av9a} select a 64 bit environment.
+
+@samp{-Av8plusa} and @samp{-Av9a} enable the SPARC V9 instruction set with
+UltraSPARC extensions.
+
+@item -xarch=v8plus | -xarch=v8plusa
+For compatibility with the Solaris v9 assembler.  These options are
+equivalent to -Av8plus and -Av8plusa, respectively.
+
+@item -bump
+Warn when the assembler switches to another architecture.
+@end table
+@end ifset
+
+@ifset TIC54X
+The following options are available when @value{AS} is configured for the 'c54x
+architecture.
+
+@table @gcctabopt
+@item -mfar-mode
+Enable extended addressing mode.  All addresses and relocations will assume
+extended addressing (usually 23 bits).
+@item -mcpu=@var{CPU_VERSION}
+Sets the CPU version being compiled for.
+@item -merrors-to-file @var{FILENAME}
+Redirect error output to a file, for broken systems which don't support such
+behaviour in the shell.
+@end table
+@end ifset
+
+@ifset MIPS
+The following options are available when @value{AS} is configured for
+a @sc{mips} processor.
+
+@table @gcctabopt
+@item -G @var{num}
+This option sets the largest size of an object that can be referenced
+implicitly with the @code{gp} register.  It is only accepted for targets that
+use ECOFF format, such as a DECstation running Ultrix.  The default value is 8.
+
+@cindex MIPS endianness
+@cindex endianness, MIPS
+@cindex big endian output, MIPS
+@item -EB
+Generate ``big endian'' format output.
+
+@cindex little endian output, MIPS
+@item -EL
+Generate ``little endian'' format output.
+
+@cindex MIPS ISA
+@item -mips1
+@itemx -mips2
+@itemx -mips3
+@itemx -mips4
+@itemx -mips5
+@itemx -mips32
+@itemx -mips32r2
+@itemx -mips64
+@itemx -mips64r2
+Generate code for a particular @sc{mips} Instruction Set Architecture level.
+@samp{-mips1} is an alias for @samp{-march=r3000}, @samp{-mips2} is an
+alias for @samp{-march=r6000}, @samp{-mips3} is an alias for
+@samp{-march=r4000} and @samp{-mips4} is an alias for @samp{-march=r8000}.
+@samp{-mips5}, @samp{-mips32}, @samp{-mips32r2}, @samp{-mips64}, and
+@samp{-mips64r2}
+correspond to generic
+@samp{MIPS V}, @samp{MIPS32}, @samp{MIPS32 Release 2}, @samp{MIPS64},
+and @samp{MIPS64 Release 2}
+ISA processors, respectively.
+
+@item -march=@var{CPU}
+Generate code for a particular @sc{mips} cpu.
+
+@item -mtune=@var{cpu}
+Schedule and tune for a particular @sc{mips} cpu.
+
+@item -mfix7000
+@itemx -mno-fix7000
+Cause nops to be inserted if the read of the destination register
+of an mfhi or mflo instruction occurs in the following two instructions.
+
+@item -mdebug
+@itemx -no-mdebug
+Cause stabs-style debugging output to go into an ECOFF-style .mdebug
+section instead of the standard ELF .stabs sections.
+
+@item -mpdr
+@itemx -mno-pdr
+Control generation of @code{.pdr} sections.
+
+@item -mgp32
+@itemx -mfp32
+The register sizes are normally inferred from the ISA and ABI, but these
+flags force a certain group of registers to be treated as 32 bits wide at
+all times.  @samp{-mgp32} controls the size of general-purpose registers
+and @samp{-mfp32} controls the size of floating-point registers.
+
+@item -mips16
+@itemx -no-mips16
+Generate code for the MIPS 16 processor.  This is equivalent to putting
+@code{.set mips16} at the start of the assembly file.  @samp{-no-mips16}
+turns off this option.
+
+@item -msmartmips
+@itemx -mno-smartmips
+Enables the SmartMIPS extension to the MIPS32 instruction set. This is
+equivalent to putting @code{.set smartmips} at the start of the assembly file.
+@samp{-mno-smartmips} turns off this option.
+
+@item -mips3d
+@itemx -no-mips3d
+Generate code for the MIPS-3D Application Specific Extension.
+This tells the assembler to accept MIPS-3D instructions.
+@samp{-no-mips3d} turns off this option.
+
+@item -mdmx
+@itemx -no-mdmx
+Generate code for the MDMX Application Specific Extension.
+This tells the assembler to accept MDMX instructions.
+@samp{-no-mdmx} turns off this option.
+
+@item -mdsp
+@itemx -mno-dsp
+Generate code for the DSP Release 1 Application Specific Extension.
+This tells the assembler to accept DSP Release 1 instructions.
+@samp{-mno-dsp} turns off this option.
+
+@item -mdspr2
+@itemx -mno-dspr2
+Generate code for the DSP Release 2 Application Specific Extension.
+This option implies -mdsp.
+This tells the assembler to accept DSP Release 2 instructions.
+@samp{-mno-dspr2} turns off this option.
+
+@item -mmt
+@itemx -mno-mt
+Generate code for the MT Application Specific Extension.
+This tells the assembler to accept MT instructions.
+@samp{-mno-mt} turns off this option.
+
+@item --construct-floats
+@itemx --no-construct-floats
+The @samp{--no-construct-floats} option disables the construction of
+double width floating point constants by loading the two halves of the
+value into the two single width floating point registers that make up
+the double width register.  By default @samp{--construct-floats} is
+selected, allowing construction of these floating point constants.
+
+@cindex emulation
+@item --emulation=@var{name}
+This option causes @command{@value{AS}} to emulate @command{@value{AS}} configured
+for some other target, in all respects, including output format (choosing
+between ELF and ECOFF only), handling of pseudo-opcodes which may generate
+debugging information or store symbol table information, and default
+endianness.  The available configuration names are: @samp{mipsecoff},
+@samp{mipself}, @samp{mipslecoff}, @samp{mipsbecoff}, @samp{mipslelf},
+@samp{mipsbelf}.  The first two do not alter the default endianness from that
+of the primary target for which the assembler was configured; the others change
+the default to little- or big-endian as indicated by the @samp{b} or @samp{l}
+in the name.  Using @samp{-EB} or @samp{-EL} will override the endianness
+selection in any case.
+
+This option is currently supported only when the primary target
+@command{@value{AS}} is configured for is a @sc{mips} ELF or ECOFF target.
+Furthermore, the primary target or others specified with
+@samp{--enable-targets=@dots{}} at configuration time must include support for
+the other format, if both are to be available.  For example, the Irix 5
+configuration includes support for both.
+
+Eventually, this option will support more configurations, with more
+fine-grained control over the assembler's behavior, and will be supported for
+more processors.
+
+@item -nocpp
+@command{@value{AS}} ignores this option.  It is accepted for compatibility with
+the native tools.
+
+@item --trap
+@itemx --no-trap
+@itemx --break
+@itemx --no-break
+Control how to deal with multiplication overflow and division by zero.
+@samp{--trap} or @samp{--no-break} (which are synonyms) take a trap exception
+(and only work for Instruction Set Architecture level 2 and higher);
+@samp{--break} or @samp{--no-trap} (also synonyms, and the default) take a
+break exception.
+
+@item -n
+When this option is used, @command{@value{AS}} will issue a warning every
+time it generates a nop instruction from a macro.
+@end table
+@end ifset
+
+@ifset MCORE
+The following options are available when @value{AS} is configured for
+an MCore processor.
+
+@table @gcctabopt
+@item -jsri2bsr
+@itemx -nojsri2bsr
+Enable or disable the JSRI to BSR transformation.  By default this is enabled.
+The command line option @samp{-nojsri2bsr} can be used to disable it.
+
+@item -sifilter
+@itemx -nosifilter
+Enable or disable the silicon filter behaviour.  By default this is disabled.
+The default can be overridden by the @samp{-sifilter} command line option.
+
+@item -relax
+Alter jump instructions for long displacements.
+
+@item -mcpu=[210|340]
+Select the cpu type on the target hardware.  This controls which instructions
+can be assembled.
+
+@item -EB
+Assemble for a big endian target.
+
+@item -EL
+Assemble for a little endian target.
+
+@end table
+@end ifset
+
+@ifset MMIX
+See the info pages for documentation of the MMIX-specific options.
+@end ifset
+
+@ifset RX
+See the info pages for documentation of the RX-specific options.
+@end ifset
+
+@ifset S390
+The following options are available when @value{AS} is configured for the s390
+processor family.
+
+@table @gcctabopt
+@item -m31
+@itemx -m64
+Select the word size, either 31/32 bits or 64 bits.
+@item -mesa
+@item -mzarch
+Select the architecture mode, either the Enterprise System
+Architecture (esa) or the z/Architecture mode (zarch).
+@item -march=@var{processor}
+Specify which s390 processor variant is the target, @samp{g6}, @samp{g6},
+@samp{z900}, @samp{z990}, @samp{z9-109}, @samp{z9-ec}, or @samp{z10}.
+@item -mregnames
+@itemx -mno-regnames
+Allow or disallow symbolic names for registers.
+@item -mwarn-areg-zero
+Warn whenever the operand for a base or index register has been specified
+but evaluates to zero.
+@end table
+@end ifset
+
+@ifset TIC6X
+The following options are available when @value{AS} is configured for a
+TMS320C6000 processor.
+
+@table @gcctabopt
+@item -march=@var{arch}
+Enable (only) instructions from architecture @var{arch}.  By default,
+all instructions are permitted.
+
+The following values of @var{arch} are accepted: @code{c62x},
+@code{c64x}, @code{c64x+}, @code{c67x}, @code{c67x+}, @code{c674x}.
+
+@item -matomic
+@itemx -mno-atomic
+Enable or disable the optional C64x+ atomic operation instructions.
+By default, they are enabled if no @option{-march} option is given, or
+if an architecture is specified with @option{-march} that implies
+these instructions are present (currently, there are no such
+architectures); they are disabled if an architecture is specified with
+@option{-march} on which the instructions are optional or not
+present.  This option overrides such a default from the architecture,
+independent of the order in which the @option{-march} or
+@option{-matomic} or @option{-mno-atomic} options are passed.
+
+@item -mdsbt
+@itemx -mno-dsbt
+The @option{-mdsbt} option causes the assembler to generate the
+@code{Tag_ABI_DSBT} attribute with a value of 1, indicating that the
+code is using DSBT addressing.  The @option{-mno-dsbt} option, the
+default, causes the tag to have a value of 0, indicating that the code
+does not use DSBT addressing.  The linker will emit a warning if
+objects of different type (DSBT and non-DSBT) are linked together.
+
+@item -mpid=no
+@itemx -mpid=near
+@itemx -mpid=far
+The @option{-mpid=} option causes the assembler to generate the
+@code{Tag_ABI_PID} attribute with a value indicating the form of data
+addressing used by the code.  @option{-mpid=no}, the default,
+indicates position-dependent data addressing, @option{-mpid=near}
+indicates position-independent addressing with GOT accesses using near
+DP addressing, and @option{-mpid=far} indicates position-independent
+addressing with GOT accesses using far DP addressing.  The linker will
+emit a warning if objects built with different settings of this option
+are linked together.
+
+@item -mpic
+@itemx -mno-pic
+The @option{-mpic} option causes the assembler to generate the
+@code{Tag_ABI_PIC} attribute with a value of 1, indicating that the
+code is using position-independent code addressing,  The
+@code{-mno-pic} option, the default, causes the tag to have a value of
+0, indicating position-dependent code addressing.  The linker will
+emit a warning if objects of different type (position-dependent and
+position-independent) are linked together.
+
+@item -mbig-endian
+@itemx -mlittle-endian
+Generate code for the specified endianness.  The default is
+little-endian.
+@end table
+
+@end ifset
+
+@ifset XTENSA
+The following options are available when @value{AS} is configured for
+an Xtensa processor.
+
+@table @gcctabopt
+@item --text-section-literals | --no-text-section-literals
+With @option{--text-@-section-@-literals}, literal pools are interspersed
+in the text section.  The default is
+@option{--no-@-text-@-section-@-literals}, which places literals in a
+separate section in the output file.  These options only affect literals
+referenced via PC-relative @code{L32R} instructions; literals for
+absolute mode @code{L32R} instructions are handled separately.
+
+@item --absolute-literals | --no-absolute-literals
+Indicate to the assembler whether @code{L32R} instructions use absolute
+or PC-relative addressing.  The default is to assume absolute addressing
+if the Xtensa processor includes the absolute @code{L32R} addressing
+option.  Otherwise, only the PC-relative @code{L32R} mode can be used.
+
+@item --target-align | --no-target-align
+Enable or disable automatic alignment to reduce branch penalties at the
+expense of some code density.  Th

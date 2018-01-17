@@ -1,0 +1,31 @@
+
+1.6.30.3 -- 28/03/2017
+- add -fPIE and -pie compilation & link flags on tools binaries
+
+1.6.30.2 -- 05/12/2016
+- [SECU] [CONTAINER] dbus-daemon
+  - Add usage of lxc_genesis_setup function to switch user/group and set hardening environment.
+  - Add support of lxc_genesis in build system and add compilation options PIE for Linux Hardening.
+
+1.6.30.1 -- 23/11/2016
+- Use uniq context per authentication in order to create uniq cookie file per authentication.
+- Replace native process to switch the current user in order to use functions : initgroups, setresuid, setreguid, for sha1 authentication mode.
+- Integrate and adapt patch from ebuild in sources under condition 'enable-dbus-cookie-sha1-authentication' about authentication : wyplay-allow-only-dbus-cookie-sha1-authent.patch
+- Integrate patch from ebuild in sources under condition 'enable-dbus-cookie-sha1-authentication' about authentication : wyplay-dbus-cookie-sha1-authent.patch
+- Build system : add support to enable cookie-sha1-authentication mode
+- Integrate hardening patch from ebuild in sources under condition 'enable-hardened' : wyplay-disable-dbus-introspect.patch
+- Integrate hardening patch from ebuild in sources under condition 'enable-hardened' : wyplay-disable-dbus-eavesdrop.patch
+- Integrate hardening patch from ebuild in sources under condition 'enable-hardened' : wyplay-disable-dbus-monitor.patch
+- Integrate hardening patch from ebuild in sources under condition 'enable-hardened' : wyplay-disable-dbus-syslog.patch
+- Integrate hardening patch from ebuild in sources under condition 'enable-hardened' : wyplay-disable-dbus-print-message.patch
+- Build system : add support to enable hardened mode
+- Integrate patch from ebuild in sources under condition 'enable-spy' : wyplay-dbus-spy.patch
+- Integrate patch from ebuild in sources : wyplay-dbus-browse-includedir-alphabetically.patch
+- Integrate patch from ebuild in sources : wyplay-dbus-counter-mutex.patch
+- Integrate patch from ebuild in sources : wyplay-dbus-timeout-atomic-refcount.patch
+- Integrate patch from ebuild in sources : wyplay-dbus_connection_send_with_reply_and_notify.patch
+- Integrate patch from ebuild in sources to add a new tool : wyplay-dbus_add_command_wait.patch
+- Integrate patch from ebuild in sources to add a new tool : wyplay-dbus_request_name_tool.patch
+- Update .gitignore
+- Fix build system : add some files from official tarball dbus-1.6.30.tar.gz to be coherent.
+

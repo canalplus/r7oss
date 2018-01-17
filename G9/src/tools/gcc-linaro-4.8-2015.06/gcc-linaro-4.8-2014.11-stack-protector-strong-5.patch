@@ -1,0 +1,225 @@
+Upstream-status: backport
+
+From ec4af1becd78ded46c41d650b910614836750a54 Mon Sep 17 00:00:00 2001
+From: fw <fw@138bc75d-0d04-0410-961f-82ee72b054a4>
+Date: Fri, 9 May 2014 12:23:46 +0000
+Subject: [PATCH] -fstack-protector-strong: Instrumentation for return slots
+
+This patch fixes a loophole in the -fstack-protector-strong protection.
+If a function call uses a return slot, the caller needs stack protector
+instrumentation because the return slot is addressable.
+
+gcc/
+
+2014-05-09  Florian Weimer  <fweimer@redhat.com>
+
+	* cfgexpand.c (stack_protect_decl_p): New function, extracted from
+	expand_used_vars.
+	(stack_protect_return_slot_p): New function.
+	(expand_used_vars): Call stack_protect_decl_p and
+	stack_protect_return_slot_p for -fstack-protector-strong.
+
+gcc/testsuite/
+
+2014-05-09  Florian Weimer  <fweimer@redhat.com>
+
+	* gcc.dg/fstack-protector-strong.c: Add coverage for return slots.
+	* g++.dg/fstack-protector-strong.C: Likewise.
+	* gcc.target/i386/ssp-strong-reg.c: New file.
+
+
+git-svn-id: svn+ssh://gcc.gnu.org/svn/gcc/trunk@210275 138bc75d-0d04-0410-961f-82ee72b054a4
+---
+ gcc/ChangeLog                                  |  8 ++++
+ gcc/cfgexpand.c                                | 64 +++++++++++++++++++-------
+ gcc/testsuite/ChangeLog                        |  6 +++
+ gcc/testsuite/g++.dg/fstack-protector-strong.C | 50 +++++++++++++++++++-
+ gcc/testsuite/gcc.dg/fstack-protector-strong.c | 20 +++++++-
+ gcc/testsuite/gcc.target/i386/ssp-strong-reg.c | 19 ++++++++
+ 6 files changed, 149 insertions(+), 18 deletions(-)
+ create mode 100644 gcc/testsuite/gcc.target/i386/ssp-strong-reg.c
+
+--- gcc-linaro-4.8-2014.11.orig/gcc/cfgexpand.c
++++ gcc-linaro-4.8-2014.11/gcc/cfgexpand.c
+@@ -1542,6 +1542,52 @@ record_or_union_type_has_array_p (const_
+   return 0;
+ }
+ 
++/* Check if the current function has local referenced variables that
++   have their addresses taken, contain an array, or are arrays.  */
++
++static bool
++stack_protect_decl_p ()
++{
++  unsigned i;
++  tree var;
++
++  FOR_EACH_LOCAL_DECL (cfun, i, var)
++    if (!is_global_var (var))
++      {
++	tree var_type = TREE_TYPE (var);
++	if (TREE_CODE (var) == VAR_DECL
++	    && (TREE_CODE (var_type) == ARRAY_TYPE
++		|| TREE_ADDRESSABLE (var)
++		|| (RECORD_OR_UNION_TYPE_P (var_type)
++		    && record_or_union_type_has_array_p (var_type))))
++	  return true;
++      }
++  return false;
++}
++
++/* Check if the current function has calls that use a return slot.  */
++
++static bool
++stack_protect_return_slot_p ()
++{
++  basic_block bb;
++  
++  FOR_ALL_BB_FN (bb, cfun)
++    for (gimple_stmt_iterator gsi = gsi_start_bb (bb);
++	 !gsi_end_p (gsi); gsi_next (&gsi))
++      {
++	gimple stmt = gsi_stmt (gsi);
++	/* This assumes that calls to internal-only functions never
++	   use a return slot.  */
++	if (is_gimple_call (stmt)
++	    && !gimple_call_internal_p (stmt)
++	    && aggregate_value_p (TREE_TYPE (gimple_call_fntype (stmt)),
++				  gimple_call_fndecl (stmt)))
++	  return true;
++      }
++  return false;
++}
++
+ /* Expand all variables used in the function.  */
+ 
+ static rtx
+@@ -1606,22 +1652,8 @@ expand_used_vars (void)
+   pointer_map_destroy (ssa_name_decls);
+ 
+   if (flag_stack_protect == SPCT_FLAG_STRONG)
+-    FOR_EACH_LOCAL_DECL (cfun, i, var)
+-      if (!is_global_var (var))
+-	{
+-	  tree var_type = TREE_TYPE (var);
+-	  /* Examine local referenced variables that have their addresses taken,
+-	     contain an array, or are arrays.  */
+-	  if (TREE_CODE (var) == VAR_DECL
+-	      && (TREE_CODE (var_type) == ARRAY_TYPE
+-		  || TREE_ADDRESSABLE (var)
+-		  || (RECORD_OR_UNION_TYPE_P (var_type)
+-		      && record_or_union_type_has_array_p (var_type))))
+-	    {
+-	      gen_stack_protect_signal = true;
+-	      break;
+-	    }
+-	}
++      gen_stack_protect_signal
++	= stack_protect_decl_p () || stack_protect_return_slot_p ();
+ 
+   /* At this point all variables on the local_decls with TREE_USED
+      set are not associated with any block scope.  Lay them out.  */
+--- gcc-linaro-4.8-2014.11.orig/gcc/testsuite/g++.dg/fstack-protector-strong.C
++++ gcc-linaro-4.8-2014.11/gcc/testsuite/g++.dg/fstack-protector-strong.C
+@@ -32,4 +32,52 @@ int foo2 ()
+   return global_func (a);
+ }
+ 
+-/* { dg-final { scan-assembler-times "stack_chk_fail" 2 } } */
++/* Frame addressed exposed through return slot. */
++
++struct B
++{
++  /* Discourage passing this struct in registers. */
++  int a1, a2, a3, a4, a5, a6, a7, a8, a9, a10;
++  int method ();
++  B return_slot();
++};
++
++B global_func ();
++void noop ();
++
++int foo3 ()
++{
++  return global_func ().a1;
++}
++
++int foo4 ()
++{
++  try {
++    noop ();
++    return 0;
++  } catch (...) {
++    return global_func ().a1;
++  }
++}
++
++int foo5 ()
++{
++  try {
++    return global_func ().a1;
++  } catch (...) {
++    return 0;
++  }
++}
++
++int foo6 ()
++{
++  B b;
++  return b.method ();
++}
++
++int foo7 (B *p)
++{
++  return p->return_slot ().a1;
++}
++
++/* { dg-final { scan-assembler-times "stack_chk_fail" 7 } } */
+--- gcc-linaro-4.8-2014.11.orig/gcc/testsuite/gcc.dg/fstack-protector-strong.c
++++ gcc-linaro-4.8-2014.11/gcc/testsuite/gcc.dg/fstack-protector-strong.c
+@@ -131,4 +131,22 @@ foo10 ()
+   return bb.three;
+ }
+ 
+-/* { dg-final { scan-assembler-times "stack_chk_fail" 10 } } */
++struct B
++{
++  /* Discourage passing this struct in registers. */
++  int a1, a2, a3, a4, a5, a6, a7, a8, a9, a10;
++};
++
++struct B global3 (void);
++
++int foo11 ()
++{
++  return global3 ().a1;
++}
++
++void foo12 ()
++{
++  global3 ();
++}
++
++/* { dg-final { scan-assembler-times "stack_chk_fail" 12 } } */
+--- /dev/null
++++ gcc-linaro-4.8-2014.11/gcc/testsuite/gcc.target/i386/ssp-strong-reg.c
+@@ -0,0 +1,19 @@
++/* Test that structs returned in registers do not lead to
++   instrumentation with -fstack-protector-strong.  */
++
++/* { dg-do compile { target { ! { ia32 } } } } */
++/* { dg-options "-O2 -fstack-protector-strong" } */
++
++struct S {
++  int a;
++  int b;
++};
++
++struct S f (void);
++
++int g (void)
++{
++  return f ().a;
++}
++
++/* { dg-final { scan-assembler-times "stack_chk_fail" 0 } } */

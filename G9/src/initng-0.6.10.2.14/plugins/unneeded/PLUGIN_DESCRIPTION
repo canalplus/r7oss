@@ -1,0 +1,8 @@
+          name : unneeded
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : 
+      commands : stop_unneeded
+       options : 
+   description : This simple plugin tries to find all services that nothing
+                 depends on and shut them down, good for cleaning the system
+                 out of manually started services.

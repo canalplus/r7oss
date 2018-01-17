@@ -1,0 +1,73 @@
+diff --git device/serial/serial.gyp device/serial/serial.gyp
+index 519263b..fc7eed1 100644
+--- device/serial/serial.gyp
++++ device/serial/serial.gyp
+@@ -44,6 +44,10 @@
+             'serial_device_enumerator_linux.cc',
+             'serial_device_enumerator_linux.h',
+           ],
++          'sources': [
++            'serial_device_enumerator_stub.cc',
++            'serial_device_enumerator_stub.h',
++          ],
+         }],
+         ['OS=="win"', {
+           'link_settings': {
+diff --git device/serial/serial_device_enumerator_stub.cc device/serial/serial_device_enumerator_stub.cc
+new file mode 100644
+index 0000000..412f752
+--- device/serial/serial_device_enumerator_stub.cc
++++ device/serial/serial_device_enumerator_stub.cc
+@@ -0,0 +1,23 @@
++// Copyright 2014 The Chromium Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "device/serial/serial_device_enumerator_stub.h"
++
++namespace device {
++
++// static
++std::unique_ptr<SerialDeviceEnumerator> SerialDeviceEnumerator::Create() {
++  return std::unique_ptr<SerialDeviceEnumerator>(new SerialDeviceEnumeratorStub());
++}
++
++SerialDeviceEnumeratorStub::SerialDeviceEnumeratorStub() {}
++
++SerialDeviceEnumeratorStub::~SerialDeviceEnumeratorStub() {}
++
++mojo::Array<serial::DeviceInfoPtr> SerialDeviceEnumeratorStub::GetDevices() {
++  mojo::Array<serial::DeviceInfoPtr> devices;
++  return devices;
++}
++
++}  // namespace device
+diff --git device/serial/serial_device_enumerator_stub.h device/serial/serial_device_enumerator_stub.h
+new file mode 100644
+index 0000000..505477e
+--- device/serial/serial_device_enumerator_stub.h
++++ device/serial/serial_device_enumerator_stub.h
+@@ -0,0 +1,23 @@
++#ifndef DEVICE_SERIAL_SERIAL_DEVICE_ENUMERATOR_STUB_H_
++#define DEVICE_SERIAL_SERIAL_DEVICE_ENUMERATOR_STUB_H_
++
++#include "device/serial/serial_device_enumerator.h"
++
++namespace device {
++
++// Discovers and enumerates serial devices available to the host.
++class SerialDeviceEnumeratorStub : public SerialDeviceEnumerator {
++ public:
++  SerialDeviceEnumeratorStub();
++  ~SerialDeviceEnumeratorStub() override;
++
++  // Implementation for SerialDeviceEnumerator.
++  mojo::Array<serial::DeviceInfoPtr> GetDevices() override;
++
++ private:
++  DISALLOW_COPY_AND_ASSIGN(SerialDeviceEnumeratorStub);
++};
++
++}  // namespace device
++
++#endif  // DEVICE_SERIAL_SERIAL_DEVICE_ENUMERATOR_STUB_H_

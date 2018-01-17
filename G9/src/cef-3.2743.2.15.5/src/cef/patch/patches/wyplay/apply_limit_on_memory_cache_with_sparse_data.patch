@@ -1,0 +1,91 @@
+From 6095714d564434efac4064e70dd0431db0dc07e7 Mon Sep 17 00:00:00 2001
+From: Gauthier Haderer <ghaderer@wyplay.com>
+Date: Mon, 10 Apr 2017 17:27:36 +0000
+Subject: [PATCH] Apply memory limit on used in-memory cache resources.
+
+Now we can free a resource partially by discarding unused entries
+instead of keeping the whole resource in-memory until it's not used
+anymore. The difference is significant when loading large resources such
+as videos. Without this change, the cache would grow until we reach the
+end of the video and stop playback. Now, when the cache reaches its
+limit, older segments of the video are purged out of the cache.
+---
+ net/disk_cache/memory/mem_entry_impl.cc | 30 ++++++++++++++++++------------
+ 1 file changed, 18 insertions(+), 12 deletions(-)
+
+diff --git net/disk_cache/memory/mem_entry_impl.cc net/disk_cache/memory/mem_entry_impl.cc
+index f1efa33..f571b9b 100644
+--- net/disk_cache/memory/mem_entry_impl.cc
++++ net/disk_cache/memory/mem_entry_impl.cc
+@@ -95,17 +95,12 @@ MemEntryImpl::MemEntryImpl(MemBackendImpl* backend,
+ }
+ 
+ void MemEntryImpl::Open() {
+-  // Only a parent entry can be opened.
+-  DCHECK_EQ(PARENT_ENTRY, type());
+   ++ref_count_;
+   DCHECK_GE(ref_count_, 1);
+   DCHECK(!doomed_);
+ }
+ 
+ bool MemEntryImpl::InUse() const {
+-  if (type() == CHILD_ENTRY)
+-    return parent_->InUse();
+-
+   return ref_count_ > 0;
+ }
+ 
+@@ -136,7 +131,6 @@ void MemEntryImpl::Doom() {
+ }
+ 
+ void MemEntryImpl::Close() {
+-  DCHECK_EQ(PARENT_ENTRY, type());
+   --ref_count_;
+   DCHECK_GE(ref_count_, 0);
+   if (!ref_count_ && doomed_)
+@@ -453,6 +447,11 @@ int MemEntryImpl::InternalWriteSparseData(int64_t offset,
+                               child->net_log_.source(), write_len));
+     }
+ 
++    // Prevent the child entry from being doomed while we are using it. Indeed,
++    // writing data may force the cache to free memory, and it may decide to
++    // doom this entry.
++    child->Open();
++
+     // Always writes to the child entry. This operation may overwrite data
+     // previously written.
+     // TODO(hclam): if there is data in the entry and this write is not
+@@ -463,17 +462,24 @@ int MemEntryImpl::InternalWriteSparseData(int64_t offset,
+       net_log_.EndEventWithNetErrorCode(
+           net::NetLog::TYPE_SPARSE_WRITE_CHILD_DATA, ret);
+     }
++
++    if (ret > 0) {
++      // Keep a record of the first byte position in the child if the write was
++      // not aligned nor continuous. This is to enable witting to the middle
++      // of an entry and still keep track of data off the aligned edge.
++      if (data_size != child_offset)
++        child->child_first_pos_ = child_offset;
++    }
++
++    // Now we can safely release the child entry. It will delete the entry
++    // if it was doomed while it was opened.
++    child->Close();
++
+     if (ret < 0)
+       return ret;
+     else if (ret == 0)
+       break;
+ 
+-    // Keep a record of the first byte position in the child if the write was
+-    // not aligned nor continuous. This is to enable witting to the middle
+-    // of an entry and still keep track of data off the aligned edge.
+-    if (data_size != child_offset)
+-      child->child_first_pos_ = child_offset;
+-
+     // Adjust the offset in the IO buffer.
+     io_buf->DidConsume(ret);
+   }
+-- 
+1.8.5.3
+

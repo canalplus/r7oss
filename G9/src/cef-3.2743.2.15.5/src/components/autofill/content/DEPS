@@ -1,0 +1,14 @@
+include_rules = [
+  "+content/public/common",
+  # Allow inclusion of WebKit API files.
+  "+third_party/WebKit/public/platform",
+  "+third_party/WebKit/public/web",
+  "+ipc",
+  "+mojo/public",
+]
+
+specific_include_rules = {
+  '.*_[a-z]*test\.cc': [
+    "+content/public/test",
+  ],
+}

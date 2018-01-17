@@ -1,0 +1,60 @@
+diff --git public/renderer/content_renderer_client.cc public/renderer/content_renderer_client.cc
+index 4ad49c8..f1fa7ab 100644
+--- public/renderer/content_renderer_client.cc
++++ public/renderer/content_renderer_client.cc
+@@ -98,7 +98,6 @@ bool ContentRendererClient::AllowPopup() {
+   return false;
+ }
+ 
+-#if defined(OS_ANDROID)
+ bool ContentRendererClient::HandleNavigation(
+     RenderFrame* render_frame,
+     bool is_content_initiated,
+@@ -111,6 +110,7 @@ bool ContentRendererClient::HandleNavigation(
+   return false;
+ }
+ 
++#if defined(OS_ANDROID)
+ bool ContentRendererClient::ShouldUseMediaPlayerForURL(const GURL& url) {
+   return false;
+ }
+diff --git public/renderer/content_renderer_client.h public/renderer/content_renderer_client.h
+index d96adc9..348ae16 100644
+--- public/renderer/content_renderer_client.h
++++ public/renderer/content_renderer_client.h
+@@ -200,7 +200,6 @@ class CONTENT_EXPORT ContentRendererClient {
+   // Returns true if a popup window should be allowed.
+   virtual bool AllowPopup();
+ 
+-#if defined(OS_ANDROID)
+   // TODO(sgurun) This callback is deprecated and will be removed as soon
+   // as android webview completes implementation of a resource throttle based
+   // shouldoverrideurl implementation. See crbug.com/325351
+@@ -216,6 +215,7 @@ class CONTENT_EXPORT ContentRendererClient {
+                                 blink::WebNavigationPolicy default_policy,
+                                 bool is_redirect);
+ 
++#if defined(OS_ANDROID)
+   // Indicates if the Android MediaPlayer should be used instead of Chrome's
+   // built in media player for the given |url|. Defaults to false.
+   virtual bool ShouldUseMediaPlayerForURL(const GURL& url);
+diff --git renderer/render_frame_impl.cc renderer/render_frame_impl.cc
+index 400a60c..2c9fe67 100644
+--- renderer/render_frame_impl.cc
++++ renderer/render_frame_impl.cc
+@@ -4779,7 +4779,6 @@ WebNavigationPolicy RenderFrameImpl::decidePolicyForNavigation(
+       (pending_navigation_params_ &&
+        !pending_navigation_params_->request_params.redirects.empty());
+ 
+-#ifdef OS_ANDROID
+   // The handlenavigation API is deprecated and will be removed once
+   // crbug.com/325351 is resolved.
+   if (GetContentClient()->renderer()->HandleNavigation(
+@@ -4788,7 +4787,6 @@ WebNavigationPolicy RenderFrameImpl::decidePolicyForNavigation(
+           is_redirect)) {
+     return blink::WebNavigationPolicyIgnore;
+   }
+-#endif
+ 
+   Referrer referrer(
+       RenderViewImpl::GetReferrerFromRequest(frame_, info.urlRequest));

@@ -1,0 +1,436 @@
+Upstream-status: backport
+
+From f836950e5d42cc0e464a271ce14bda5e561674ae Mon Sep 17 00:00:00 2001
+From: ktkachov <ktkachov@138bc75d-0d04-0410-961f-82ee72b054a4>
+Date: Wed, 29 Jan 2014 13:46:39 +0000
+Subject: [PATCH 2/2] [ARM] Add -march=armv7ve
+
+gcc/
+2014-01-29  Renlin Li  <Renlin.Li@arm.com>
+
+	* config/arm/arm-arches.def (ARM_ARCH): Add armv7ve arch.
+	* config/arm/arm.c (FL_FOR_ARCH7VE): New.
+	(arm_file_start): Generate correct asm header for armv7ve.
+	* config/arm/bpabi.h: Add multilib support for armv7ve.
+	* config/arm/driver-arm.c: Change the architectures of cortex-a7
+	and cortex-a15 to armv7ve.
+	* config/arm/t-aprofile: Add multilib support for armv7ve.
+	* doc/invoke.texi: Document -march=armv7ve.
+
+gcc/testsuite/
+2014-01-29  Renlin Li  <Renlin.Li@arm.com>
+
+	* gcc.target/arm/ftest-armv7ve-arm.c: New.
+	* gcc.target/arm/ftest-armv7ve-thumb.c: New.
+	* lib/target-supports.exp: New armfunc, armflag and armdef for armv7ve.
+
+git-svn-id: svn+ssh://gcc.gnu.org/svn/gcc/trunk@207237 138bc75d-0d04-0410-961f-82ee72b054a4
+
+Conflicts (resolved by gregory@broadcom.com):
+	gcc/ChangeLog
+	gcc/config/arm/arm.c
+	gcc/config/arm/driver-arm.c
+	gcc/config/arm/t-aprofile
+	gcc/doc/invoke.texi
+	gcc/testsuite/ChangeLog
+---
+ gcc/ChangeLog                                      | 11 ++++
+ gcc/config/arm/arm-arches.def                      |  1 +
+ gcc/config/arm/arm.c                               | 35 ++++++++++-
+ gcc/config/arm/bpabi.h                             |  2 +
+ gcc/config/arm/driver-arm.c                        |  4 +-
+ gcc/config/arm/t-aprofile                          | 70 +++++++++++-----------
+ gcc/doc/invoke.texi                                |  5 +-
+ gcc/testsuite/ChangeLog                            |  6 ++
+ gcc/testsuite/gcc.target/arm/ftest-armv7ve-arm.c   | 40 +++++++++++++
+ gcc/testsuite/gcc.target/arm/ftest-armv7ve-thumb.c | 40 +++++++++++++
+ gcc/testsuite/lib/target-supports.exp              |  1 +
+ 11 files changed, 173 insertions(+), 42 deletions(-)
+ create mode 100644 gcc/testsuite/gcc.target/arm/ftest-armv7ve-arm.c
+ create mode 100644 gcc/testsuite/gcc.target/arm/ftest-armv7ve-thumb.c
+
+diff --git a/gcc/config/arm/arm-arches.def b/gcc/config/arm/arm-arches.def
+index 6131630..dd18312 100644
+--- a/gcc/config/arm/arm-arches.def
++++ b/gcc/config/arm/arm-arches.def
+@@ -50,6 +50,7 @@ ARM_ARCH("armv6-m", cortexm1,	6M,			      FL_FOR_ARCH6M)
+ ARM_ARCH("armv6s-m", cortexm1,	6M,			      FL_FOR_ARCH6M)
+ ARM_ARCH("armv7",   cortexa8,	7,   FL_CO_PROC |	      FL_FOR_ARCH7)
+ ARM_ARCH("armv7-a", cortexa8,	7A,  FL_CO_PROC |	      FL_FOR_ARCH7A)
++ARM_ARCH("armv7ve", cortexa8,	7A,  FL_CO_PROC |	      FL_FOR_ARCH7VE)
+ ARM_ARCH("armv7-r", cortexr4,	7R,  FL_CO_PROC |	      FL_FOR_ARCH7R)
+ ARM_ARCH("armv7-m", cortexm3,	7M,  FL_CO_PROC |	      FL_FOR_ARCH7M)
+ ARM_ARCH("armv7e-m", cortexm4,  7EM, FL_CO_PROC |	      FL_FOR_ARCH7EM)
+diff --git a/gcc/config/arm/arm.c b/gcc/config/arm/arm.c
+index 5bc6603..4d721ba 100644
+--- a/gcc/config/arm/arm.c
++++ b/gcc/config/arm/arm.c
+@@ -736,11 +736,11 @@ static int thumb_call_reg_needed;
+ #define FL_FOR_ARCH6M	(FL_FOR_ARCH6 & ~FL_NOTM)
+ #define FL_FOR_ARCH7	((FL_FOR_ARCH6T2 & ~FL_NOTM) | FL_ARCH7)
+ #define FL_FOR_ARCH7A	(FL_FOR_ARCH7 | FL_NOTM | FL_ARCH6K)
++#define FL_FOR_ARCH7VE	(FL_FOR_ARCH7A | FL_THUMB_DIV | FL_ARM_DIV)
+ #define FL_FOR_ARCH7R	(FL_FOR_ARCH7A | FL_THUMB_DIV)
+ #define FL_FOR_ARCH7M	(FL_FOR_ARCH7 | FL_THUMB_DIV)
+ #define FL_FOR_ARCH7EM  (FL_FOR_ARCH7M | FL_ARCH7EM)
+-#define FL_FOR_ARCH8A	(FL_FOR_ARCH7 | FL_ARCH6K | FL_ARCH8 | FL_THUMB_DIV \
+-			 | FL_ARM_DIV | FL_NOTM)
++#define FL_FOR_ARCH8A	(FL_FOR_ARCH7VE | FL_ARCH8)
+ 
+ /* The bits in this mask specify which
+    instructions we are allowed to generate.  */
+@@ -27859,20 +27859,34 @@ arm_file_start (void)
+       const char *fpu_name;
+       if (arm_selected_arch)
+         {
+-          const char* pos = strchr (arm_selected_arch->name, '+');
+-	  if (pos)
++	  /* armv7ve doesn't support any extensions.  */
++	  if (strcmp (arm_selected_arch->name, "armv7ve") == 0)
+ 	    {
+-	      char buf[15];
+-	      gcc_assert (strlen (arm_selected_arch->name)
+-	                  <= sizeof (buf) / sizeof (*pos));
+-	      strncpy (buf, arm_selected_arch->name,
+-	                    (pos - arm_selected_arch->name) * sizeof (*pos));
+-	      buf[pos - arm_selected_arch->name] = '\0';
+-	      asm_fprintf (asm_out_file, "\t.arch %s\n", buf);
+-	      asm_fprintf (asm_out_file, "\t.arch_extension %s\n", pos + 1);
++	      /* Keep backward compatability for assemblers
++		 which don't support armv7ve.  */
++	      asm_fprintf (asm_out_file, "\t.arch armv7-a\n");
++	      asm_fprintf (asm_out_file, "\t.arch_extension virt\n");
++	      asm_fprintf (asm_out_file, "\t.arch_extension idiv\n");
++	      asm_fprintf (asm_out_file, "\t.arch_extension sec\n");
++	      asm_fprintf (asm_out_file, "\t.arch_extension mp\n");
+ 	    }
+ 	  else
+-	    asm_fprintf (asm_out_file, "\t.arch %s\n", arm_selected_arch->name);
++	    {
++	      const char* pos = strchr (arm_selected_arch->name, '+');
++	      if (pos)
++		{
++		  char buf[15];
++		  gcc_assert (strlen (arm_selected_arch->name)
++			      <= sizeof (buf) / sizeof (*pos));
++		  strncpy (buf, arm_selected_arch->name,
++				(pos - arm_selected_arch->name) * sizeof (*pos));
++		  buf[pos - arm_selected_arch->name] = '\0';
++		  asm_fprintf (asm_out_file, "\t.arch %s\n", buf);
++		  asm_fprintf (asm_out_file, "\t.arch_extension %s\n", pos + 1);
++		}
++	      else
++		asm_fprintf (asm_out_file, "\t.arch %s\n", arm_selected_arch->name);
++	    }
+         }
+       else if (strncmp (arm_selected_cpu->name, "generic", 7) == 0)
+ 	asm_fprintf (asm_out_file, "\t.arch %s\n", arm_selected_cpu->name + 8);
+diff --git a/gcc/config/arm/bpabi.h b/gcc/config/arm/bpabi.h
+index bee429f..6c35b3b 100644
+--- a/gcc/config/arm/bpabi.h
++++ b/gcc/config/arm/bpabi.h
+@@ -61,6 +61,7 @@
+    |mcpu=marvell-pj4					\
+    |mcpu=cortex-a53					\
+    |mcpu=generic-armv7-a                                \
++   |march=armv7ve	                                \
+    |march=armv7-m|mcpu=cortex-m3                        \
+    |march=armv7e-m|mcpu=cortex-m4                       \
+    |march=armv6-m|mcpu=cortex-m0                        \
+@@ -73,6 +74,7 @@
+    |mcpu=cortex-a53					\
+    |mcpu=marvell-pj4					\
+    |mcpu=generic-armv7-a                                \
++   |march=armv7ve	                                \
+    |march=armv7-m|mcpu=cortex-m3                        \
+    |march=armv7e-m|mcpu=cortex-m4                       \
+    |march=armv6-m|mcpu=cortex-m0                        \
+diff --git a/gcc/config/arm/driver-arm.c b/gcc/config/arm/driver-arm.c
+index c0fb04c..9df0a78 100644
+--- a/gcc/config/arm/driver-arm.c
++++ b/gcc/config/arm/driver-arm.c
+@@ -37,10 +37,10 @@ static struct vendor_cpu arm_cpu_table[] = {
+     {"0xb56", "armv6t2", "arm1156t2-s"},
+     {"0xb76", "armv6zk", "arm1176jz-s"},
+     {"0xc05", "armv7-a", "cortex-a5"},
+-    {"0xc07", "armv7-a", "cortex-a7"},
++    {"0xc07", "armv7ve", "cortex-a7"},
+     {"0xc08", "armv7-a", "cortex-a8"},
+     {"0xc09", "armv7-a", "cortex-a9"},
+-    {"0xc0f", "armv7-a", "cortex-a15"},
++    {"0xc0f", "armv7ve", "cortex-a15"},
+     {"0xc14", "armv7-r", "cortex-r4"},
+     {"0xc15", "armv7-r", "cortex-r5"},
+     {"0xc20", "armv6-m", "cortex-m0"},
+diff --git a/gcc/config/arm/t-aprofile b/gcc/config/arm/t-aprofile
+index ce45d4d..f0ede4b 100644
+--- a/gcc/config/arm/t-aprofile
++++ b/gcc/config/arm/t-aprofile
+@@ -37,12 +37,10 @@ MULTILIB_REUSE	     =
+ #        NEON-VFPV4 (simdvfpv4), NEON for ARMv8 (simdv8), or None (.).
+ #   Float-abi: Soft (.), softfp (softfp), or hard (hardfp).
+ 
+-# We use the option -mcpu=cortex-a7 because we do not yet have march=armv7ve
+-# or march=armv7a+virt as a command line option for the compiler.
+ MULTILIB_OPTIONS       += mthumb
+ MULTILIB_DIRNAMES      += thumb
+ 
+-MULTILIB_OPTIONS       += march=armv7-a/mcpu=cortex-a7/march=armv8-a
++MULTILIB_OPTIONS       += march=armv7-a/march=armv7ve/march=armv8-a
+ MULTILIB_DIRNAMES      += v7-a v7ve v8-a
+ 
+ MULTILIB_OPTIONS       += mfpu=vfpv3-d16/mfpu=neon/mfpu=vfpv4-d16/mfpu=neon-vfpv4/mfpu=neon-fp-armv8
+@@ -64,12 +62,12 @@ MULTILIB_EXCEPTIONS    += mfpu=*
+ MULTILIB_EXCEPTIONS    += mthumb/mfloat-abi=*
+ MULTILIB_EXCEPTIONS    += mthumb/mfpu=*
+ MULTILIB_EXCEPTIONS    += *march=armv7-a/mfloat-abi=*
+-MULTILIB_EXCEPTIONS    += *mcpu=cortex-a7/mfloat-abi=*
++MULTILIB_EXCEPTIONS    += *march=armv7ve/mfloat-abi=*
+ MULTILIB_EXCEPTIONS    += *march=armv8-a/mfloat-abi=*
+ 
+ # Ensure the correct FPU variants apply to the correct base architectures.
+-MULTILIB_EXCEPTIONS    += *mcpu=cortex-a7/*mfpu=vfpv3-d16*
+-MULTILIB_EXCEPTIONS    += *mcpu=cortex-a7/*mfpu=neon/*
++MULTILIB_EXCEPTIONS    += *march=armv7ve/*mfpu=vfpv3-d16*
++MULTILIB_EXCEPTIONS    += *march=armv7ve/*mfpu=neon/*
+ MULTILIB_EXCEPTIONS    += *march=armv8-a/*mfpu=vfpv3-d16*
+ MULTILIB_EXCEPTIONS    += *march=armv8-a/*mfpu=neon/*
+ MULTILIB_EXCEPTIONS    += *march=armv7-a/*mfpu=vfpv4-d16*
+@@ -77,13 +75,13 @@ MULTILIB_EXCEPTIONS    += *march=armv7-a/*mfpu=neon-vfpv4*
+ MULTILIB_EXCEPTIONS    += *march=armv8-a/*mfpu=vfpv4-d16*
+ MULTILIB_EXCEPTIONS    += *march=armv8-a/*mfpu=neon-vfpv4*
+ MULTILIB_EXCEPTIONS    += *march=armv7-a/*mfpu=neon-fp-armv8*
+-MULTILIB_EXCEPTIONS    += *mcpu=cortex-a7/*mfpu=neon-fp-armv8*
++MULTILIB_EXCEPTIONS    += *march=armv7ve/*mfpu=neon-fp-armv8*
+ 
+ # CPU Matches
+ MULTILIB_MATCHES       += march?armv7-a=mcpu?cortex-a8
+ MULTILIB_MATCHES       += march?armv7-a=mcpu?cortex-a9
+ MULTILIB_MATCHES       += march?armv7-a=mcpu?cortex-a5
+-MULTILIB_MATCHES       += mcpu?cortex-a7=mcpu?cortex-a15
++MULTILIB_MATCHES       += march?armv7ve=mcpu?cortex-a15
+ MULTILIB_MATCHES       += march?armv8-a=mcpu?cortex-a53
+ 
+ # FPU matches
+@@ -102,8 +100,8 @@ MULTILIB_MATCHES       += mfpu?neon-fp-armv8=mfpu?crypto-neon-fp-armv8
+ # This applies to any similar combination at the v7ve and v8-a arch
+ # levels.
+ 
+-MULTILIB_REUSE	      += march.armv7-a/mfpu.vfpv3-d16/mfloat-abi.hard=mcpu.cortex-a7/mfpu.vfpv3-d16/mfloat-abi.hard
+-MULTILIB_REUSE	      += march.armv7-a/mfpu.vfpv3-d16/mfloat-abi.softfp=mcpu.cortex-a7/mfpu.vfpv3-d16/mfloat-abi.softfp
++MULTILIB_REUSE	      += march.armv7-a/mfpu.vfpv3-d16/mfloat-abi.hard=march.armv7ve/mfpu.vfpv3-d16/mfloat-abi.hard
++MULTILIB_REUSE	      += march.armv7-a/mfpu.vfpv3-d16/mfloat-abi.softfp=march.armv7ve/mfpu.vfpv3-d16/mfloat-abi.softfp
+ MULTILIB_REUSE	      += march.armv7-a/mfpu.vfpv3-d16/mfloat-abi.hard=march.armv8-a/mfpu.vfpv3-d16/mfloat-abi.hard
+ MULTILIB_REUSE	      += march.armv7-a/mfpu.vfpv3-d16/mfloat-abi.softfp=march.armv8-a/mfpu.vfpv3-d16/mfloat-abi.softfp
+ MULTILIB_REUSE	      += march.armv7-a/mfpu.vfpv3-d16/mfloat-abi.hard=march.armv7-a/mfpu.vfpv4-d16/mfloat-abi.hard
+@@ -114,8 +112,8 @@ MULTILIB_REUSE	      += march.armv7-a/mfpu.vfpv3-d16/mfloat-abi.hard=march.armv7
+ MULTILIB_REUSE	      += march.armv7-a/mfpu.vfpv3-d16/mfloat-abi.softfp=march.armv7-a/mfpu.vfpv4/mfloat-abi.softfp
+ 
+ 
+-MULTILIB_REUSE	      += march.armv7-a/mfpu.neon/mfloat-abi.hard=mcpu.cortex-a7/mfpu.neon/mfloat-abi.hard
+-MULTILIB_REUSE	      += march.armv7-a/mfpu.neon/mfloat-abi.softfp=mcpu.cortex-a7/mfpu.neon/mfloat-abi.softfp
++MULTILIB_REUSE	      += march.armv7-a/mfpu.neon/mfloat-abi.hard=march.armv7ve/mfpu.neon/mfloat-abi.hard
++MULTILIB_REUSE	      += march.armv7-a/mfpu.neon/mfloat-abi.softfp=march.armv7ve/mfpu.neon/mfloat-abi.softfp
+ MULTILIB_REUSE	      += march.armv7-a/mfpu.neon/mfloat-abi.hard=march.armv8-a/mfpu.neon/mfloat-abi.hard
+ MULTILIB_REUSE	      += march.armv7-a/mfpu.neon/mfloat-abi.softfp=march.armv8-a/mfpu.neon/mfloat-abi.softfp
+ MULTILIB_REUSE	      += march.armv7-a/mfpu.neon/mfloat-abi.hard=march.armv7-a/mfpu.neon-vfpv4/mfloat-abi.hard
+@@ -124,25 +122,25 @@ MULTILIB_REUSE	      += march.armv7-a/mfpu.neon/mfloat-abi.hard=march.armv7-a/mf
+ MULTILIB_REUSE	      += march.armv7-a/mfpu.neon/mfloat-abi.softfp=march.armv7-a/mfpu.neon-fp-armv8/mfloat-abi.softfp
+ 
+ 
+-MULTILIB_REUSE	      += mcpu.cortex-a7/mfpu.vfpv4-d16/mfloat-abi.hard=mcpu.cortex-a7/mfpu.fp-armv8/mfloat-abi.hard
+-MULTILIB_REUSE	      += mcpu.cortex-a7/mfpu.vfpv4-d16/mfloat-abi.softfp=mcpu.cortex-a7/mfpu.fp-armv8/mfloat-abi.softfp
+-MULTILIB_REUSE	      += mcpu.cortex-a7/mfpu.vfpv4-d16/mfloat-abi.hard=march.armv8-a/mfpu.vfpv4/mfloat-abi.hard
+-MULTILIB_REUSE	      += mcpu.cortex-a7/mfpu.vfpv4-d16/mfloat-abi.softfp=march.armv8-a/mfpu.vfpv4/mfloat-abi.softfp
+-MULTILIB_REUSE	      += mcpu.cortex-a7/mfpu.vfpv4-d16/mfloat-abi.hard=march.armv8-a/mfpu.vfpv4-d16/mfloat-abi.hard
+-MULTILIB_REUSE	      += mcpu.cortex-a7/mfpu.vfpv4-d16/mfloat-abi.softfp=march.armv8-a/mfpu.vfpv4-d16/mfloat-abi.softfp
++MULTILIB_REUSE	      += march.armv7ve/mfpu.vfpv4-d16/mfloat-abi.hard=march.armv7ve/mfpu.fp-armv8/mfloat-abi.hard
++MULTILIB_REUSE	      += march.armv7ve/mfpu.vfpv4-d16/mfloat-abi.softfp=march.armv7ve/mfpu.fp-armv8/mfloat-abi.softfp
++MULTILIB_REUSE	      += march.armv7ve/mfpu.vfpv4-d16/mfloat-abi.hard=march.armv8-a/mfpu.vfpv4/mfloat-abi.hard
++MULTILIB_REUSE	      += march.armv7ve/mfpu.vfpv4-d16/mfloat-abi.softfp=march.armv8-a/mfpu.vfpv4/mfloat-abi.softfp
++MULTILIB_REUSE	      += march.armv7ve/mfpu.vfpv4-d16/mfloat-abi.hard=march.armv8-a/mfpu.vfpv4-d16/mfloat-abi.hard
++MULTILIB_REUSE	      += march.armv7ve/mfpu.vfpv4-d16/mfloat-abi.softfp=march.armv8-a/mfpu.vfpv4-d16/mfloat-abi.softfp
+ 
+ 
+-MULTILIB_REUSE	      += mcpu.cortex-a7/mfpu.neon-vfpv4/mfloat-abi.hard=march.armv8-a/mfpu.neon-vfpv4/mfloat-abi.hard
+-MULTILIB_REUSE	      += mcpu.cortex-a7/mfpu.neon-vfpv4/mfloat-abi.softfp=march.armv8-a/mfpu.neon-vfpv4/mfloat-abi.softfp
+-MULTILIB_REUSE	      += mcpu.cortex-a7/mfpu.neon-vfpv4/mfloat-abi.hard=mcpu.cortex-a7/mfpu.neon-fp-armv8/mfloat-abi.hard
+-MULTILIB_REUSE	      += mcpu.cortex-a7/mfpu.neon-vfpv4/mfloat-abi.softfp=mcpu.cortex-a7/mfpu.neon-fp-armv8/mfloat-abi.softfp
++MULTILIB_REUSE	      += march.armv7ve/mfpu.neon-vfpv4/mfloat-abi.hard=march.armv8-a/mfpu.neon-vfpv4/mfloat-abi.hard
++MULTILIB_REUSE	      += march.armv7ve/mfpu.neon-vfpv4/mfloat-abi.softfp=march.armv8-a/mfpu.neon-vfpv4/mfloat-abi.softfp
++MULTILIB_REUSE	      += march.armv7ve/mfpu.neon-vfpv4/mfloat-abi.hard=march.armv7ve/mfpu.neon-fp-armv8/mfloat-abi.hard
++MULTILIB_REUSE	      += march.armv7ve/mfpu.neon-vfpv4/mfloat-abi.softfp=march.armv7ve/mfpu.neon-fp-armv8/mfloat-abi.softfp
+ 
+ 
+ 
+ # And again for mthumb.
+ 
+-MULTILIB_REUSE	      += mthumb/march.armv7-a/mfpu.vfpv3-d16/mfloat-abi.hard=mthumb/mcpu.cortex-a7/mfpu.vfpv3-d16/mfloat-abi.hard
+-MULTILIB_REUSE	      += mthumb/march.armv7-a/mfpu.vfpv3-d16/mfloat-abi.softfp=mthumb/mcpu.cortex-a7/mfpu.vfpv3-d16/mfloat-abi.softfp
++MULTILIB_REUSE	      += mthumb/march.armv7-a/mfpu.vfpv3-d16/mfloat-abi.hard=mthumb/march.armv7ve/mfpu.vfpv3-d16/mfloat-abi.hard
++MULTILIB_REUSE	      += mthumb/march.armv7-a/mfpu.vfpv3-d16/mfloat-abi.softfp=mthumb/march.armv7ve/mfpu.vfpv3-d16/mfloat-abi.softfp
+ MULTILIB_REUSE	      += mthumb/march.armv7-a/mfpu.vfpv3-d16/mfloat-abi.hard=mthumb/march.armv8-a/mfpu.vfpv3-d16/mfloat-abi.hard
+ MULTILIB_REUSE	      += mthumb/march.armv7-a/mfpu.vfpv3-d16/mfloat-abi.softfp=mthumb/march.armv8-a/mfpu.vfpv3-d16/mfloat-abi.softfp
+ MULTILIB_REUSE	      += mthumb/march.armv7-a/mfpu.vfpv3-d16/mfloat-abi.hard=mthumb/march.armv7-a/mfpu.vfpv4-d16/mfloat-abi.hard
+@@ -153,8 +151,8 @@ MULTILIB_REUSE	      += mthumb/march.armv7-a/mfpu.vfpv3-d16/mfloat-abi.hard=mthu
+ MULTILIB_REUSE	      += mthumb/march.armv7-a/mfpu.vfpv3-d16/mfloat-abi.softfp=mthumb/march.armv7-a/mfpu.vfpv4/mfloat-abi.softfp
+ 
+ 
+-MULTILIB_REUSE	      += mthumb/march.armv7-a/mfpu.neon/mfloat-abi.hard=mthumb/mcpu.cortex-a7/mfpu.neon/mfloat-abi.hard
+-MULTILIB_REUSE	      += mthumb/march.armv7-a/mfpu.neon/mfloat-abi.softfp=mthumb/mcpu.cortex-a7/mfpu.neon/mfloat-abi.softfp
++MULTILIB_REUSE	      += mthumb/march.armv7-a/mfpu.neon/mfloat-abi.hard=mthumb/march.armv7ve/mfpu.neon/mfloat-abi.hard
++MULTILIB_REUSE	      += mthumb/march.armv7-a/mfpu.neon/mfloat-abi.softfp=mthumb/march.armv7ve/mfpu.neon/mfloat-abi.softfp
+ MULTILIB_REUSE	      += mthumb/march.armv7-a/mfpu.neon/mfloat-abi.hard=mthumb/march.armv8-a/mfpu.neon/mfloat-abi.hard
+ MULTILIB_REUSE	      += mthumb/march.armv7-a/mfpu.neon/mfloat-abi.softfp=mthumb/march.armv8-a/mfpu.neon/mfloat-abi.softfp
+ MULTILIB_REUSE	      += mthumb/march.armv7-a/mfpu.neon/mfloat-abi.hard=mthumb/march.armv7-a/mfpu.neon-vfpv4/mfloat-abi.hard
+@@ -163,15 +161,15 @@ MULTILIB_REUSE	      += mthumb/march.armv7-a/mfpu.neon/mfloat-abi.hard=mthumb/ma
+ MULTILIB_REUSE	      += mthumb/march.armv7-a/mfpu.neon/mfloat-abi.softfp=mthumb/march.armv7-a/mfpu.neon-fp-armv8/mfloat-abi.softfp
+ 
+ 
+-MULTILIB_REUSE	      += mthumb/mcpu.cortex-a7/mfpu.vfpv4-d16/mfloat-abi.hard=mthumb/mcpu.cortex-a7/mfpu.fp-armv8/mfloat-abi.hard
+-MULTILIB_REUSE	      += mthumb/mcpu.cortex-a7/mfpu.vfpv4-d16/mfloat-abi.softfp=mthumb/mcpu.cortex-a7/mfpu.fp-armv8/mfloat-abi.softfp
+-MULTILIB_REUSE	      += mthumb/mcpu.cortex-a7/mfpu.vfpv4-d16/mfloat-abi.hard=mthumb/march.armv8-a/mfpu.vfpv4/mfloat-abi.hard
+-MULTILIB_REUSE	      += mthumb/mcpu.cortex-a7/mfpu.vfpv4-d16/mfloat-abi.softfp=mthumb/march.armv8-a/mfpu.vfpv4/mfloat-abi.softfp
+-MULTILIB_REUSE	      += mthumb/mcpu.cortex-a7/mfpu.vfpv4-d16/mfloat-abi.hard=mthumb/march.armv8-a/mfpu.vfpv4-d16/mfloat-abi.hard
+-MULTILIB_REUSE	      += mthumb/mcpu.cortex-a7/mfpu.vfpv4-d16/mfloat-abi.softfp=mthumb/march.armv8-a/mfpu.vfpv4-d16/mfloat-abi.softfp
++MULTILIB_REUSE	      += mthumb/march.armv7ve/mfpu.vfpv4-d16/mfloat-abi.hard=mthumb/march.armv7ve/mfpu.fp-armv8/mfloat-abi.hard
++MULTILIB_REUSE	      += mthumb/march.armv7ve/mfpu.vfpv4-d16/mfloat-abi.softfp=mthumb/march.armv7ve/mfpu.fp-armv8/mfloat-abi.softfp
++MULTILIB_REUSE	      += mthumb/march.armv7ve/mfpu.vfpv4-d16/mfloat-abi.hard=mthumb/march.armv8-a/mfpu.vfpv4/mfloat-abi.hard
++MULTILIB_REUSE	      += mthumb/march.armv7ve/mfpu.vfpv4-d16/mfloat-abi.softfp=mthumb/march.armv8-a/mfpu.vfpv4/mfloat-abi.softfp
++MULTILIB_REUSE	      += mthumb/march.armv7ve/mfpu.vfpv4-d16/mfloat-abi.hard=mthumb/march.armv8-a/mfpu.vfpv4-d16/mfloat-abi.hard
++MULTILIB_REUSE	      += mthumb/march.armv7ve/mfpu.vfpv4-d16/mfloat-abi.softfp=mthumb/march.armv8-a/mfpu.vfpv4-d16/mfloat-abi.softfp
+ 
+ 
+-MULTILIB_REUSE	      += mthumb/mcpu.cortex-a7/mfpu.neon-vfpv4/mfloat-abi.hard=mthumb/march.armv8-a/mfpu.neon-vfpv4/mfloat-abi.hard
+-MULTILIB_REUSE	      += mthumb/mcpu.cortex-a7/mfpu.neon-vfpv4/mfloat-abi.softfp=mthumb/march.armv8-a/mfpu.neon-vfpv4/mfloat-abi.softfp
+-MULTILIB_REUSE	      += mthumb/mcpu.cortex-a7/mfpu.neon-vfpv4/mfloat-abi.hard=mthumb/mcpu.cortex-a7/mfpu.neon-fp-armv8/mfloat-abi.hard
+-MULTILIB_REUSE	      += mthumb/mcpu.cortex-a7/mfpu.neon-vfpv4/mfloat-abi.softfp=mthumb/mcpu.cortex-a7/mfpu.neon-fp-armv8/mfloat-abi.softfp
++MULTILIB_REUSE	      += mthumb/march.armv7ve/mfpu.neon-vfpv4/mfloat-abi.hard=mthumb/march.armv8-a/mfpu.neon-vfpv4/mfloat-abi.hard
++MULTILIB_REUSE	      += mthumb/march.armv7ve/mfpu.neon-vfpv4/mfloat-abi.softfp=mthumb/march.armv8-a/mfpu.neon-vfpv4/mfloat-abi.softfp
++MULTILIB_REUSE	      += mthumb/march.armv7ve/mfpu.neon-vfpv4/mfloat-abi.hard=mthumb/march.armv7ve/mfpu.neon-fp-armv8/mfloat-abi.hard
++MULTILIB_REUSE	      += mthumb/march.armv7ve/mfpu.neon-vfpv4/mfloat-abi.softfp=mthumb/march.armv7ve/mfpu.neon-fp-armv8/mfloat-abi.softfp
+diff --git a/gcc/doc/invoke.texi b/gcc/doc/invoke.texi
+index c39192b..7104ea3 100644
+--- a/gcc/doc/invoke.texi
++++ b/gcc/doc/invoke.texi
+@@ -11266,9 +11266,12 @@ of the @option{-mcpu=} option.  Permissible names are: @samp{armv2},
+ @samp{armv6}, @samp{armv6j},
+ @samp{armv6t2}, @samp{armv6z}, @samp{armv6zk}, @samp{armv6-m},
+ @samp{armv7}, @samp{armv7-a}, @samp{armv7-r}, @samp{armv7-m}, @samp{armv7e-m}
+-@samp{armv8-a}, @samp{armv8-a+crc},
++@samp{armv7ve}, @samp{armv8-a},
+ @samp{iwmmxt}, @samp{iwmmxt2}, @samp{ep9312}.
+ 
++@option{-march=armv7ve} is the armv7-a architecture with virtualization
++extensions.
++
+ @option{-march=armv8-a+crc} enables code generation for the ARMv8-A
+ architecture together with the optional CRC32 extensions.
+ 
+diff --git a/gcc/testsuite/gcc.target/arm/ftest-armv7ve-arm.c b/gcc/testsuite/gcc.target/arm/ftest-armv7ve-arm.c
+new file mode 100644
+index 0000000..3cf987c
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/arm/ftest-armv7ve-arm.c
+@@ -0,0 +1,40 @@
++/* { dg-do compile } */
++/* { dg-skip-if "avoid conflicting multilib options" { *-*-* } { "-march=*" } { "-march=armv7ve" } } */
++/* { dg-skip-if "avoid conflicting multilib options" { *-*-* } { "-mthumb" } { "" } } */
++/* { dg-options "-marm" } */
++/* { dg-add-options arm_arch_v7ve } */
++
++#define NEED_ARM_ARCH
++#define VALUE_ARM_ARCH 7
++
++#define NEED_ARM_ARCH_ISA_ARM
++#define VALUE_ARM_ARCH_ISA_ARM 1
++
++#define NEED_ARM_ARCH_ISA_THUMB
++#define VALUE_ARM_ARCH_ISA_THUMB 2
++
++#define NEED_ARM_ARCH_PROFILE
++#define VALUE_ARM_ARCH_PROFILE 'A'
++
++#define NEED_ARM_FEATURE_UNALIGNED
++#define VALUE_ARM_FEATURE_UNALIGNED 1
++
++#define NEED_ARM_FEATURE_LDREX
++#define VALUE_ARM_FEATURE_LDREX 15
++
++#define NEED_ARM_FEATURE_CLZ
++#define VALUE_ARM_FEATURE_CLZ 1
++
++#define NEED_ARM_FEATURE_DSP
++#define VALUE_ARM_FEATURE_DSP 1
++
++#define NEED_ARM_FEATURE_SIMD32
++#define VALUE_ARM_FEATURE_SIMD32 1
++
++#define NEED_ARM_FEATURE_QBIT
++#define VALUE_ARM_FEATURE_QBIT 1
++
++#define NEED_ARM_FEATURE_SAT
++#define VALUE_ARM_FEATURE_SAT 1
++
++#include "ftest-support.h"
+diff --git a/gcc/testsuite/gcc.target/arm/ftest-armv7ve-thumb.c b/gcc/testsuite/gcc.target/arm/ftest-armv7ve-thumb.c
+new file mode 100644
+index 0000000..0d6b432
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/arm/ftest-armv7ve-thumb.c
+@@ -0,0 +1,40 @@
++/* { dg-do compile } */
++/* { dg-skip-if "avoid conflicting multilib options" { *-*-* } { "-march=*" } { "-march=armv7ve" } } */
++/* { dg-skip-if "avoid conflicting multilib options" { *-*-* } { "-marm" } { "" } } */
++/* { dg-options "-mthumb" } */
++/* { dg-add-options arm_arch_v7ve } */
++
++#define NEED_ARM_ARCH
++#define VALUE_ARM_ARCH 7
++
++#define NEED_ARM_ARCH_ISA_ARM
++#define VALUE_ARM_ARCH_ISA_ARM 1
++
++#define NEED_ARM_ARCH_ISA_THUMB
++#define VALUE_ARM_ARCH_ISA_THUMB 2
++
++#define NEED_ARM_ARCH_PROFILE
++#define VALUE_ARM_ARCH_PROFILE 'A'
++
++#define NEED_ARM_FEATURE_UNALIGNED
++#define VALUE_ARM_FEATURE_UNALIGNED 1
++
++#define NEED_ARM_FEATURE_LDREX
++#define VALUE_ARM_FEATURE_LDREX 15
++
++#define NEED_ARM_FEATURE_CLZ
++#define VALUE_ARM_FEATURE_CLZ 1
++
++#define NEED_ARM_FEATURE_DSP
++#define VALUE_ARM_FEATURE_DSP 1
++
++#define NEED_ARM_FEATURE_SIMD32
++#define VALUE_ARM_FEATURE_SIMD32 1
++
++#define NEED_ARM_FEATURE_QBIT
++#define VALUE_ARM_FEATURE_QBIT 1
++
++#define NEED_ARM_FEATURE_SAT
++#define VALUE_ARM_FEATURE_SAT 1
++
++#include "ftest-support.h"
+diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
+index 815d5e1..2a69795 100644
+--- a/gcc/testsuite/lib/target-supports.exp
++++ b/gcc/testsuite/lib/target-supports.exp
+@@ -2399,6 +2399,7 @@ foreach { armfunc armflag armdef } { v4 "-march=armv4 -marm" __ARM_ARCH_4__
+ 				     v6z "-march=armv6z" __ARM_ARCH_6Z__
+ 				     v6m "-march=armv6-m -mthumb" __ARM_ARCH_6M__
+ 				     v7a "-march=armv7-a" __ARM_ARCH_7A__
++				     v7ve "-march=armv7ve" __ARM_ARCH_7A__
+ 				     v7r "-march=armv7-r" __ARM_ARCH_7R__
+ 				     v7m "-march=armv7-m -mthumb" __ARM_ARCH_7M__
+ 				     v7em "-march=armv7e-m -mthumb" __ARM_ARCH_7EM__
+-- 
+1.8.3.2
+

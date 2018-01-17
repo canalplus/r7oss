@@ -1,0 +1,12 @@
+What:		/sys/bus/platform/drivers/brcm-waketimer/<MMIO-address>.waketimer/timeout
+Date:		November 21, 2014
+KernelVersion:	3.14
+Contact:	Brian Norris <norris@broadcom.com>
+Description:	The control file for the wakeup timer. This integer value
+		represents the number of seconds between a suspend operation
+		(e.g., S3 suspend-to-RAM) and the time at which the wakeup
+		timer should fire.
+
+		Values are -1 (default) or any non-negative integer. Units are
+		in seconds. The special value of -1 means the timer should not
+		wake up the system.

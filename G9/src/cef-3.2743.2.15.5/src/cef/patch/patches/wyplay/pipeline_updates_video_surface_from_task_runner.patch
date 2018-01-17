@@ -1,0 +1,47 @@
+From ece461e59ea8d7102f603c75ba853b131fc8912d Mon Sep 17 00:00:00 2001
+From: Gauthier Haderer <ghaderer@wyplay.com>
+Date: Mon, 10 Apr 2017 17:21:36 +0000
+Subject: [PATCH] Pipeline updates video surface from task runner.
+
+---
+ media/base/pipeline_impl.cc | 10 ++++++++++
+ media/base/pipeline_impl.h  |  2 ++
+ 2 files changed, 12 insertions(+)
+
+diff --git media/base/pipeline_impl.cc media/base/pipeline_impl.cc
+index 0af157d..a342a2c 100644
+--- media/base/pipeline_impl.cc
++++ media/base/pipeline_impl.cc
+@@ -957,6 +957,16 @@ void PipelineImpl::ReportMetadata() {
+ }
+ 
+ void PipelineImpl::UpdateVideoSurface(int x, int y, int width, int height) {
++  base::AutoLock auto_lock(lock_);
++  if (renderer_.get()) {
++    media_task_runner_->PostTask(
++        FROM_HERE,
++        base::Bind(
++            &PipelineImpl::UpdateVideoSurfaceTask, weak_factory_.GetWeakPtr(), x, y, width, height));
++  }
++}
++
++void PipelineImpl::UpdateVideoSurfaceTask(int x, int y, int width, int height) {
+   if (renderer_.get())
+     renderer_->UpdateVideoSurface(x, y, width, height);
+ }
+diff --git media/base/pipeline_impl.h media/base/pipeline_impl.h
+index 479c8e4..e47cde0 100644
+--- media/base/pipeline_impl.h
++++ media/base/pipeline_impl.h
+@@ -232,6 +232,8 @@ class MEDIA_EXPORT PipelineImpl : public Pipeline,
+ 
+   void ReportMetadata();
+ 
++  void UpdateVideoSurfaceTask(int x, int y, int width, int height);
++
+   // Task runner of the thread on which this class is constructed.
+   // Also used to post notifications on Pipeline::Client object.
+   const scoped_refptr<base::SingleThreadTaskRunner> main_task_runner_;
+-- 
+1.8.5.3
+

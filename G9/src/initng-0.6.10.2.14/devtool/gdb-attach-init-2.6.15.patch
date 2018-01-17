@@ -1,0 +1,28 @@
+--- linux-2.6.15-pre7/kernel/ptrace.c	2005-12-27 19:46:11.042565898 +0000
++++ linux-2.6.15-pre7-initng/kernel/ptrace.c	2005-12-27 20:21:50.850443573 +0000
+@@ -153,7 +153,8 @@
+ 	int retval;
+ 	task_lock(task);
+ 	retval = -EPERM;
+-	if (task->pid <= 1)
++	/* We do wanna be able to attach pid 1 */
++	if (task->pid <= 0)
+ 		goto bad;
+ 	if (task->tgid == current->tgid)
+ 		goto bad;
+@@ -437,11 +438,11 @@
+ 		return 0;
+ 	}
+ 
+-	/*
+-	 * You may not mess with init
++      	/*
++	 * You may mess with init, if you really want to
+ 	 */
+-	if (pid == 1)
+-		return -EPERM;
++	/*	if (pid == 1)
++		return -EPERM; */
+ 
+ 	ret = -ESRCH;
+ 	read_lock(&tasklist_lock);

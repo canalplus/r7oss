@@ -1,0 +1,267 @@
+if BUILD_BASH_COMPLETION
+dist_bashcompletion_DATA = \
+	bash-completion/blkid \
+	bash-completion/cal \
+	bash-completion/col \
+	bash-completion/colcrt \
+	bash-completion/colrm \
+	bash-completion/column \
+	bash-completion/findmnt \
+	bash-completion/flock \
+	bash-completion/fsck.minix \
+	bash-completion/getopt \
+	bash-completion/hexdump \
+	bash-completion/ipcrm \
+	bash-completion/ipcs \
+	bash-completion/isosize \
+	bash-completion/logger \
+	bash-completion/look \
+	bash-completion/mcookie \
+	bash-completion/mkfs \
+	bash-completion/mkfs.minix \
+	bash-completion/mkswap \
+	bash-completion/namei \
+	bash-completion/prlimit \
+	bash-completion/readprofile \
+	bash-completion/renice \
+	bash-completion/rev \
+	bash-completion/script \
+	bash-completion/scriptreplay \
+	bash-completion/setsid \
+	bash-completion/tailf \
+	bash-completion/whereis \
+	bash-completion/wipefs
+
+# disk-utils...
+if BUILD_BFS
+dist_bashcompletion_DATA += \
+	bash-completion/mkfs.bfs
+endif
+if BUILD_CRAMFS
+dist_bashcompletion_DATA += \
+	bash-completion/fsck.cramfs \
+	bash-completion/mkfs.cramfs
+endif
+if BUILD_FSCK
+dist_bashcompletion_DATA += \
+	bash-completion/fsck
+endif
+if BUILD_PARTX
+dist_bashcompletion_DATA += \
+	bash-completion/addpart \
+	bash-completion/delpart \
+	bash-completion/resizepart \
+	bash-completion/partx
+endif
+if BUILD_RAW
+dist_bashcompletion_DATA += \
+	bash-completion/raw
+endif
+if BUILD_SWAPLABEL
+dist_bashcompletion_DATA += \
+	bash-completion/swaplabel
+endif
+if BUILD_FDFORMAT
+dist_bashcompletion_DATA += \
+	bash-completion/fdformat
+endif
+if LINUX
+dist_bashcompletion_DATA += \
+	bash-completion/blockdev
+endif
+# ...disk-utils
+
+# fdisks...
+if !ARCH_M68K
+dist_bashcompletion_DATA += \
+	bash-completion/fdisk
+if !ARCH_SPARC
+dist_bashcompletion_DATA += \
+	bash-completion/sfdisk
+if BUILD_CFDISK
+dist_bashcompletion_DATA += \
+	bash-completion/cfdisk
+endif
+endif # !ARCH_SPARC
+endif # !ARCH_M68
+# ...fdisks
+
+# login-utils...
+if BUILD_CHFN_CHSH
+dist_bashcompletion_DATA += \
+	bash-completion/chfn \
+	bash-completion/chsh
+endif
+if BUILD_DEPRECATED_LAST
+dist_bashcompletion_DATA += \
+	bash-completion/last
+endif
+if BUILD_NEWGRP
+dist_bashcompletion_DATA += \
+	bash-completion/newgrp
+endif
+
+if BUILD_SU
+dist_bashcompletion_DATA += \
+	bash-completion/su
+if BUILD_RUNUSER
+install-data-hook-bashcomp-runuser::
+	ln -sf su $(DESTDIR)$(bashcompletiondir)/runuser
+INSTALL_DATA_HOOKS += install-data-hook-bashcomp-runuser
+endif
+endif
+
+if BUILD_UTMPDUMP
+dist_bashcompletion_DATA += \
+	bash-completion/utmpdump
+endif
+# ...login-utils
+
+# misc-utils...
+if BUILD_LIBUUID
+dist_bashcompletion_DATA += \
+	bash-completion/uuidgen
+endif
+if BUILD_UUIDD
+dist_bashcompletion_DATA += \
+	bash-completion/uuidd
+endif
+if BUILD_LSBLK
+dist_bashcompletion_DATA += \
+	bash-completion/lsblk
+endif
+if BUILD_LSLOCKS
+dist_bashcompletion_DATA += \
+	bash-completion/lslocks
+endif
+if BUILD_RENAME
+dist_bashcompletion_DATA += \
+	bash-completion/rename
+endif
+# ...misc-utils
+
+# schedutils...
+if BUILD_SCHEDUTILS
+dist_bashcompletion_DATA += \
+	bash-completion/chrt
+if BUILD_IONICE
+dist_bashcompletion_DATA += \
+	bash-completion/ionice
+endif
+if BUILD_TASKSET
+dist_bashcompletion_DATA += \
+	bash-completion/taskset
+endif
+endif # BUILD_SCHEDUTILS
+# ...schedutils
+
+# sys-utils...
+if BUILD_CHCPU
+dist_bashcompletion_DATA += \
+	bash-completion/chcpu
+endif
+if BUILD_EJECT
+dist_bashcompletion_DATA += \
+	bash-completion/eject
+endif
+if BUILD_FALLOCATE
+dist_bashcompletion_DATA += \
+	bash-completion/fallocate
+endif
+if BUILD_HWCLOCK
+dist_bashcompletion_DATA += \
+	bash-completion/hwclock
+endif
+if BUILD_TUNELP
+dist_bashcompletion_DATA += \
+	bash-completion/tunelp
+endif
+if BUILD_LSCPU
+dist_bashcompletion_DATA += \
+	bash-completion/lscpu
+endif
+if BUILD_LOSETUP
+dist_bashcompletion_DATA += \
+	bash-completion/losetup
+endif
+if BUILD_MOUNTPOINT
+dist_bashcompletion_DATA += \
+	bash-completion/mountpoint
+endif
+if BUILD_NSENTER
+dist_bashcompletion_DATA += \
+	bash-completion/nsenter
+endif
+if BUILD_PIVOT_ROOT
+dist_bashcompletion_DATA += \
+	bash-completion/pivot_root
+endif
+if BUILD_SETPRIV
+dist_bashcompletion_DATA += \
+	bash-completion/setpriv
+endif
+if BUILD_SWAPON
+dist_bashcompletion_DATA += \
+	bash-completion/swapon
+endif
+if BUILD_UNSHARE
+dist_bashcompletion_DATA += \
+	bash-completion/unshare
+endif
+if BUILD_WDCTL
+dist_bashcompletion_DATA += \
+	bash-completion/wdctl
+endif
+if BUILD_CYTUNE
+dist_bashcompletion_DATA += \
+	bash-completion/cytune
+endif
+if LINUX
+dist_bashcompletion_DATA += \
+	bash-completion/blkdiscard \
+	bash-completion/ctrlaltdel \
+	bash-completion/dmesg \
+	bash-completion/fsfreeze \
+	bash-completion/fstrim \
+	bash-completion/ldattach \
+	bash-completion/rtcwake \
+	bash-completion/setarch
+endif
+# ...sys-utils
+
+# term-utils...
+if BUILD_MESG
+dist_bashcompletion_DATA += \
+	bash-completion/mesg
+endif
+if BUILD_WALL
+dist_bashcompletion_DATA += \
+	bash-completion/wall
+endif
+if BUILD_WRITE
+dist_bashcompletion_DATA += \
+	bash-completion/write
+endif
+if LINUX
+dist_bashcompletion_DATA += \
+	bash-completion/setterm
+endif
+# ...term-utils
+
+# text-utils...
+if BUILD_MORE
+dist_bashcompletion_DATA += \
+	bash-completion/more
+endif
+if BUILD_PG
+dist_bashcompletion_DATA += \
+	bash-completion/pg
+endif
+if BUILD_UL
+dist_bashcompletion_DATA += \
+	bash-completion/ul
+endif
+# ...text-utils
+
+
+endif # BUILD_BASH_COMPLETION

@@ -1,0 +1,24 @@
+diff --git build/common.gypi build/common.gypi
+index 11312fe..64fed4e 100644
+--- build/common.gypi
++++ build/common.gypi
+@@ -2505,6 +2505,9 @@
+ 
+     # Whether to allow building of Media Router related isolates.
+     'archive_media_router_tests%': 0,
++
++    # By default, don't include PlayReady support.
++    'use_playready%': 0,
+   },
+   'target_defaults': {
+     'variables': {
+@@ -2767,6 +2770,9 @@
+       ['enable_browser_cdms==1', {
+         'defines': ['ENABLE_BROWSER_CDMS'],
+       }],
++      ['use_playready==1', {
++        'defines': ['PLAYREADY_CDM_AVAILABLE',],
++      }],
+       ['notifications==1', {
+         'defines': ['ENABLE_NOTIFICATIONS'],
+       }],

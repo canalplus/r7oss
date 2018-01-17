@@ -1,0 +1,88 @@
+Broadcom MSPI controller
+
+The Broadcom MSPI controller is a SPI master found on various chips, including
+BRCMSTB (BCM7XXX) and Cygnus.
+
+Required properties:
+
+- #address-cells:
+    Must be <1>, as required by generic SPI binding.
+
+- #size-cells:
+    Must be <0>, also as required by generic SPI binding.
+
+- compatible:
+    Must be "brcm,spi-brcmstb-mspi" or "brcm,spi-brcmstb".
+
+- reg:
+    Define the bases and ranges of the associated I/O address spaces.
+    For historical reasons, the first range should contain the MSPI controller
+    registers, while the others may be for extended interrupt control or an
+    optional Boot SPI (BSPI) portion for accelerating flash reads.  Only
+    the MSPI controller register range is required.
+
+- reg-names:
+    First name does not matter, but must be reserved for the MSPI controller
+    register range as mentioned in 'reg' above, and will typically contain
+    "mspi" or "hif_mspi".
+    Other names include:
+    - "bspi": BSPI register range
+    - "bspi_raf": Linear read BSPI pipe register range
+
+- interrupts + interrupt-parent OR interrupts-extended:
+    The interrupts used by the MSPI controller.
+
+- interrupt-names:
+    Names of interrupts associated with this MSPI controller.
+    - "mspi_done": Indicates that the requested SPI operation is complete.
+
+Optional properties:
+
+- clocks:
+    A phandle to the reference clock for this block.  If not present, will
+    assume a 27 MHz fixed clock (default for UPG).
+
+Examples:
+
+spi@f0416000 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	clocks = <&upg_fixed>;
+	compatible = "brcm,spi-brcmstb-mspi";
+	reg = <0xf0416000 0x180>;
+	reg-names = "mspi";
+	interrupts = <0x14>;
+	interrupt-parent = <&irq0_aon_intc>;
+	interrupt-names = "mspi_done";
+};
+
+spi@f03e3400 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	compatible = "brcm,spi-brcmstb";
+	status = "disabled";
+	reg = <0xf03e3400 0x188>,
+		<0xf03e3200 0x50>,
+		<0xf03e3300 0x24>;
+	reg-names = "hif_mspi",
+		"bspi",
+		"bspi_raf";
+	interrupts = <0x0 0x21 0x0>;
+	interrupt-parent = <&intc>;
+	interrupts-extended = <&intc 0x0 0x21 0x0>,
+		<&hif_spi_intr2_intc 0x0>,
+		<&hif_spi_intr2_intc 0x1>,
+		<&hif_spi_intr2_intc 0x2>,
+		<&hif_spi_intr2_intc 0x3>,
+		<&hif_spi_intr2_intc 0x5>,
+		<&hif_spi_intr2_intc 0x6>;
+	interrupt-names = "hif_spi",
+		"spi_lr_fullness_reached",
+		"spi_lr_session_aborted",
+		"spi_lr_impatient",
+		"spi_lr_session_done",
+		"mspi_done",
+		"mspi_halted";
+	clocks = <&sw_spi>;
+	clock-names = "sw_spi";
+};

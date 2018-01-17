@@ -1,0 +1,16 @@
+diff -up gcc-linaro-4.8-2014.01/gcc/builtins.c.orig gcc-linaro-4.8-2014.01/gcc/builtins.c
+--- gcc-linaro-4.8-2014.01/gcc/builtins.c.orig	2013-12-11 05:47:33.000000000 -0800
++++ gcc-linaro-4.8-2014.01/gcc/builtins.c	2014-02-10 19:09:54.854408517 -0800
+@@ -3170,6 +3170,11 @@ expand_builtin_mempcpy_args (tree dest, 
+       len_rtx = expand_normal (len);
+       src_str = c_getstr (src);
+ 
++      /* Call optimized libc memcpy for larger copies */
++      if (CONST_INT_P (len_rtx)
++	  && (unsigned HOST_WIDE_INT) INTVAL (len_rtx) > 256)
++	return NULL_RTX;
++
+       /* If SRC is a string constant and block move would be done
+ 	 by pieces, we can avoid loading the string from memory
+ 	 and only stored the computed constants.  */
+

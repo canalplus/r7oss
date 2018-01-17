@@ -1,0 +1,6 @@
+INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR}/src ${CMAKE_BINARY_DIR} )
+
+ADD_LIBRARY(runlevel MODULE initng_runlevel.c)
+TARGET_LINK_LIBRARIES(runlevel initng)
+INSTALL_TARGETS(${LIB_INSTALL_DIR}/initng runlevel)
+

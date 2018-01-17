@@ -1,0 +1,12 @@
+          name : find
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : 
+      commands : 
+       options : 
+   description : When starting a new service, initng usually needs the
+                 full daemon/service/subservice path and will fail if it is not
+                 found.  This plugin will search the /etc/initng dir, so
+                 'ngc -u subservice' can start "daemon/service/subservice".
+                 The plugin also supports an alias file where you can store
+                 arbitary conversions, for example to start "animals/pig" on
+                 executing "ngc -u animals/cow"

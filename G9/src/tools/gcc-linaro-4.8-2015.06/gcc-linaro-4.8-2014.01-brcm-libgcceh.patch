@@ -1,0 +1,45 @@
+Upstream-status: Not applicable
+
+gcc: Build libgcc_eh.a in --disable-shared builds
+
+uClibc 0.9.32 requires libgcc_eh.a on ARM EABI platforms.  libgcc_eh.a
+is not normally built for a stage 1 gcc, which must use --disable-shared.
+Change the gcc behavior so that uClibc builds correctly.
+
+refs #SWLINUX-1822
+
+diff -up gcc-linaro-4.8-2014.01/libgcc/Makefile.in.orig gcc-linaro-4.8-2014.01/libgcc/Makefile.in
+--- gcc-linaro-4.8-2014.01/libgcc/Makefile.in.orig	2013-02-04 11:06:20.000000000 -0800
++++ gcc-linaro-4.8-2014.01/libgcc/Makefile.in	2014-02-10 19:09:54.856408567 -0800
+@@ -890,8 +890,9 @@ all: libunwind.a
+ libgcc_s$(SHLIB_EXT): libunwind$(SHLIB_EXT)
+ endif
+ 
++all: libgcc_eh.a
+ ifeq ($(enable_shared),yes)
+-all: libgcc_eh.a libgcc_s$(SHLIB_EXT)
++all: libgcc_s$(SHLIB_EXT)
+ ifneq ($(LIBUNWIND),)
+ all: libunwind$(SHLIB_EXT)
+ endif
+@@ -1054,10 +1055,6 @@ install-libunwind:
+ install-shared:
+ 	$(mkinstalldirs) $(DESTDIR)$(inst_libdir)
+ 
+-	$(INSTALL_DATA) libgcc_eh.a $(DESTDIR)$(inst_libdir)/
+-	chmod 644 $(DESTDIR)$(inst_libdir)/libgcc_eh.a
+-	$(RANLIB) $(DESTDIR)$(inst_libdir)/libgcc_eh.a
+-
+ 	$(subst @multilib_dir@,$(MULTIDIR),$(subst \
+ 		@shlib_base_name@,libgcc_s,$(subst \
+ 		@shlib_slibdir_qual@,$(MULTIOSSUBDIR),$(SHLIB_INSTALL))))
+@@ -1071,6 +1068,9 @@ install-leaf: $(install-shared) $(instal
+ 	$(INSTALL_DATA) libgcov.a $(DESTDIR)$(inst_libdir)/
+ 	chmod 644 $(DESTDIR)$(inst_libdir)/libgcov.a
+ 	$(RANLIB) $(DESTDIR)$(inst_libdir)/libgcov.a
++	$(INSTALL_DATA) libgcc_eh.a $(DESTDIR)$(inst_libdir)/
++	chmod 644 $(DESTDIR)$(inst_libdir)/libgcc_eh.a
++	$(RANLIB) $(DESTDIR)$(inst_libdir)/libgcc_eh.a
+ 
+ 	parts="$(INSTALL_PARTS)";				\
+ 	for file in $$parts; do					\

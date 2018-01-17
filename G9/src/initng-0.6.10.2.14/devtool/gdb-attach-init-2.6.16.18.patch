@@ -1,0 +1,27 @@
+diff -ur linux-2.6.16.18-org/kernel/ptrace.c linux-2.6.16.18/kernel/ptrace.c
+--- linux-2.6.16.18-org/kernel/ptrace.c	2006-05-28 23:14:18.000000000 +0200
++++ linux-2.6.16.18/kernel/ptrace.c	2006-05-28 23:10:52.000000000 +0200
+@@ -151,7 +151,8 @@
+ 	int retval;
+ 
+ 	retval = -EPERM;
+-	if (task->pid <= 1)
++	/* there is times when you wanna debug init */
++	if (task->pid < 1)
+ 		goto out;
+ 	if (task->tgid == current->tgid)
+ 		goto out;
+@@ -471,10 +472,11 @@
+ 	struct task_struct *child;
+ 
+ 	/*
+-	 * Tracing init is not allowed.
++	 * Tracing init is now allowed.
+ 	 */
++	/*
+ 	if (pid == 1)
+-		return ERR_PTR(-EPERM);
++		return ERR_PTR(-EPERM);*/
+ 
+ 	read_lock(&tasklist_lock);
+ 	child = find_task_by_pid(pid);

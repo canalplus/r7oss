@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+
+<node name="/any" xmlns:tp="http://telepathy.freedesktop.org/wiki/DbusSpec#extensions-v0">
+	<interface name="org.freedesktop.DBus.Properties">
+		<tp:docstring xmlns="http://www.w3.org/1999/xhtml">
+			<p>Many native APIs will have a concept of object <em>properties</em> or <em>attributes</em>.</p>
+			
+			<p>These can be exposed via the <code>org.freedesktop.DBus.Properties</code> interface.</p>
+	
+			<p>It is conventional to give D-Bus properties names consisting of capitalized words without punctuation ("CamelCase"), like <a class="link" href="http://dbus.freedesktop.org/doc/dbus-specification.html#message-protocol-names-member" title="Member names">member names</a>.</p>
+			
+			<p>For instance, the GObject property <code>connection-status</code> or the Qt property <code>connectionStatus</code> could be represented on D-Bus as <code>ConnectionStatus</code>.</p>
+			
+			<p>Strictly speaking, D-Bus property names are not required to follow the same naming restrictions as member names, but D-Bus property names that would not be valid member names (in particular, GObject-style dash-separated property names) can cause interoperability problems and should be avoided.</p>
+		  
+			<p>An empty string may be provided for the interface name; in this case, if there are multiple properties on an object with the same name, the results are undefined (picking one by according to an arbitrary deterministic rule, or returning an error, are the reasonable possibilities).</p>
+		</tp:docstring>
+
+		<method name="Get">
+			<tp:docstring>Get a single property by name.</tp:docstring>
+
+			<arg name="interface_name" type="s" direction="in">
+				<tp:docstring>Name of the interface to target</tp:docstring>
+			</arg>
+
+			<arg name="property_name" type="s" direction="in">
+				<tp:docstring>Name of the property to get</tp:docstring>
+			</arg>
+
+			<arg name="value" type="v" direction="out">
+				<tp:docstring>The property's value</tp:docstring>
+			</arg>
+		</method>
+
+		<method name="Set">
+			<tp:docstring>Set a single property by name.</tp:docstring>
+
+			<arg name="interface_name" type="s" direction="in">
+				<tp:docstring>Name of the interface to target</tp:docstring>
+			</arg>
+
+			<arg name="property_name" type="s" direction="in">
+				<tp:docstring>Name of the property to get</tp:docstring>
+			</arg>
+
+			<arg name="value" type="v" direction="in">
+				<tp:docstring>The new property's value</tp:docstring>
+			</arg>
+		</method>
+
+		<method name="GetAll">
+			<tp:docstring>Get all existing properties for a given interface</tp:docstring>
+
+			<arg name="interface_name" type="s" direction="in">
+				<tp:docstring>Name of the interface to target</tp:docstring>
+			</arg>
+
+			<arg name="props" type="a{sv}" direction="out">
+				<tp:docstring>Existing properties indexed by name and their values</tp:docstring>
+			</arg>
+		</method>
+
+		<signal name="PropertiesChanged">
+			<tp:docstring xmlns="http://www.w3.org/1999/xhtml">
+				<p>This signal may be emitted if one or more properties change on an object (this signal was added in D-Bus specfication 0.14).</p>
+				<p>Whether this signal is supported can be determined in IDL definitions.
+				   Note that the signal may be supported for an object but it may differ how
+				   whether and how it is used on a per-property basis (for e.g. performance or security reasons).</p>
+			   
+			   <p>Each property (or the parent interface) must be annotated with the <code>org.freedesktop.DBus.Property.EmitsChangedSignal</code> annotation to convey this.</p>
+
+			   <p>Possible values for the annotation include <code>true</code>, <code>invalidates</code> and <code>false</code>:
+				   <ul>
+					   <li>If set to <code>false</code>, the signal is not guaranteed to be emitted if the property changes.</li>
+					   <li>If set to <code>invalidates</code> the signal is emitted but the value is not included in the signal.</li>
+					   <li>If set to <code>true</code> the signal is emitted with the value included.</li>
+				  </ul>
+			  </p>
+				  
+			  <p>The value for the annotation defaults to <code>true</code> if the enclosing interface element does not specify the annotation. Otherwise it defaults to the value specified in the enclosing interface element.</p>
+
+			  <p>Usually the default value <code>true</code> is sufficient meaning that the annotation does not need to be used).</p>
+
+			  <p>Refer to <a href="http://dbus.freedesktop.org/doc/dbus-specification.html#introspection-format">D-Bus specification's introspection data format</a> for more details.</p>
+
+			</tp:docstring>
+		
+			<arg name="interface_name" type="s"/>
+
+			<arg name="changed_properties" type="a{sv}">
+				<tp:docstring>Dictionary containing the changed properties with the new values.</tp:docstring>
+			</arg>
+
+			<arg name="invalidated_properties" type="as">
+				<tp:docstring>Array of properties that changed but the value is not conveyed.</tp:docstring>
+			</arg>
+		</signal>
+	</interface>
+</node>
+

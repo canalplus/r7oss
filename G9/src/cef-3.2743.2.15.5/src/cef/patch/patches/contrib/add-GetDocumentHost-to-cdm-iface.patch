@@ -1,0 +1,111 @@
+diff --git applied/add-GetDocumentHost-to-cdm-iface.patch applied/add-GetDocumentHost-to-cdm-iface.patch
+new file mode 100644
+index 0000000..e69de29
+diff --git media/cdm/api/content_decryption_module.h media/cdm/api/content_decryption_module.h
+index 8cd6f92..ff30057 100644
+--- media/cdm/api/content_decryption_module.h
++++ media/cdm/api/content_decryption_module.h
+@@ -5,6 +5,8 @@
+ #ifndef CDM_CONTENT_DECRYPTION_MODULE_H_
+ #define CDM_CONTENT_DECRYPTION_MODULE_H_
+ 
++#include <string>
++
+ #if defined(_MSC_VER)
+ typedef unsigned char uint8_t;
+ typedef unsigned int uint32_t;
+@@ -989,6 +991,10 @@ class CDM_CLASS_API Host_7 {
+   // CDM can call this method multiple times to operate on different files.
+   virtual FileIO* CreateFileIO(FileIOClient* client) = 0;
+ 
++  // Basic workaround to retrieve current document URL
++  // to ensure per-app/per-domain CDM persistent storage
++  virtual std::string GetDocumentHost() = 0;
++
+  protected:
+   Host_7() {}
+   virtual ~Host_7() {}
+@@ -1126,6 +1132,10 @@ class CDM_CLASS_API Host_8 {
+   // CDM can call this method multiple times to operate on different files.
+   virtual FileIO* CreateFileIO(FileIOClient* client) = 0;
+ 
++  // Basic workaround to retrieve current document URL
++  // to ensure per-app/per-domain CDM persistent storage
++  virtual std::string GetDocumentHost() = 0;
++
+  protected:
+   Host_8() {}
+   virtual ~Host_8() {}
+diff --git media/cdm/cdm_adapter.cc media/cdm/cdm_adapter.cc
+index bc553ec..64d3897 100644
+--- media/cdm/cdm_adapter.cc
++++ media/cdm/cdm_adapter.cc
+@@ -966,4 +966,8 @@ bool CdmAdapter::AudioFramesDataToAudioFrames(
+   return true;
+ }
+ 
++std::string CdmAdapter::GetDocumentHost() {
++  return "";
++}
++
+ }  // namespace media
+diff --git media/cdm/cdm_adapter.h media/cdm/cdm_adapter.h
+index 269fc8f..6cc6673 100644
+--- media/cdm/cdm_adapter.h
++++ media/cdm/cdm_adapter.h
+@@ -156,6 +156,7 @@ class MEDIA_EXPORT CdmAdapter : public MediaKeys,
+   void OnDeferredInitializationDone(cdm::StreamType stream_type,
+                                     cdm::Status decoder_status) override;
+   cdm::FileIO* CreateFileIO(cdm::FileIOClient* client) override;
++  std::string GetDocumentHost() override;
+ 
+  private:
+   CdmAdapter(const std::string& key_system,
+diff --git media/cdm/ppapi/ppapi_cdm_adapter.cc media/cdm/ppapi/ppapi_cdm_adapter.cc
+index d3a143a..b552554 100644
+--- media/cdm/ppapi/ppapi_cdm_adapter.cc
++++ media/cdm/ppapi/ppapi_cdm_adapter.cc
+@@ -15,10 +15,8 @@
+ #include "ppapi/c/ppb_console.h"
+ #include "ppapi/cpp/private/uma_private.h"
+ 
+-#if defined(CHECK_DOCUMENT_URL)
+ #include "ppapi/cpp/dev/url_util_dev.h"
+ #include "ppapi/cpp/instance_handle.h"
+-#endif  // defined(CHECK_DOCUMENT_URL)
+ 
+ namespace {
+ 
+@@ -1139,6 +1137,20 @@ cdm::FileIO* PpapiCdmAdapter::CreateFileIO(cdm::FileIOClient* client) {
+       callback_factory_.NewCallback(&PpapiCdmAdapter::OnFirstFileRead));
+ }
+ 
++std::string PpapiCdmAdapter::GetDocumentHost() {
++  PP_URLComponents_Dev url_components = {};
++  const pp::URLUtil_Dev* url_util = pp::URLUtil_Dev::Get();
++  if (!url_util)
++    return "";
++
++  pp::Var href = url_util->GetDocumentURL(pp::InstanceHandle(pp_instance()),
++                                          &url_components);
++  std::string url = href.AsString();
++  std::string url_host =
++      url.substr(url_components.host.begin, url_components.host.len);
++  return url_host;
++}
++
+ #if defined(OS_CHROMEOS)
+ void PpapiCdmAdapter::ReportOutputProtectionUMA(OutputProtectionStatus status) {
+   pp::UMAPrivate uma_interface(this);
+diff --git media/cdm/ppapi/ppapi_cdm_adapter.h media/cdm/ppapi/ppapi_cdm_adapter.h
+index f1a196c..e8a9865 100644
+--- media/cdm/ppapi/ppapi_cdm_adapter.h
++++ media/cdm/ppapi/ppapi_cdm_adapter.h
+@@ -131,6 +131,7 @@ class PpapiCdmAdapter : public pp::Instance,
+   void OnDeferredInitializationDone(cdm::StreamType stream_type,
+                                     cdm::Status decoder_status) override;
+   cdm::FileIO* CreateFileIO(cdm::FileIOClient* client) override;
++  std::string GetDocumentHost() override;
+ 
+  private:
+   // These are reported to UMA server. Do not change the existing values!

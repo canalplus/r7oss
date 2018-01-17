@@ -1,0 +1,36 @@
+syntax: glob
+
+.deps
+autom4te.cache
+Doxyfile
+Makefile
+Makefile.in
+*.a
+*.la
+*.lai
+*.lo
+*.o
+*.so
+*.so.*
+*.swp
+
+syntax: regexp
+
+^\.elibtoolized
+^aclocal\.m4
+^config\.guess
+^config\.h
+^config\.h\.in
+^config\.log
+^config\.status
+^config\.sub
+^configure
+^dbus-c\+\+-1-uninstalled\.pc
+^dbus-c\+\+-1\.pc
+^depcomp
+^install-sh
+^libdbus-c\+\+\.spec
+^libtool
+^ltmain\.sh
+^missing
+^stamp-h1

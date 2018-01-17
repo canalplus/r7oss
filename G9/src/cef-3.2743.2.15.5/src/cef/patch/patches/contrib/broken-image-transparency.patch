@@ -1,0 +1,84 @@
+diff -Nur third_party/WebKit/Source/core/html/HTMLImageElement.cpp third_party/WebKit/Source/core/html/HTMLImageElement.cpp
+--- third_party/WebKit/Source/core/html/HTMLImageElement.cpp	2016-10-27 16:23:42.793590839 +0200
++++ third_party/WebKit/Source/core/html/HTMLImageElement.cpp	2016-10-28 12:08:41.583161273 +0200
+@@ -355,12 +355,6 @@
+     if (layoutObject() && layoutObject()->isImage()) {
+         LayoutImage* layoutImage = toLayoutImage(layoutObject());
+         LayoutImageResource* layoutImageResource = layoutImage->imageResource();
+-        if (m_isFallbackImage) {
+-            float deviceScaleFactor = blink::deviceScaleFactor(layoutImage->frame());
+-            std::pair<Image*, float> brokenImageAndImageScaleFactor = ImageResource::brokenImage(deviceScaleFactor);
+-            ImageResource* newImageResource = ImageResource::create(brokenImageAndImageScaleFactor.first);
+-            layoutImage->imageResource()->setImageResource(newImageResource);
+-        }
+         if (layoutImageResource->hasImage())
+             return;
+ 
+diff -Nur third_party/WebKit/Source/core/html/HTMLImageFallbackHelper.cpp third_party/WebKit/Source/core/html/HTMLImageFallbackHelper.cpp
+--- third_party/WebKit/Source/core/html/HTMLImageFallbackHelper.cpp	2016-10-27 16:23:42.781590978 +0200
++++ third_party/WebKit/Source/core/html/HTMLImageFallbackHelper.cpp	2016-10-28 12:11:09.365448944 +0200
+@@ -16,6 +16,7 @@
+ #include "core/html/HTMLImageLoader.h"
+ #include "core/html/HTMLInputElement.h"
+ #include "core/html/HTMLStyleElement.h"
++#include "core/css/CSSValuePool.h"
+ #include "wtf/PassOwnPtr.h"
+ #include "wtf/text/StringBuilder.h"
+ 
+@@ -38,21 +39,12 @@
+     root.appendChild(container);
+     container->setAttribute(idAttr, AtomicString("alttext-container"));
+     container->setInlineStyleProperty(CSSPropertyOverflow, CSSValueHidden);
+-    container->setInlineStyleProperty(CSSPropertyBorderWidth, 1, CSSPrimitiveValue::UnitType::Pixels);
+-    container->setInlineStyleProperty(CSSPropertyBorderStyle, CSSValueSolid);
+-    container->setInlineStyleProperty(CSSPropertyBorderColor, CSSValueSilver);
++    container->setInlineStyleProperty(CSSPropertyBorderWidth, 0, CSSPrimitiveValue::UnitType::Pixels);
++    container->setInlineStyleProperty(CSSPropertyBorderStyle, CSSValueNone);
++    container->setInlineStyleProperty(CSSPropertyBorderColor, "rgba(0, 0, 0, 0.5)");
+     container->setInlineStyleProperty(CSSPropertyDisplay, CSSValueInlineBlock);
+     container->setInlineStyleProperty(CSSPropertyBoxSizing, CSSValueBorderBox);
+-    container->setInlineStyleProperty(CSSPropertyPadding, 1, CSSPrimitiveValue::UnitType::Pixels);
+-
+-    HTMLImageElement* brokenImage = HTMLImageElement::create(element.document());
+-    container->appendChild(brokenImage);
+-    brokenImage->setIsFallbackImage();
+-    brokenImage->setAttribute(idAttr, AtomicString("alttext-image"));
+-    brokenImage->setAttribute(widthAttr, AtomicString("16"));
+-    brokenImage->setAttribute(heightAttr, AtomicString("16"));
+-    brokenImage->setAttribute(alignAttr, AtomicString("left"));
+-    brokenImage->setInlineStyleProperty(CSSPropertyMargin, 0, CSSPrimitiveValue::UnitType::Pixels);
++    container->setInlineStyleProperty(CSSPropertyPadding, 0, CSSPrimitiveValue::UnitType::Pixels);
+ 
+     HTMLDivElement* altText = HTMLDivElement::create(element.document());
+     container->appendChild(altText);
+@@ -72,9 +64,8 @@
+         return newStyle;
+ 
+     Element* placeHolder = element.userAgentShadowRoot()->getElementById("alttext-container");
+-    Element* brokenImage = element.userAgentShadowRoot()->getElementById("alttext-image");
+     // Input elements have a UA shadow root of their own. We may not have replaced it with fallback content yet.
+-    if (!placeHolder || !brokenImage)
++    if (!placeHolder)
+         return newStyle;
+ 
+ 
+@@ -95,19 +86,10 @@
+         placeHolder->setInlineStyleProperty(CSSPropertyHeight, 100, CSSPrimitiveValue::UnitType::Percentage);
+     }
+ 
+-    // Make sure the broken image icon appears on the appropriate side of the image for the element's writing direction.
+-    brokenImage->setInlineStyleProperty(CSSPropertyFloat, AtomicString(newStyle->direction() == LTR ? "left" : "right"));
+-
+     // This is an <img> with no attributes, so don't display anything.
+     if (noImageSourceSpecified(element) && !newStyle->width().isSpecifiedOrIntrinsic() && !newStyle->height().isSpecifiedOrIntrinsic() && toHTMLElement(element).altText().isEmpty())
+         newStyle->setDisplay(NONE);
+ 
+-    // This preserves legacy behaviour originally defined when alt-text was managed by LayoutImage.
+-    if (noImageSourceSpecified(element))
+-        brokenImage->setInlineStyleProperty(CSSPropertyDisplay, CSSValueNone);
+-    else
+-        brokenImage->setInlineStyleProperty(CSSPropertyDisplay, CSSValueInline);
+-
+     return newStyle;
+ }
+ 

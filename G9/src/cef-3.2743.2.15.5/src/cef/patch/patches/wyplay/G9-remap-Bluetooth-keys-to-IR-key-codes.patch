@@ -1,0 +1,87 @@
+From 542e0cdba1bba9b7b237dc6e3f37ccf1074043d9 Mon Sep 17 00:00:00 2001
+From: Gauthier Haderer <ghaderer@wyplay.com>
+Date: Tue, 16 May 2017 18:00:12 +0200
+Subject: [PATCH] G9: remap Bluetooth keys to IR key codes.
+
+---
+ ui/events/keycodes/dom_us_layout_data.h | 38 ++++++++++++++++++++++++---------
+ 1 file changed, 28 insertions(+), 10 deletions(-)
+
+diff --git ui/events/keycodes/dom_us_layout_data.h ui/events/keycodes/dom_us_layout_data.h
+index c9ced3d..9886688 100644
+--- ui/events/keycodes/dom_us_layout_data.h
++++ ui/events/keycodes/dom_us_layout_data.h
+@@ -310,7 +310,7 @@ const struct DomKeyToKeyboardCodeEntry {
+ #if defined(OS_POSIX)
+     {DomKey::BRIGHTNESS_DOWN, VKEY_BRIGHTNESS_DOWN},
+     {DomKey::BRIGHTNESS_UP, VKEY_BRIGHTNESS_UP},
+-    {DomKey::POWER, VKEY_POWER},
++    //{DomKey::POWER, VKEY_POWER},
+ #endif
+     {DomKey::PRINT_SCREEN, VKEY_SNAPSHOT},
+ // IME and Composition Keys
+@@ -361,14 +361,14 @@ const struct DomKeyToKeyboardCodeEntry {
+     {DomKey::F24, VKEY_F24},
+     // Multimedia Keys
+     // http://www.w3.org/TR/DOM-Level-3-Events-key/#keys-multimedia
+-    {DomKey::MEDIA_PLAY_PAUSE, VKEY_MEDIA_PLAY_PAUSE},
++//    {DomKey::MEDIA_PLAY_PAUSE, VKEY_MEDIA_PLAY_PAUSE},
+     {DomKey::MEDIA_STOP, VKEY_MEDIA_STOP},
+-    {DomKey::MEDIA_TRACK_NEXT, VKEY_MEDIA_NEXT_TRACK},
+-    {DomKey::MEDIA_TRACK_PREVIOUS, VKEY_MEDIA_PREV_TRACK},
++//    {DomKey::MEDIA_TRACK_NEXT, VKEY_MEDIA_NEXT_TRACK},
++//    {DomKey::MEDIA_TRACK_PREVIOUS, VKEY_MEDIA_PREV_TRACK},
+     {DomKey::PRINT, VKEY_PRINT},
+-    {DomKey::AUDIO_VOLUME_DOWN, VKEY_VOLUME_DOWN},
+-    {DomKey::AUDIO_VOLUME_MUTE, VKEY_VOLUME_MUTE},
+-    {DomKey::AUDIO_VOLUME_UP, VKEY_VOLUME_UP},
++//    {DomKey::AUDIO_VOLUME_DOWN, VKEY_VOLUME_DOWN},
++//    {DomKey::AUDIO_VOLUME_MUTE, VKEY_VOLUME_MUTE},
++//    {DomKey::AUDIO_VOLUME_UP, VKEY_VOLUME_UP},
+     // Application Keys
+     // http://www.w3.org/TR/DOM-Level-3-Events-key/#keys-apps
+     {DomKey::LAUNCH_CALCULATOR, VKEY_MEDIA_LAUNCH_APP2},
+@@ -377,12 +377,12 @@ const struct DomKeyToKeyboardCodeEntry {
+     {DomKey::LAUNCH_MY_COMPUTER, VKEY_MEDIA_LAUNCH_APP1},
+     // Browser Keys
+     // http://www.w3.org/TR/DOM-Level-3-Events-key/#keys-browser
+-    {DomKey::BROWSER_BACK, VKEY_BROWSER_BACK},
+-    {DomKey::BROWSER_FAVORITES, VKEY_BROWSER_FAVORITES},
++//    {DomKey::BROWSER_BACK, VKEY_BROWSER_BACK},
++//    {DomKey::BROWSER_FAVORITES, VKEY_BROWSER_FAVORITES},
+     {DomKey::BROWSER_FORWARD, VKEY_BROWSER_FORWARD},
+     {DomKey::BROWSER_HOME, VKEY_BROWSER_HOME},
+     {DomKey::BROWSER_REFRESH, VKEY_BROWSER_REFRESH},
+-    {DomKey::BROWSER_SEARCH, VKEY_BROWSER_SEARCH},
++    //{DomKey::BROWSER_SEARCH, VKEY_BROWSER_SEARCH},
+     {DomKey::BROWSER_STOP, VKEY_BROWSER_STOP},
+     // Media Controller Keys
+     // http://www.w3.org/TR/DOM-Level-3-Events-key/#keys-media-controller
+@@ -394,6 +394,24 @@ const struct DomKeyToKeyboardCodeEntry {
+     {DomKey::MEDIA_REWIND, VKEY_OEM_103},
+ #endif
+     {DomKey::ZOOM_TOGGLE, VKEY_ZOOM},
++    /* G9 MAPPING */
++    /* NOT MAPPED KEYS */
++    {DomKey::MENU, VKEY_F9},
++    {DomKey::INFO, VKEY_F7},
++    {DomKey::MEDIA_RECORD, VKEY_F6},
++    {DomKey::CHANNEL_UP, VKEY_PRIOR},
++    {DomKey::CHANNEL_DOWN, VKEY_NEXT},
++    /* REMAPPED KEYS */
++    {DomKey::POWER, VKEY_F12},
++    {DomKey::AUDIO_VOLUME_DOWN, VKEY_END},
++    {DomKey::AUDIO_VOLUME_MUTE, VKEY_F8},
++    {DomKey::AUDIO_VOLUME_UP, VKEY_HOME},
++    {DomKey::BROWSER_SEARCH, VKEY_V},
++    {DomKey::BROWSER_BACK, VKEY_BACK},
++    {DomKey::BROWSER_FAVORITES, VKEY_F},
++    {DomKey::MEDIA_PLAY_PAUSE, VKEY_F2},
++    {DomKey::MEDIA_TRACK_NEXT, VKEY_F3},
++    {DomKey::MEDIA_TRACK_PREVIOUS, VKEY_F1},
+ };
+ 
+ // This table, used by DomCodeToUsLayoutKeyboardCode() and
+-- 
+1.8.5.3
+

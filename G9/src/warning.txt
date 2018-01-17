@@ -1,0 +1,5 @@
+Warning : The source code of some packages has been modified compared to their
+original version. Do not consider these source files as the original ones.
+
+This tarball contains the source code of some open-source packages as used in
+the product, including the modifications.

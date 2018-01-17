@@ -1,0 +1,68 @@
+2017-04-04 - 1.1.4
+- Improve configuration file parser and add test suite.
+
+	Now all graphical characters, as determined by isgraph(), can be part of an
+	environment variable name except '='. They can also be part of an
+	environment variable value, including '='. Note that space characters are
+	still not allowed.
+
+	We ensure a statement cannot span multiple lines. Previously, the
+	following content was valid and interpreted as expected:
+
+			user=my_user group=my_group
+
+	Prefix all lex/yacc to avoid symbol name conflicts with packages also using
+	lex/yacc without a prefix.
+
+	Separate the configuration file parser from the core logic in order to
+	easily test it. Add a test framework and a test suite for the parser.
+
+	Clean up the parser by removing duplicated lex/yacc variable/function
+	declarations, and moving code to the right place.
+
+	Add the --enable-config-debug option to easily turn on lexer/parser debug
+	traces.
+
+	Add a Doxygen configuration file.
+
+2016-12-05 - 1.1.3
+- Making sure groups are always well initialized
+
+2016-12-05 - 1.1.2
+- Separate the constructor and the core tools library
+- Rename variable macro PROD to ENABLE_HARDENED
+
+2016-11-03 - 1.1.1
+* Compile lxc genesis as a static library
+
+2016-08-29 - 1.0.12
+* Use MIT license
+
+2016-08-24 - 1.0.11
+* Establishing a capabilities-only environment does not depend on the group parameter anymore
+
+2016-01-04 - 1.0.10
+* Unset the environment variable PATH for the current process.
+
+2015-07-01 - 1.0.9
+* No establishing a capabilities-only environment if no user and group are set in config. file
+
+2015-03-26 - 1.0.8
+* prod mode and core dumping
+* using libtool to be a shared library
+* possibility to use custom config file or no config file at all in dev mode
+* fix rlimit type
+* lxc_genesis init program is deprectated: info message
+* doc updated
+
+2015-02-18
+* Merge lxc_genesis with linux_hardening helper
+* lxc_genesis is now a static library with a constructor function
+* /lxc_genesis.conf is parsed at startup
+2014-12-12
+* added ulimit support: core size, opened files desc, writable file size
+* Add new parameters to set the process user (-u) and group (-g)
+* add -m option for umask
+2014-10-27
+* LXC genesis first release
+

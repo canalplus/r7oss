@@ -1,0 +1,6 @@
+#!/bin/bash
+
+exec g++-4.8.3 \
+  -B /usr/i486-pc-linux-gnu/binutils-bin/2.21/ \
+  -Wl,-rpath,/usr/lib/gcc/i486-pc-linux-gnu/4.8.3/ \
+  "$@"

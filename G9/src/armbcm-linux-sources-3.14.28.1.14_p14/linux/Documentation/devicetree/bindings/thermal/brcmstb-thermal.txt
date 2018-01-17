@@ -1,0 +1,20 @@
+* Broadcom STB (BCM7xxx) thermal management
+
+Thermal management core, provided by the AVS TMON hardware block.
+
+Required properties:
+
+- compatible: "brcm,avs-tmon-bcm7445" and/or "brcm,avs-tmon"
+- reg: address range for the AVS TMON registers
+- interrupts: 'TMON' interrupt, for high/low threshold triggers
+- interrupt-names: "tmon"
+
+Example:
+
+	thermal@f04d1500 {
+		compatible = "brcm,avs-tmon-bcm7445", "brcm,avs-tmon";
+		interrupt-names = "tmon";
+		interrupt-parent = <&avs_host_l2_intc>;
+		reg = <0xf04d1500 0x28>;
+		interrupts = <0x6>;
+	};

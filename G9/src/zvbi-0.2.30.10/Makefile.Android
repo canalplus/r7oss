@@ -1,0 +1,16 @@
+include $(WY_AUTOTOOLS_WRAPPER)
+
+WY_CONFIGURE_OPTIONS = \
+	--disable-v4l \
+	--disable-bktr \
+	--disable-dvb \
+	--disable-proxy \
+	--disable-tests \
+	--without-doxygen \
+	--without-x
+
+# autoconf wrapper
+all:
+	$(call wy-link-crt-objs, zvbi zvbi/src zvbi/contrib zvbi/examples zvbi/test)
+	$(call wy-autoreconf,$(REAL_LOCAL_PATH))
+	$(call wy-autoconf-wrapper,zvbi,$(REAL_LOCAL_PATH),$(WY_CONFIGURE_OPTIONS))

@@ -1,0 +1,38 @@
+Upstream-status: backport
+Upstream-BZ: https://sourceware.org/bugzilla/show_bug.cgi?id=17013
+
+Retrieved from
+https://sourceware.org/git/?p=glibc.git;a=patch;h=8f630cca5c36941db1cb48726016bbed80ec1041
+
+From 8f630cca5c36941db1cb48726016bbed80ec1041 Mon Sep 17 00:00:00 2001
+From: Yang Yingliang <yangyingliang@huawei.com>
+Date: Wed, 30 Apr 2014 15:46:18 +0530
+Subject: [PATCH] Fix lll_unlock twice in pthread_cond_broadcast
+
+lll_unlock() will be called again if it goes to "wake_all" in
+pthread_cond_broadcast(). This may make another thread which is
+waiting for lock in pthread_cond_timedwait() unlock.  So there are
+more than one threads get the lock, it will break the shared data.
+
+It's introduced by commit 8313cb997d2d("FUTEX_*_REQUEUE_PI support for
+non-x86 code")
+---
+ ChangeLog                     | 5 +++++
+ nptl/pthread_cond_broadcast.c | 1 +
+ 2 files changed, 6 insertions(+)
+
+diff --git a/nptl/pthread_cond_broadcast.c b/nptl/pthread_cond_broadcast.c
+index ed30e7c..7c6c9ea 100644
+--- a/nptl/pthread_cond_broadcast.c
++++ b/nptl/pthread_cond_broadcast.c
+@@ -81,6 +81,7 @@ __pthread_cond_broadcast (cond)
+ 
+ wake_all:
+       lll_futex_wake (&cond->__data.__futex, INT_MAX, pshared);
++      return 0;
+     }
+ 
+   /* We are done.  */
+-- 
+1.9.4
+

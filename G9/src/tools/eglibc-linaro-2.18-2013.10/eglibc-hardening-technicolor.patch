@@ -1,0 +1,122 @@
+diff -ur eglibc-linaro-2.18-2013.10.orig/elf/rtld.c eglibc-linaro-2.18-2013.10/elf/rtld.c
+--- eglibc-linaro-2.18-2013.10.orig/elf/rtld.c	2017-06-02 12:51:29.839787388 +0000
++++ eglibc-linaro-2.18-2013.10/elf/rtld.c	2017-06-02 13:20:53.563561232 +0000
+@@ -878,8 +878,10 @@
+ 
+ /* The library search path.  */
+ static const char *library_path attribute_relro;
++#if 0
+ /* The list preloaded objects.  */
+ static const char *preloadlist attribute_relro;
++#endif
+ /* Nonzero if information about versions has to be printed.  */
+ static int version_info attribute_relro;
+ 
+@@ -1610,6 +1612,7 @@
+   struct link_map **preloads = NULL;
+   unsigned int npreloads = 0;
+ 
++#if 0
+   if (__builtin_expect (preloadlist != NULL, 0))
+     {
+       /* The LD_PRELOAD environment variable gives list of libraries
+@@ -1717,6 +1720,7 @@
+ 	  __munmap (file, file_size);
+ 	}
+     }
++#endif
+ 
+   if (__builtin_expect (*first_preload != NULL, 0))
+     {
+@@ -2522,8 +2526,10 @@
+ 	      break;
+ 	    }
+ #endif
++#if 0
+ 	  if (memcmp (envline, "AUDIT", 5) == 0)
+ 	    process_dl_audit (&envline[6]);
++#endif
+ 	  break;
+ 
+ 	case 7:
+@@ -2534,6 +2540,7 @@
+ 	      break;
+ 	    }
+ 
++#if 0
+ 	  /* List of objects to be preloaded.  */
+ 	  if (memcmp (envline, "PRELOAD", 7) == 0)
+ 	    {
+@@ -2544,6 +2551,7 @@
+ 	  /* Which shared object shall be profiled.  */
+ 	  if (memcmp (envline, "PROFILE", 7) == 0 && envline[8] != '\0')
+ 	    GLRO(dl_profile) = &envline[8];
++#endif
+ 	  break;
+ 
+ 	case 8:
+@@ -2558,11 +2566,13 @@
+ 	  break;
+ 
+ 	case 9:
++#if 0
+ 	  /* Test whether we want to see the content of the auxiliary
+ 	     array passed up from the kernel.  */
+ 	  if (!INTUSE(__libc_enable_secure)
+ 	      && memcmp (envline, "SHOW_AUXV", 9) == 0)
+ 	    _dl_show_auxv ();
++#endif
+ 	  break;
+ 
+ 	case 10:
+@@ -2580,12 +2590,14 @@
+ 	  break;
+ 
+ 	case 12:
++#if 0
+ 	  /* The library search path.  */
+ 	  if (memcmp (envline, "LIBRARY_PATH", 12) == 0)
+ 	    {
+ 	      library_path = &envline[13];
+ 	      break;
+ 	    }
++#endif
+ 
+ 	  /* Where to place the profiling data file.  */
+ 	  if (memcmp (envline, "DEBUG_OUTPUT", 12) == 0)
+@@ -2625,6 +2637,7 @@
+ 	  break;
+ 
+ 	case 16:
++#if 0
+ 	  /* The mode of the dynamic linker can be set.  */
+ 	  if (memcmp (envline, "TRACE_PRELINKING", 16) == 0)
+ 	    {
+@@ -2635,12 +2648,15 @@
+ #endif
+ 	      GLRO(dl_trace_prelink) = &envline[17];
+ 	    }
++#endif
+ 	  break;
+ 
+ 	case 20:
++#if 0
+ 	  /* The mode of the dynamic linker can be set.  */
+ 	  if (memcmp (envline, "TRACE_LOADED_OBJECTS", 20) == 0)
+ 	    mode = trace;
++#endif
+ 	  break;
+ 
+ 	  /* We might have some extra environment variable to handle.  This
+diff -ur eglibc-linaro-2.18-2013.10.orig/option-groups.defaults eglibc-linaro-2.18-2013.10/option-groups.defaults
+--- eglibc-linaro-2.18-2013.10.orig/option-groups.defaults	2017-06-02 12:51:29.975787386 +0000
++++ eglibc-linaro-2.18-2013.10/option-groups.defaults	2017-06-02 12:57:33.695786393 +0000
+@@ -34,7 +34,7 @@
+ OPTION_EGLIBC_NIS = y
+ OPTION_EGLIBC_NSSWITCH = y
+ OPTION_EGLIBC_RCMD = y
+-OPTION_EGLIBC_RTLD_DEBUG = y
++#OPTION_EGLIBC_RTLD_DEBUG = y
+ OPTION_EGLIBC_SPAWN = y
+ OPTION_EGLIBC_STREAMS = y
+ OPTION_EGLIBC_SUNRPC = y

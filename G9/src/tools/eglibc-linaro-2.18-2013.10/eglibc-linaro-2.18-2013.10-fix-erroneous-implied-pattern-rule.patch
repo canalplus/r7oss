@@ -1,0 +1,126 @@
+Upstream-status: Backport
+
+Upstream commit:
+https://sourceware.org/git/gitweb.cgi?p=glibc.git;a=commit;h=5f855e3598a576c35e54623a13b256f3e87fcd4d
+
+BZ entry: https://sourceware.org/bugzilla/show_bug.cgi?id=15915
+
+From 5f855e3598a576c35e54623a13b256f3e87fcd4d Mon Sep 17 00:00:00 2001
+From: Brooks Moses <bmoses@google.com>
+Date: Thu, 3 Oct 2013 10:38:14 -0700
+Subject: [PATCH] Fix erroneous (and circular) implied pattern rule for linkobj/libc.so.
+
+[BZ #15915] As described in the bug, the pattern rule for lib%.so files
+in Makerules includes linkobj/libc.so as a dependency.  However, the
+explicit rule for linkobj/libc.so is in the top-level Makefile.
+
+Thus, the subdirectory makefiles that include Makerules end up with an
+erroneous makefile pattern rule for linkobj/libc.so that includes
+itself as a dependency.  The result is make warnings whenever rules
+for other .so files are resolved -- and, on occasion, actual makefile
+failures when a race condition causes the implicit rule to actually be
+used.
+
+This patch moves the explicit rules for linkobj/libc.so into Makerules
+to clear up this problem.  It also elaborates a couple of comments
+that I'd initially found confusing.
+---
+ ChangeLog |    6 ++++++
+ Makefile  |   31 +------------------------------
+ Makerules |   37 ++++++++++++++++++++++++++++++++++---
+ 3 files changed, 41 insertions(+), 33 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index ba1820d..302a300 100644
+--- a/Makefile
++++ b/Makefile
+@@ -132,30 +132,7 @@
+ 
+ ifeq (yes,$(build-shared))
+ # Build the shared object from the PIC object library.
+-lib: $(common-objpfx)libc.so
+-
+-lib: $(common-objpfx)linkobj/libc.so
+-
+-# Do not filter ld.so out of libc.so link.
+-$(common-objpfx)linkobj/libc.so: link-libc-deps = # empty
+-
+-$(common-objpfx)linkobj/libc.so: $(elfobjdir)/soinit.os \
+-				 $(common-objpfx)linkobj/libc_pic.a \
+-				 $(elfobjdir)/sofini.os \
+-				 $(elfobjdir)/interp.os \
+-				 $(elfobjdir)/ld.so \
+-				 $(shlib-lds)
+-	$(build-shlib)
+-
+-$(common-objpfx)linkobj/libc_pic.a: $(common-objpfx)libc_pic.a \
+-				    $(common-objpfx)sunrpc/librpc_compat_pic.a
+-	$(..)./scripts/mkinstalldirs $(common-objpfx)linkobj
+-	(cd $(common-objpfx)linkobj; \
+-	 $(AR) x ../libc_pic.a; \
+-	 rm $$($(AR) t ../sunrpc/librpc_compat_pic.a | sed 's/^compat-//'); \
+-	 $(AR) x ../sunrpc/librpc_compat_pic.a; \
+-	 $(AR) cr libc_pic.a *.os; \
+-	 rm *.os)
++lib: $(common-objpfx)libc.so $(common-objpfx)linkobj/libc.so
+ endif
+ 
+ 
+diff --git a/Makerules b/Makerules
+index cca3f82..92c2872 100644
+--- a/Makerules
++++ b/Makerules
+@@ -595,16 +595,47 @@ generated += libc_pic.opts libc_pic.os.clean
+ libc_gcclibs := -lgcc_eh
+ endif
+ 
+-# Do not filter ld.so out of libc.so link.
++# Build a possibly-modified version of libc_pic.a for use in building
++# linkobj/libc.so.
++ifeq (,$(filter sunrpc,$(subdirs)))
++$(common-objpfx)linkobj/libc_pic.a: $(common-objpfx)libc_pic.a
++	$(make-target-directory)
++	ln -f $< $@
++else
++$(common-objpfx)linkobj/libc_pic.a: $(common-objpfx)libc_pic.a \
++				    $(common-objpfx)sunrpc/librpc_compat_pic.a
++	$(make-target-directory)
++	(cd $(common-objpfx)linkobj; \
++	 $(AR) x ../libc_pic.a; \
++	 rm $$($(AR) t ../sunrpc/librpc_compat_pic.a | sed 's/^compat-//'); \
++	 $(AR) x ../sunrpc/librpc_compat_pic.a; \
++	 $(AR) cr libc_pic.a *.os; \
++	 rm *.os)
++endif # $(subdirs) contains sunrpc
++
++# Clear link-libc-deps for the libc.so libraries so build-shlibs does not
++# filter ld.so out of the list of linked objects.
+ $(common-objpfx)libc.so: link-libc-deps = # empty
++$(common-objpfx)linkobj/libc.so: link-libc-deps = # empty
+ 
+-# Use our own special initializer and finalizer files for libc.so.
++# Use our own special initializer and finalizer files for the libc.so
++# libraries.
+ $(common-objpfx)libc.so: $(elfobjdir)/soinit.os \
+ 			 $(common-objpfx)libc_pic.os$(libc_pic_clean) \
+ 			 $(elfobjdir)/sofini.os \
+-			 $(elfobjdir)/interp.os $(elfobjdir)/ld.so \
++			 $(elfobjdir)/interp.os \
++			 $(elfobjdir)/ld.so \
++			 $(shlib-lds)
++	$(build-shlib) $(libc_gcclibs)
++
++$(common-objpfx)linkobj/libc.so: $(elfobjdir)/soinit.os \
++			 $(common-objpfx)linkobj/libc_pic.a \
++			 $(elfobjdir)/sofini.os \
++			 $(elfobjdir)/interp.os \
++			 $(elfobjdir)/ld.so \
+ 			 $(shlib-lds)
+ 	$(build-shlib) $(libc_gcclibs)
++
+ # eglibc: ifeq ($(versioning),yes)
+ $(common-objpfx)libc.so: $(common-objpfx)libc.map
+ # eglibc: endif
+-- 
+1.7.1
+

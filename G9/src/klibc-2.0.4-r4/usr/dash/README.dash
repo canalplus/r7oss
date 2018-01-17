@@ -1,0 +1,30 @@
+This version of dash was obtained from
+
+git://git.kernel.org/pub/scm/utils/dash/dash.git
+
+It corresponds up to changeset 46abc8c6d8a5e9a5712bdc1312c0b6960eec65a4
+omitting ee5cbe9fd6bc02f31b4d955606288de36c3d4eab.
+
+HOWTO sync branch:
+1) Generate patch and fix up their path
+
+ git format-patch --subject-prefix=klibc -N <changeset>..
+
+Path fixup:
+ perl -i -pe 's#^([-+]{3} [ab]/)src/#$1#g' 00*patch
+
+2) Import patches on by one
+ git am --directory="usr/dash" --exclude="usr/dash/configure.ac" \
+	--exclude="usr/dash/ChangeLog" --exclude="usr/dash/dash.1" \
+	--exclude="usr/dash/Makefile.am" --exclude="usr/dash/mksignames.c" \
+	--whitespace=fix -k -i -s ../dash/000X-foo.patch
+
+The only changes made are the addition of config.h, Kbuild usage,
+the omition of Changelog and manpage and automatic whitespace fixups.
+
+3) update config.h
+
+Generate klibc config.h in dash repository:
+ automake --add-missing
+ autoreconf
+ ./configure CC=klcc

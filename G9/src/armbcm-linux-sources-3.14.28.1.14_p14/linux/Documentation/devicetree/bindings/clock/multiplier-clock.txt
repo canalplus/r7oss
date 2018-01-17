@@ -1,0 +1,84 @@
+Binding for simple multiplier clock.
+
+This binding uses the common clock binding[1].  It assumes a
+register-mapped adjustable clock rate multiplier that does not gate and has
+only one input clock or parent.  By default the value programmed into
+the register is one less than the actual multiplier value.  E.g:
+
+register value		actual multiplier value
+0			1
+1			2
+2			3
+
+This assumption may be modified by the following optional properties:
+
+index-starts-at-one - valid multiplier values start at 1, not the default
+of 0.  E.g:
+register value		actual multiplier value
+1			1
+2			2
+3			3
+
+index-power-of-two - valid multiplier values are powers of two.  E.g:
+register value		actual multiplier value
+0			1
+1			2
+2			4
+
+index-allow-zero - same as index_one, but zero is multiply-by-1.  E.g:
+register value		actual multiplier value
+0			1
+1			1
+2			2
+
+Additionally a table of valid multipliers may be supplied like so:
+
+	table = <4 0>, <8, 1>;
+
+where the first value in the pair is the multiplier and the second value is
+the programmed register bitfield.
+
+The binding must also provide the register to control the multiplier and
+the mask for the corresponding control bits.  Optionally the number of
+bits to shift that mask, if necessary.  If the shift value is missing it
+is the same as supplying a zero shift.
+
+[1] Documentation/devicetree/bindings/clock/clock-bindings.txt
+
+Required properties:
+- compatible : shall be "multiplier-clock".
+- #clock-cells : from common clock binding; shall be set to 0.
+- clocks : link to phandle of parent clock
+- reg : base address for register controlling adjustable multiplier
+- bit-mask : arbitrary bitmask for programming the adjustable multiplier
+
+Optional properties:
+- clock-output-names : from common clock binding.
+- table : array of integer pairs defining multipliers & bitfield values
+- bit-shift : number of bits to shift the bit-mask, defaults to
+  (ffs(mask) - 1) if not present
+- index-starts-at-one : valid multiplier programming starts at 1, not zero
+- index-power-of-two : valid multiplier programming must be a power of two
+- index-allow-zero : implies index-one, and programming zero results in
+  multiply-by-one
+- index-max-mult-at-zero : same as index-starts-at-one, but the value
+  of zero implies a multiplier of 2^width of the register field.
+
+Examples:
+	clock_foo: clock_foo at 4a008100 {
+		compatible = "multiplier-clock";
+		#clock-cells = <0>;
+		clocks = <&clock_baz>;
+		reg = <0x4a008100 0x4>
+		mask = <0x3>
+	};
+
+	clock_bar: clock_bar at 4a008108 {
+		#clock-cells = <0>;
+		compatible = "multiplier-clock";
+		clocks = <&clock_foo>;
+		reg = <0x4a008108 0x4>;
+		mask = <0x1>;
+		shift = <0>;
+		table = < 4 0 >, < 8 1 >;
+	};

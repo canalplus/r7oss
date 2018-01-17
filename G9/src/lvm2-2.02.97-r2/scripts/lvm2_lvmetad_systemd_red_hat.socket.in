@@ -1,0 +1,11 @@
+[Unit]
+Description=LVM2 metadata daemon socket
+Documentation=man:lvmetad(8)
+DefaultDependencies=no
+
+[Socket]
+ListenStream=@DEFAULT_RUN_DIR@/lvmetad.socket
+SocketMode=0600
+
+[Install]
+WantedBy=sockets.target

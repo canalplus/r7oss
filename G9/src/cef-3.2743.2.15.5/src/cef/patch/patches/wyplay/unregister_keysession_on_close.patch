@@ -1,0 +1,59 @@
+diff --git media/blink/webcontentdecryptionmodulesession_impl.cc media/blink/webcontentdecryptionmodulesession_impl.cc
+index 150886f..5e6eb21 100644
+--- media/blink/webcontentdecryptionmodulesession_impl.cc
++++ media/blink/webcontentdecryptionmodulesession_impl.cc
+@@ -221,14 +221,16 @@ static bool SanitizeResponse(const std::string& key_system,
+ 
+ WebContentDecryptionModuleSessionImpl::WebContentDecryptionModuleSessionImpl(
+     const scoped_refptr<CdmSessionAdapter>& adapter)
+-    : adapter_(adapter), is_closed_(false), weak_ptr_factory_(this) {
++    : adapter_(adapter), is_closed_(false), is_registered(false), weak_ptr_factory_(this) {
+ }
+ 
+ WebContentDecryptionModuleSessionImpl::
+     ~WebContentDecryptionModuleSessionImpl() {
+   DCHECK(thread_checker_.CalledOnValidThread());
+-  if (!session_id_.empty())
++  if (is_registered) {
++    DCHECK(!session_id_.empty());
+     adapter_->UnregisterSession(session_id_);
++  }
+ }
+ 
+ void WebContentDecryptionModuleSessionImpl::setClientInterface(Client* client) {
+@@ -415,6 +417,12 @@ void WebContentDecryptionModuleSessionImpl::OnSessionClosed() {
+   if (is_closed_)
+     return;
+ 
++  if (is_registered) {
++    DCHECK(!session_id_.empty());
++    adapter_->UnregisterSession(session_id_);
++    is_registered = false;
++  }
++
+   is_closed_ = true;
+   client_->close();
+ }
+@@ -435,6 +443,8 @@ void WebContentDecryptionModuleSessionImpl::OnSessionInitialized(
+       adapter_->RegisterSession(session_id_, weak_ptr_factory_.GetWeakPtr())
+           ? SessionInitStatus::NEW_SESSION
+           : SessionInitStatus::SESSION_ALREADY_EXISTS;
++  if (*status == SessionInitStatus::NEW_SESSION)
++    is_registered = true;
+ }
+ 
+ }  // namespace media
+diff --git media/blink/webcontentdecryptionmodulesession_impl.h media/blink/webcontentdecryptionmodulesession_impl.h
+index 18db472..e8de90e 100644
+--- media/blink/webcontentdecryptionmodulesession_impl.h
++++ media/blink/webcontentdecryptionmodulesession_impl.h
+@@ -80,6 +80,9 @@ class WebContentDecryptionModuleSessionImpl
+   // closed() event.
+   bool is_closed_;
+ 
++  // Session is registered.
++  bool is_registered;
++
+   base::ThreadChecker thread_checker_;
+   // Since promises will live until they are fired, use a weak reference when
+   // creating a promise in case this class disappears before the promise

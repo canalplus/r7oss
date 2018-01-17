@@ -1,0 +1,12 @@
+          name : limit
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : 
+      commands : 
+       options : rlimit_as_soft, rlimit_as_hard, rlimit_core_soft, rlimit_core_hard,
+                 rlimit_cpu_soft, rlimit_cpu_hard, rlimit_data_soft, rlimit_data_hard,
+		 rlimit_fsize_soft, rlimit_fsize_hard, rlimit_memlock_soft,
+		 rlimit_memlock_hard, rlimit_nofile_soft, rlimit_nofile_hard,
+		 rlimit_nproc_soft, rlimit_nproc_hard, rlimit_rss_soft, rlimit_rss_hard,
+		 rlimit_sigpending_soft, rlimit_sigpending_hard, rlimit_stack_soft,
+		 rlimit_stack_hard
+   description : This option sets standard ulimits for the service/daemon/other process.

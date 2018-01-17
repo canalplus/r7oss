@@ -1,0 +1,20 @@
+diff --git media/cast/cast.gyp media/cast/cast.gyp
+index 01eb71f..5d67f78 100644
+--- media/cast/cast.gyp
++++ media/cast/cast.gyp
+@@ -4,14 +4,9 @@
+ 
+ {
+   'variables': {
+-    'include_tests%': 1,
+     'chromium_code': 1,
+   },
+-  'conditions': [
+-    ['include_tests==1', {
+-      'includes': [ 'cast_testing.gypi' ]
+-    }],
+-  ],
++  'includes': [ 'cast_testing.gypi' ],
+   'targets': [
+     {
+       # GN version: //media/cast:common

@@ -1,0 +1,211 @@
+/*
+ * libudev - interface to udev device information
+ *
+ * Copyright (C) 2008 Kay Sievers <kay.sievers@vrfy.org>
+ * Copyright (C) 2009 Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stddef.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+#include <limits.h>
+#include <sys/stat.h>
+
+#include "libudev.h"
+#include "libudev-private.h"
+
+/**
+ * SECTION:libudev-queue
+ * @short_description: access to currently active events
+ *
+ * This exports the current state of the udev processing queue.
+ */
+
+/**
+ * udev_queue:
+ *
+ * Opaque object representing the current event queue in the udev daemon.
+ */
+struct udev_queue {
+	struct udev *udev;
+	int refcount;
+};
+
+/**
+ * udev_queue_new:
+ * @udev: udev library context
+ *
+ * The initial refcount is 1, and needs to be decremented to
+ * release the resources of the udev queue context.
+ *
+ * Returns: the udev queue context, or #NULL on error.
+ **/
+UDEV_EXPORT struct udev_queue *udev_queue_new(struct udev *udev)
+{
+	struct udev_queue *udev_queue;
+
+	if (udev == NULL)
+		return NULL;
+
+	udev_queue = calloc(1, sizeof(struct udev_queue));
+	if (udev_queue == NULL)
+		return NULL;
+	udev_queue->refcount = 1;
+	udev_queue->udev = udev;
+	return udev_queue;
+}
+
+/**
+ * udev_queue_ref:
+ * @udev_queue: udev queue context
+ *
+ * Take a reference of a udev queue context.
+ *
+ * Returns: the same udev queue context.
+ **/
+UDEV_EXPORT struct udev_queue *udev_queue_ref(struct udev_queue *udev_queue)
+{
+	if (udev_queue == NULL)
+		return NULL;
+	udev_queue->refcount++;
+	return udev_queue;
+}
+
+/**
+ * udev_queue_unref:
+ * @udev_queue: udev queue context
+ *
+ * Drop a reference of a udev queue context. If the refcount reaches zero,
+ * the resources of the queue context will be released.
+ **/
+UDEV_EXPORT void udev_queue_unref(struct udev_queue *udev_queue)
+{
+	if (udev_queue == NULL)
+		return;
+	udev_queue->refcount--;
+	if (udev_queue->refcount > 0)
+		return;
+	free(udev_queue);
+}
+
+/**
+ * udev_queue_get_udev:
+ * @udev_queue: udev queue context
+ *
+ * Retrieve the udev library context the queue context was created with.
+ *
+ * Returns: the udev library context.
+ **/
+UDEV_EXPORT struct udev *udev_queue_get_udev(struct udev_queue *udev_queue)
+{
+	if (udev_queue == NULL)
+		return NULL;
+	return udev_queue->udev;
+}
+
+/**
+ * udev_queue_get_kernel_seqnum:
+ * @udev_queue: udev queue context
+ *
+ * This function is deprecated.
+ *
+ * Returns: 0.
+ **/
+UDEV_EXPORT unsigned long long int udev_queue_get_kernel_seqnum(struct udev_queue *udev_queue)
+{
+	return 0;
+}
+
+/**
+ * udev_queue_get_udev_seqnum:
+ * @udev_queue: udev queue context
+ *
+ * This function is deprecated.
+ *
+ * Returns: 0.
+ **/
+UDEV_EXPORT unsigned long long int udev_queue_get_udev_seqnum(struct udev_queue *udev_queue)
+{
+	return 0;
+}
+
+/**
+ * udev_queue_get_udev_is_active:
+ * @udev_queue: udev queue context
+ *
+ * Returns: a flag indicating if udev is active.
+ **/
+UDEV_EXPORT int udev_queue_get_udev_is_active(struct udev_queue *udev_queue)
+{
+	char filename[UTIL_PATH_SIZE];
+
+	util_strscpyl(filename, sizeof(filename), udev_get_run_path(udev_queue->udev), "/control", NULL);
+	return access(filename, F_OK) >= 0;
+}
+
+/**
+ * udev_queue_get_queue_is_empty:
+ * @udev_queue: udev queue context
+ *
+ * Returns: a flag indicating if udev is currently handling events.
+ **/
+UDEV_EXPORT int udev_queue_get_queue_is_empty(struct udev_queue *udev_queue)
+{
+	char filename[UTIL_PATH_SIZE];
+
+	util_strscpyl(filename, sizeof(filename), udev_get_run_path(udev_queue->udev), "/queue", NULL);
+	return access(filename, F_OK) >= 0;
+}
+
+/**
+ * udev_queue_get_seqnum_sequence_is_finished:
+ * @udev_queue: udev queue context
+ * @start: first event sequence number
+ * @end: last event sequence number
+ *
+ * This function is deprecated, it just returns the result of
+ * udev_queue_get_queue_is_empty().
+ *
+ * Returns: a flag indicating if udev is currently handling events.
+ **/
+UDEV_EXPORT int udev_queue_get_seqnum_sequence_is_finished(struct udev_queue *udev_queue,
+					       unsigned long long int start, unsigned long long int end)
+{
+	return udev_queue_get_queue_is_empty(udev_queue);
+}
+
+/**
+ * udev_queue_get_seqnum_is_finished:
+ * @udev_queue: udev queue context
+ * @seqnum: sequence number
+ *
+ * This function is deprecated, it just returns the result of
+ * udev_queue_get_queue_is_empty().
+ *
+ * Returns: a flag indicating if udev is currently handling events.
+ **/
+UDEV_EXPORT int udev_queue_get_seqnum_is_finished(struct udev_queue *udev_queue, unsigned long long int seqnum)
+{
+	return udev_queue_get_queue_is_empty(udev_queue);
+}
+
+/**
+ * udev_queue_get_queued_list_entry:
+ * @udev_queue: udev queue context
+ *
+ * This function is deprecated.
+ *
+ * Returns: NULL.
+ **/
+UDEV_EXPORT struct udev_list_entry *udev_queue_get_queued_list_entry(struct udev_queue *udev_queue)
+{
+	return NULL;
+}

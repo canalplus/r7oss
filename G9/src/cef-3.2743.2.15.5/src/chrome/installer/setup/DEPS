@@ -1,0 +1,4 @@
+include_rules = [
+  "+chrome_elf/chrome_elf_constants.h",
+  "+courgette",
+]

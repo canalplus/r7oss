@@ -1,0 +1,19 @@
+--- content/browser/time_zone_monitor.cc	2016-10-27 16:22:37.478353142 +0200
++++ content/browser/time_zone_monitor.cc	2016-10-28 14:14:42.381641439 +0200
+@@ -29,16 +29,6 @@
+   std::unique_ptr<icu::TimeZone> new_zone(icu::TimeZone::createDefault());
+ #else
+   icu::TimeZone* new_zone = icu::TimeZone::detectHostTimeZone();
+-#if defined(OS_LINUX)
+-  // We get here multiple times on Linux per a single tz change, but
+-  // want to update the ICU default zone and notify renderer only once.
+-  std::unique_ptr<icu::TimeZone> current_zone(icu::TimeZone::createDefault());
+-  if (*current_zone == *new_zone) {
+-    VLOG(1) << "timezone already updated";
+-    delete new_zone;
+-    return;
+-  }
+-#endif
+   icu::TimeZone::adoptDefault(new_zone);
+ #endif
+   icu::UnicodeString zone_id;

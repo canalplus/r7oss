@@ -1,0 +1,6 @@
+          name : i_parser
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : 
+      commands : 
+       options : 
+   description : This is the standard i parser plugin for .i files.

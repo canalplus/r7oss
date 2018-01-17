@@ -1,0 +1,26 @@
+Upstream-status: backport
+
+From 7ee4b683fd228376447a3a4ad0ad869c560f4c2b Mon Sep 17 00:00:00 2001
+From: ro <ro@138bc75d-0d04-0410-961f-82ee72b054a4>
+Date: Tue, 14 May 2013 10:24:03 +0000
+Subject: [PATCH] Fix gcc.dg/fstack-protector-strong.c on Solaris/x86
+
+	* gcc.dg/fstack-protector-strong.c (alloca): Declare.
+
+git-svn-id: svn+ssh://gcc.gnu.org/svn/gcc/trunk@198872 138bc75d-0d04-0410-961f-82ee72b054a4
+---
+ gcc/testsuite/ChangeLog                        | 4 ++++
+ gcc/testsuite/gcc.dg/fstack-protector-strong.c | 2 ++
+ 2 files changed, 6 insertions(+)
+
+--- gcc-linaro-4.8-2014.11.orig/gcc/testsuite/gcc.dg/fstack-protector-strong.c
++++ gcc-linaro-4.8-2014.11/gcc/testsuite/gcc.dg/fstack-protector-strong.c
+@@ -6,6 +6,8 @@
+ #include<string.h>
+ #include<stdlib.h>
+ 
++extern void *alloca(__SIZE_TYPE__);
++
+ extern int g0;
+ extern int* pg0;
+ int

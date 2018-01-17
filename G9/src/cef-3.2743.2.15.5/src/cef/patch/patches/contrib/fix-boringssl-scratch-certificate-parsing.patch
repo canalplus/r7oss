@@ -1,0 +1,27 @@
+diff --git third_party/boringssl/src/crypto/rsa/rsa_asn1.c third_party/boringssl/src/crypto/rsa/rsa_asn1.c
+index d14ecae..d3c8714 100644
+--- third_party/boringssl/src/crypto/rsa/rsa_asn1.c
++++ third_party/boringssl/src/crypto/rsa/rsa_asn1.c
+@@ -220,14 +220,14 @@ RSA *RSA_parse_private_key(CBS *cbs) {
+     goto err;
+   }
+ 
+-  if (!parse_integer(&child, &ret->n) ||
+-      !parse_integer(&child, &ret->e) ||
+-      !parse_integer(&child, &ret->d) ||
+-      !parse_integer(&child, &ret->p) ||
+-      !parse_integer(&child, &ret->q) ||
+-      !parse_integer(&child, &ret->dmp1) ||
+-      !parse_integer(&child, &ret->dmq1) ||
+-      !parse_integer(&child, &ret->iqmp)) {
++  if (!parse_integer_buggy(&child, &ret->n, 1) ||
++      !parse_integer_buggy(&child, &ret->e, 1) ||
++      !parse_integer_buggy(&child, &ret->d, 1) ||
++      !parse_integer_buggy(&child, &ret->p, 1) ||
++      !parse_integer_buggy(&child, &ret->q, 1) ||
++      !parse_integer_buggy(&child, &ret->dmp1, 1) ||
++      !parse_integer_buggy(&child, &ret->dmq1, 1) ||
++      !parse_integer_buggy(&child, &ret->iqmp, 1)) {
+     goto err;
+   }
+ 

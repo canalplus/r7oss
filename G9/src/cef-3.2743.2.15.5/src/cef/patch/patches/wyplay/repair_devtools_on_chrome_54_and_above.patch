@@ -1,0 +1,54 @@
+From ee86606eb8773fbceac4d105ec17e70354b3d428 Mon Sep 17 00:00:00 2001
+From: Gauthier Haderer <ghaderer@wyplay.com>
+Date: Fri, 19 May 2017 11:14:57 +0200
+Subject: [PATCH] Polyfill KeyboardEvent.keyIdentifier if needed.
+
+This property was removed in Chrome 54 and this breaks the console and
+maybe other parts of the inspector.
+---
+ .../devtools/front_end/platform/DOMExtension.js    | 29 ++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
+
+diff --git third_party/WebKit/Source/devtools/front_end/platform/DOMExtension.js third_party/WebKit/Source/devtools/front_end/platform/DOMExtension.js
+index 30f588f..434af1d 100644
+--- third_party/WebKit/Source/devtools/front_end/platform/DOMExtension.js
++++ third_party/WebKit/Source/devtools/front_end/platform/DOMExtension.js
+@@ -648,6 +648,35 @@ KeyboardEvent.prototype.__defineGetter__("data", function()
+     }
+ });
+ 
++if (!('keyIdentifier' in KeyboardEvent.prototype)) {
++    Object.defineProperty(KeyboardEvent.prototype, 'keyIdentifier', {
++        get: function() {
++            switch (this.key) {
++                case "ArrowDown":
++                    return "Down";
++                    break;
++                case "ArrowLeft":
++                    return "Left";
++                    break;
++                case "ArrowRight":
++                    return "Right";
++                    break;
++                case "ArrowUp":
++                    return "Up";
++                    break;
++                case "Tab":
++                    return "U+0009";
++                    break;
++                case "Escape":
++                    return "U+001B";
++                    break;
++                default:
++                    return this.key;
++            }
++        }
++    });
++}
++
+ /**
+  * @param {boolean=} preventDefault
+  */
+-- 
+1.8.5.3
+

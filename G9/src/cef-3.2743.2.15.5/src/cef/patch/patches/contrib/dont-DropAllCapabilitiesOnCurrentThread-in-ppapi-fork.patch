@@ -1,0 +1,11 @@
+--- sandbox/linux/services/credentials.cc	2016-02-12 15:34:53.422758933 +0100
++++ sandbox/linux/services/credentials.cc	2016-02-15 11:38:22.017695895 +0100
+@@ -327,8 +327,6 @@
+     return pid;
+   }
+ 
+-  // Since we just forked, we are single threaded.
+-  PCHECK(DropAllCapabilitiesOnCurrentThread());
+   return 0;
+ }
+ 

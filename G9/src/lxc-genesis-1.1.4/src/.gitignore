@@ -1,0 +1,15 @@
+*~
+.deps/
+Makefile
+Makefile.in
+config_bison.c
+config_bison.h
+config_flex.c
+liblxc_genesis.a
+liblxc_genesis_a-lxc_genesis.o
+liblxc_genesis_core.a
+liblxc_genesis_core_a-config_bison.o
+liblxc_genesis_core_a-config_flex.o
+liblxc_genesis_core_a-core.o
+lxc_genesis
+main.o

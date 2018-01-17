@@ -1,0 +1,6 @@
+          name : suid
+        author : Jimmy Wennlund <jimmy.wennlund@gmail.com>
+  contributors : 
+      commands : 
+       options : suid, sgid
+   description : Set user and group id before launching.

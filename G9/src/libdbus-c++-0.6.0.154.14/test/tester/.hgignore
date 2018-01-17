@@ -1,0 +1,19 @@
+syntax: glob
+*.Po
+*.o
+*.a
+*/Makefile
+*/Makefile.in
+Makefile
+Makefile.in
+configure
+config.*
+aclocal.m4
+wytchmain.i
+wytchmain.pc
+src/wytchmain
+*/*-adaptor.h
+*/*-proxy.h
+autom4te.cache/
+build-aux/
+stamp-h1

@@ -1,0 +1,68 @@
+* Broadcom STB NAND Controller
+
+The Broadcom STB NAND controller utilizes the MTD subsystem to provide generic
+access to NAND flash chips.
+
+Required properties:
+- compatible     : should contain "brcm,brcmnand" and an appropriate version
+                   compatibility string, like "brcm,brcmnand-v7.0"
+- reg            : the register start and length for NAND and (if present)
+                   FLASH_DMA blocks
+- reg-names      : a list of the names corresponding to the previous register
+		   ranges. Should contain "nand" and (if FLASH_DMA is
+                   available) "flash-dma".
+- interrupts     : The HIF L2 interrupts for NAND_CLTRDY and (if FLASH_DMA is
+                   available) FLASH_DMA_DONE
+- interrupt-parent: The phandle to the HIF L2 interrupt controller node
+- #address-cells : <1> - subnodes give the chip-select number
+- #size-cells    : <0>
+
+Each controller (compatible: "brcm,brcmnand") may contain one or more subnodes
+to represent enabled chip-selects which (may) contain NAND flash chips. Their
+properties are as follows.
+
+Required properties:
+- compatible        : should contain "brcm,nandcs"
+- reg               : a single integer representing the chip-select number
+                      (e.g., 0, 1, 2, etc.)
+- #address-cells    : see partition.txt
+- #size-cells       : see partition.txt
+
+Optional properties:
+- nand-on-flash-bbt : boolean, to enable the on-flash BBT for this chip-select
+
+Each nandcs device node may optionally contain sub-nodes describing the flash
+partition mapping. See partition.txt for more detail.
+
+Example:
+
+nand@f0442800 {
+	compatible = "brcm,brcmnand-v7.0", "brcm,brcmnand";
+	reg = <0xF0442800 0x600>,
+	      <0xF0443000 0x100>;
+	reg-names = "nand", "flash-dma";
+	interrupt-parent = <&hif_intr2_intc>;
+	interrupts = <24>, <4>;
+
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	nandcs@1 {
+		compatible = "brcm,nandcs";
+		reg = <1>; // Chip select 1
+		nand-on-flash-bbt;
+
+		// Partitions
+		#address-cells = <1>;  // <2>, for 64-bit offset
+		#size-cells = <1>;     // <2>, for 64-bit length
+		flash0.rootfs@0 {
+			reg = <0 0x10000000>;
+		};
+		flash0@0 {
+			reg = <0 0>; // MTDPART_SIZ_FULL
+		};
+		flash0.kernel@10000000 {
+			reg = <0x10000000 0x400000>;
+		};
+	};
+};

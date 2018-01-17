@@ -1,0 +1,36 @@
+If the LSB SDK doesn't recognize a version of gcc it prints (for 4.8)
+
+  unrecognized gcc version: "4.8"
+
+to stderr.  This is bad because if called with gcc -E it will print to
+stderr for cpp lines which will break autoconf configure script checks.
+
+This is a non-issue with some newer autoconf-generated configure scripts that
+use compile tests instead of preprocessor tests, but still breaks on a lot of
+stuff out today.
+
+Use this patch until this issue is resolved:
+https://lsbbugs.linuxfoundation.org/show_bug.cgi?id=3816
+
+diff -uNpr gcc-4.8.2-old/libiberty/configure gcc-4.8.2/libiberty/configure
+--- gcc-4.8.2-old/libiberty/configure	2013-10-30 18:54:29.370999545 -0700
++++ gcc-4.8.2/libiberty/configure	2013-10-30 18:59:24.486986526 -0700
+@@ -1457,6 +1457,7 @@ eval ac_try_echo="\"\$as_me:${as_lineno-
+ $as_echo "$ac_try_echo"; } >&5
+   (eval "$ac_cpp conftest.$ac_ext") 2>conftest.err
+   ac_status=$?
++  sed -i "/unrecognized gcc version/d" conftest.err
+   if test -s conftest.err; then
+     grep -v '^ *+' conftest.err >conftest.er1
+     cat conftest.er1 >&5
+diff -up gcc-linaro-4.8-2014.01/gcc/configure.orig gcc-linaro-4.8-2014.01/gcc/configure
+--- gcc-linaro-4.8-2014.01/gcc/configure.orig	2014-01-13 05:00:54.000000000 -0800
++++ gcc-linaro-4.8-2014.01/gcc/configure	2014-02-10 19:09:54.862408715 -0800
+@@ -1867,6 +1867,7 @@ eval ac_try_echo="\"\$as_me:${as_lineno-
+ $as_echo "$ac_try_echo"; } >&5
+   (eval "$ac_cpp conftest.$ac_ext") 2>conftest.err
+   ac_status=$?
++  sed -i "/unrecognized gcc version/d" conftest.err
+   if test -s conftest.err; then
+     grep -v '^ *+' conftest.err >conftest.er1
+     cat conftest.er1 >&5

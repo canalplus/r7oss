@@ -1,0 +1,31 @@
+From db130fe3b312a9dd048d448b4911bca28619072f Mon Sep 17 00:00:00 2001
+From: Gauthier Haderer <ghaderer@wyplay.com>
+Date: Tue, 26 Sep 2017 18:04:16 +0200
+Subject: [PATCH] Disable media suspension to avoid a black screen.
+
+When a video is paused for more than 15 seconds, the media delegate
+tries to suspend the media player, that in turn stops and deletes the
+renderer. As we release the hardware video decoder, it also clears the
+video window, resulting in a black area on the screen.
+
+As we don't really need this feature anyway, we forcibly disable it.
+---
+ media/blink/webmediaplayer_impl.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git media/blink/webmediaplayer_impl.cc media/blink/webmediaplayer_impl.cc
+index 23a9dfd..be36aaf 100644
+--- media/blink/webmediaplayer_impl.cc
++++ media/blink/webmediaplayer_impl.cc
+@@ -1558,7 +1558,7 @@ void WebMediaPlayerImpl::SetSuspendState(bool is_suspended) {
+     }
+   }
+ #else
+-  can_suspend_state_ = CanSuspendState::YES;
++  can_suspend_state_ = CanSuspendState::NO;
+ #endif
+ 
+   if (can_suspend_state_ == CanSuspendState::NO)
+-- 
+2.9.4
+

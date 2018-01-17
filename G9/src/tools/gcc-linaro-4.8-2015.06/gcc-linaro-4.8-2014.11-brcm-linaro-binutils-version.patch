@@ -1,0 +1,218 @@
+Upstream-status: not yet submitted
+
+Upstream-BZ: https://bugs.linaro.org/show_bug.cgi?id=1438
+
+For some bizarre reason, all of these were using a different regex from
+gcc/configure.ac to get the LD version, which was messing with the version
+detection, so that the configure script decided that our binutils didn't
+support symbol versioning.
+
+The issue occurred because the latest Linaro binutils had a "fix" to the
+version number that pleased the regex in gcc/configure.ac but broke these ones
+instead.  There isn't a sane way to handle this other than to make them all use
+roughly the same approach to determining the version.
+
+diff -up gcc-linaro-4.8-2014.11/libatomic/acinclude.m4.orig gcc-linaro-4.8-2014.11/libatomic/acinclude.m4
+--- gcc-linaro-4.8-2014.11/libatomic/acinclude.m4.orig	2015-04-23 15:41:44.932966716 -0700
++++ gcc-linaro-4.8-2014.11/libatomic/acinclude.m4	2015-04-23 15:41:56.652112188 -0700
+@@ -334,7 +334,8 @@ AC_DEFUN([LIBAT_CHECK_LINKER_FEATURES], 
+   fi
+   changequote(,)
+   ldver=`$LD --version 2>/dev/null |
+-         sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /;s/GNU ld \([0-9.][0-9.]*\).*/\1/; q'`
++	  sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /' |
++	  sed -n -e 's,^.*[       ]\([0-9][0-9]*\.[0-9][0-9]*.*\)$,\1,p'`
+   changequote([,])
+   libat_gnu_ld_version=`echo $ldver | \
+          $AWK -F. '{ if (NF<3) [$]3=0; print ([$]1*100+[$]2)*100+[$]3 }'`
+diff -up gcc-linaro-4.8-2014.11/libgomp/acinclude.m4.orig gcc-linaro-4.8-2014.11/libgomp/acinclude.m4
+--- gcc-linaro-4.8-2014.11/libgomp/acinclude.m4.orig	2015-04-23 15:36:40.174172395 -0700
++++ gcc-linaro-4.8-2014.11/libgomp/acinclude.m4	2015-04-23 15:36:47.885264321 -0700
+@@ -153,7 +153,8 @@ AC_DEFUN([LIBGOMP_CHECK_LINKER_FEATURES]
+   fi
+   changequote(,)
+   ldver=`$LD --version 2>/dev/null |
+-         sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /;s/GNU ld \([0-9.][0-9.]*\).*/\1/; q'`
++	  sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /' |
++	  sed -n -e 's,^.*[       ]\([0-9][0-9]*\.[0-9][0-9]*.*\)$,\1,p'`
+   changequote([,])
+   libgomp_gnu_ld_version=`echo $ldver | \
+          $AWK -F. '{ if (NF<3) [$]3=0; print ([$]1*100+[$]2)*100+[$]3 }'`
+diff -up gcc-linaro-4.8-2014.11/libitm/acinclude.m4.orig gcc-linaro-4.8-2014.11/libitm/acinclude.m4
+--- gcc-linaro-4.8-2014.11/libitm/acinclude.m4.orig	2015-04-23 15:40:39.684155223 -0700
++++ gcc-linaro-4.8-2014.11/libitm/acinclude.m4	2015-04-23 15:41:03.780453219 -0700
+@@ -246,7 +246,8 @@ AC_DEFUN([LIBITM_CHECK_LINKER_FEATURES],
+   fi
+   changequote(,)
+   ldver=`$LD --version 2>/dev/null |
+-         sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /;s/GNU ld \([0-9.][0-9.]*\).*/\1/; q'`
++	  sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /' |
++	  sed -n -e 's,^.*[       ]\([0-9][0-9]*\.[0-9][0-9]*.*\)$,\1,p'`
+   changequote([,])
+   libitm_gnu_ld_version=`echo $ldver | \
+          $AWK -F. '{ if (NF<3) [$]3=0; print ([$]1*100+[$]2)*100+[$]3 }'`
+diff -up gcc-linaro-4.8-2014.11/libstdc++-v3/acinclude.m4.orig gcc-linaro-4.8-2014.11/libstdc++-v3/acinclude.m4
+--- gcc-linaro-4.8-2014.11/libstdc++-v3/acinclude.m4.orig	2015-04-23 15:32:19.222913845 -0700
++++ gcc-linaro-4.8-2014.11/libstdc++-v3/acinclude.m4	2015-04-23 15:32:21.949951353 -0700
+@@ -251,7 +251,8 @@ AC_DEFUN([GLIBCXX_CHECK_LINKER_FEATURES]
+       glibcxx_ld_is_gold=yes
+     fi
+     ldver=`$LD --version 2>/dev/null |
+-	   sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /;s/GNU ld \([0-9.][0-9.]*\).*/\1/; q'`
++	   sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /' |
++	   sed -n -e 's,^.*[       ]\([0-9][0-9]*\.[0-9][0-9]*.*\)$,\1,p'`
+     changequote([,])
+     glibcxx_gnu_ld_version=`echo $ldver | \
+ 	   $AWK -F. '{ if (NF<3) [$]3=0; print ([$]1*100+[$]2)*100+[$]3 }'`
+diff -up gcc-linaro-4.8-2014.11/libatomic/configure.orig gcc-linaro-4.8-2014.11/libatomic/configure
+--- gcc-linaro-4.8-2014.11/libatomic/configure.orig	2015-04-23 16:50:12.368885772 -0700
++++ gcc-linaro-4.8-2014.11/libatomic/configure	2015-04-23 16:52:02.430246336 -0700
+@@ -14730,7 +14730,8 @@ with_gnu_ld=$lt_cv_prog_gnu_ld
+   fi
+ 
+   ldver=`$LD --version 2>/dev/null |
+-         sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /;s/GNU ld \([0-9.][0-9.]*\).*/\1/; q'`
++	  sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /' |
++	  sed -n -e 's,^.*[       ]\([0-9][0-9]*\.[0-9][0-9]*.*\)$,\1,p'`
+ 
+   libat_gnu_ld_version=`echo $ldver | \
+          $AWK -F. '{ if (NF<3) $3=0; print ($1*100+$2)*100+$3 }'`
+diff -up gcc-linaro-4.8-2014.11/libgomp/configure.orig gcc-linaro-4.8-2014.11/libgomp/configure
+--- gcc-linaro-4.8-2014.11/libgomp/configure.orig	2015-04-23 16:50:06.100807939 -0700
++++ gcc-linaro-4.8-2014.11/libgomp/configure	2015-04-23 16:51:52.150119098 -0700
+@@ -15706,7 +15706,8 @@ with_gnu_ld=$lt_cv_prog_gnu_ld
+   fi
+ 
+   ldver=`$LD --version 2>/dev/null |
+-         sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /;s/GNU ld \([0-9.][0-9.]*\).*/\1/; q'`
++	  sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /' |
++	  sed -n -e 's,^.*[       ]\([0-9][0-9]*\.[0-9][0-9]*.*\)$,\1,p'`
+ 
+   libgomp_gnu_ld_version=`echo $ldver | \
+          $AWK -F. '{ if (NF<3) $3=0; print ($1*100+$2)*100+$3 }'`
+diff -up gcc-linaro-4.8-2014.11/libitm/configure.orig gcc-linaro-4.8-2014.11/libitm/configure
+--- gcc-linaro-4.8-2014.11/libitm/configure.orig	2015-04-23 16:49:56.436688175 -0700
++++ gcc-linaro-4.8-2014.11/libitm/configure	2015-04-23 16:51:32.389874765 -0700
+@@ -16819,7 +16819,8 @@ fi
+   fi
+ 
+   ldver=`$LD --version 2>/dev/null |
+-         sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /;s/GNU ld \([0-9.][0-9.]*\).*/\1/; q'`
++	  sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /' |
++	  sed -n -e 's,^.*[       ]\([0-9][0-9]*\.[0-9][0-9]*.*\)$,\1,p'`
+ 
+   libitm_gnu_ld_version=`echo $ldver | \
+          $AWK -F. '{ if (NF<3) $3=0; print ($1*100+$2)*100+$3 }'`
+diff -up gcc-linaro-4.8-2014.11/libstdc++-v3/configure.orig gcc-linaro-4.8-2014.11/libstdc++-v3/configure
+--- gcc-linaro-4.8-2014.11/libstdc++-v3/configure.orig	2015-04-23 16:50:18.926966073 -0700
++++ gcc-linaro-4.8-2014.11/libstdc++-v3/configure	2015-04-23 16:53:22.336235347 -0700
+@@ -20686,7 +20686,8 @@ $as_echo_n "checking for ld version... "
+       glibcxx_ld_is_gold=yes
+     fi
+     ldver=`$LD --version 2>/dev/null |
+-	   sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /;s/GNU ld \([0-9.][0-9.]*\).*/\1/; q'`
++	  sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /' |
++	  sed -n -e 's,^.*[       ]\([0-9][0-9]*\.[0-9][0-9]*.*\)$,\1,p'`
+ 
+     glibcxx_gnu_ld_version=`echo $ldver | \
+ 	   $AWK -F. '{ if (NF<3) $3=0; print ($1*100+$2)*100+$3 }'`
+@@ -27721,7 +27722,8 @@ $as_echo_n "checking for ld version... "
+       glibcxx_ld_is_gold=yes
+     fi
+     ldver=`$LD --version 2>/dev/null |
+-	   sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /;s/GNU ld \([0-9.][0-9.]*\).*/\1/; q'`
++	  sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /' |
++	  sed -n -e 's,^.*[       ]\([0-9][0-9]*\.[0-9][0-9]*.*\)$,\1,p'`
+ 
+     glibcxx_gnu_ld_version=`echo $ldver | \
+ 	   $AWK -F. '{ if (NF<3) $3=0; print ($1*100+$2)*100+$3 }'`
+@@ -33652,7 +33654,8 @@ $as_echo_n "checking for ld version... "
+       glibcxx_ld_is_gold=yes
+     fi
+     ldver=`$LD --version 2>/dev/null |
+-	   sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /;s/GNU ld \([0-9.][0-9.]*\).*/\1/; q'`
++	  sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /' |
++	  sed -n -e 's,^.*[       ]\([0-9][0-9]*\.[0-9][0-9]*.*\)$,\1,p'`
+ 
+     glibcxx_gnu_ld_version=`echo $ldver | \
+ 	   $AWK -F. '{ if (NF<3) $3=0; print ($1*100+$2)*100+$3 }'`
+@@ -45529,7 +45532,8 @@ $as_echo_n "checking for ld version... "
+       glibcxx_ld_is_gold=yes
+     fi
+     ldver=`$LD --version 2>/dev/null |
+-	   sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /;s/GNU ld \([0-9.][0-9.]*\).*/\1/; q'`
++	  sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /' |
++	  sed -n -e 's,^.*[       ]\([0-9][0-9]*\.[0-9][0-9]*.*\)$,\1,p'`
+ 
+     glibcxx_gnu_ld_version=`echo $ldver | \
+ 	   $AWK -F. '{ if (NF<3) $3=0; print ($1*100+$2)*100+$3 }'`
+@@ -45743,7 +45747,8 @@ $as_echo_n "checking for ld version... "
+       glibcxx_ld_is_gold=yes
+     fi
+     ldver=`$LD --version 2>/dev/null |
+-	   sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /;s/GNU ld \([0-9.][0-9.]*\).*/\1/; q'`
++	  sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /' |
++	  sed -n -e 's,^.*[       ]\([0-9][0-9]*\.[0-9][0-9]*.*\)$,\1,p'`
+ 
+     glibcxx_gnu_ld_version=`echo $ldver | \
+ 	   $AWK -F. '{ if (NF<3) $3=0; print ($1*100+$2)*100+$3 }'`
+@@ -46218,7 +46223,8 @@ $as_echo_n "checking for ld version... "
+       glibcxx_ld_is_gold=yes
+     fi
+     ldver=`$LD --version 2>/dev/null |
+-	   sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /;s/GNU ld \([0-9.][0-9.]*\).*/\1/; q'`
++	  sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /' |
++	  sed -n -e 's,^.*[       ]\([0-9][0-9]*\.[0-9][0-9]*.*\)$,\1,p'`
+ 
+     glibcxx_gnu_ld_version=`echo $ldver | \
+ 	   $AWK -F. '{ if (NF<3) $3=0; print ($1*100+$2)*100+$3 }'`
+@@ -52503,7 +52509,8 @@ $as_echo_n "checking for ld version... "
+       glibcxx_ld_is_gold=yes
+     fi
+     ldver=`$LD --version 2>/dev/null |
+-	   sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /;s/GNU ld \([0-9.][0-9.]*\).*/\1/; q'`
++	  sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /' |
++	  sed -n -e 's,^.*[       ]\([0-9][0-9]*\.[0-9][0-9]*.*\)$,\1,p'`
+ 
+     glibcxx_gnu_ld_version=`echo $ldver | \
+ 	   $AWK -F. '{ if (NF<3) $3=0; print ($1*100+$2)*100+$3 }'`
+@@ -58419,7 +58426,8 @@ $as_echo_n "checking for ld version... "
+       glibcxx_ld_is_gold=yes
+     fi
+     ldver=`$LD --version 2>/dev/null |
+-	   sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /;s/GNU ld \([0-9.][0-9.]*\).*/\1/; q'`
++	  sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /' |
++	  sed -n -e 's,^.*[       ]\([0-9][0-9]*\.[0-9][0-9]*.*\)$,\1,p'`
+ 
+     glibcxx_gnu_ld_version=`echo $ldver | \
+ 	   $AWK -F. '{ if (NF<3) $3=0; print ($1*100+$2)*100+$3 }'`
+@@ -58586,7 +58594,8 @@ $as_echo_n "checking for ld version... "
+       glibcxx_ld_is_gold=yes
+     fi
+     ldver=`$LD --version 2>/dev/null |
+-	   sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /;s/GNU ld \([0-9.][0-9.]*\).*/\1/; q'`
++	  sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /' |
++	  sed -n -e 's,^.*[       ]\([0-9][0-9]*\.[0-9][0-9]*.*\)$,\1,p'`
+ 
+     glibcxx_gnu_ld_version=`echo $ldver | \
+ 	   $AWK -F. '{ if (NF<3) $3=0; print ($1*100+$2)*100+$3 }'`
+@@ -58814,7 +58823,8 @@ $as_echo_n "checking for ld version... "
+       glibcxx_ld_is_gold=yes
+     fi
+     ldver=`$LD --version 2>/dev/null |
+-	   sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /;s/GNU ld \([0-9.][0-9.]*\).*/\1/; q'`
++	  sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /' |
++	  sed -n -e 's,^.*[       ]\([0-9][0-9]*\.[0-9][0-9]*.*\)$,\1,p'`
+ 
+     glibcxx_gnu_ld_version=`echo $ldver | \
+ 	   $AWK -F. '{ if (NF<3) $3=0; print ($1*100+$2)*100+$3 }'`
+@@ -64730,7 +64740,8 @@ $as_echo_n "checking for ld version... "
+       glibcxx_ld_is_gold=yes
+     fi
+     ldver=`$LD --version 2>/dev/null |
+-	   sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /;s/GNU ld \([0-9.][0-9.]*\).*/\1/; q'`
++	  sed -e 's/GNU gold /GNU ld /;s/GNU ld version /GNU ld /;s/GNU ld ([^)]*) /GNU ld /' |
++	  sed -n -e 's,^.*[       ]\([0-9][0-9]*\.[0-9][0-9]*.*\)$,\1,p'`
+ 
+     glibcxx_gnu_ld_version=`echo $ldver | \
+ 	   $AWK -F. '{ if (NF<3) $3=0; print ($1*100+$2)*100+$3 }'`

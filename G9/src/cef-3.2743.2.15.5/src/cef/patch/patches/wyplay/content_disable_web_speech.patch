@@ -1,0 +1,42 @@
+diff --git content/browser/speech/speech_recognition_manager_impl.cc content/browser/speech/speech_recognition_manager_impl.cc
+--- content/browser/speech/speech_recognition_manager_impl.cc
++++ content/browser/speech/speech_recognition_manager_impl.cc
+@@ -99,6 +99,7 @@ int SpeechRecognitionManagerImpl::CreateSession(
+     const SpeechRecognitionSessionConfig& config) {
+   DCHECK_CURRENTLY_ON(BrowserThread::IO);
+ 
++#if !defined(DISABLE_WEB_SPEECH)
+   const int session_id = GetNextSessionID();
+   DCHECK(!SessionExists(session_id));
+   // Set-up the new session.
+@@ -146,6 +147,9 @@ int SpeechRecognitionManagerImpl::CreateSession(
+   session->recognizer = new SpeechRecognizerImplAndroid(this, session_id);
+ #endif
+   return session_id;
++#else  // !DISABLE_WEB_SPEECH
++  return kSessionIDInvalid;
++#endif  // DISABLE_WEB_SPEECH
+ }
+ 
+ void SpeechRecognitionManagerImpl::StartSession(int session_id) {
+diff --git content/content_browser.gypi content/content_browser.gypi
+index 150367d..c0208bf 100644
+--- content/content_browser.gypi
++++ content/content_browser.gypi
+@@ -2143,6 +2143,16 @@
+         '../third_party/flac/flac.gyp:libflac',
+       ],
+     }],
++    ['enable_web_speech==0 and OS!="android"', {
++      'defines': [
++        'DISABLE_WEB_SPEECH=1',
++      ],
++      'sources/': [
++        ['exclude', '^browser/speech/'],
++        ['include', '^browser/speech/speech_recognition_dispatcher_host\\.(cc|h)$'],
++        ['include', '^browser/speech/speech_recognition_manager_impl\\.(cc|h)$'],
++      ],
++    }],
+     ['enable_web_speech==0 and OS=="android"', {
+       'sources/': [
+         ['exclude', '^browser/speech/'],

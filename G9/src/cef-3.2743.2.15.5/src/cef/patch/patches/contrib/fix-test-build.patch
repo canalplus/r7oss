@@ -1,0 +1,135 @@
+diff -Nur chrome/chrome_tests.gypi chrome/chrome_tests.gypi
+--- chrome/chrome_tests.gypi	2016-08-10 14:46:07.765536527 +0200
++++ chrome/chrome_tests.gypi	2016-08-10 16:07:44.047378125 +0200
+@@ -2173,7 +2173,6 @@
+         '../device/serial/serial.gyp:device_serial_test_util',
+         '../extensions/common/api/api.gyp:extensions_api',
+         '../google_apis/google_apis.gyp:google_apis_test_support',
+-        '../media/cast/cast.gyp:cast_test_utility',
+         '../media/media.gyp:media',
+         '../net/net.gyp:net',
+         '../net/net.gyp:net_test_support',
+@@ -2724,7 +2723,6 @@
+         '../base/base.gyp:test_support_base',
+         '../components/components.gyp:autofill_content_test_support',
+         '../content/content_shell_and_tests.gyp:content_browser_test_base',
+-        '../media/cast/cast.gyp:cast_test_utility',
+         '../net/net.gyp:net',
+         '../net/net.gyp:net_test_support',
+         '../skia/skia.gyp:skia',
+diff -Nur chrome/test/data/webui_test_resources.grd chrome/test/data/webui_test_resources.grd
+--- chrome/test/data/webui_test_resources.grd	2016-08-10 14:46:06.877542677 +0200
++++ chrome/test/data/webui_test_resources.grd	2016-08-10 16:08:46.854941655 +0200
+@@ -8,7 +8,6 @@
+   </outputs>
+   <release seq="1">
+     <includes>
+-      <include name="IDR_WEBUI_TEST_I18N_PROCESS_CSS_TEST" file="webui/i18n_process_css_test.html" flattenhtml="true" allowexternalscript="true" type="BINDATA" />
+     </includes>
+   </release>
+ </grit>
+diff -Nur device/serial/serial.gyp device/serial/serial.gyp
+--- device/serial/serial.gyp	2016-08-10 14:46:06.725543730 +0200
++++ device/serial/serial.gyp	2016-08-10 16:12:04.141545916 +0200
+@@ -39,11 +39,6 @@
+           'dependencies': [
+             '../udev_linux/udev.gyp:udev_linux',
+           ],
+-        }, {
+-          'sources!': [
+-            'serial_device_enumerator_linux.cc',
+-            'serial_device_enumerator_linux.h',
+-          ],
+         }],
+         ['OS=="win"', {
+           'link_settings': {
+diff -Nur ui/views/test/ui_controls_factory_desktop_aura_ozone.cc ui/views/test/ui_controls_factory_desktop_aura_ozone.cc
+--- ui/views/test/ui_controls_factory_desktop_aura_ozone.cc	1970-01-01 01:00:00.000000000 +0100
++++ ui/views/test/ui_controls_factory_desktop_aura_ozone.cc	2016-08-11 15:23:35.694546130 +0200
+@@ -0,0 +1,63 @@
++#include "ui/base/test/ui_controls_aura.h"
++
++namespace views {
++  namespace test {
++
++    class UIControlsDesktopOzone : public UIControlsAura {
++
++        virtual bool SendKeyPress(gfx::NativeWindow window,
++                                  ui::KeyboardCode key,
++                                  bool control,
++                                  bool shift,
++                                  bool alt,
++                                  bool command) override {
++          return false;
++        }
++
++        virtual bool SendKeyPressNotifyWhenDone(gfx::NativeWindow window,
++                                                ui::KeyboardCode key,
++                                                bool control,
++                                                bool shift,
++                                                bool alt,
++                                                bool command,
++                                                const base::Closure& task) override {
++          return false;
++        }
++
++        virtual bool SendMouseMove(long x, long y) override {
++          return false;
++        }
++
++        virtual bool SendMouseMoveNotifyWhenDone(long x,
++                                                 long y,
++                                                 const base::Closure& task) override {
++          return false;
++        }
++
++        virtual bool SendMouseEvents(MouseButton type, int state) override {
++          return false;
++        }
++
++        virtual bool SendMouseEventsNotifyWhenDone(MouseButton type, int state,
++                                                   const base::Closure& task) override {
++          return false;
++        };
++
++        // Same as SendMouseEvents with BUTTON_UP | BUTTON_DOWN.
++        virtual bool SendMouseClick(MouseButton type) override {
++          return false;
++        }
++
++        // Runs |closure| after processing all pending ui events.
++        virtual void RunClosureAfterAllPendingUIEvents(
++          const base::Closure& closure) override {
++          closure.Run();
++        }
++    };
++
++    ui_controls::UIControlsAura* CreateUIControlsDesktopAura() {
++      return new UIControlsDesktopOzone();
++    }
++
++  }  // namespace test
++}  // namespace views
+diff -Nur ui/views/views.gyp ui/views/views.gyp
+--- ui/views/views.gyp	2016-08-10 14:46:29.629385094 +0200
++++ ui/views/views.gyp	2016-08-11 15:23:54.458418333 +0200
+@@ -562,6 +562,9 @@
+       'test/ui_controls_factory_desktop_aurax11.cc',
+       'test/ui_controls_factory_desktop_aurax11.h',
+     ],
++    'views_test_support_desktop_aura_ozone_sources': [
++      'test/ui_controls_factory_desktop_aura_ozone.cc'
++    ],
+     'views_unittests_sources': [
+       'accessibility/native_view_accessibility_unittest.cc',
+       'accessibility/native_view_accessibility_win_unittest.cc',
+@@ -862,6 +865,9 @@
+         ['use_aura==1 and use_x11==1 and chromeos==0', {
+           'sources': [ '<@(views_test_support_desktop_aura_x11_sources)' ],
+         }],
++        ['use_aura==1 and use_x11==0 and use_ozone==1 and chromeos==0', {
++          'sources': [ '<@(views_test_support_desktop_aura_ozone_sources)' ],
++        }],
+       ],
+     },  # target_name: views_test_support
+     {

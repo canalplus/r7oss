@@ -1,0 +1,193 @@
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+
+#include "skeleton.dtsi"
+
+/ {
+	#address-cells = <2>;
+	#size-cells = <2>;
+	model = "Broadcom STB (bcm7445)";
+	compatible = "brcm,bcm7445", "brcm,brcmstb";
+	interrupt-parent = <&gic>;
+
+	chosen {
+		bootargs = "console=ttyS0,115200 earlyprintk";
+	};
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu@0 {
+			compatible = "brcm,brahma-b15";
+			device_type = "cpu";
+			reg = <0>;
+		};
+
+		cpu@1 {
+			compatible = "brcm,brahma-b15";
+			device_type = "cpu";
+			reg = <1>;
+		};
+
+		cpu@2 {
+			compatible = "brcm,brahma-b15";
+			device_type = "cpu";
+			reg = <2>;
+		};
+
+		cpu@3 {
+			compatible = "brcm,brahma-b15";
+			device_type = "cpu";
+			reg = <3>;
+		};
+	};
+
+	gic: interrupt-controller@ffd00000 {
+		compatible = "brcm,brahma-b15-gic", "arm,cortex-a15-gic";
+		reg = <0x00 0xffd01000 0x00 0x1000>,
+		      <0x00 0xffd02000 0x00 0x2000>,
+		      <0x00 0xffd04000 0x00 0x2000>,
+		      <0x00 0xffd06000 0x00 0x2000>;
+		interrupt-controller;
+		#interrupt-cells = <3>;
+	};
+
+	timer {
+		compatible = "arm,armv7-timer";
+		interrupts = <GIC_PPI 13 (GIC_CPU_MASK_RAW(15) | IRQ_TYPE_LEVEL_LOW)>,
+			     <GIC_PPI 14 (GIC_CPU_MASK_RAW(15) | IRQ_TYPE_LEVEL_LOW)>,
+			     <GIC_PPI 11 (GIC_CPU_MASK_RAW(15) | IRQ_TYPE_LEVEL_LOW)>,
+			     <GIC_PPI 10 (GIC_CPU_MASK_RAW(15) | IRQ_TYPE_LEVEL_LOW)>;
+	};
+
+	rdb {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "simple-bus";
+		ranges = <0 0x00 0xf0000000 0x1000000>;
+
+		serial@406b00 {
+			compatible = "ns16550a";
+			reg = <0x406b00 0x20>;
+			reg-shift = <2>;
+			reg-io-width = <4>;
+			interrupts = <GIC_SPI 75 IRQ_TYPE_LEVEL_HIGH>;
+			clock-frequency = <0x4d3f640>;
+		};
+
+		sun_top_ctrl: syscon@404000 {
+			compatible = "brcm,bcm7445-sun-top-ctrl",
+				     "syscon";
+			reg = <0x404000 0x51c>;
+		};
+
+		hif_cpubiuctrl: syscon@3e2400 {
+			compatible = "brcm,bcm7445-hif-cpubiuctrl",
+				     "syscon";
+			reg = <0x3e2400 0x5b4>;
+		};
+
+		hif_continuation: syscon@452000 {
+			compatible = "brcm,bcm7445-hif-continuation",
+				     "syscon";
+			reg = <0x452000 0x100>;
+		};
+
+		sata@45a000 {
+			compatible = "brcm,sata3-ahci";
+			reg = <0x45a000 0xa9c>;
+			phy-enable-ssc-mask = <0x0>;
+			phy-generation = <0x2800>;
+			interrupts = <GIC_SPI 30 IRQ_TYPE_LEVEL_HIGH>;
+			phy-base-addr = <0xf0458100>;
+			top-ctrl-base-addr = <0xf0458040>;
+		};
+
+		usb@470200 {
+			reg = <0x470200 0x80>;
+			compatible = "brcm,usb-instance";
+			ioc = <0x1>;
+			#size-cells = <0x1>;
+			#address-cells = <0x1>;
+			ipp = <0x1>;
+			ranges;
+
+			ohci@470400 {
+				compatible = "brcm,ohci-brcm";
+				reg = <0x470400 0x58>;
+				interrupts = <GIC_SPI 0x51 IRQ_TYPE_LEVEL_HIGH>;
+			};
+
+			ohci@470600 {
+				compatible = "brcm,ohci-brcm";
+				reg = <0x470600 0x58>;
+				interrupts = <GIC_SPI 0x52 IRQ_TYPE_LEVEL_HIGH>;
+			};
+		};
+
+		usb@480200 {
+			reg = <0x480200 0x80>;
+			compatible = "brcm,usb-instance";
+			ioc = <0x1>;
+			#size-cells = <0x1>;
+			#address-cells = <0x1>;
+			ipp = <0x1>;
+			ranges;
+
+			ohci@480400 {
+				compatible = "brcm,ohci-brcm";
+				reg = <0x480400 0x58>;
+				interrupts = <GIC_SPI 0x57 IRQ_TYPE_LEVEL_HIGH>;
+			};
+
+			ohci@480600 {
+				compatible = "brcm,ohci-brcm";
+				reg = <0x480600 0x58>;
+				interrupts = <GIC_SPI 0x58 IRQ_TYPE_LEVEL_HIGH>;
+			};
+		};
+	};
+
+	/*
+	 * PCIe has funky address translation that touches beyond the
+	 * RDB range, so we place the node out here.
+	 */
+	pci {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "simple-bus";
+		ranges = <0 0x00 0x00000000 0xffffffff>;
+
+		pcie@f0460000 {
+			#address-cells = <0x3>;
+			#size-cells = <0x2>;
+			#interrupt-cells = <0x1>;
+			compatible = "brcm,pci-plat-dev";
+			reg = <0xf0460000 0x9310>;
+			interrupts = <GIC_SPI 0 IRQ_TYPE_LEVEL_HIGH>;
+			device_type = "pci";
+			bus-ranges = <0x0 0xff>;
+			tot-num-pcie = <0x1>;
+			ranges = <0x2000000 0x0 0x00000000 0xc0000000 0x0 0x8000000>,
+				 <0x2000000 0x0 0x08000000 0xc8000000 0x0 0x8000000>,
+				 <0x2000000 0x0 0x10000000 0xd0000000 0x0 0x8000000>,
+				 <0x2000000 0x0 0x18000000 0xd8000000 0x0 0x8000000>;
+			interrupt-map-mask = <0xf800 0x0 0x0 0x7>;
+			interrupt-map = <0x0 0x0 0x0 0x1 0x1 0x2f 0x3>,
+					<0x0 0x0 0x0 0x2 0x1 0x30 0x3>,
+					<0x0 0x0 0x0 0x3 0x1 0x31 0x3>,
+					<0x0 0x0 0x0 0x4 0x1 0x32 0x3>;
+		};
+	};
+
+	smpboot {
+		compatible = "brcm,brcmstb-smpboot";
+		syscon-cpu = <&hif_cpubiuctrl 0x88 0x178>;
+		syscon-cont = <&hif_continuation>;
+	};
+
+	reboot {
+		compatible = "brcm,brcmstb-reboot";
+		syscon = <&sun_top_ctrl 0x304 0x308>;
+	};
+};

@@ -1,0 +1,18 @@
+#!/bin/sh
+#
+# Copyright (C) 2009 Karel Zak <kzak@redhat.com>
+#
+
+# find all *.c files, 
+# sort the list
+# exclude /samples/ subdirectories
+# exclude ./tests/ from the list 
+#         and remove "./" prefix
+
+[ ! -f "po/Makevars" ] && \
+	echo "You must run this script in the top-level directory"
+
+find -name "*.c" -or -name "*.h" | \
+  sort | \
+  sed '/samples/d; /config\.h/d; /util-linux-.*/d; /\.\/tests/d; s/^\.\///' \
+  > po/POTFILES.in

@@ -1,0 +1,1790 @@
+diff --git build/common.gypi build/common.gypi
+index f5e8f44..0629e9e 100644
+--- build/common.gypi
++++ build/common.gypi
+@@ -602,6 +602,9 @@
+       # Enable FTP support by default.
+       'disable_ftp_support%': 0,
+ 
++      # Disable RTSP support by default.
++      'enable_cets_rtsp_support%' : 0,
++
+       # Do not use the platform ICU alternatives by default.
+       'use_platform_icu_alternatives%': 0,
+ 
+@@ -1255,6 +1258,7 @@
+     'enable_captive_portal_detection%': '<(enable_captive_portal_detection)',
+     'disable_file_support%': '<(disable_file_support)',
+     'disable_ftp_support%': '<(disable_ftp_support)',
++    'enable_cets_rtsp_support%' : '<(enable_cets_rtsp_support)',
+     'use_platform_icu_alternatives%': '<(use_platform_icu_alternatives)',
+     'disable_brotli_filter%': '<(disable_brotli_filter)',
+     'enable_task_manager%': '<(enable_task_manager)',
+diff --git media/blink/media_blink.gyp media/blink/media_blink.gyp
+index a00b1f1..cc41a2d 100644
+--- media/blink/media_blink.gyp
++++ media/blink/media_blink.gyp
+@@ -102,6 +102,20 @@
+             'webmediaplayer_impl.h',
+           ],
+         }],
++        ['enable_cets_rtsp_support==1', {
++          'sources': [
++            'rtsp_buffered_data_source.cc',
++            'rtsp_buffered_data_source.h',
++          ],
++          'link_settings': {
++            'libraries': [
++              '-lUsageEnvironment -lBasicUsageEnvironment -lgroupsock -lliveMedia',
++            ],
++          },
++          'defines': [
++            'ENABLE_CETS_RTSP_SUPPORT',
++          ]
++        }],
+       ],
+     },
+     {
+diff --git media/blink/rtsp_buffered_data_source.cc media/blink/rtsp_buffered_data_source.cc
+index e69de29..868b7d1 100644
+--- media/blink/rtsp_buffered_data_source.cc
++++ media/blink/rtsp_buffered_data_source.cc
+@@ -0,0 +1,531 @@
++#include "media/blink/rtsp_buffered_data_source.h"
++
++#include "base/bind.h"
++#include "media/base/media_log.h"
++#include "media/base/bind_to_current_loop.h"
++
++#define RTSP_SINK_RECEIVE_BUFFER_SIZE (2 * 7 * 188) // 2 RTSP frames
++
++namespace media {
++
++  static const int kBufferBackwardCapacity = 1024;
++  static const int kBufferForwardCapacity = 1024 * 1024 * 2; // 2M
++
++  namespace {
++
++    std::string CbTypeToString(RtspBufferedDataSource::Live555Wrapper::CbType type) {
++      switch (type) {
++        case RtspBufferedDataSource::Live555Wrapper::NONE:
++          return "NONE";
++        case RtspBufferedDataSource::Live555Wrapper::DESCRIBE:
++          return "DESCRIBE";
++        case RtspBufferedDataSource::Live555Wrapper::SETUP:
++          return "SETUP";
++        case RtspBufferedDataSource::Live555Wrapper::PLAY:
++          return "PLAY";
++        default:
++          return "UNEXPECTED";
++      }
++    }
++
++    static const char* kLive555ClientID = "ChromiumRTSPClient";
++
++    // Class used to forward callback from live555 to our wrapper class
++    class RTSPClientWrapper : public RTSPClient {
++      public:
++        static RTSPClientWrapper* createNew(RtspBufferedDataSource::Live555Wrapper* wrapper,
++                                            UsageEnvironment* env, const std::string& url) {
++          return new RTSPClientWrapper(wrapper,
++                                       env,
++                                       url.c_str());
++        }
++
++        void Forward(int code, char* str) {
++          DCHECK(wrapper_);
++          wrapper_->OnResponse(code, str);
++        }
++
++      protected:
++        RTSPClientWrapper(RtspBufferedDataSource::Live555Wrapper* wrapper,
++                          UsageEnvironment* env,
++                          const char* url)
++          : RTSPClient(*env, url, 0, kLive555ClientID, 0, -1),
++            wrapper_(wrapper) {}
++
++        virtual ~RTSPClientWrapper() {}
++
++      public:
++
++        RtspBufferedDataSource::Live555Wrapper* wrapper_;
++    };
++
++    // Class used to receive data from live555
++    class RTSPSink : public MediaSink {
++
++      public:
++        static RTSPSink* createNew(UsageEnvironment* env,
++                                   RtspBufferedDataSource* host) {
++          return new RTSPSink(env, host);
++        }
++
++      private:
++        RTSPSink(UsageEnvironment* env,
++                 RtspBufferedDataSource* host)
++          : MediaSink(*env),
++            host_(host)
++        {
++        }
++
++        ~RTSPSink() {}
++
++        static void afterGettingFrame(void* clientData,
++                                      unsigned frameSize,
++                                      unsigned numTruncatedBytes,
++                                      struct timeval presentationTime,
++                                      unsigned durationInMicroseconds) {
++          RTSPSink* sink = (RTSPSink*)clientData;
++
++          sink->afterGettingFrame(frameSize,
++                                  numTruncatedBytes,
++                                  presentationTime,
++                                  durationInMicroseconds);
++        }
++
++        void afterGettingFrame(unsigned frameSize,
++                               unsigned numTruncatedBytes,
++                               struct timeval presentationTime,
++                               unsigned durationInMicroseconds) {
++
++          host_->OnReceivedFrame(receive_buffer_, frameSize);
++
++          continuePlaying();
++        }
++
++        virtual Boolean continuePlaying() {
++          if (fSource == NULL)
++            return False;
++
++          fSource->getNextFrame(receive_buffer_,
++                                RTSP_SINK_RECEIVE_BUFFER_SIZE,
++                                afterGettingFrame, this,
++                                onSourceClosure, this);
++          return True;
++        }
++
++        uint8_t receive_buffer_[RTSP_SINK_RECEIVE_BUFFER_SIZE];
++        RtspBufferedDataSource* host_;
++    };
++
++    static void Live555WrapperTrampoline(RTSPClient* client, int code, char* str) {
++      ((RTSPClientWrapper *)client)->Forward(code, str);
++    }
++
++    static void Live555AfterSubsessionPlaying(void* clientData) {
++      MediaSubsession* subsession = (MediaSubsession*)clientData;
++      ((RtspBufferedDataSource::Live555Wrapper*)subsession->miscPtr)
++        ->AfterSubsessionPlaying(subsession);
++    }
++
++  }
++
++  RtspBufferedDataSource::Live555Wrapper::Live555Wrapper(
++    RtspBufferedDataSource* host, MediaLog* media_log)
++    : next_callback_(NONE),
++      scheduler_(NULL),
++      environment_(NULL),
++      client_(NULL),
++      session_(NULL),
++      iterator_(NULL),
++      host_(host),
++      watch_var_(0),
++      thread_("Live555EventLoop"),
++      media_log_(media_log) {
++  }
++
++  RtspBufferedDataSource::Live555Wrapper::~Live555Wrapper() {
++    CleanUp();
++  }
++
++  void RtspBufferedDataSource::Live555Wrapper::Initialize(
++    const std::string& url,
++    RtspBufferedDataSource::Live555Wrapper::Live555InitCB init_cb) {
++    CleanUp();
++
++    if (!(scheduler_ = BasicTaskScheduler::createNew())) {
++      media_log_->AddLogEvent(MediaLog::MEDIALOG_ERROR,
++                              "Failed to initialize live555 scheduler");
++      init_cb.Run(false);
++      return;
++    }
++
++    if (!(environment_ = BasicUsageEnvironment::createNew(*scheduler_))) {
++      media_log_->AddLogEvent(MediaLog::MEDIALOG_ERROR,
++                              "Failed to initialize live555 environment");
++      init_cb.Run(false);
++      return;
++    }
++
++    if (!(client_ = RTSPClientWrapper::createNew(this, environment_, url))) {
++      media_log_->AddLogEvent(MediaLog::MEDIALOG_ERROR,
++                              "Failed to initialize live555 client");
++      init_cb.Run(false);
++      return;
++    }
++
++    init_cb_ = media::BindToCurrentLoop(init_cb);
++
++    Start();
++  }
++
++  void RtspBufferedDataSource::Live555Wrapper::Start() {
++    thread_.Start();
++    thread_.message_loop()->PostTask(
++      FROM_HERE,
++      base::Bind(&RtspBufferedDataSource::Live555Wrapper::DoEventLoop, this)
++      );
++  }
++
++  void RtspBufferedDataSource::Live555Wrapper::Stop() {
++    watch_var_ = 1;
++  }
++
++  void RtspBufferedDataSource::Live555Wrapper::OnResponse(int code, char* str) {
++    CbType type = next_callback_;
++
++    if (code != 0) {
++      delete[] str;
++      // FIXME : error handling
++      return;
++    }
++
++    next_callback_ = NONE;
++
++    switch (type) {
++      case DESCRIBE:
++        OnDescribeResponse(code, str);
++        break;
++      case SETUP:
++        OnSetupResponse(code, str);
++        break;
++    };
++  }
++
++  void RtspBufferedDataSource::Live555Wrapper::DoEventLoop() {
++    DCHECK(client_);
++
++    watch_var_ = 0;
++
++    next_callback_ = DESCRIBE;
++    client_->sendDescribeCommand(Live555WrapperTrampoline);
++
++    environment_->taskScheduler().doEventLoop(&watch_var_);
++
++    if (session_) {
++      MediaSubsessionIterator it(*session_);
++      MediaSubsession* subsession;
++
++      while ((subsession = it.next())) {
++        if (subsession->sink) {
++          Medium::close(subsession->sink);
++          subsession->sink = NULL;
++        }
++      }
++
++      client_->sendTeardownCommand(*session_, NULL);
++    }
++
++    CleanUp();
++  }
++
++  void RtspBufferedDataSource::Live555Wrapper::CleanUp() {
++    if (session_)
++      Medium::close(session_);
++    if (client_)
++      Medium::close(client_);
++    if (environment_)
++      environment_->reclaim();
++    if (scheduler_)
++      delete scheduler_;
++
++    session_ = NULL;
++    client_ = NULL;
++    environment_ = NULL;
++    scheduler_ = NULL;
++    subsessions_.clear();
++  }
++
++  void RtspBufferedDataSource::Live555Wrapper::SetupNextSubsession() {
++    MediaSubsession* subsession = iterator_->next();
++
++    if (subsession) {
++      SetupSubsession(subsession);
++      return;
++    }
++
++    if (!init_cb_.is_null()) {
++      init_cb_.Run(true);
++      init_cb_.Reset();
++    }
++
++    StartPlaying();
++  }
++
++  void RtspBufferedDataSource::Live555Wrapper::SetupSubsession(
++    MediaSubsession* subsession)
++  {
++    if (!subsession->initiate()) {
++      SetupNextSubsession();
++      return;
++    }
++
++    next_callback_ = SETUP;
++    subsessions_.push_back(subsession);
++    client_->sendSetupCommand(*subsession, Live555WrapperTrampoline);
++  }
++
++  void RtspBufferedDataSource::Live555Wrapper::OnDescribeResponse(int code, char* str) {
++    session_ = MediaSession::createNew(*environment_, str);
++
++    if (session_ && session_->hasSubsessions()) {
++      iterator_ = new MediaSubsessionIterator(*session_);
++      SetupNextSubsession();
++    } else if (!init_cb_.is_null()) {
++      media_log_->AddLogEvent(MediaLog::MEDIALOG_ERROR,
++                              "Failed to initialize live555 client");
++      init_cb_.Run(false);
++    }
++  }
++
++  void RtspBufferedDataSource::Live555Wrapper::OnSetupResponse(int code, char* str) {
++    MediaSubsession* subsession = subsessions_.back();
++
++    subsession->sink = RTSPSink::createNew(environment_, host_);
++
++    if (subsession->sink) {
++      subsession->miscPtr = this;
++      subsession->sink->startPlaying(*(subsession->readSource()),
++                                     Live555AfterSubsessionPlaying,
++                                     subsession);
++    }
++
++    SetupNextSubsession();
++  }
++
++  void RtspBufferedDataSource::Live555Wrapper::AfterSubsessionPlaying(
++    MediaSubsession* subsession) {
++     Medium::close(subsession->sink);
++     subsession->sink = NULL;
++
++     for (std::vector<MediaSubsession*>::iterator it = subsessions_.begin();
++          it != subsessions_.end(); ++it) {
++       if (*it == subsession) {
++         subsessions_.erase(it);
++         break;
++       }
++     }
++
++     if (subsessions_.size() == 0) {
++       // We are done, i guess
++     }
++  }
++
++  void RtspBufferedDataSource::Live555Wrapper::StartPlaying() {
++    next_callback_ = PLAY;
++
++    if (session_->absStartTime() != NULL)
++      client_->sendPlayCommand(
++        *session_,
++        NULL,
++        session_->absStartTime(),
++        session_->absEndTime());
++    else
++      client_->sendPlayCommand(
++        *session_,
++        NULL);
++  }
++
++  //// RTSP Buffered Data Source implementation
++
++  RtspBufferedDataSource::RtspBufferedDataSource(
++    const GURL& url,
++    const scoped_refptr<base::SingleThreadTaskRunner>& task_runner,
++    MediaLog* media_log,
++    BufferedDataSourceHost* host,
++    const BufferedDataSource::DownloadingCB& downloading_cb)
++    : state_(RtspBufferedDataSource::UNINITIALISED),
++      url_(url),
++      host_(host),
++      wrapper_(this, media_log),
++      media_has_played_(false),
++      playback_rate_(0),
++      downloading_cb_(downloading_cb),
++      buffer_(kBufferBackwardCapacity, kBufferForwardCapacity),
++      pending_read_size_(0),
++      pending_read_data_(NULL),
++      task_runner_(task_runner),
++      media_log_(media_log)
++  {
++    DCHECK(host_);
++    DCHECK(!downloading_cb_.is_null());
++    DCHECK(task_runner_->BelongsToCurrentThread());
++    AddRef();
++  }
++
++  RtspBufferedDataSource::~RtspBufferedDataSource() {
++    DCHECK(task_runner_->BelongsToCurrentThread());
++  }
++
++  //// BufferedDataSourceInterface Implementation
++  void RtspBufferedDataSource::Initialize(const InitializeCB& init_cb) {
++    pending_read_.Reset();
++    pending_read_data_ = NULL;
++    pending_read_size_ = 0;
++
++    wrapper_.Initialize(
++      url_.spec(),
++      base::Bind(&RtspBufferedDataSource::OnRTSPClientInitialized,
++                 this, media::BindToCurrentLoop(init_cb)));
++
++    downloading_cb_.Run(true);
++  }
++
++  void RtspBufferedDataSource::SetPreload(Preload preload) {
++    DCHECK(task_runner_->BelongsToCurrentThread());
++    // Fuck it, we do as we want
++  }
++
++  void RtspBufferedDataSource::SetBufferingStrategy(
++    BufferingStrategy buffering_strategy) {
++    DCHECK(task_runner_->BelongsToCurrentThread());
++    // Fuck it, we do as we want
++  }
++
++  bool RtspBufferedDataSource::HasSingleOrigin() {
++    DCHECK(task_runner_->BelongsToCurrentThread());
++    return true;
++  }
++
++  bool RtspBufferedDataSource::DidPassCORSAccessCheck() const {
++    return false;
++  }
++
++  void RtspBufferedDataSource::MediaPlaybackRateChanged(double playback_rate) {
++    playback_rate_ = playback_rate;
++  }
++
++  void RtspBufferedDataSource::MediaIsPlaying() {
++    DCHECK(task_runner_->BelongsToCurrentThread());
++    media_has_played_ = true;
++  }
++
++  bool RtspBufferedDataSource::media_has_played() const {
++    return media_has_played_;
++  }
++
++  bool RtspBufferedDataSource::assume_fully_buffered() {
++    return false;
++  }
++
++  void RtspBufferedDataSource::OnBufferingHaveEnough(bool always_cancel) {
++    DCHECK(task_runner_->BelongsToCurrentThread());
++    // FIXME : Something to do here ?
++  }
++
++  int64_t RtspBufferedDataSource::GetMemoryUsage() const {
++    return buffer_.forward_bytes() + buffer_.backward_bytes();
++  }
++
++  //// DataSource Implementation
++  void RtspBufferedDataSource::Read(int64_t position,
++                                    int size,
++                                    uint8_t* data,
++                                    const DataSource::ReadCB& read_cb) {
++
++    // FIXME : Use position ?
++    switch (state_) {
++      case RUNNING:
++      {
++        base::AutoLock lock(lock_);
++
++        if (!pending_read_.is_null()) {
++          read_cb.Run(DataSource::kReadError);
++        } else if (buffer_.forward_bytes() < size) {
++          pending_read_ = media::BindToCurrentLoop(read_cb);
++          pending_read_size_ = size;
++          pending_read_data_ = data;
++        } else {
++          task_runner_->PostTask(
++            FROM_HERE,
++            base::Bind(
++              &RtspBufferedDataSource::SatisfyRead,
++              this, data, size, media::BindToCurrentLoop(read_cb)
++              )
++            );
++        }
++        break;
++      }
++      default:
++        read_cb.Run(DataSource::kReadError);
++        break;
++    }
++  }
++
++  void RtspBufferedDataSource::Stop() {
++    if (state_ == RUNNING)
++      wrapper_.Stop();
++
++    state_ = STOPPING;
++  }
++
++  void RtspBufferedDataSource::Abort() {
++    if (state_ != RUNNING)
++      return;
++
++    if (!pending_read_.is_null()) {
++      pending_read_.Run(DataSource::kReadError);
++      pending_read_.Reset();
++      pending_read_data_ = NULL;
++      pending_read_size_ = 0;
++    }
++  }
++
++  bool RtspBufferedDataSource::GetSize(int64_t* size_out) {
++    return false;
++  }
++
++  bool RtspBufferedDataSource::IsStreaming() {
++    return true;
++  }
++
++  void RtspBufferedDataSource::SetBitrate(int bitrate) {
++    // FIXME : Something to do here ?
++  }
++
++  //// Custom
++  void RtspBufferedDataSource::OnReceivedFrame(uint8_t *data, unsigned size) {
++    base::AutoLock lock(lock_);
++
++    buffer_.Append(data, size);
++
++    if (!pending_read_.is_null() && buffer_.forward_bytes() >= pending_read_size_) {
++      SatisfyRead(pending_read_data_, pending_read_size_, pending_read_);
++      pending_read_.Reset();
++      pending_read_data_ = NULL;
++      pending_read_size_ = 0;
++    }
++
++    // host_->AddBufferedByteRange();
++  }
++
++  void RtspBufferedDataSource::OnRTSPClientInitialized(const InitializeCB& init_cb,
++                                                       bool success) {
++    init_cb.Run(success);
++    state_ = RUNNING;
++  }
++
++  void RtspBufferedDataSource::SatisfyRead(uint8_t *data, unsigned size, const DataSource::ReadCB& read_cb)
++  {
++    read_cb.Run(buffer_.Read(data, size));
++  }
++
++}
+diff --git media/blink/rtsp_buffered_data_source.h media/blink/rtsp_buffered_data_source.h
+index e69de29..0a6772a 100644
+--- media/blink/rtsp_buffered_data_source.h
++++ media/blink/rtsp_buffered_data_source.h
+@@ -0,0 +1,199 @@
++#ifndef MEDIA_BLINK_RTSP_BUFFERED_DATA_SOURCE_H_
++#define MEDIA_BLINK_RTSP_BUFFERED_DATA_SOURCE_H_
++
++#include "media/blink/buffered_data_source.h"
++#include "base/threading/thread.h"
++#include "media/base/seekable_buffer.h"
++#include "base/memory/ref_counted.h"
++
++#include <liveMedia.hh>
++#include <BasicUsageEnvironment.hh>
++
++namespace media {
++
++  class MEDIA_BLINK_EXPORT RtspBufferedDataSource :
++      NON_EXPORTED_BASE(public BufferedDataSourceInterface),
++      public base::RefCounted<RtspBufferedDataSource> {
++
++    public:
++
++      RtspBufferedDataSource(
++        const GURL& url,
++        const scoped_refptr<base::SingleThreadTaskRunner>& task_runner,
++        MediaLog* media_log,
++        BufferedDataSourceHost* host,
++        const BufferedDataSource::DownloadingCB& downloading_cb);
++      ~RtspBufferedDataSource();
++
++      //// DataSource Implementation
++
++      // Reads |size| bytes from |position| into |data|. And when the read is done
++      // or failed, |read_cb| is called with the number of bytes read or
++      // kReadError in case of error.
++      void Read(int64_t position,
++                int size,
++                uint8_t* data,
++                const DataSource::ReadCB& read_cb) override;
++
++      // Stops the DataSource. Once this is called all future Read() calls will
++      // return an error.
++      void Stop() override;
++
++      // Similar to Stop(), but only aborts current reads and not future reads.
++      // Cancels initialization, any pending loaders, and any pending read calls
++      // from the demuxer. The caller is expected to release its reference to this
++      // object and never call it again.
++      //
++      // Method called on the render thread.
++      void Abort() override;
++
++      // Returns true and the file size, false if the file size could not be
++      // retrieved.
++      bool GetSize(int64_t* size_out) override;
++
++      // Returns true if we are performing streaming. In this case seeking is
++      // not possible.
++      bool IsStreaming() override;
++
++      // Notify the DataSource of the bitrate of the media.
++      // Values of |bitrate| <= 0 are invalid and should be ignored.
++      void SetBitrate(int bitrate) override;
++
++      //// BufferedDataSourceInterface Implementation
++
++      // Executes |init_cb| with the result of initialization when it has completed.
++      //
++      // Method called on the render thread.
++      void Initialize(const InitializeCB& init_cb) override;
++
++      // Adjusts the buffering algorithm based on the given preload value.
++      void SetPreload(Preload preload) override;
++
++      // Adjusts the buffering algorithm based on the given buffering strategy
++      // value.
++      void SetBufferingStrategy(BufferingStrategy buffering_strategy) override;
++
++      // Returns true if the media resource has a single origin, false otherwise.
++      // Only valid to call after Initialize() has completed.
++      //
++      // Method called on the render thread.
++      bool HasSingleOrigin() override;
++
++      // Returns true if the media resource passed a CORS access control check.
++      bool DidPassCORSAccessCheck() const override;
++
++      // Notifies changes in playback state for controlling media buffering
++      // behavior.
++      void MediaPlaybackRateChanged(double playback_rate) override;
++      void MediaIsPlaying() override;
++      bool media_has_played() const override;
++
++      // Returns true if the resource is local.
++      bool assume_fully_buffered() override;
++
++      // Cancels any open network connections once reaching the deferred state. If
++      // |always_cancel| is false this is done only for preload=metadata, non-
++      // streaming resources that have not started playback. If |always_cancel| is
++      // true, all resource types will have their connections canceled. If already
++      // deferred, connections will be immediately closed.
++      void OnBufferingHaveEnough(bool always_cancel) override;
++
++      // Returns an estimate of the number of bytes held by the data source.
++      int64_t GetMemoryUsage() const override;
++
++      void OnReceivedFrame(uint8_t *data, unsigned size);
++      void OnRTSPClientInitialized(const InitializeCB& init_cb,
++                                   bool success);
++      void SatisfyRead(uint8_t *data, unsigned size, const DataSource::ReadCB& read_cb);
++
++      class Live555Wrapper : public base::RefCounted<Live555Wrapper> {
++
++        public:
++
++          typedef base::Callback<void(bool)> Live555InitCB;
++
++          typedef enum {
++            NONE,
++            DESCRIBE,
++            SETUP,
++            PLAY
++          } CbType;
++
++          Live555Wrapper(RtspBufferedDataSource* host, MediaLog* media_log);
++          ~Live555Wrapper();
++
++          void Initialize(const std::string& url, Live555InitCB init_cb);
++          void Start();
++          void Stop();
++          void OnResponse(int code, char* str);
++          void AfterSubsessionPlaying(MediaSubsession* subsession);
++
++        private:
++
++          void DoEventLoop();
++          void CleanUp();
++
++          void OnDescribeResponse(int code, char* str);
++          void OnSetupResponse(int code, char* str);
++
++          void SetupSubsession(MediaSubsession* subsession);
++          void SetupNextSubsession();
++          void StartPlaying();
++
++          CbType next_callback_;
++
++          TaskScheduler* scheduler_;
++          UsageEnvironment* environment_;
++          RTSPClient* client_;
++          MediaSession* session_;
++          MediaSubsessionIterator* iterator_;
++          std::vector<MediaSubsession*> subsessions_;
++
++          Live555InitCB init_cb_;
++          RtspBufferedDataSource* host_;
++
++          volatile char watch_var_;
++
++          base::Thread thread_;
++          MediaLog* media_log_;
++
++      };
++
++    private:
++
++      typedef enum {
++        UNINITIALISED,
++        INITIALISED,
++        RUNNING,
++        STOPPING
++      } State;
++
++      State state_;
++
++      const GURL url_;
++
++      BufferedDataSourceHost* host_;
++
++      Live555Wrapper wrapper_;
++      bool media_has_played_;
++      double playback_rate_;
++      const BufferedDataSource::DownloadingCB downloading_cb_;
++      BufferedResourceLoader::DeferStrategy defer_strategy_;
++
++      media::SeekableBuffer buffer_;
++
++      ReadCB pending_read_;
++      int pending_read_size_;
++      uint8_t *pending_read_data_;
++
++      base::Lock lock_;
++
++      const scoped_refptr<base::SingleThreadTaskRunner> task_runner_;
++      MediaLog* media_log_;
++
++      DISALLOW_COPY_AND_ASSIGN(RtspBufferedDataSource);
++  };
++
++}  // namespace media
++
++#endif  // MEDIA_BLINK_RTSP_BUFFERED_DATA_SOURCE_H_
+diff --git media/blink/webmediaplayer_impl.cc media/blink/webmediaplayer_impl.cc
+index f1c3b6d..23a9dfd 100644
+--- media/blink/webmediaplayer_impl.cc
++++ media/blink/webmediaplayer_impl.cc
+@@ -61,6 +61,11 @@
+ #include "media/base/android/media_codec_util.h"
+ #endif
+ 
++#if defined(ENABLE_CETS_RTSP_SUPPORT)
++#include "media/filters/cets_demuxer.h"
++#include "media/blink/rtsp_buffered_data_source.h"
++#endif
++
+ using blink::WebCanvas;
+ using blink::WebMediaPlayer;
+ using blink::WebRect;
+@@ -179,6 +184,9 @@ WebMediaPlayerImpl::WebMediaPlayerImpl(
+       should_notify_time_changed_(false),
+       fullscreen_(false),
+       decoder_requires_restart_for_fullscreen_(false),
++#if defined(ENABLE_CETS_RTSP_SUPPORT)
++      is_rtsp_(false),
++#endif
+       client_(client),
+       encrypted_client_(encrypted_client),
+       delegate_(delegate),
+@@ -332,6 +340,10 @@ void WebMediaPlayerImpl::DoLoad(LoadType load_type,
+   SetReadyState(WebMediaPlayer::ReadyStateHaveNothing);
+   media_log_->AddEvent(media_log_->CreateLoadEvent(url.string().utf8()));
+ 
++#if defined(ENABLE_CETS_RTSP_SUPPORT)
++  is_rtsp_ = (gurl.scheme() == "rtsp");
++#endif
++
+   // Media source pipelines can start immediately.
+   if (load_type == LoadTypeMediaSource) {
+     supports_save_ = false;
+@@ -341,6 +353,13 @@ void WebMediaPlayerImpl::DoLoad(LoadType load_type,
+     // we have enough data to support the primacy of the new media cache.
+     // See http://crbug.com/514719 for details.
+     // Otherwise it's a regular request which requires resolving the URL first.
++#if defined(ENABLE_CETS_RTSP_SUPPORT)
++    if (is_rtsp_) {
++      data_source_.reset(new RtspBufferedDataSource(
++          url, main_task_runner_, media_log_.get(), &buffered_data_source_host_,
++          base::Bind(&WebMediaPlayerImpl::NotifyDownloading, AsWeakPtr())));
++    } else
++#endif
+     if (base::FeatureList::IsEnabled(kUseNewMediaCache)) {
+       // Remove this when MultiBufferDataSource becomes default.
+       LOG(WARNING) << "Using MultibufferDataSource";
+@@ -1334,16 +1353,27 @@ void WebMediaPlayerImpl::StartPipeline() {
+     DCHECK(!chunk_demuxer_);
+     DCHECK(data_source_);
+ 
+-#if !defined(MEDIA_DISABLE_FFMPEG)
++#if defined(ENABLE_CETS_RTSP_SUPPORT) || !defined(MEDIA_DISABLE_FFMPEG)
+     Demuxer::MediaTracksUpdatedCB media_tracks_updated_cb =
+         BIND_TO_RENDER_LOOP(&WebMediaPlayerImpl::OnFFmpegMediaTracksUpdated);
+-
+-    demuxer_.reset(new FFmpegDemuxer(media_task_runner_, data_source_.get(),
+-                                     encrypted_media_init_data_cb,
+-                                     media_tracks_updated_cb, media_log_));
++#endif
++#if defined(ENABLE_CETS_RTSP_SUPPORT)
++    if (is_rtsp_) {
++      demuxer_.reset(new CETSDemuxer(media_task_runner_, data_source_.get(),
++                                      encrypted_media_init_data_cb,
++                                      media_tracks_updated_cb, media_log_));
++    } else {
++#endif
++#if !defined(MEDIA_DISABLE_FFMPEG)
++      demuxer_.reset(new FFmpegDemuxer(media_task_runner_, data_source_.get(),
++                                       encrypted_media_init_data_cb,
++                                       media_tracks_updated_cb, media_log_));
+ #else
+-    OnError(PipelineStatus::DEMUXER_ERROR_COULD_NOT_OPEN);
+-    return;
++      OnError(PipelineStatus::DEMUXER_ERROR_COULD_NOT_OPEN);
++      return;
++#endif
++#if defined(ENABLE_CETS_RTSP_SUPPORT)
++    }
+ #endif
+   } else {
+     DCHECK(!chunk_demuxer_);
+diff --git media/blink/webmediaplayer_impl.h media/blink/webmediaplayer_impl.h
+index 6133eb2..e7e4f82 100644
+--- media/blink/webmediaplayer_impl.h
++++ media/blink/webmediaplayer_impl.h
+@@ -429,6 +429,10 @@ class MEDIA_BLINK_EXPORT WebMediaPlayerImpl
+   // Whether the current decoder requires a restart on fullscreen transitions.
+   bool decoder_requires_restart_for_fullscreen_;
+ 
++#if defined(ENABLE_CETS_RTSP_SUPPORT)
++  bool is_rtsp_;
++#endif
++
+   blink::WebMediaPlayerClient* client_;
+   blink::WebMediaPlayerEncryptedMediaClient* encrypted_client_;
+ 
+diff --git media/filters/cets_demuxer.cc media/filters/cets_demuxer.cc
+index e69de29..7af877a 100644
+--- media/filters/cets_demuxer.cc
++++ media/filters/cets_demuxer.cc
+@@ -0,0 +1,638 @@
++#include "media/filters/cets_demuxer.h"
++
++#include "media/base/stream_parser_buffer.h"
++#include "base/callback_helpers.h"
++#include "media/base/media_log.h"
++#include "media/base/bind_to_current_loop.h"
++
++#include <iostream>
++
++namespace media {
++
++  namespace {
++    static DemuxerStream::Type MediaTrackTypeToDemuxerStreamType(MediaTrack::Type type) {
++      switch (type) {
++        case MediaTrack::Text:
++          return DemuxerStream::TEXT;
++        case MediaTrack::Audio:
++          return DemuxerStream::AUDIO;
++        case MediaTrack::Video:
++          return DemuxerStream::VIDEO;
++      };
++
++      return DemuxerStream::UNKNOWN;
++    }
++
++    /* static std::string DemuxerStreamTypeToString(DemuxerStream::Type type) {
++      switch (type) {
++        case DemuxerStream::TEXT:
++          return "TEXT";
++        case DemuxerStream::AUDIO:
++          return "AUDIO";
++        case DemuxerStream::VIDEO:
++          return "VIDEO";
++        default:
++          return "UNKNOWN";
++      };
++    } */
++  }
++
++  // DemuxerStream Implementation
++  CETSDemuxerStream::CETSDemuxerStream(Type type,
++                                       DemuxerStream::Liveness liveness,
++                                       base::Closure buffered_ranges_changed_cb,
++                                       const scoped_refptr<MediaLog>& media_log)
++    : state_(UNINITIALIZED),
++      type_(type),
++      liveness_(liveness),
++      config_changed_(false),
++      buffered_ranges_changed_cb_(buffered_ranges_changed_cb),
++      media_log_(media_log)
++  {
++  }
++
++  CETSDemuxerStream::~CETSDemuxerStream() {
++  }
++
++  void CETSDemuxerStream::Read(const ReadCB& read_cb) {
++    scoped_refptr<StreamParserBuffer> buffer;
++    Status status = kAborted;
++
++    switch (state_) {
++      case UNINITIALIZED:
++        NOTREACHED();
++        return;
++      // FIXME : Will be used for seeking
++      case RETURNING_ABORT_FOR_READS:
++        status = kAborted;
++        buffer = NULL;
++        break;
++      case RETURNING_DATA_FOR_READS :
++      {
++        base::AutoLock auto_lock(lock_);
++
++        if (buffers_.size() <= 0) {
++          if (read_cb_.is_null()) {
++            read_cb_ = media::BindToCurrentLoop(read_cb);
++            return;
++          }
++
++          status = kAborted;
++          buffer = NULL;
++
++          media_log_->AddLogEvent(MediaLog::MEDIALOG_ERROR,
++                                  "Multiple reads are not supported");
++        } else {
++          if (config_changed_) {
++            status =  kConfigChanged;
++            config_changed_ = false;
++          } else
++            status = kOk;
++
++          buffer = buffers_.front();
++          buffers_.pop_front();
++          buffered_ranges_changed_cb_.Run();
++        }
++        break;
++      }
++      case SHUTDOWN:
++        status = kOk;
++        buffer = StreamParserBuffer::CreateEOSBuffer();
++        break;
++    }
++
++    read_cb.Run(status, buffer);
++  }
++
++  AudioDecoderConfig CETSDemuxerStream::audio_decoder_config() {
++    return audio_config_;
++  }
++
++  VideoDecoderConfig CETSDemuxerStream::video_decoder_config() {
++    return video_config_;
++  }
++
++  DemuxerStream::Type CETSDemuxerStream::type() const {
++    return type_;
++  }
++
++  DemuxerStream::Liveness CETSDemuxerStream::liveness() const {
++    return liveness_;
++  }
++
++  bool CETSDemuxerStream::SupportsConfigChanges() {
++    return true;
++  }
++
++  VideoRotation CETSDemuxerStream::video_rotation() {
++    return VIDEO_ROTATION_0;
++  }
++
++  void CETSDemuxerStream::SetConfiguration(const VideoDecoderConfig& config) {
++    base::AutoLock auto_lock(lock_);
++
++    if (type_ != DemuxerStream::VIDEO) {
++      media_log_->AddLogEvent(
++        MediaLog::MEDIALOG_ERROR,
++        "Updating stream configuration with wrong configuration type (VIDEO)");
++      return;
++    }
++
++    video_config_ = config;
++
++    if (state_ == UNINITIALIZED)
++      state_ = RETURNING_DATA_FOR_READS;
++    else
++      config_changed_ = false;
++  }
++
++  void CETSDemuxerStream::SetConfiguration(const AudioDecoderConfig& config) {
++    base::AutoLock auto_lock(lock_);
++
++    if (type_ != DemuxerStream::AUDIO) {
++      media_log_->AddLogEvent(
++        MediaLog::MEDIALOG_ERROR,
++        "Updating stream configuration with wrong configuration type (AUDIO)");
++      return;
++    }
++
++    audio_config_ = config;
++
++    if (state_ == UNINITIALIZED)
++      state_ = RETURNING_DATA_FOR_READS;
++    else
++      config_changed_ = false;
++  }
++
++  void CETSDemuxerStream::SetConfiguration(const TextTrackConfig& config) {
++    base::AutoLock auto_lock(lock_);
++
++    if (type_ != DemuxerStream::TEXT) {
++      media_log_->AddLogEvent(
++        MediaLog::MEDIALOG_ERROR,
++        "Updating stream configuration with wrong configuration type (TEXT)");
++      return;
++    }
++
++    text_config_ = config;
++
++    if (state_ == UNINITIALIZED)
++      state_ = RETURNING_DATA_FOR_READS;
++    else
++      config_changed_ = false;
++  }
++
++  void CETSDemuxerStream::AppendBuffer(scoped_refptr<StreamParserBuffer> buffer) {
++    base::AutoLock auto_lock(lock_);
++
++    if (!read_cb_.is_null()) {
++      Status status = kOk;
++
++      if (config_changed_) {
++        status =  kConfigChanged;
++        config_changed_ = false;
++      }
++
++      read_cb_.Run(status, buffer);
++      read_cb_.Reset();
++    } else {
++      buffers_.push_back(buffer);
++      buffered_ranges_changed_cb_.Run();
++    }
++  }
++
++  uint64_t CETSDemuxerStream::GetMemoryUsage() {
++    base::AutoLock auto_lock(lock_);
++    uint64_t res = 0;
++
++    for (BufferDeque::const_iterator buf = buffers_.begin();
++         buf != buffers_.end(); ++buf) {
++      res += (*buf)->data_size();
++    }
++
++    return res;
++  }
++
++  void CETSDemuxerStream::Shutdown() {
++    base::AutoLock auto_lock(lock_);
++
++    state_ = SHUTDOWN;
++    buffers_.clear();
++  }
++
++  void CETSDemuxerStream::WaitForSeek() {
++    base::AutoLock auto_lock(lock_);
++
++    if (state_ == RETURNING_DATA_FOR_READS) {
++      state_ = RETURNING_ABORT_FOR_READS;
++    } else {
++      media_log_->AddLogEvent(
++        MediaLog::MEDIALOG_ERROR,
++        "Stream not in correct state for waiting seek");
++    }
++  }
++
++  void CETSDemuxerStream::Resume(bool clear) {
++    base::AutoLock auto_lock(lock_);
++
++    if (state_ == RETURNING_ABORT_FOR_READS) {
++      state_ = RETURNING_DATA_FOR_READS;
++      if (clear)
++        buffers_.clear();
++    } else {
++      media_log_->AddLogEvent(
++        MediaLog::MEDIALOG_ERROR,
++        "Resuming a stream not waiting for a seek");
++    }
++  }
++
++  void CETSDemuxerStream::GetBufferedRanges(Ranges<base::TimeDelta>& ranges) {
++    for (BufferDeque::const_iterator buf = buffers_.begin();
++         buf != buffers_.end(); ++buf) {
++      ranges.Add((*buf)->timestamp(), (*buf)->timestamp() + (*buf)->duration());
++    }
++  }
++
++  // Demuxer Implementation
++  CETSDemuxer::CETSDemuxer(const scoped_refptr<base::SingleThreadTaskRunner>& task_runner,
++                           DataSource* data_source,
++                           const EncryptedMediaInitDataCB& encrypted_media_init_data_cb,
++                           const MediaTracksUpdatedCB& media_tracks_updated_cb,
++                           const scoped_refptr<MediaLog>& media_log)
++    : state_(UNINITIALIZED),
++      stream_parser_(false),
++      data_source_(data_source),
++      demuxer_host_(NULL),
++      enable_text_tracks_(false),
++      current_position_(0),
++      media_tracks_updated_cb_(media_tracks_updated_cb),
++      encrypted_media_init_data_cb_(encrypted_media_init_data_cb),
++      task_runner_(task_runner),
++      media_log_(media_log) {
++  }
++
++  CETSDemuxer::~CETSDemuxer() {
++  }
++
++  std::string CETSDemuxer::GetDisplayName() const {
++    return "CETSDemuxer";
++  }
++
++  void CETSDemuxer::Initialize(DemuxerHost* host,
++                               const PipelineStatusCB& status_cb,
++                               bool enable_text_tracks) {
++    demuxer_host_ = host;
++    enable_text_tracks_ = enable_text_tracks;
++    status_cb_ = media::BindToCurrentLoop(status_cb);
++
++    stream_parser_.Init(
++      base::Bind(&CETSDemuxer::StreamParserInitCB, this),
++      base::Bind(&CETSDemuxer::StreamParserNewConfigCB, this),
++      base::Bind(&CETSDemuxer::StreamParserNewBuffersCB, this),
++      enable_text_tracks_,
++      base::Bind(&CETSDemuxer::StreamParserEncryptedMediaInitDataCB, this),
++      base::Bind(&CETSDemuxer::StreamParserNewMediaSegmentCB, this),
++      base::Bind(&CETSDemuxer::StreamParserEndMediaSegmentCB, this),
++      media_log_);
++
++    DoRead();
++  }
++
++  void CETSDemuxer::StartWaitingForSeek(base::TimeDelta seek_time) {
++    if (data_source_->IsStreaming())
++      return;
++
++    for (CETSDemuxer::StreamMap::iterator elm = streams_.begin();
++         elm != streams_.end(); ++elm) {
++      elm->second->WaitForSeek();
++    }
++
++    state_ = SEEKING;
++  }
++
++  void CETSDemuxer::CancelPendingSeek(base::TimeDelta seek_time) {
++    if (data_source_->IsStreaming())
++      return;
++
++    for (CETSDemuxer::StreamMap::iterator elm = streams_.begin();
++         elm != streams_.end(); ++elm) {
++      elm->second->Resume(false);
++    }
++
++    state_ = RUNNING;
++  }
++
++  void CETSDemuxer::Seek(base::TimeDelta time,
++                         const PipelineStatusCB& status_cb) {
++    if (data_source_->IsStreaming()) {
++      status_cb.Run(PIPELINE_ERROR_ABORT);
++      return;
++    }
++
++    // FIXME : Find a way to seek the data source, the problems are :
++    //   -> Mp2tStreamParser has no seek method...
++    //   -> DataSource needs a position and we have a TimeDelta here...
++    // So for now, we just don't do anything
++
++    for (CETSDemuxer::StreamMap::iterator elm = streams_.begin();
++         elm != streams_.end(); ++elm) {
++      elm->second->Resume(true);
++    }
++
++    state_ = RUNNING;
++  }
++
++  void CETSDemuxer::Stop() {
++    for (CETSDemuxer::StreamMap::iterator elm = streams_.begin();
++         elm != streams_.end(); ++elm) {
++      elm->second->Shutdown();
++    }
++
++    data_source_->Stop();
++
++    state_ = STOPPING;
++  }
++
++  base::TimeDelta CETSDemuxer::GetStartTime() const {
++    return start_time_;
++  }
++
++  base::Time CETSDemuxer::GetTimelineOffset() const {
++    return time_offset_;
++  }
++
++  int64_t CETSDemuxer::GetMemoryUsage() const {
++    int64_t res = 0;
++
++    for (CETSDemuxer::StreamMap::const_iterator elm = streams_.begin();
++         elm != streams_.end(); ++elm) {
++      res += elm->second->GetMemoryUsage();
++    }
++
++    return res;
++  }
++
++  DemuxerStream* CETSDemuxer::GetStream(DemuxerStream::Type type) {
++    for (CETSDemuxer::StreamMap::iterator stream = streams_.begin();
++         stream != streams_.end(); ++stream)
++    {
++      if (stream->second->type() == type)
++        return stream->second.get();
++    }
++
++    return NULL;
++  }
++
++  // StreamParser callbacks
++  void CETSDemuxer::StreamParserInitCB(const StreamParser::InitParameters& params) {
++    base::AutoLock lock(lock_);
++
++    liveness_ = params.liveness;
++    time_offset_ = params.timeline_offset;
++
++    if (demuxer_host_)
++      demuxer_host_->SetDuration(params.duration);
++
++    if (params.detected_audio_track_count > 0 && params.detected_video_track_count > 0)
++      state_ = RUNNING;
++    else
++      status_cb_.Run(DEMUXER_ERROR_NO_SUPPORTED_STREAMS);
++  }
++
++  bool CETSDemuxer::StreamParserNewConfigCB(scoped_ptr<MediaTracks> media_tracks,
++                                            const StreamParser::TextTrackConfigMap& text_track_config) {
++    base::AutoLock lock(lock_);
++
++    std::vector<std::string> ids;
++    const MediaTracks::MediaTracksCollection& tracks = media_tracks->tracks();
++
++    // Iterate over each track found in the stream (except text tracks)
++    for (MediaTracks::MediaTracksCollection::const_iterator track = tracks.begin();
++         track != tracks.end(); ++track)
++    {
++      UpdateStreamConfiguration(media_tracks, *track);
++      ids.push_back((*track)->id());
++    }
++
++    // Signal that track configuration has been updated
++    media_tracks_updated_cb_.Run(std::move(media_tracks));
++
++    // Same for text tracks
++    for(StreamParser::TextTrackConfigMap::const_iterator it = text_track_config.begin();
++        it != text_track_config.end(); ++it) {
++      if (streams_.find(it->second.id()) != streams_.end()) {
++        streams_[it->second.id()]->SetConfiguration(it->second);
++      } else {
++        CETSDemuxerStream *stream = new CETSDemuxerStream(
++          DemuxerStream::TEXT, liveness_,
++          base::Bind(&CETSDemuxer::OnBufferedRangesChanged, this), media_log_);
++
++        streams_[it->second.id()] = std::move(std::unique_ptr<CETSDemuxerStream>(stream));
++        stream->SetConfiguration(it->second);
++        text_tracks_[it->first] = it->second.id();
++
++        // Signal host about the new stream
++        if (demuxer_host_)
++          demuxer_host_->AddTextStream(stream, it->second);
++      }
++
++      ids.push_back(it->second.id());
++    }
++
++    CleanupUnusedStreams(ids);
++
++    return true;
++  }
++
++  void CETSDemuxer::StreamParserNewBuffersTask(const StreamParser::BufferQueue& audio,
++                                               const StreamParser::BufferQueue& video,
++                                               const StreamParser::TextBufferQueueMap& text) {
++    base::AutoLock lock(lock_);
++    CETSDemuxerStream *audio_stream =
++      static_cast<CETSDemuxerStream *>(GetStream(DemuxerStream::AUDIO));;
++    CETSDemuxerStream *video_stream =
++      static_cast<CETSDemuxerStream *>(GetStream(DemuxerStream::VIDEO));
++
++    if (audio_stream) {
++      for (StreamParser::BufferQueue::const_iterator buf = audio.begin();
++           buf != audio.end(); ++buf) {
++        audio_stream->AppendBuffer(*buf);
++        // Update start timestamp
++        if (start_time_.is_zero() || (*buf)->timestamp() < start_time_)
++          start_time_ = (*buf)->timestamp();
++      }
++    }
++
++    if (video_stream) {
++      for (StreamParser::BufferQueue::const_iterator buf = video.begin();
++           buf != video.end(); ++buf) {
++        video_stream->AppendBuffer(*buf);
++        // Update start timestamp
++        if (start_time_.is_zero() || (*buf)->timestamp() < start_time_)
++          start_time_ = (*buf)->timestamp();
++      }
++    }
++
++    for (StreamParser::TextBufferQueueMap::const_iterator it = text.begin();
++         it != text.end(); ++it) {
++      if (text_tracks_.find(it->first) != text_tracks_.end()) {
++        std::string& id = text_tracks_[it->first];
++        if (streams_.find(id) != streams_.end()) {
++          for (StreamParser::BufferQueue::const_iterator buf = it->second.begin();
++               buf != it->second.end(); ++buf) {
++            streams_[id]->AppendBuffer(*buf);
++            // Update start timestamp
++            if (start_time_.is_zero() || (*buf)->timestamp() < start_time_)
++              start_time_ = (*buf)->timestamp();
++          }
++        }
++      }
++    }
++
++    if (!status_cb_.is_null()) {
++      status_cb_.Run(PIPELINE_OK);
++      status_cb_.Reset();
++    }
++  }
++
++  bool CETSDemuxer::StreamParserNewBuffersCB(const StreamParser::BufferQueue& audio,
++                                             const StreamParser::BufferQueue& video,
++                                             const StreamParser::TextBufferQueueMap& text) {
++    task_runner_->PostTask(
++      FROM_HERE,
++      base::Bind(&CETSDemuxer::StreamParserNewBuffersTask, this, audio, video, text));
++
++    return true;
++  }
++
++  void CETSDemuxer::StreamParserEncryptedMediaInitDataCB(EmeInitDataType data_type,
++                                                         const std::vector<uint8_t>& init_data) {
++    // FIXME : Implement required code for CETS in Mp2tStreamParser
++  }
++
++  void CETSDemuxer::StreamParserNewMediaSegmentCB() {
++    // FIXME : Something to do here ?
++  }
++
++  void CETSDemuxer::StreamParserEndMediaSegmentCB() {
++    // FIXME : Something to do here ?
++  }
++
++  void CETSDemuxer::UpdateStreamConfiguration(scoped_ptr<MediaTracks>& media_tracks,
++                                              const scoped_ptr<MediaTrack>& track) {
++    CETSDemuxerStream *stream = NULL;
++
++    if (streams_.find(track->id()) == streams_.end()) {
++      stream = new CETSDemuxerStream(
++        MediaTrackTypeToDemuxerStreamType(track->type()), liveness_,
++        base::Bind(&CETSDemuxer::OnBufferedRangesChanged, this), media_log_);
++      streams_[track->id()] = std::move(std::unique_ptr<CETSDemuxerStream>(stream));
++    } else
++      stream = streams_[track->id()].get();
++
++    switch (track->type()) {
++      case DemuxerStream::AUDIO:
++        stream->SetConfiguration(
++          media_tracks->getAudioConfig(track->id()));
++        break;
++      case DemuxerStream::VIDEO:
++        stream->SetConfiguration(
++          media_tracks->getVideoConfig(track->id()));
++        break;
++      default:
++        // Text tracks configuration are not handled here
++        break;
++    }
++  }
++
++  // FIXME : Optimize this
++  void CETSDemuxer::CleanupUnusedStreams(std::vector<std::string>& used)
++  {
++    std::vector<std::string> removed;
++
++    for (CETSDemuxer::StreamMap::iterator stream = streams_.begin();
++         stream != streams_.end(); ++stream)
++    {
++      bool found = false;
++
++      for (std::vector<std::string>::const_iterator id = used.begin();
++           id != used.end(); ++id) {
++
++        if (stream->first == *id) {
++          found = true;
++          break;
++        }
++      }
++
++      if (!found)
++        removed.push_back(stream->first);
++    }
++
++    for (std::vector<std::string>::const_iterator id = removed.begin();
++         id != removed.end(); ++id) {
++
++      if (streams_[*id]->type() == DemuxerStream::TEXT && demuxer_host_) {
++        demuxer_host_->RemoveTextStream(streams_[*id].get());
++      }
++
++      streams_.erase(*id);
++    }
++  }
++
++  void CETSDemuxer::DoRead() {
++    data_source_->Read(current_position_,
++                       TS_PACKET_SIZE,
++                       data_buffer_,
++                       base::Bind(&CETSDemuxer::DataSourceReadCb, this));
++  }
++
++  void CETSDemuxer::DataSourceReadCb(int state) {
++    base::AutoLock lock(lock_);
++
++    if (state < 0) {
++      if (state == DataSource::kReadError)
++        Stop();
++      return;
++    }
++
++    task_runner_->PostTask(FROM_HERE,
++                           base::Bind(&CETSDemuxer::AppendToStreamParserTask, this));
++  }
++
++  void CETSDemuxer::OnBufferedRangesChanged() {
++    if (demuxer_host_) {
++      Ranges<base::TimeDelta> ranges;
++
++      for (CETSDemuxer::StreamMap::iterator elm = streams_.begin();
++           elm != streams_.end(); ++elm) {
++        elm->second->GetBufferedRanges(ranges);
++      }
++
++      demuxer_host_->OnBufferedTimeRangesChanged(ranges);
++    }
++  }
++
++  std::string CETSDemuxer::StateToString(CETSDemuxer::State state) {
++    switch (state) {
++      case UNINITIALIZED :
++        return "UNINITIALIZED";
++      case RUNNING :
++        return "RUNNING";
++      case SEEKING :
++        return "SEEKING";
++      case STOPPING :
++        return "STOPPING";
++    }
++
++    return "UNKNOWN";
++  }
++
++  void CETSDemuxer::AppendToStreamParserTask() {
++    stream_parser_.Parse(data_buffer_, sizeof (data_buffer_));
++
++    if (state_ == RUNNING || state_ == UNINITIALIZED) {
++      DoRead();
++    }
++  }
++
++}
+diff --git media/filters/cets_demuxer.h media/filters/cets_demuxer.h
+index e69de29..024960e 100644
+--- media/filters/cets_demuxer.h
++++ media/filters/cets_demuxer.h
+@@ -0,0 +1,234 @@
++#ifndef MEDIA_FILTERS_CETS_DEMUXER_H_
++# define MEDIA_FILTERS_CETS_DEMUXER_H_
++
++#include "media/base/demuxer.h"
++#include "media/formats/mp2t/mp2t_stream_parser.h"
++#include "media/base/media_tracks.h"
++#include "media/base/text_track_config.h"
++#include "media/base/stream_parser.h"
++#include "base/memory/ref_counted.h"
++
++#define TS_PACKET_SIZE 188
++
++namespace media {
++
++  class CETSDemuxerStream : public DemuxerStream {
++
++    public:
++
++      CETSDemuxerStream(Type type,
++                        DemuxerStream::Liveness liveness,
++                        base::Closure buffered_ranges_changed_cb,
++                        const scoped_refptr<MediaLog>& media_log);
++      ~CETSDemuxerStream();
++
++      void Read(const ReadCB& read_cb) override;
++
++      // Returns the audio/video decoder configuration. It is an error to call the
++      // audio method on a video stream and vice versa. After |kConfigChanged| is
++      // returned in a Read(), the caller should call this method again to retrieve
++      // the new config.
++      AudioDecoderConfig audio_decoder_config() override;
++      VideoDecoderConfig video_decoder_config() override;
++
++      // Returns the type of stream.
++      DemuxerStream::Type type() const override;
++
++      // Returns liveness of the streams provided, i.e. whether recorded or live.
++      DemuxerStream::Liveness liveness() const override;
++
++      // Whether or not this DemuxerStream allows midstream configuration changes.
++      //
++      // A DemuxerStream that returns 'true' to this may return the 'kConfigChange'
++      // status from a Read() call. In this case the client is expected to be
++      // capable of taking appropriate action to handle config changes. Otherwise
++      // audio_decoder_config() and video_decoder_config()'s return values are
++      // guaranteed to remain constant, and the client may make optimizations based
++      // on this.
++      bool SupportsConfigChanges() override;
++
++      VideoRotation video_rotation() override;
++
++      // Custom methods
++      void SetConfiguration(const VideoDecoderConfig& config);
++      void SetConfiguration(const AudioDecoderConfig& config);
++      void SetConfiguration(const TextTrackConfig& config);
++      void AppendBuffer(scoped_refptr<StreamParserBuffer> buffer);
++      uint64_t GetMemoryUsage();
++      void Shutdown();
++      void WaitForSeek();
++      void Resume(bool clear);
++      void GetBufferedRanges(Ranges<base::TimeDelta>& ranges);
++
++    private :
++
++      typedef std::deque<scoped_refptr<StreamParserBuffer> > BufferDeque;
++
++      enum State {
++        UNINITIALIZED = 0,
++        RETURNING_DATA_FOR_READS = 1,
++        RETURNING_ABORT_FOR_READS = 2,
++        SHUTDOWN = 3,
++      };
++
++      State state_;
++      Type type_;
++      DemuxerStream::Liveness liveness_;
++      bool config_changed_;
++      ReadCB read_cb_;
++
++      //configs
++      VideoDecoderConfig video_config_;
++      AudioDecoderConfig audio_config_;
++      TextTrackConfig text_config_;
++
++      BufferDeque buffers_;
++      base::Lock lock_;
++      base::Closure buffered_ranges_changed_cb_;
++      scoped_refptr<MediaLog> media_log_;
++  };
++
++  class MEDIA_EXPORT CETSDemuxer :
++      public Demuxer,
++      public base::RefCounted<CETSDemuxer> {
++
++    public:
++
++    typedef std::map<std::string, std::unique_ptr<CETSDemuxerStream> > StreamMap;
++    typedef std::map<StreamParser::TrackId, std::string> TextTrackMap;
++
++      CETSDemuxer(const scoped_refptr<base::SingleThreadTaskRunner>& task_runner,
++                  DataSource* data_source,
++                  const EncryptedMediaInitDataCB& encrypted_media_init_data_cb,
++                  const MediaTracksUpdatedCB& media_tracks_updated_cb,
++                  const scoped_refptr<MediaLog>& media_log);
++      ~CETSDemuxer() override;
++
++      // Returns the name of the demuxer for logging purpose.
++      std::string GetDisplayName() const override;
++
++      // Completes initialization of the demuxer.
++      //
++      // The demuxer does not own |host| as it is guaranteed to outlive the
++      // lifetime of the demuxer. Don't delete it!  |status_cb| must only be run
++      // after this method has returned.
++      void Initialize(DemuxerHost* host,
++                      const PipelineStatusCB& status_cb,
++                      bool enable_text_tracks) override;
++
++      // Indicates that a new Seek() call is on its way. Implementations may abort
++      // pending reads and future Read() calls may return kAborted until Seek() is
++      // executed. |seek_time| is the presentation timestamp of the new Seek() call.
++      //
++      // In actual use, this call occurs on the main thread while Seek() is called
++      // on the media thread. StartWaitingForSeek() can be used to synchronize the
++      // two.
++      //
++      // StartWaitingForSeek() MUST be called before Seek().
++      void StartWaitingForSeek(base::TimeDelta seek_time) override;
++
++      // Indicates that the current Seek() operation is obsoleted by a new one.
++      // Implementations can expect that StartWaitingForSeek() will be called
++      // when the current seek operation completes.
++      //
++      // Like StartWaitingForSeek(), CancelPendingSeek() is called on the main
++      // thread. Ordering with respect to the to-be-canceled Seek() is not
++      // guaranteed. Regardless of ordering, implementations may abort pending reads
++      // and may return kAborted from future Read() calls, until after
++      // StartWaitingForSeek() and the following Seek() call occurs.
++      //
++      // |seek_time| should match that passed to the next StartWaitingForSeek(), but
++      // may not if the seek target changes again before the current seek operation
++      // completes or is aborted.
++      void CancelPendingSeek(base::TimeDelta seek_time) override;
++
++      // Carry out any actions required to seek to the given time, executing the
++      // callback upon completion.
++      void Seek(base::TimeDelta time,
++                const PipelineStatusCB& status_cb) override;
++
++      // Stops this demuxer.
++      //
++      // After this call the demuxer may be destroyed. It is illegal to call any
++      // method (including Stop()) after a demuxer has stopped.
++      void Stop() override;
++
++      // Returns the starting time for the media file; it's always positive.
++      base::TimeDelta GetStartTime() const override;
++
++      // Returns Time represented by presentation timestamp 0.
++      // If the timstamps are not associated with a Time, then
++      // a null Time is returned.
++      base::Time GetTimelineOffset() const override;
++
++      // Returns the memory usage in bytes for the demuxer.
++      int64_t GetMemoryUsage() const override;
++
++      DemuxerStream* GetStream(DemuxerStream::Type type) override;
++
++      // StreamParser callbacks
++      void StreamParserInitCB(const StreamParser::InitParameters& params);
++      bool StreamParserNewConfigCB(scoped_ptr<MediaTracks> tracks,
++                                   const StreamParser::TextTrackConfigMap& text_track_config);
++      bool StreamParserNewBuffersCB(const StreamParser::BufferQueue& audio,
++                                    const StreamParser::BufferQueue& video,
++                                    const StreamParser::TextBufferQueueMap& text);
++      void StreamParserEncryptedMediaInitDataCB(EmeInitDataType data_type,
++                                                const std::vector<uint8_t>& init_data);
++      void StreamParserNewMediaSegmentCB();
++      void StreamParserEndMediaSegmentCB();
++      void OnBufferedRangesChanged();
++      void StreamParserNewBuffersTask(const StreamParser::BufferQueue& audio,
++                                      const StreamParser::BufferQueue& video,
++                                      const StreamParser::TextBufferQueueMap& text);
++      // DataSource callback
++      void DataSourceReadCb(int state);
++
++    private:
++
++      typedef enum {
++        UNINITIALIZED,
++        RUNNING,
++        SEEKING,
++        STOPPING
++      } State;
++
++      void UpdateStreamConfiguration(scoped_ptr<MediaTracks>& media_tracks,
++                                     const scoped_ptr<MediaTrack>& track);
++      void CleanupUnusedStreams(std::vector<std::string>& ids);
++      void DoRead();
++      std::string StateToString(CETSDemuxer::State state);
++      void AppendToStreamParserTask();
++
++      CETSDemuxer::State state_;
++
++      mp2t::Mp2tStreamParser stream_parser_;
++
++      CETSDemuxer::StreamMap streams_;
++      TextTrackMap text_tracks_;
++
++      DataSource* data_source_;
++      DemuxerHost* demuxer_host_;
++
++      bool enable_text_tracks_;
++      DemuxerStream::Liveness liveness_;
++      base::Time time_offset_;
++      base::TimeDelta start_time_;
++      uint64_t current_position_;
++      uint8_t data_buffer_[TS_PACKET_SIZE];
++
++      PipelineStatusCB status_cb_;
++      const MediaTracksUpdatedCB media_tracks_updated_cb_;
++      const EncryptedMediaInitDataCB encrypted_media_init_data_cb_;
++
++      const scoped_refptr<base::SingleThreadTaskRunner> task_runner_;
++      const scoped_refptr<MediaLog> media_log_;
++
++      base::Lock lock_;
++
++      DISALLOW_COPY_AND_ASSIGN(CETSDemuxer);
++  };
++
++}
++
++#endif // MEDIA_FILTERS_CETS_DEMUXER.H
+diff --git media/media.gyp media/media.gyp
+index d3d1604..612a240 100644
+--- media/media.gyp
++++ media/media.gyp
+@@ -1063,6 +1063,15 @@
+             'filters/ffmpeg_h265_to_annex_b_bitstream_converter.h',
+           ],
+         }],
++        ['enable_cets_rtsp_support==1', {
++          'sources': [
++            'filters/cets_demuxer.cc',
++            'filters/cets_demuxer.h',
++          ],
++          'defines': [
++            'ENABLE_CETS_RTSP_SUPPORT',
++          ]
++        }],
+         ['target_arch=="ia32" or target_arch=="x64"', {
+           'dependencies': [
+             'media_asm',

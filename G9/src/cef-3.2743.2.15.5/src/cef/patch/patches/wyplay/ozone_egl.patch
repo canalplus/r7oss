@@ -1,0 +1,28 @@
+diff --git build/common.gypi build/common.gypi
+index a00882f..11312fe 100644
+--- build/common.gypi
++++ build/common.gypi
+@@ -1587,6 +1587,7 @@
+     'ozone_platform_caca%': 0,
+     'ozone_platform_cast%': 0,
+     'ozone_platform_egltest%': 0,
++    'ozone_platform_eglhaisi%': 0,
+     'ozone_platform_gbm%': 0,
+     'ozone_platform_ozonex%': 0,
+     'ozone_platform_headless%': 0,
+diff --git ui/ozone/ozone.gyp ui/ozone/ozone.gyp
+index e40d8c9..ed8678c 100644
+--- ui/ozone/ozone.gyp
++++ ui/ozone/ozone.gyp
+@@ -271,6 +271,11 @@
+         'platform/egltest/egltest.gypi',
+       ],
+     }],
++    ['<(ozone_platform_eglhaisi) == 1', {
++      'includes': [
++        'platform/eglhaisi/eglhaisi.gypi',
++      ],
++    }],
+     ['<(ozone_platform_gbm) == 1', {
+       'includes': [
+         'platform/drm/gbm.gypi',

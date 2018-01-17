@@ -1,0 +1,13 @@
+--- build/common.gypi	2016-02-12 15:34:31.263066522 +0100
++++ build/common.gypi	2016-02-15 11:33:31.217704562 +0100
+@@ -6079,8 +6079,8 @@
+       # Set default ARM cross tools on linux.  These can be overridden
+       # using CC,CXX,CC.host and CXX.host environment variables.
+       'make_global_settings': [
+-        ['CC', '<!(which arm-linux-gnueabihf-gcc)'],
+-        ['CXX', '<!(which arm-linux-gnueabihf-g++)'],
++        ['CC', '$(CC)'],
++        ['CXX', '$(CXX)'],
+         ['CC.host', '<(host_cc)'],
+         ['CXX.host', '<(host_cxx)'],
+       ],

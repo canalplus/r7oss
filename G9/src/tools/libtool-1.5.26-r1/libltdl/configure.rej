@@ -1,0 +1,21 @@
+***************
+*** 5148,5157 ****
+    :
+  else
+    { { echo "$as_me:$LINENO: error: C++ preprocessor \"$CXXCPP\" fails sanity check
+- See \`config.log' for more details." >&5
+- echo "$as_me: error: C++ preprocessor \"$CXXCPP\" fails sanity check
+- See \`config.log' for more details." >&2;}
+-    { (exit 1); exit 1; }; }
+  fi
+  
+  ac_ext=cc
+--- 5148,5155 ----
+    :
+  else
+    { { echo "$as_me:$LINENO: error: C++ preprocessor \"$CXXCPP\" fails sanity check
++ See \`config.log' for more details." >&5;}
++    { echo "C++ sucks, ignoring ..." >&5; }; }
+  fi
+  
+  ac_ext=cc

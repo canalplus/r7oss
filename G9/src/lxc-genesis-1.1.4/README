@@ -1,0 +1,34 @@
+lxc_genesis component provides two static libraries
+    * liblxc_genesis_core.a which contains all core functions
+      especially function ``lxc_genesis_setup``.
+    * liblxc_genesis.a which contains a "constructor" function which
+      use fonction ``lxc_genesis_setup`` to setup the process
+      environment. This "constructor" function is called before the
+      process main function.
+
+lxc_genesis use the "/lxc_genesis.conf" file to get the configuration.
+The syntax is the following :
+    * user=[username] : this is used to change the process uid
+    * group=[groupname] : this is used to change the process gid
+    * umask=[umaskval] : this is used to set the process usmask
+    * rlimit=[RESSOURCE]|[current value]|[max_value] : set ressource limits for
+    the process
+    * [environment variable]=[values] : this environment variable is set for the
+    process
+
+The libraries can be linked using pkg-config tool
+    * lxc_genesis_core.pc file for liblxc_genesis_core.a.
+    * lxc_genesis.pc file for liblxc_genesis.a.
+Otherwise when linking to the library with "constructor" you need to add this compilation option :
+    * -u lxc_genesis_setup_constructor
+This will force the compilator to add this symbol from the static library.
+
+If --enable-hardened configure option is set, lxc_genesis is disabling ptrace and
+core dumping capability.
+
+If --enable-hardened configure option is set, GENESIS_CONFIG_FILE environment
+variable can be used to override default config file location.
+If GENESIS_CONFIG_FILE is not set and if /lxc_genesis.conf is not found,
+lxc_genesis is running the process as root:root with the default config.
+
+Using lxc_genesis init script is DEPRECATED.

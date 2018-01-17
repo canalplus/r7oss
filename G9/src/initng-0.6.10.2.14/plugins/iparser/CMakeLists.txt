@@ -1,0 +1,6 @@
+INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR}/src ${CMAKE_BINARY_DIR} )
+
+ADD_LIBRARY(iparser MODULE initng_i_parser.c)
+TARGET_LINK_LIBRARIES(iparser initng)
+INSTALL_TARGETS(${LIB_INSTALL_DIR}/initng iparser)
+

@@ -1,0 +1,139 @@
+# Copyright (C) 2007-2012 Red Hat, Inc. All rights reserved.
+#
+# This file is part of LVM2.
+#
+# This copyrighted material is made available to anyone wishing to use,
+# modify, copy, or redistribute it subject to the terms and conditions
+# of the GNU General Public License v.2.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+#TEST_OPTS=--verbose --debug
+SHELL_PATH ?= $(SHELL)
+RM ?= rm -f
+
+subdir = $(shell pwd|sed 's,.*/,,')
+
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+top_builddir = @top_builddir@
+abs_srcdir = "@abs_srcdir@"
+abs_builddir = "@abs_builddir@"
+abs_top_builddir = "@abs_top_builddir@"
+abs_top_srcdir = "@abs_top_srcdir@"
+
+SUBDIRS = api unit
+SOURCES = lib/not.c lib/harness.c
+
+include $(top_builddir)/make.tmpl
+
+T ?= .
+S ?= @ # never match anything by default
+VERBOSE ?= 0
+ALL = $(shell find $(srcdir) \( -path \*/shell/\*.sh -or -path \*/api/\*.sh \) | sort)
+RUN = $(shell find $(srcdir) -regextype posix-egrep \( -path \*/shell/\*.sh -or -path \*/api/\*.sh \) -and -regex "$(srcdir)/.*($(T)).*" -and -not -regex "$(srcdir)/.*($(S)).*" | sort)
+RUN_BASE = $(subst $(srcdir)/,,$(RUN))
+
+# Shell quote;
+SHELL_PATH_SQ = $(subst ','\'',$(SHELL_PATH))
+
+ifeq ("@UDEV_SYNC@", "yes")
+dm_udev_synchronisation = 1
+endif
+
+all: check
+
+help:
+	@echo -e "\nAvailable targets:"
+	@echo "  all			Default target, run check."
+	@echo "  check			Run all tests."
+	@echo "  check_local		Run tests without clvmd and lvmetad."
+	@echo "  check_cluster		Run tests with cluster daemon."
+	@echo "  check_lvmetad		Run tests with lvmetad daemon."
+	@echo "  clean			Clean dir."
+	@echo "  help			Display callable targets."
+	@echo -e "\nSupported variables:"
+	@echo "  LVM_TEST_DEVDIR	Set to '/dev' to run on real /dev."
+	@echo "  LVM_TEST_DIR		Where to create test files [TMPDIR]."
+	@echo "  LVM_TEST_LOCKING	Normal (1), Cluster (3)."
+	@echo "  LVM_TEST_LVMETAD	Start lvmetad (1)."
+	@echo "  LVM_TEST_NODEBUG	Do not debug lvm commands."
+	@echo "  LVM_TEST_PARALLEL	May skip agresive wipe of LVMTEST resources."
+	@echo "  LVM_VERIFY_UDEV	Default verify state for lvm.conf."
+	@echo "  S			Skip given test (regex)."
+	@echo "  T			Run given test (regex)."
+	@echo "  VERBOSE		Verbose output (1), timing (2)."
+
+check: check_local check_cluster check_lvmetad
+
+check_cluster: .tests-stamp
+	@echo Testing with locking_type 3
+	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=3 ./lib/harness $(RUN_BASE)
+
+check_local: .tests-stamp
+	@echo Testing with locking_type 1
+	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=1 ./lib/harness $(RUN_BASE)
+
+check_lvmetad: .tests-stamp
+	@echo Testing with lvmetad on
+	VERBOSE=$(VERBOSE) LVM_TEST_LVMETAD=1 ./lib/harness $(RUN_BASE)
+
+lib/should: lib/not
+	ln -sf not lib/should
+
+lib/%: lib/%.o .lib-dir-stamp
+	$(CC) $(LDFLAGS) -o $@ $<
+
+lib/%: $(srcdir)/lib/%.sh .lib-dir-stamp
+	cp $< $@
+	chmod +x $@
+
+lib/paths: $(srcdir)/Makefile.in .lib-dir-stamp
+	$(RM) $@-t
+	echo 'top_srcdir=$(top_srcdir)' >> $@-t
+	echo 'abs_top_builddir=$(abs_top_builddir)' >> $@-t
+	echo 'abs_top_srcdir=$(abs_top_srcdir)' >> $@-t
+	echo 'abs_srcdir=$(abs_srcdir)' >> $@-t
+	echo 'abs_builddir=$(abs_builddir)' >> $@-t
+	echo 'export DM_UDEV_SYNCHRONISATION=$(dm_udev_synchronisation)' >> $@-t
+	mv $@-t $@
+
+LIB = lib/not lib/should lib/harness \
+      lib/check lib/aux lib/test lib/utils lib/get lib/lvm-wrapper \
+      lib/paths
+
+CMDS = lvm $(shell cat $(top_builddir)/tools/.commands)
+
+.tests-stamp: $(ALL) $(LIB) $(SUBDIRS)
+	@if test "$(srcdir)" != . ; then \
+		echo "Linking tests to builddir."; \
+		$(MKDIR_P) shell; \
+		for f in $(subst $(srcdir)/,,$(ALL)); do \
+			ln -sf $(abs_top_srcdir)/test/$$f $$f; \
+		done; \
+	fi
+	touch $@
+
+.lib-dir-stamp:
+	$(MKDIR_P) lib
+	for i in $(CMDS); do ln -fs lvm-wrapper lib/$$i; done
+	ln -fs $(abs_top_builddir)/tools/dmsetup lib/dmsetup
+	ln -fs $(abs_top_builddir)/daemons/clvmd/clvmd lib/clvmd
+	ln -fs $(abs_top_builddir)/daemons/dmeventd/dmeventd lib/dmeventd
+	ln -fs $(abs_top_builddir)/daemons/lvmetad/lvmetad lib/lvmetad
+	ln -fs $(abs_top_srcdir)/scripts/vgimportclone.sh lib/vgimportclone
+	ln -fs $(abs_top_srcdir)/scripts/fsadm.sh lib/fsadm
+	touch $@
+
+clean:
+	test "$(srcdir)" = . || $(RM) $(RUN_BASE)
+
+CLEAN_TARGETS += .lib-dir-stamp .tests-stamp $(LIB) $(addprefix lib/,$(CMDS)) \
+	lib/clvmd lib/dmeventd lib/dmsetup lib/lvmetad lib/fsadm lib/vgimportclone
+
+Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+
+.NOTPARALLEL:

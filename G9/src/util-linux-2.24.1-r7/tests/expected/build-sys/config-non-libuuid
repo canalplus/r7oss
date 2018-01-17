@@ -1,0 +1,96 @@
+blkid:  libblkid 
+cfdisk:  libblkid libncursesw libtinfo 
+eject:  libblkid libmount 
+findfs:  libblkid 
+findmnt:  libblkid libmount libudev 
+fsck:  libblkid libmount 
+fstrim:  libblkid libmount 
+libblkid.so.1.1.0:  
+libmount.so.1.1.0:  libblkid 
+lsblk:  libblkid libmount libudev 
+lslocks:  libblkid libmount 
+mkswap:  libblkid 
+mount:  libblkid libmount 
+mountpoint:  libblkid libmount 
+partx:  libblkid 
+swaplabel:  libblkid 
+swapoff:  libblkid libmount 
+swapon:  libblkid libmount 
+umount:  libblkid libmount 
+wipefs:  libblkid 
+addpart:  
+agetty:  
+blkdiscard:  
+blockdev:  
+cal:  libncursesw libtinfo 
+chcpu:  
+chrt:  
+col:  
+colcrt:  
+colrm:  
+column:  
+ctrlaltdel:  
+cytune:  
+delpart:  
+dmesg:  librt 
+fallocate:  
+fdformat:  
+flock:  
+fsck.cramfs:  libz 
+fsck.minix:  
+fsfreeze:  
+getopt:  
+hexdump:  
+hwclock:  
+ionice:  
+ipcmk:  
+ipcrm:  
+ipcs:  
+isosize:  
+kill:  
+last:  
+ldattach:  
+logger:  
+login:  libpam libpam_misc 
+look:  
+losetup:  
+lscpu:  
+mcookie:  
+mesg:  
+mkfs:  
+mkfs.bfs:  
+mkfs.cramfs:  libz 
+mkfs.minix:  
+more:  libtinfo 
+namei:  
+nologin:  
+nsenter:  
+pg:  libncursesw libtinfo 
+pivot_root:  
+prlimit:  
+raw:  
+readprofile:  
+rename:  
+renice:  
+resizepart:  
+rev:  
+rtcwake:  
+runuser:  libpam libpam_misc 
+script:  libutil 
+scriptreplay:  
+setarch:  
+setpriv:  ap-ng 
+setsid:  
+setterm:  libtinfo 
+sfdisk:  
+su:  libpam libpam_misc 
+sulogin:  rypt 
+switch_root:  
+tailf:  
+taskset:  
+ul:  libtinfo 
+unshare:  
+utmpdump:  
+wall:  
+wdctl:  
+whereis:  

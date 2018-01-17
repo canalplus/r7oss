@@ -1,0 +1,123 @@
+<?xml version="1.0" ?><tp:spec name="Mediarenderer2" xmlns:tp="http://telepathy.freedesktop.org/wiki/DbusSpec#extensions-v0" xmlns:xi="http://www.w3.org/2001/XInclud
+e">
+
+<tp:title>WMS Mediarenderer D-Bus Interface Specification</tp:title>
+<tp:version>3.0.1 (aka. Phase 1.1)</tp:version>
+
+<tp:copyright>Copyright © 2006-2012 - Wyplay SAS</tp:copyright>
+
+<tp:license>WYPLAY PROPRIETARY</tp:license>
+
+<tp:section name="Connection Manager">
+
+<node name="/com/wyplay/asynctest/test">
+    <interface name="com.wyplay.asynctest.Tests">
+
+      <method name="STBReboot"/>
+      <method name="STBFactoryReset"/>
+
+      <method name="ECMReboot"/>
+      <method name="ECMFactoryReset"/>
+
+      <method name="SetUsageID">
+        <arg type="i" name="ID" direction="in"/>
+        <arg type="b" name="result" direction="out"/>
+      </method>
+      
+      <method name="SetDownstreamFrequency">
+        <arg type="i" name="frequency" direction="in"/>
+        <arg type="b" name="result" direction="out"/>
+      </method>
+
+      <signal name="ECMStatus">
+        <arg type="i" name="status"/>
+        <arg type="h" name="fd1"/>
+      </signal>
+
+      <signal name="ECMLinkStatus">
+        <arg type="i" name="status"/>
+      </signal>
+
+      <method name="GetProperties">
+        <arg type="a(ss)" name="propertyValue" direction="out"/>
+      </method>
+
+      <method name="GetDocsisProperties">
+        <arg type="a(ss)" name="propertyValue" direction="out"/>
+      </method>
+      
+      <method name="GetDownloadStatus">
+        <arg type="b" name="result" direction="out"/>
+        <arg type="u" name="statusValue" direction="out"/>
+      </method>
+
+      <method name="TestDict">
+        <arg type="a{iv}" name="a1" direction="in"/>
+      </method>
+      
+      <method name="TestSignals"/>
+
+      <property name="Bar" type="y" access="readwrite"/>
+      <property name="Name" type="s" access="readwrite"/>
+
+    </interface>
+</node>
+
+</tp:section>
+
+
+
+
+<tp:errors xmlns:tp="http://telepathy.freedesktop.org/wiki/DbusSpec#extensions-v0" namespace="com.wyplay.tdaemon.Error">
+	<tp:docstring>Error types defined by UPnP (most of those are useless, but whatever)</tp:docstring>
+
+	<tp:error name="Invalid Action">
+		<tp:docstring>
+			Raised when a requested action is not allowed from current context.
+			<tp:rationale>replaces EUPNP_INVALID_ACTION</tp:rationale>
+		</tp:docstring>
+	</tp:error>
+
+	<tp:error name="Invalid Argument">
+		<tp:docstring>
+			Raised when one of the provided arguments is invalid.
+			<tp:rationale>replaces EUPNP_INVALID_ARGS</tp:rationale>
+		</tp:docstring>
+	</tp:error>
+
+	<tp:error name="Invalid Instance">
+		<tp:docstring>
+			An instance identifier (ie. object path) passed as input argument doesn't exist or isn't appliquable to the requested action.
+			<tp:rationale>replaces EUPNP_RCS_INVALID_INSTANCE_ID and EUPNP_AVT_INVALID_INSTANCE_ID</tp:rationale>
+		</tp:docstring>
+	</tp:error>
+
+	<tp:error name="Action Failed">
+		<tp:docstring>
+			Raised when a requested action did not succeed (whatever that means...)
+			<tp:rationale>replaces EUPNP_ACTION_FAILED</tp:rationale>
+		</tp:docstring>
+	</tp:error>
+
+    <tp:error name="sA mA fUT">
+    </tp:error>
+
+	<tp:error name="Action Cancelled">
+		<tp:docstring>
+			Raised when a requested action was cancelled before completion
+		</tp:docstring>
+	</tp:error>
+
+	<tp:error name="Timeout">
+		<tp:docstring>
+			Raised when a requested action's execution time goes beyond a predefined (context-dependent) timeout
+		</tp:docstring>
+	</tp:error>
+
+	<tp:error name="Arg Val Oor">
+		<tp:deprecated version="5.1.2">Error only used in deprecated method <tp:dbus-ref namespace="com.wyplay.mediarenderer.avtransport">setObject</tp:dbus-ref> replaced by <tp:dbus-ref namespace="com.wyplay.mediarenderer.avtransport">playURI</tp:dbus-ref></tp:deprecated>
+		<tp:docstring>wtf is this... (EUPNP_ARG_VAL_OOR)</tp:docstring>
+	</tp:error>
+</tp:errors>
+
+</tp:spec>

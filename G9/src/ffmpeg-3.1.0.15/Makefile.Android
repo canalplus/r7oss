@@ -1,0 +1,50 @@
+include $(WY_AUTOTOOLS_WRAPPER)
+
+LDFLAGS += -nostdlib
+
+# Features to enable
+ENABLE_DEMUXERS  = aac ac3 aiff amr ass au avi dts dv flv h261 h263 h264 m4v matroska mov mp3 mpegps mpegts mpegvideo ogg pcm_alaw pcm_mulaw pcm_s16be pcm_s16le pcm_s8 pcm_u16be pcm_u16le pcm_u8 swf vc1 wav flac mpc mpc8 rtsp sdp hevc
+ENABLE_MUXERS    = rtp
+ENABLE_PROTOCOLS = file rtp tcp udp
+ENABLE_DECODERS  = h263 flv dvbsub flac mpeg4 mp3 vorbis mpc7 mpc8 mpeg1video pcm_mulaw xsub aac
+ENABLE_ENCODERS  =
+
+# Configure flags
+my_conf = --enable-cross-compile --cross-prefix=$(ANDROID_ROOT)/$(TARGET_TOOLS_PREFIX) --prefix=$(WYPLAY_SYSTEM_DIR) --extra-cflags="-fPIC"
+my_conf += --target-os=none --arch=generic --cpu=generic --enable-shared --enable-small
+my_conf += --disable-debug --disable-ffmpeg
+my_conf += \
+	--disable-pthreads \
+	--disable-programs \
+	--disable-doc \
+	--disable-avfilter \
+	--disable-avdevice \
+	--disable-swresample \
+	--disable-swscale \
+	--disable-bsfs \
+	--disable-filters \
+	--disable-encoders \
+	--disable-devices \
+	--disable-runtime-cpudetect \
+	--disable-hardcoded-tables \
+	--disable-symver
+my_conf += \
+	--disable-demuxers \
+	--disable-muxers \
+	--disable-decoders \
+	--disable-protocols \
+	--enable-parsers \
+	--disable-protocol=http
+
+all:
+	# Symlinks to bionic
+	$(call wy-link-crt-objs, ffmpeg ffmpeg/libavcodec ffmpeg/libavdevice ffmpeg/libavutil ffmpeg/tools ffmpeg/libavdevice ffmpeg/libavcodec ffmpeg/libavfilter ffmpeg/libavformat ffmpeg/libavresample ffmpeg/libavutil ffmpeg/libpostproc ffmpeg/libswresample ffmpeg/libswscale ffmpeg/doc ffmpeg/compat ffmpeg/presets ffmpeg/tests ffmpeg/tools)
+	# Enable features
+	$(foreach d, $(ENABLE_DEMUXERS), $(eval my_conf := $(my_conf) --enable-demuxer=$d))
+	$(foreach d, $(ENABLE_MUXERS),   $(eval my_conf := $(my_conf) --enable-muxer=$d))
+	$(foreach d, $(ENABLE_PROTOCOLS),$(eval my_conf := $(my_conf) --enable-protocol=$d))
+	$(foreach d, $(ENABLE_DECODERS), $(eval my_conf := $(my_conf) --enable-decoder=$d))
+	$(foreach d, $(ENABLE_ENCODERS), $(eval my_conf := $(my_conf) --enable-encoder=$d))
+	# Build
+	$(call wy-autoconf-wrapper,ffmpeg,$(REAL_LOCAL_PATH),$(my_conf) --extra-cflags='$(CFLAGS)' --extra-ldflags='$(LDFLAGS)',,1)
+

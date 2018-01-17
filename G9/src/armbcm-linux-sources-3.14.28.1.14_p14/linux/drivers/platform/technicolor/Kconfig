@@ -1,0 +1,24 @@
+
+menu "Technicolor driver"
+
+config TECHNICOLOR_PLT_ID
+	boolean "Platform ID"
+	---help---
+	  This driver provide the platform ID for Technicolor Set-Top-Box
+	  according to device-tree gpio and platform name
+
+if TECHNICOLOR_PLT_ID
+config TECHNICOLOR_PLT_ID_PERMDATA
+	boolean "Platform permanant data sysfs"
+	---help---
+	  This driver export generique permanant data from flash as a sysfs
+	  into /sys/plt/permdata
+
+config TECHNICOLOR_PLT_ID_PERMDATA_MAC
+	int "Number of Mac address"
+    default 1
+	---help---
+	  Define the number of MAC show into /sys/plt/permdata/
+endif
+
+endmenu

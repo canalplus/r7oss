@@ -1,0 +1,26 @@
+* Broadcom buggy variant on Synopsys DW APB UART
+
+This UART variant is for a Synopsys DW APB UART that cannot reset the
+"busy detect" interrupt (IIR == 7).
+
+Required properties:
+- compatible: should be "brcm,buggy-dw-apb-uart"
+- reg: The base address of the UART register bank
+- interrupts: Should be the UART interrupt specifier.
+
+Optional properties:
+- clock-frequency: frequency of the clock input to the UART
+- reg-io-width: UART register width
+- reg-shift: amount by which to shift offsets
+
+
+Example:
+
+serial@f0406b00 {
+	compatible = "brcm,buggy-dw-apb-uart";
+	reg = <0xf0406b00 0x20>;
+	reg-shift = <0x2>;
+	reg-io-width = <0x4>;
+	interrupts = <0x0 0x4b 0x4>;
+	clock-frequency = <0x4d3f640>;
+};

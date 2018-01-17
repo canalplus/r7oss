@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+Name: lxc_genesis_core
+Description: Core tools for init. program in LXC containers
+Version: @VERSION@
+Requires: libcap >= 2.24
+Libs: -L${libdir} -llxc_genesis_core -lnss_files
+Cflags: -I${includedir}

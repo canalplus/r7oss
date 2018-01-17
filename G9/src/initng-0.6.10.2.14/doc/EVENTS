@@ -1,0 +1,8 @@
+
+
+Hook return values:
+
+TRUE    : Everything OK.
+FALSE   : Something failed, but we can continue.
+FAIL    : Something failed, break the event.
+HANDLED : Event was handled, so we don't need to continue.

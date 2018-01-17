@@ -1,0 +1,5 @@
+addFilter("E: invalid-license")
+addFilter("W: version-control-internal-file")
+addFilter("W: no-binary")
+addFilter("E: files-duplicated-waste")
+addFilter("W: files-duplicate")

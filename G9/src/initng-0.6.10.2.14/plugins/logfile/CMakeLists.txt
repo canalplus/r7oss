@@ -1,0 +1,6 @@
+INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR}/src ${CMAKE_BINARY_DIR} )
+
+ADD_LIBRARY(logfile MODULE initng_logfile.c)
+TARGET_LINK_LIBRARIES(logfile initng)
+INSTALL_TARGETS(${LIB_INSTALL_DIR}/initng logfile)
+

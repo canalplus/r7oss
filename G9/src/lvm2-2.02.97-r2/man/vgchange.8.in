@@ -1,0 +1,213 @@
+.TH VGCHANGE 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
+.SH NAME
+vgchange \- change attributes of a volume group
+.SH SYNOPSIS
+.B vgchange
+.RB [ \-\-addtag
+.IR Tag ]
+.RB [ \-\-alloc
+.IR AllocationPolicy ]
+.RB [ \-A | \-\-autobackup
+.RI { y | n }]
+.RB [ \-a | \-\-activate
+.RI [ a | e | l ]
+.RI { y | n }]
+.RB [ \-\-monitor
+.RI { y | n }]
+.RB [ \-\-poll
+.RI { y | n }]
+.RB [ \-c | \-\-clustered
+.RI { y | n }]
+.RB [ \-u | \-\-uuid ]
+.RB [ \-d | \-\-debug ]
+.RB [ \-\-deltag
+.IR Tag ]
+.RB [ \-h | \-\-help ]
+.RB [ \-\-ignorelockingfailure ]
+.RB [ \-\-ignoremonitoring ]
+.RB [ \-\-sysinit ]
+.RB [ \-\-noudevsync ]
+.RB [ \-l | \-\-logicalvolume
+.IR MaxLogicalVolumes ]
+.RB [ -p | \-\-maxphysicalvolumes
+.IR MaxPhysicalVolumes ]
+.RB [ \-\- [ vg ] metadatacopies ]
+.IR NumberOfCopies | unmanaged | all ]
+.RB [ \-P | \-\-partial ]
+.RB [ \-s | \-\-physicalextentsize
+.IR PhysicalExtentSize [ bBsSkKmMgGtTpPeE ]]
+.RB [ \-\-refresh ]
+.RB [ -t | \-\-test ]
+.RB [ \-v | \-\-verbose ]
+.RB [ \-\-version ]
+.RB [ \-x | \-\-resizeable
+.RI { y | n }]
+.RI [ VolumeGroupName ...]
+.SH DESCRIPTION
+vgchange allows you to change the attributes of one or more
+volume groups. Its main purpose is to activate and deactivate
+.IR VolumeGroupName ,
+or all volume groups if none is specified.  Only active volume groups
+are subject to changes and allow access to their logical volumes.
+[Not yet implemented: During volume group activation, if
+.B vgchange
+recognizes snapshot logical volumes which were dropped because they ran
+out of space, it displays a message informing the administrator that such
+snapshots should be removed (see
+.BR lvremove (8)).
+]
+.SH OPTIONS
+See \fBlvm\fP(8) for common options.
+.TP
+.BR \-A ", " \-\-autobackup " {" \fIy | \fIn }
+Controls automatic backup of metadata after the change.  See
+.BR vgcfgbackup (8).
+Default is yes.
+.TP
+.BR \-a ", " \-\-activate " [" \fIa | \fIe | \fIl ]{ \fIy | \fIn }
+Controls the availability of the logical volumes in the volume
+group for input/output.
+In other words, makes the logical volumes known/unknown to the kernel.
+If autoactivation option is used (\-aay), each logical volume in
+the volume group is activated only if it matches an item in the
+activation/auto_activation_volume_list set in lvm.conf.
+Autoactivation is not yet supported for partial or clustered
+volume groups.
+.IP
+If clustered locking is enabled, add 'e' to activate/deactivate
+exclusively on one node or 'l' to activate/deactivate only
+on the local node.
+Logical volumes with single-host snapshots are always activated
+exclusively because they can only be used on one node at once.
+.TP
+.BR \-c ", " \-\-clustered " {" \fIy | \fIn }
+If clustered locking is enabled, this indicates whether this
+Volume Group is shared with other nodes in the cluster or whether
+it contains only local disks that are not visible on the other nodes.
+If the cluster infrastructure is unavailable on a particular node at a
+particular time, you may still be able to use Volume Groups that
+are not marked as clustered.
+.TP
+.BR \-u ", " \-\-uuid
+Generate new random UUID for specified Volume Groups.
+.TP
+.BR \-\-monitor " {" \fIy | \fIn }
+Start or stop monitoring a mirrored or snapshot logical volume with
+dmeventd, if it is installed.
+If a device used by a monitored mirror reports an I/O error,
+the failure is handled according to
+.B mirror_image_fault_policy
+and
+.B mirror_log_fault_policy
+set in
+.BR lvm.conf (5).
+.TP
+.BR \-\-poll " {" \fIy | \fIn }
+Without polling a logical volume's backgrounded transformation process
+will never complete.  If there is an incomplete pvmove or lvconvert (for
+example, on rebooting after a crash), use \fB\-\-poll y\fP to restart the
+process from its last checkpoint.  However, it may not be appropriate to
+immediately poll a logical volume when it is activated, use 
+\fB\-\-poll n\fP to defer and then \fB\-\-poll y\fP to restart the process.
+.TP
+.BR \-\-sysinit
+Indicates that vgchange(8) is being invoked from early system initialisation
+scripts (e.g. rc.sysinit or an initrd), before writeable filesystems are
+available. As such, some functionality needs to be disabled and this option
+acts as a shortcut which selects an appropriate set of options. Currently
+this is equivalent to using
+.BR \-\-ignorelockingfailure ,
+.BR \-\-ignoremonitoring ,
+.B \-\-poll n
+and setting \fBLVM_SUPPRESS_LOCKING_FAILURE_MESSAGES\fP
+environment variable.
+
+If \fB\-\-sysinit\fP is used in conjunction with lvmetad(8) enabled and running,
+autoactivation is preferred over manual activation via direct vgchange call.
+Logical volumes are autoactivated according to auto_activation_volume_list
+set in lvm.conf(5).
+.TP
+.BR \-\-noudevsync
+Disable udev synchronisation. The
+process will not wait for notification from udev.
+It will continue irrespective of any possible udev processing
+in the background.  You should only use this if udev is not running
+or has rules that ignore the devices LVM2 creates.
+.TP
+.BR \-\-ignoremonitoring
+Make no attempt to interact with dmeventd unless
+.BR \-\-monitor
+is specified.
+Do not use this if dmeventd is already monitoring a device.
+.TP
+.BR \-l ", " \-\-logicalvolume " " \fIMaxLogicalVolumes
+Changes the maximum logical volume number of an existing inactive
+volume group.
+.TP
+.BR \-p ", " \-\-maxphysicalvolumes " " \fIMaxPhysicalVolumes
+Changes the maximum number of physical volumes that can belong
+to this volume group.
+For volume groups with metadata in lvm1 format, the limit is 255.
+If the metadata uses lvm2 format, the value 0 removes this restriction:
+there is then no limit.  If you have a large number of physical volumes in
+a volume group with metadata in lvm2 format, for tool performance reasons,
+you should consider some use of \fB--pvmetadatacopies 0\fP as described in
+\fBpvcreate(8)\fP, and/or use \fB--vgmetadatacopies\fP.
+.TP
+.BR \-\- [ vg ] metadatacopies " " \fINumberOfCopies | \fIunmanaged | \fIall
+Sets the desired number of metadata copies in the volume group.  If set to
+a non-zero value, LVM will automatically manage the 'metadataignore'
+flags on the physical volumes (see \fBpvchange\fP or \fBpvcreate --metadataignore\fP) in order
+to achieve \fINumberOfCopies\fP copies of metadata.  If set to \fIunmanaged\fP,
+LVM will not automatically manage the 'metadataignore' flags.  If set to
+\fIall\fP, LVM will first clear all of the 'metadataignore' flags on all
+metadata areas in the volume group, then set the value to \fIunmanaged\fP.
+The \fBvgmetadatacopies\fP option is useful for volume groups containing
+large numbers of physical volumes with metadata as it may be used to
+minimize metadata read and write overhead.
+.TP
+.BR \-s ", " \-\-physicalextentsize " " \fIPhysicalExtentSize [ \fIBbBsSkKmMgGtTpPeE ]
+Changes the physical extent size on physical volumes of this volume group.
+A size suffix (k for kilobytes up to t for terabytes) is optional, megabytes
+is the default if no suffix is present.
+The default is 4 MiB and it must be at least 1 KiB and a power of 2.
+
+Before increasing the physical extent size, you might need to use lvresize,
+pvresize and/or pvmove so that everything fits.  For example, every
+contiguous range of extents used in a logical volume must start and
+end on an extent boundary.
+
+If the volume group metadata uses lvm1 format, extents can vary in size from
+8KiB to 16GiB and there is a limit of 65534 extents in each logical volume.
+The default of 4 MiB leads to a maximum logical volume size of around 256GiB.
+
+If the volume group metadata uses lvm2 format those restrictions do not apply,
+but having a large number of extents will slow down the tools but have no
+impact on I/O performance to the logical volume.  The smallest PE is 1KiB.
+
+The 2.4 kernel has a limitation of 2TiB per block device.
+.TP
+.BR \-\-refresh
+If any logical volume in the volume group is active, reload its metadata.
+This is not necessary in normal operation, but may be useful
+if something has gone wrong or if you're doing clustering
+manually without a clustered lock manager.
+.TP
+.BR \-x ", " \-\-resizeable " {" \fIy | \fIn }
+Enables or disables the extension/reduction of this volume group
+with/by physical volumes.
+.SH Examples
+To activate all known volume groups in the system:
+.sp
+.B vgchange -a y
+
+To change the maximum number of logical volumes of inactive volume group
+vg00 to 128.
+.sp
+.B vgchange -l 128 /dev/vg00
+
+
+.SH SEE ALSO
+.BR lvchange (8),
+.BR lvm (8),
+.BR vgcreate (8)

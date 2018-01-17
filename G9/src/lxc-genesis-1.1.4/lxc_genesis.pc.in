@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+Name: lxc_genesis
+Description: Init program for LXC containers
+Version: @VERSION@
+Requires: libcap >= 2.24
+Libs: -L${libdir} -u lxc_genesis_setup_constructor -llxc_genesis -llxc_genesis_core -lnss_files
+Cflags: -I${includedir}

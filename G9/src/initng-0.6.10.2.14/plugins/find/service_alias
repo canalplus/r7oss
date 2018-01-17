@@ -1,0 +1,5 @@
+virtual/httpd=daemon/apache2
+virtual/syslogd=daemon/syslog
+virtual/crond=daemon/vixie-cron
+virtual/getty=daemon/agetty
+virtual/sendmail=daemon/sendmail

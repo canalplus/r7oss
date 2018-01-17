@@ -1,0 +1,38 @@
+Upstream-status: backport
+
+From 6c4553507f3f851523885d5fbef09de24b1e4be9 Mon Sep 17 00:00:00 2001
+From: ro <ro@138bc75d-0d04-0410-961f-82ee72b054a4>
+Date: Tue, 14 May 2013 13:11:25 +0000
+Subject: [PATCH] Use __builtin_alloca in gcc.dg/fstack-protector-strong.c
+
+	* gcc.dg/fstack-protector-strong.c: Don't include <stdlib.h>.
+	(alloca): Remove declaration.
+	(foo9): Replace alloca by __builtin_alloca.
+
+git-svn-id: svn+ssh://gcc.gnu.org/svn/gcc/trunk@198883 138bc75d-0d04-0410-961f-82ee72b054a4
+---
+ gcc/testsuite/ChangeLog                        | 6 ++++++
+ gcc/testsuite/gcc.dg/fstack-protector-strong.c | 5 +----
+ 2 files changed, 7 insertions(+), 4 deletions(-)
+
+--- gcc-linaro-4.8-2014.11.orig/gcc/testsuite/gcc.dg/fstack-protector-strong.c
++++ gcc-linaro-4.8-2014.11/gcc/testsuite/gcc.dg/fstack-protector-strong.c
+@@ -4,9 +4,6 @@
+ /* { dg-options "-O2 -fstack-protector-strong" } */
+ 
+ #include<string.h>
+-#include<stdlib.h>
+-
+-extern void *alloca(__SIZE_TYPE__);
+ 
+ extern int g0;
+ extern int* pg0;
+@@ -112,7 +109,7 @@ foo8 ()
+ int
+ foo9 ()
+ {
+-  char* p = alloca (100);
++  char* p = __builtin_alloca (100);
+   return goo ((int *)(p + 50));
+ }
+ 

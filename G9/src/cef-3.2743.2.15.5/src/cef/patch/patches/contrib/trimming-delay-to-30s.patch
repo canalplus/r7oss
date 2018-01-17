@@ -1,0 +1,13 @@
+diff --git net/disk_cache/blockfile/backend_impl.cc net/disk_cache/blockfile/backend_impl.cc
+index 980ddc7..2255049 100644
+--- net/disk_cache/blockfile/backend_impl.cc
++++ net/disk_cache/blockfile/backend_impl.cc
+@@ -54,7 +54,7 @@ const int k64kEntriesStore = 240 * 1000 * 1000;
+ const int kBaseTableLen = 64 * 1024;
+ 
+ // Avoid trimming the cache for the first 5 minutes (10 timer ticks).
+-const int kTrimDelay = 10;
++const int kTrimDelay = 1;
+ 
+ int DesiredIndexTableLen(int32_t storage_size) {
+   if (storage_size <= k64kEntriesStore)

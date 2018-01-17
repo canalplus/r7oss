@@ -1,0 +1,22 @@
+Simple example how to use libcryptsetup
+for password search.
+
+Run: crypt_dict luks|tcrypt <device|image> <dictionary> [cpus]
+
+luks|tcrypt specified device type (LUKS or TrueCrypt)
+
+<device|image> is LUKS or TrueCrypt device or image
+
+<dictionary> is list of passphrases to try
+(note trailing EOL is stripped)
+
+cpus - number of processes to start in parallel
+
+Format of dictionary file is simple one password per line,
+if first char on line s # it is skiped as comment.
+
+For LUKS, you have it run as root (device-mapper cannot
+create dmcrypt devices as nrmal user. Code need
+to map keyslots as temporary dmcrypt device.)
+
+For TrueCrypt devices root privilege is not required.

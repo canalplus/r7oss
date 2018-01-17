@@ -1,0 +1,11 @@
+--- a/third_party/icu/source/common/putil.cpp	2016-02-12 15:38:10.028030435 +0100
++++ b/third_party/icu/source/common/putil.cpp	2016-02-15 11:03:07.134916815 +0100
+@@ -666,7 +666,7 @@
+ #define TZZONEINFO2     "../usr/share/lib/zoneinfo/"
+ #define TZ_ENV_CHECK    "localtime"
+ #else
+-#define TZDEFAULT       "/etc/localtime"
++#define TZDEFAULT       "/data/localtime"
+ #define TZZONEINFO      "/usr/share/zoneinfo/"
+ #endif
+ #if U_HAVE_DIRENT_H

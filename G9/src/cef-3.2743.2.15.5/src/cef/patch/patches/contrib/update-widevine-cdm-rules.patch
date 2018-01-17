@@ -1,0 +1,18 @@
+--- a/third_party/widevine/cdm/widevine_cdm.gyp	2016-02-12 15:38:17.799922595 +0100
++++ b/third_party/widevine/cdm/widevine_cdm.gyp	2016-02-15 11:58:45.208824866 +0100
+@@ -174,9 +174,13 @@
+             'widevine_cdm_version_h',
+             '<(DEPTH)/base/base.gyp:base',
+           ],
++          'libraries': [
++            '-lcurl',
++            '-lwidevine_ce_cdm',
++          ],
+           'sources': [
+-            '<(DEPTH)/media/cdm/stub/stub_cdm.cc',
+-            '<(DEPTH)/media/cdm/stub/stub_cdm.h',
++            '<(DEPTH)/media/cdm/ppapi/widevine_cdm/widevine_cdm.cc',
++            '<(DEPTH)/media/cdm/ppapi/widevine_cdm/widevine_cdm.h',
+           ],
+         }],
+       ],

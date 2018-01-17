@@ -1,0 +1,39 @@
+Broadcom BCM7120 Level 2 interrupt controller
+
+Required properties:
+
+- compatible: should be "brcm,bcm7120-l2-intc"
+- reg: specifies the base physical address and size of the registers
+- interrupt-controller: identifies the node as an interrupt controller
+- #interrupt-cells: specifies the number of cells needed to encode an interrupt
+  source, should be 1.
+- interrupt-parent: specifies the phandle to the parent interrupt controller
+  this one is cascaded from
+- interrupts: specifies the interrupt line(s) in the interrupt-parent domain
+  to be used for cascading
+- brcm,int-map-mask: 32-bits bit mask describing how the interrupts at this level
+  map to their respective parents. Should match exactly the number of interrupts
+  specified in the 'interrupts' property.
+
+Optional properties:
+
+- brcm,irq-can-wake: if present, this means the L2 controller can be used as a
+  wakeup source for system suspend/resume.
+
+- brcm,int-fwd-mask: if present, a 32-bits bit mask describing the interrupts
+  which need to be enabled in this controller to flow to the higher level
+  interrupt controller.
+
+Example:
+
+irq0_intc: interrupt-controller@f0406800 {
+	compatible = "brcm,bcm7120-l2-intc";
+	interrupt-parent = <&intc>;
+	#interrupt-cells = <1>;
+	reg = <0xf0406800 0x8>;
+	interrupt-controller;
+	interrupts = <0x0 0x42 0x0>, <0x0 0x40 0x0>;
+	interrupt-names = "upg_main", "upg_bsc";
+	brcm,int-map-mask = <0xeb8>, <0x140>;
+	brcm,int-fwd-mask = <0x7>;
+};

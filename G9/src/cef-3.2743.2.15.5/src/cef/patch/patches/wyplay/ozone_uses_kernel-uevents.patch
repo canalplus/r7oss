@@ -1,0 +1,28 @@
+From 1ac5b5b93edbeda9729954e07fe9cbd7568278c3 Mon Sep 17 00:00:00 2001
+From: Gauthier Haderer <ghaderer@wyplay.com>
+Date: Tue, 26 Sep 2017 12:33:35 +0200
+Subject: [PATCH] Ozone uses kernel uevents instead of udev ones.
+
+When running in a different network namespace, we don't receive udev
+uevents. But we still receive kernel ones. As we don't need properties
+added by udev on these events, this change should cause no regression.
+---
+ ui/events/ozone/device/udev/device_manager_udev.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git ui/events/ozone/device/udev/device_manager_udev.cc ui/events/ozone/device/udev/device_manager_udev.cc
+index 0f21e8f..e304e71 100644
+--- ui/events/ozone/device/udev/device_manager_udev.cc
++++ ui/events/ozone/device/udev/device_manager_udev.cc
+@@ -64,7 +64,7 @@ device::ScopedUdevPtr UdevCreate() {
+ // Start monitoring input device changes.
+ device::ScopedUdevMonitorPtr UdevCreateMonitor(struct udev* udev) {
+   struct udev_monitor* monitor =
+-      device::udev_monitor_new_from_netlink(udev, "udev");
++      device::udev_monitor_new_from_netlink(udev, "kernel");
+   if (monitor) {
+     for (size_t i = 0; i < arraysize(kSubsystems); ++i)
+       device::udev_monitor_filter_add_match_subsystem_devtype(
+-- 
+2.9.4
+

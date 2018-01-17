@@ -1,0 +1,389 @@
+config ARCH_BCM
+	bool "Broadcom SoC Support"
+	depends on ARCH_MULTIPLATFORM
+	help
+	  This enables support for Broadcom ARM based SoC
+          chips
+
+if ARCH_BCM
+
+menu "Broadcom SoC Selection"
+
+config ARCH_BCM_MOBILE
+	bool "Broadcom Mobile SoC" if ARCH_MULTI_V7
+	depends on MMU
+	select ARCH_REQUIRE_GPIOLIB
+	select ARM_ERRATA_754322
+	select ARM_ERRATA_764369 if SMP
+	select ARM_GIC
+	select CPU_V7
+	select CLKSRC_OF
+	select GENERIC_CLOCKEVENTS
+	select GENERIC_TIME
+	select GPIO_BCM_KONA
+	select SPARSE_IRQ
+	select TICK_ONESHOT
+	select CACHE_L2X0
+	select HAVE_ARM_ARCH_TIMER
+	select PINCTRL
+	help
+	  This enables support for systems based on Broadcom mobile SoCs.
+	  It currently supports the 'BCM281XX' family, which includes
+	  BCM11130, BCM11140, BCM11351, BCM28145 and
+	  BCM28155 variants.
+
+config ARCH_BRCMSTB
+	bool "Broadcom BCM7XXX based boards" if ARCH_MULTI_V7
+	depends on MMU
+	select ARM_GIC
+	select MIGHT_HAVE_PCI
+	select HAVE_SMP
+	select HAVE_ARM_ARCH_TIMER
+	select POWER_RESET_BRCMSTB
+	select BRCMSTB
+	select ARCH_HAS_OPP
+	select ARCH_HAS_CPUFREQ
+	select PM_OPP if PM
+	select ARM_ERRATA_798181 if SMP
+	select ARCH_DMA_ADDR_T_64BIT if ARM_LPAE
+	select GENERIC_IRQ_CHIP
+	select BRCMSTB_GISB_ARB
+	select SOC_BRCMSTB
+	select ARCH_WANT_OPTIONAL_GPIOLIB
+	select SOC_BUS
+	select PCI_DOMAINS if PCI
+	select BCM7120_L2_IRQ
+	help
+	  Say Y if you intend to run the kernel on a Broadcom ARM-based STB
+	  chipset.
+
+	  This enables support for Broadcom ARM-based set-top box chipsets,
+	  including the 7445 family of chips.
+
+endmenu
+
+endif
+
+choice
+	prompt "Chipset selection"
+	depends on BRCMSTB
+	help
+	  Select the Broadcom STB chipset you are building for.
+
+config BCM3390A0
+	bool "3390 Ax"
+	select BRCM_HAS_NAND_MAJOR_7
+	select BRCM_HAS_NAND_MINOR_1
+	select BRCM_HAS_BSPI_V4
+	select BRCM_HAS_MOCA_20_GEN23
+	select BRCM_MSPI_64B_WORDS
+
+config BCM3390B0
+	bool "3390 Bx"
+	select BRCM_HAS_NAND_MAJOR_7
+	select BRCM_HAS_NAND_MINOR_1
+	select BRCM_HAS_BSPI_V4
+	select BRCM_HAS_MOCA_20_GEN23
+	select BRCM_MSPI_64B_WORDS
+
+config BCM7250B0
+	bool "7250 Bx"
+	select BCM7250
+	select BRCM_HAS_NAND_MAJOR_7
+	select BRCM_HAS_NAND_MINOR_1
+	select BRCM_HAS_BSPI_V4
+	select BRCM_MSPI_64B_WORDS
+	select BRCMSTB_XPT_HASH if PM
+
+config BCM7364A0
+	bool "7364 Ax"
+	select BCM7364
+	select BRCM_GENET_V4
+	select BRCM_HAS_NAND_MAJOR_7
+	select BRCM_HAS_NAND_MINOR_1
+	select BRCM_HAS_BSPI_V4
+	select BRCM_HAS_MOCA_20_GEN23
+	select BRCM_MSPI_64B_WORDS
+	select BRCMSTB_XPT_HASH if PM
+
+config BCM7366C0
+	bool "7366 Cx"
+	select BCM7366
+	select BRCM_GENET_V4
+	select BRCM_HAS_NAND_MAJOR_7
+	select BRCM_HAS_NAND_MINOR_1
+	select BRCM_HAS_BSPI_V4
+	select BRCM_HAS_MOCA_20_GEN23
+	select BRCM_MSPI_64B_WORDS
+	select BRCMSTB_XPT_HASH if PM
+
+config BCM74371A0
+	bool "74371 Ax"
+	select BCM74371
+	select BRCM_GENET_V4
+	select BRCM_HAS_NAND_MAJOR_7
+	select BRCM_HAS_NAND_MINOR_0
+	select BRCM_HAS_BSPI_V4
+	select BRCM_HAS_MOCA_20_GEN23
+	select BRCM_MSPI_64B_WORDS
+
+config BCM7439B0
+	bool "7439 Bx"
+	select BCM7439
+	select BRCM_GENET_V4
+	select BRCM_HAS_NAND_MAJOR_7
+	select BRCM_HAS_NAND_MINOR_1
+	select BRCM_HAS_BSPI_V4
+	select BRCM_HAS_MOCA_20_GEN23
+	select BRCM_MSPI_64B_WORDS
+	select BRCMSTB_XPT_HASH if PM
+
+config BCM7445D0
+	bool "7445 Dx"
+	select BCM7445
+	select BRCM_GENET_V4
+	select BRCM_HAS_MOCA_20_GEN23
+	select BRCM_HAS_NAND_MAJOR_7
+	select BRCM_HAS_NAND_MINOR_1
+	select BRCM_HAS_BSPI_V4
+	select BRCM_MSPI_64B_WORDS
+	select BRCMSTB_XPT_HASH if PM
+
+endchoice
+
+config SPI_BRCMSTB
+	tristate "Broadcom HIF SPI controller support"
+	default y
+	depends on BRCMSTB
+	help
+	  Say Y to enable support for SPI (serial) flash devices.
+
+config BCMGENET
+	tristate "Broadcom STB 10/100/1000 MAC/PHY support"
+	depends on ETHERNET && BRCMSTB
+	default y
+	select CRC32
+	select MII
+	select PHYLIB
+	select FIXED_PHY
+	select BCM7XXX_PHY
+	select BCM531XX_PHY
+	help
+	  Say Y to support the internal 10/100/1000 GENET MAC/PHY on
+	  Broadcom set-top chips.  This driver also supports the datapath
+	  for the onchip MoCA transceiver.
+
+	  If your chipset supports power management, disabling this driver
+	  will keep the device permanently powered down.
+
+config BRCM_MOCA
+	tristate "Broadcom MoCA character driver"
+	depends on BRCMSTB && (BRCM_HAS_GENET || BRCM_HAS_MOCA_20_GEN21 || \
+		BRCM_HAS_MOCA_20_GEN22 || BRCM_HAS_MOCA_20_GEN23) && !BRCM_IKOS
+	default y
+	help
+	  Say Y to build the MoCA control path driver.  This is a simple
+	  character driver that allows the MoCA daemon (mocad) to
+	  initialize and configure the MoCA interface.
+
+	  If your chipset supports power management, disabling this driver
+	  will keep the device permanently powered down.
+
+config BRCM_USB
+	tristate "Broadcom STB USB support"
+	depends on BRCMSTB && USB
+	select BRCM_USB_OHCI if USB_OHCI_HCD
+	select BRCM_USB_EHCI if USB_EHCI_HCD
+	select BRCM_USB_XHCI if USB_XHCI_HCD
+	select BRCM_USB_PHY if USB_OHCI_HCD || USB_EHCI_HCD || USB_XHCI_HCD
+	select GENERIC_PHY if BRCM_USB_PHY
+	default y
+	help
+	  Say Y to enable the drivers for the onchip USB controllers.
+
+	  If your chipset supports power management, disabling this driver
+	  will keep the device permanently powered down.
+
+
+config MTD_NAND_BRCMSTB
+	tristate "Broadcom NAND controller support"
+	default y
+	depends on OF && OF_MTD
+	select MTD_NAND
+	help
+	  Say Y to enable the onchip NAND controller.
+
+config BRCM_SDIO
+	tristate "Broadcom SDHCI (SDIO) support"
+	depends on BRCMSTB && MMC_SDHCI
+	default y
+	select MMC_SDHCI_IO_ACCESSORS
+	help
+	  Say Y to enable the driver for the onchip SDIO controller.
+
+	  If you do not plan on using this device, disabling CONFIG_MMC
+	  will save about 75KB.
+
+	  If unsure, say Y.
+
+#####################################################################
+# Hidden options
+#####################################################################
+
+config BRCMSTB
+	bool
+
+config BCM7250
+	bool
+
+config BCM7364
+	bool
+
+config BCM7366
+	bool
+
+config BCM74371
+	bool
+
+config BCM7439
+	bool
+
+config BCM7445
+	bool
+
+config BRCM_GENET_V3
+	bool
+
+config BRCM_GENET_V4
+	bool
+
+config BRCM_GENET_VERSION
+	int
+	default 3 if BRCM_GENET_V3
+	default 4 if BRCM_GENET_V4
+
+# MoCA controller
+config BRCM_HAS_MOCA
+	bool
+
+# Original MoCA 1.1 (gen1 firmware)
+config BRCM_HAS_MOCA_11
+	bool
+	select BRCM_HAS_MOCA
+
+# Cost-reduced MoCA 1.1 with limited TX RAM (gen1 firmware)
+config BRCM_HAS_MOCA_11_LITE
+	bool
+	select BRCM_HAS_MOCA
+
+# MoCA 1.1 with selected 2.0 features (gen2 firmware)
+config BRCM_HAS_MOCA_11_PLUS
+	bool
+	select BRCM_HAS_MOCA
+
+# MoCA 2.0 (gen3 firmware for 1.1, gen2x firmware for 2.0)
+config BRCM_HAS_MOCA_20_GEN21
+	bool
+	select BRCM_HAS_MOCA
+
+config BRCM_HAS_MOCA_20_GEN22
+	bool
+	select BRCM_HAS_MOCA
+
+config BRCM_HAS_MOCA_20_GEN23
+	bool
+	select BRCM_HAS_MOCA
+
+config BRCM_MOCA_VERS
+	hex
+	default 0x1100 if BRCM_HAS_MOCA_11
+	default 0x1101 if BRCM_HAS_MOCA_11_LITE
+	default 0x1102 if BRCM_HAS_MOCA_11_PLUS
+	default 0x2001 if BRCM_HAS_MOCA_20_GEN21
+	default 0x2002 if BRCM_HAS_MOCA_20_GEN22
+	default 0x2003 if BRCM_HAS_MOCA_20_GEN23
+
+# select for MoCA on GENET_0
+config BRCM_MOCA_ON_GENET_0
+	bool
+	select BRCM_HAS_GENET_0
+
+# select for MoCA on GENET_1
+config BRCM_MOCA_ON_GENET_1
+	bool
+	select BRCM_HAS_GENET_1
+
+# MoCA is MidRF (default is HighRF)
+config BRCM_HAS_MOCA_MIDRF
+	bool
+
+config BRCM_HAS_NAND_MINOR_0
+	bool
+
+config BRCM_HAS_NAND_MINOR_1
+	bool
+
+config BRCM_HAS_NAND_MINOR_2
+	bool
+
+config BRCM_HAS_NAND_MINOR_3
+	bool
+
+config BRCM_HAS_NAND_MINOR_4
+	bool
+
+config BRCM_HAS_NAND_MAJOR_5
+	bool
+	select BRCM_HAS_NAND
+
+config BRCM_HAS_NAND_MAJOR_6
+	bool
+	select BRCM_HAS_NAND
+
+config BRCM_HAS_NAND_MAJOR_7
+	bool
+	select BRCM_HAS_NAND
+
+config BRCMNAND_MAJOR_VERS
+	int
+	default "7" if BRCM_HAS_NAND_MAJOR_7
+	default "6" if BRCM_HAS_NAND_MAJOR_6
+	default "5" if BRCM_HAS_NAND_MAJOR_5
+
+config BRCMNAND_MINOR_VERS
+	int
+	default "4" if BRCM_HAS_NAND_MINOR_4
+	default "3" if BRCM_HAS_NAND_MINOR_3
+	default "2" if BRCM_HAS_NAND_MINOR_2
+	default "1" if BRCM_HAS_NAND_MINOR_1
+	default "0" if BRCM_HAS_NAND_MINOR_0
+
+config BRCM_HAS_BSPI_V4
+	bool
+	select BRCM_HAS_SPI
+
+config BRCM_BSPI_MAJOR_VERS
+	int
+	default "4" if BRCM_HAS_BSPI_V4
+	default "3" if BRCM_HAS_BSPI_V3
+	default "2" if BRCM_HAS_BSPI_V2
+
+# For MSPI prior to v1.5 (first version with a revision register)
+config BRCM_MSPI_LEGACY
+	bool
+
+# MSPI can transfer either 64b or 8b per slot
+config BRCM_MSPI_64B_WORDS
+	bool
+
+config BRCM_USB_OHCI
+       tristate
+
+config BRCM_USB_EHCI
+       tristate
+
+config BRCM_USB_XHCI
+       tristate
+
+config BRCM_USB_PHY
+       tristate
