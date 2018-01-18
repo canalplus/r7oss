@@ -1,1 +1,25 @@
+## JS MODULES
 
+Here is the of modules used in the webapp :
+
+- [Babel](https://github.com/babel/babel)
+- [AJV](https://github.com/epoberezkin/ajv)
+- [classnames](https://github.com/JedWatson/classnames)
+- [Lodash](https://github.com/lodash/lodash)
+- [crc-32](https://github.com/SheetJS/js-crc32)
+- [history](https://github.com/ReactTraining/history)
+- [moment](https://github.com/moment/moment)
+- [normalize.scss](https://github.com/guerrero/normalize.scss)
+- [prop-types](https://github.com/facebook/prop-types)
+- [React](https://github.com/facebook/react)
+- [React-image](https://github.com/mbrevda/react-image)
+- [React-redux](https://github.com/reactjs/react-redux)
+- [React-router](https://github.com/ReactTraining/react-router)
+- [Recompose](https://github.com/acdlite/recompose)
+- [Redux](https://github.com/reactjs/redux)
+- [Redux-Observable](https://github.com/redux-observable/redux-observable)
+- [Redux-thunk](https://github.com/gaearon/redux-thunk)
+- [Reselect](https://github.com/reactjs/reselect)
+- [RxJs](https://github.com/ReactiveX/RxJS)
+- [url-polyfill](https://github.com/lifaon74/url-polyfill)
+- [whatwg-fetch](https://github.com/github/fetch)
